@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee", "Brizbee\Brizbee.csproj", "{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Tests", "Brizbee.Tests\Brizbee.Tests.csproj", "{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Web", "Brizbee.Web\Brizbee.Web.csproj", "{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Common", "Brizbee.Common\Brizbee.Common.csproj", "{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +15,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
