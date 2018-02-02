@@ -16,7 +16,6 @@ namespace Brizbee.Repositories
         /// <returns>The created punch</returns>
         public Punch Create(Punch punch, User currentUser)
         {
-            // Save the object itself
             punch.CreatedAt = DateTime.Now;
             db.Punches.Add(punch);
 
