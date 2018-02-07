@@ -67,6 +67,7 @@ namespace Brizbee.Repositories
 
             // Auto-generated
             punch.CreatedAt = DateTime.Now;
+            punch.InAt = DateTime.Now;
             punch.TaskId = taskId;
             punch.UserId = currentUser.Id;
 

@@ -2,6 +2,7 @@
 using Brizbee.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
@@ -67,15 +68,16 @@ namespace Brizbee.Controllers
         [HttpPost]
         public IHttpActionResult PunchIn(ODataActionParameters parameters)
         {
-            var taskId = int.Parse(parameters["TaskId"].ToString());
+            var taskId = (int)parameters["TaskId"];
 
             try
             {
                 repo.PunchIn(taskId, CurrentUser());
                 return Ok();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Trace.TraceWarning(ex.ToString());
                 return BadRequest();
             }
         }
@@ -89,8 +91,9 @@ namespace Brizbee.Controllers
                 repo.PunchOut(CurrentUser());
                 return Ok();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Trace.TraceWarning(ex.ToString());
                 return BadRequest();
             }
         }
