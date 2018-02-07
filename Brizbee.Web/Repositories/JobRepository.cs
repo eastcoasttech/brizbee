@@ -11,15 +11,17 @@ namespace Brizbee.Repositories
         private BrizbeeWebContext db = new BrizbeeWebContext();
 
         /// <summary>
-        /// Creates the given job in the repository.
+        /// Creates the given job in the database.
         /// </summary>
         /// <param name="job">The job to create</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The created job</returns>
         public Job Create(Job job, Customer customer, User currentUser)
         {
+            // Auto-generated
             job.CreatedAt = DateTime.Now;
             job.CustomerId = customer.Id;
+
             db.Jobs.Add(job);
 
             db.SaveChanges();

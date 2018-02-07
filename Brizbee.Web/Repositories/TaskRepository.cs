@@ -11,15 +11,17 @@ namespace Brizbee.Repositories
         private BrizbeeWebContext db = new BrizbeeWebContext();
 
         /// <summary>
-        /// Creates the given task in the repository.
+        /// Creates the given task in the database.
         /// </summary>
         /// <param name="task">The task to create</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The created task</returns>
         public Task Create(Task task, Job job, User currentUser)
         {
+            // Auto-generated
             task.CreatedAt = DateTime.Now;
             task.JobId = job.Id;
+
             db.Tasks.Add(task);
 
             db.SaveChanges();

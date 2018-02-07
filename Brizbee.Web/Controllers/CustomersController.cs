@@ -1,11 +1,14 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
+using Microsoft.OData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Http;
 using System.Web.OData;
+using System.Web.OData.Extensions;
 
 namespace Brizbee.Controllers
 {
@@ -18,15 +21,32 @@ namespace Brizbee.Controllers
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<Customer> GetPunches()
         {
-            return repo.GetAll(CurrentUser());
+            try
+            {
+                return repo.GetAll(CurrentUser());
+            }
+            catch (Exception)
+            {
+                // Return an empty result if there are errors
+                return Enumerable.Empty<Customer>().AsQueryable();
+            }
         }
 
         // GET: odata/Customers(5)
         [EnableQuery]
         public SingleResult<Customer> GetPunch([FromODataUri] int key)
         {
-            var queryable = new List<Customer>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-            return SingleResult.Create(queryable);
+            try
+            {
+                var queryable = new List<Customer>() { repo.Get(key, CurrentUser()) }.AsQueryable();
+                return SingleResult.Create(queryable);
+            }
+            catch (Exception)
+            {
+                // Return an empty result if there are errors
+                return SingleResult.Create(Enumerable.Empty<Customer>().AsQueryable());
+                //Request.CreateErrorResponse(HttpStatusCode.NotFound, new ODataError() { Message = "" });
+            }
         }
 
         // POST: odata/Customers

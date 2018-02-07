@@ -17,8 +17,14 @@ namespace Brizbee.Common.Models
 
         [Required]
         public DateTime InAt { get; set; }
+        
+        public DateTime? OutAt { get; set; }
 
-        public DateTime OutAt { get; set; }
+        [Required]
+        public int TaskId { get; set; }
+
+        [ForeignKey("TaskId")]
+        public virtual Task Task { get; set; }
 
         [Required]
         public int UserId { get; set; }

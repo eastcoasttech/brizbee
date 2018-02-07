@@ -43,6 +43,58 @@ namespace Brizbee.Controllers
             return Created(punch);
         }
 
+        // GET: odata/Punches/Default.Current
+        [HttpGet]
+        public IHttpActionResult Current()
+        {
+            var userId = CurrentUser().Id;
+            var punch = db.Punches.Where(p => p.UserId == userId)
+                .Where(p => p.OutAt == null)
+                .OrderByDescending(p => p.InAt)
+                .FirstOrDefault();
+
+            if (punch != null)
+            {
+                return Ok(punch);
+            }
+            else
+            {
+                return Ok();
+            }
+        }
+
+        // POST: odata/Punches/Default.PunchIn
+        [HttpPost]
+        public IHttpActionResult PunchIn(ODataActionParameters parameters)
+        {
+            var taskId = int.Parse(parameters["TaskId"].ToString());
+
+            try
+            {
+                repo.PunchIn(taskId, CurrentUser());
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
+        // POST: odata/Punches/Default.PunchOut
+        [HttpPost]
+        public IHttpActionResult PunchOut(ODataActionParameters parameters)
+        {
+            try
+            {
+                repo.PunchOut(CurrentUser());
+                return Ok();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
