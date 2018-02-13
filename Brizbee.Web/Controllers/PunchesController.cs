@@ -45,6 +45,20 @@ namespace Brizbee.Controllers
             return Created(punch);
         }
 
+        // PATCH: odata/Punches(5)
+        [AcceptVerbs("PATCH", "MERGE")]
+        public IHttpActionResult Patch([FromODataUri] int key, Delta<Punch> patch)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var punch = repo.Update(key, patch, CurrentUser());
+
+            return Updated(punch);
+        }
+
         // GET: odata/Punches/Default.Current
         [HttpGet]
         [EnableQuery(MaxExpansionDepth =3)]

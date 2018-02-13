@@ -41,6 +41,7 @@ namespace Brizbee
             builder.EntitySet<Organization>("Organizations");
             builder.EntitySet<Punch>("Punches");
             builder.EntitySet<Task>("Tasks");
+            builder.EntitySet<TaskTemplate>("TaskTemplates");
             builder.EntitySet<User>("Users");
 
             // Collection Function - Current

@@ -139,6 +139,7 @@
     <Compile Include="Controllers\OrganizationsController.cs" />
     <Compile Include="Controllers\PunchesController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
+    <Compile Include="Controllers\TaskTemplatesController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Filters\BrizbeeAuthorizeAttribute.cs" />
     <Compile Include="Filters\HttpBasicAuthorizeAttribute.cs" />
@@ -174,6 +175,10 @@
     <Compile Include="Migrations\201802131712089_CommitIdNotRequired.Designer.cs">
       <DependentUpon>201802131712089_CommitIdNotRequired.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201802131935082_AddingTaskTemplates.cs" />
+    <Compile Include="Migrations\201802131935082_AddingTaskTemplates.Designer.cs">
+      <DependentUpon>201802131935082_AddingTaskTemplates.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -188,6 +193,7 @@
     <Compile Include="Repositories\JobRepository.cs" />
     <Compile Include="Repositories\PunchRepository.cs" />
     <Compile Include="Repositories\TaskRepository.cs" />
+    <Compile Include="Repositories\TaskTemplateRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
   </ItemGroup>
@@ -230,6 +236,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201802131712089_CommitIdNotRequired.resx">
       <DependentUpon>201802131712089_CommitIdNotRequired.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802131935082_AddingTaskTemplates.resx">
+      <DependentUpon>201802131935082_AddingTaskTemplates.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

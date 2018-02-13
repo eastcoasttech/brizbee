@@ -1,6 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using System;
 using System.Linq;
+using System.Web.OData;
 
 namespace Brizbee.Repositories
 {
@@ -53,6 +54,50 @@ namespace Brizbee.Repositories
         public IQueryable<Punch> GetAll(User currentUser)
         {
             return db.Punches.AsQueryable<Punch>();
+        }
+
+        /// <summary>
+        /// Updates the given punch with the given delta of changes.
+        /// </summary>
+        /// <param name="id">The id of the punch</param>
+        /// <param name="patch">The changes that should be made to the punch</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        /// <returns>The updated punch</returns>
+        public Punch Update(int id, Delta<Punch> patch, User currentUser)
+        {
+            var punch = db.Punches.Find(id);
+
+            //// Ensure that object was found
+            //ValidateFound(group, id);
+
+            //// Ensure that user is authorized
+            //if (!GroupPolicy.CanUpdate(currentUser, group))
+            //{
+            //    var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
+            //    {
+            //        Content = new StringContent("No permission to modify the group"),
+            //        ReasonPhrase = "Permission Denied"
+            //    };
+            //    throw new HttpResponseException(resp);
+            //}
+
+            //// Do not allow modifying some properties
+            //if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
+            //{
+            //    var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
+            //    {
+            //        Content = new StringContent("Cannot modify OrganizationId"),
+            //        ReasonPhrase = "Permission Denied"
+            //    };
+            //    throw new HttpResponseException(resp);
+            //}
+
+            // Peform the update
+            patch.Patch(punch);
+            
+            db.SaveChanges();
+
+            return punch;
         }
 
         /// <summary>

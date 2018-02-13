@@ -28,6 +28,7 @@ namespace Brizbee
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Punch> Punches { get; set; }
         public DbSet<Task> Tasks { get; set; }
+        public DbSet<TaskTemplate> TaskTemplates { get; set; }
         public DbSet<User> Users { get; set; }
     }
 }
