@@ -6,19 +6,19 @@ using System.Web;
 
 namespace Brizbee.Policies
 {
-    public class CustomerPolicy
+    public class TaskPolicy
     {
-        public static Boolean CanCreate(Customer customer, User currentUser)
+        public static Boolean CanCreate(Task task, User currentUser)
         {
             return true;
         }
 
-        public static Boolean CanDelete(Customer customer, User currentUser)
+        public static Boolean CanDelete(Task task, User currentUser)
         {
             return true;
         }
 
-        public static Boolean CanUpdate(Customer customer, User currentUser)
+        public static Boolean CanUpdate(Task task, User currentUser)
         {
             return true;
         }

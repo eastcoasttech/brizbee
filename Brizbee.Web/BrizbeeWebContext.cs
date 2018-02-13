@@ -22,6 +22,7 @@ namespace Brizbee
 
         // Add a DbSet for each entity type that you want to include in your model. For more information 
         // on configuring and using a Code First model, see http://go.microsoft.com/fwlink/?LinkId=390109.
+        public DbSet<Commit> Commits { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Organization> Organizations { get; set; }

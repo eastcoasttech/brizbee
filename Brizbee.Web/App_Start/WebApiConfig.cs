@@ -36,6 +36,7 @@ namespace Brizbee
             ODataModelBuilder builder = new ODataConventionModelBuilder();
             config.Count().Filter().OrderBy().Expand().Select().MaxTop(null);
             builder.EntitySet<Customer>("Customers");
+            builder.EntitySet<Commit>("Commits");
             builder.EntitySet<Job>("Jobs");
             builder.EntitySet<Organization>("Organizations");
             builder.EntitySet<Punch>("Punches");
@@ -77,6 +78,9 @@ namespace Brizbee
             // Member Action - Change Password
             ActionConfiguration changePassword = builder.EntityType<User>().Action("ChangePassword");
             changePassword.Parameter<string>("Password");
+
+            // Member Action - Undo
+            ActionConfiguration undo = builder.EntityType<Commit>().Action("Undo");
 
             config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
             

@@ -6,19 +6,19 @@ using System.Web;
 
 namespace Brizbee.Policies
 {
-    public class CustomerPolicy
+    public class JobPolicy
     {
-        public static Boolean CanCreate(Customer customer, User currentUser)
+        public static Boolean CanCreate(Job job, User currentUser)
         {
             return true;
         }
 
-        public static Boolean CanDelete(Customer customer, User currentUser)
+        public static Boolean CanDelete(Job job, User currentUser)
         {
             return true;
         }
 
-        public static Boolean CanUpdate(Customer customer, User currentUser)
+        public static Boolean CanUpdate(Job job, User currentUser)
         {
             return true;
         }

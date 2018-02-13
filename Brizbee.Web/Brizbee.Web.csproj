@@ -133,6 +133,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="BrizbeeWebContext.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
+    <Compile Include="Controllers\CommitsController.cs" />
     <Compile Include="Controllers\CustomersController.cs" />
     <Compile Include="Controllers\JobsController.cs" />
     <Compile Include="Controllers\OrganizationsController.cs" />
@@ -157,12 +158,32 @@
     <Compile Include="Migrations\201802061822349_AddingTaskId.Designer.cs">
       <DependentUpon>201802061822349_AddingTaskId.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201802101753257_AddingRoleToUsers.cs" />
+    <Compile Include="Migrations\201802101753257_AddingRoleToUsers.Designer.cs">
+      <DependentUpon>201802101753257_AddingRoleToUsers.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201802110121428_AddingCommits.cs" />
+    <Compile Include="Migrations\201802110121428_AddingCommits.Designer.cs">
+      <DependentUpon>201802110121428_AddingCommits.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201802121749005_AddingPin.cs" />
+    <Compile Include="Migrations\201802121749005_AddingPin.Designer.cs">
+      <DependentUpon>201802121749005_AddingPin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201802131712089_CommitIdNotRequired.cs" />
+    <Compile Include="Migrations\201802131712089_CommitIdNotRequired.Designer.cs">
+      <DependentUpon>201802131712089_CommitIdNotRequired.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
+    <Compile Include="Policies\CommitPolicy.cs" />
     <Compile Include="Policies\CustomerPolicy.cs" />
+    <Compile Include="Policies\JobPolicy.cs" />
+    <Compile Include="Policies\TaskPolicy.cs" />
     <Compile Include="Policies\UserPolicy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\CommitRepository.cs" />
     <Compile Include="Repositories\CustomerRepository.cs" />
     <Compile Include="Repositories\JobRepository.cs" />
     <Compile Include="Repositories\PunchRepository.cs" />
@@ -197,6 +218,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201802061822349_AddingTaskId.resx">
       <DependentUpon>201802061822349_AddingTaskId.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802101753257_AddingRoleToUsers.resx">
+      <DependentUpon>201802101753257_AddingRoleToUsers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802110121428_AddingCommits.resx">
+      <DependentUpon>201802110121428_AddingCommits.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802121749005_AddingPin.resx">
+      <DependentUpon>201802121749005_AddingPin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802131712089_CommitIdNotRequired.resx">
+      <DependentUpon>201802131712089_CommitIdNotRequired.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

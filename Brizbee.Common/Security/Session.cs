@@ -8,6 +8,8 @@ namespace Brizbee.Common.Security
         public string EmailAddress { get; set; }
         public string EmailPassword { get; set; }
         public string Method { get; set; }
+        public string PinOrganizationCode { get; set; }
+        public string PinUserPin { get; set; }
 
         [JsonProperty("odata.type")]
         [NotMapped]

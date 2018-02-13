@@ -2,6 +2,7 @@
 using Brizbee.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
 using System.Web;
@@ -17,7 +18,7 @@ namespace Brizbee.Controllers
         private PunchRepository repo = new PunchRepository();
 
         // GET: odata/Punches
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
         public IQueryable<Punch> GetPunches()
         {
             return repo.GetAll(CurrentUser());
@@ -46,22 +47,17 @@ namespace Brizbee.Controllers
 
         // GET: odata/Punches/Default.Current
         [HttpGet]
-        public IHttpActionResult Current()
+        [EnableQuery(MaxExpansionDepth =3)]
+        public SingleResult<Punch> Current()
         {
             var userId = CurrentUser().Id;
-            var punch = db.Punches.Where(p => p.UserId == userId)
+            var punch = db.Punches
+                .Where(p => p.UserId == userId)
                 .Where(p => p.OutAt == null)
                 .OrderByDescending(p => p.InAt)
-                .FirstOrDefault();
+                .Take(1);
 
-            if (punch != null)
-            {
-                return Ok(punch);
-            }
-            else
-            {
-                return Ok();
-            }
+            return SingleResult.Create(punch);
         }
 
         // POST: odata/Punches/Default.PunchIn

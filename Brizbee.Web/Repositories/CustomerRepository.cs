@@ -38,6 +38,27 @@ namespace Brizbee.Repositories
         }
 
         /// <summary>
+        /// Deletes the customer with the given id.
+        /// </summary>
+        /// <param name="id">The id of the customer</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        public void Delete(int id, User currentUser)
+        {
+            var customer = db.Customers.Find(id);
+
+            // Ensure that user is authorized
+            if (!CustomerPolicy.CanDelete(customer, currentUser))
+            {
+                throw new Exception("Not authorized to delete the object");
+            }
+
+            // Delete the object itself
+            db.Customers.Remove(customer);
+
+            db.SaveChanges();
+        }
+
+        /// <summary>
         /// Disposes of the database connection.
         /// </summary>
         public void Dispose()

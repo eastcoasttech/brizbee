@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace Brizbee.Common.Models
 {
@@ -33,5 +31,10 @@ namespace Brizbee.Common.Models
         public string PasswordSalt { get; set; }
         [IgnoreDataMember]
         public string PasswordHash { get; set; }
+
+        public string Pin { get; set; }
+
+        [Required]
+        public string Role { get; set; }
     }
 }

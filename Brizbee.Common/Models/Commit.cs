@@ -4,13 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Common.Models
 {
-    public partial class Punch
+    public partial class Commit
     {
-        public int? CommitId { get; set; }
-
-        [ForeignKey("CommitId")]
-        public virtual Commit Commit { get; set; }
-
         [Required]
         public DateTime CreatedAt { get; set; }
 
@@ -19,14 +14,15 @@ namespace Brizbee.Common.Models
 
         [Required]
         public DateTime InAt { get; set; }
-        
-        public DateTime? OutAt { get; set; }
 
         [Required]
-        public int TaskId { get; set; }
+        public int OrganizationId { get; set; }
 
-        [ForeignKey("TaskId")]
-        public virtual Task Task { get; set; }
+        [ForeignKey("OrganizationId")]
+        public virtual Organization Organization { get; set; }
+
+        [Required]
+        public DateTime OutAt { get; set; }
 
         [Required]
         public int UserId { get; set; }

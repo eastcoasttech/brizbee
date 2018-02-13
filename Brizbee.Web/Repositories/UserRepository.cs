@@ -10,7 +10,7 @@ namespace Brizbee.Repositories
     public class UserRepository : IDisposable
     {
         private BrizbeeWebContext db = new BrizbeeWebContext();
-
+        
         /// <summary>
         /// Changes the password to the given password.
         /// </summary>
@@ -69,6 +69,31 @@ namespace Brizbee.Repositories
             db.Dispose();
         }
 
+        /// <summary>
+        /// Returns the user with the given id.
+        /// </summary>
+        /// <param name="id">The id of the user</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        /// <returns>The user with the given id</returns>
+        public User Get(int id, User currentUser)
+        {
+            return db.Users
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .FirstOrDefault(c => c.Id == id);
+        }
+
+        /// <summary>
+        /// Returns a queryable collection of users.
+        /// </summary>
+        /// <param name="currentUser">The user to check for permissions</param>
+        /// <returns>The queryable collection of users</returns>
+        public IQueryable<User> GetAll(User currentUser)
+        {
+            return db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .AsQueryable<User>();
+        }
+
         public User Register(User user, Organization organization)
         {
             // Ensure Email address is unique
@@ -85,6 +110,7 @@ namespace Brizbee.Repositories
             user.Password = null;
 
             // Auto-generated
+            user.Role = "Administrator";
             user.CreatedAt = DateTime.Now;
             organization.CreatedAt = DateTime.Now;
 

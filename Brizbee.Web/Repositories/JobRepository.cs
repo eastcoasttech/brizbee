@@ -1,4 +1,5 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Policies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,8 +17,10 @@ namespace Brizbee.Repositories
         /// <param name="job">The job to create</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The created job</returns>
-        public Job Create(Job job, Customer customer, User currentUser)
+        public Job Create(Job job, User currentUser)
         {
+            var customer = db.Customers.Find(job.CustomerId);
+
             // Auto-generated
             job.CreatedAt = DateTime.Now;
             job.CustomerId = customer.Id;
@@ -27,6 +30,27 @@ namespace Brizbee.Repositories
             db.SaveChanges();
 
             return job;
+        }
+
+        /// <summary>
+        /// Deletes the job with the given id.
+        /// </summary>
+        /// <param name="id">The id of the job</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        public void Delete(int id, User currentUser)
+        {
+            var job = db.Jobs.Find(id);
+
+            // Ensure that user is authorized
+            if (!JobPolicy.CanDelete(job, currentUser))
+            {
+                throw new Exception("Not authorized to delete the object");
+            }
+
+            // Delete the object itself
+            db.Jobs.Remove(job);
+
+            db.SaveChanges();
         }
 
         /// <summary>
