@@ -12,12 +12,14 @@ namespace Brizbee.Common.Models
 
         [EmailAddress]
         [Required]
+        [MaxLength(254)]
         public string EmailAddress { get; set; }
 
         [Key]
         public int Id { get; set; }
 
         [Required]
+        [MaxLength(128)]
         public string Name { get; set; }
 
         [Required]
@@ -35,6 +37,7 @@ namespace Brizbee.Common.Models
         public string Pin { get; set; }
 
         [Required]
+        [MaxLength(128)]
         public string Role { get; set; }
     }
 }

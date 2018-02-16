@@ -57,7 +57,21 @@ namespace Brizbee.Controllers
 
             return Created(customer);
         }
-        
+
+        // PATCH: odata/Customers(5)
+        [AcceptVerbs("PATCH", "MERGE")]
+        public IHttpActionResult Patch([FromODataUri] int key, Delta<Customer> patch)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var customer = repo.Update(key, patch, CurrentUser());
+
+            return Updated(customer);
+        }
+
         // DELETE: odata/Customers(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {

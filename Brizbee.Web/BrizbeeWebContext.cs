@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure.Interception;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Web;
 
 namespace Brizbee
@@ -30,5 +31,13 @@ namespace Brizbee
         public DbSet<Task> Tasks { get; set; }
         public DbSet<TaskTemplate> TaskTemplates { get; set; }
         public DbSet<User> Users { get; set; }
+        
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            //base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.EmailAddress)
+                .IsUnique();
+        }
     }
 }

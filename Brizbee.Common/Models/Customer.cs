@@ -18,6 +18,9 @@ namespace Brizbee.Common.Models
         public string Name { get; set; }
 
         [Required]
+        public string Number { get; set; }
+
+        [Required]
         public int OrganizationId { get; set; }
 
         [ForeignKey("OrganizationId")]

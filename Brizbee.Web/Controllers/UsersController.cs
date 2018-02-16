@@ -49,6 +49,33 @@ namespace Brizbee.Controllers
             }
         }
 
+        // POST: odata/Users
+        public IHttpActionResult Post(User user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            user = repo.Create(user, CurrentUser());
+
+            return Created(user);
+        }
+
+        // PATCH: odata/Users(5)
+        [AcceptVerbs("PATCH", "MERGE")]
+        public IHttpActionResult Patch([FromODataUri] int key, Delta<User> patch)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = repo.Update(key, patch, CurrentUser());
+
+            return Updated(user);
+        }
+
         // POST: odata/Users/Default.Authenticate
         [HttpPost]
         public IHttpActionResult Authenticate(ODataActionParameters parameters)

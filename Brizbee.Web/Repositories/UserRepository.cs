@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.OData;
 
 namespace Brizbee.Repositories
 {
@@ -92,6 +93,45 @@ namespace Brizbee.Repositories
             return db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .AsQueryable<User>();
+        }
+
+        /// <summary>
+        /// Updates the given user with the given delta of changes.
+        /// </summary>
+        /// <param name="id">The id of the user</param>
+        /// <param name="patch">The changes that should be made to the user</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        /// <returns>The updated user</returns>
+        public User Update(int id, Delta<User> patch, User currentUser)
+        {
+            var user = db.Users.Find(id);
+            
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
+                patch.GetChangedPropertyNames().Contains("EmailAddress"))
+            {
+                throw new Exception("Cannot modify OrganizationId or EmailAddress");
+            }
+
+            // Peform the update
+            patch.Patch(user);
+
+            if (user.Password != null)
+            {
+                // Generates a password hash and salt
+                var service = new SecurityService();
+                user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                user.Password = null;
+            }
+            else
+            {
+                user.Password = null;
+            }
+
+            db.SaveChanges();
+
+            return user;
         }
 
         public User Register(User user, Organization organization)

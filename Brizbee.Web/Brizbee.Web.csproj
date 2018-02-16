@@ -179,6 +179,14 @@
     <Compile Include="Migrations\201802131935082_AddingTaskTemplates.Designer.cs">
       <DependentUpon>201802131935082_AddingTaskTemplates.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201802151806240_AddIndexAndSetStringLengths.cs" />
+    <Compile Include="Migrations\201802151806240_AddIndexAndSetStringLengths.Designer.cs">
+      <DependentUpon>201802151806240_AddIndexAndSetStringLengths.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201802161752520_AddingNumber.cs" />
+    <Compile Include="Migrations\201802161752520_AddingNumber.Designer.cs">
+      <DependentUpon>201802161752520_AddingNumber.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -239,6 +247,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201802131935082_AddingTaskTemplates.resx">
       <DependentUpon>201802131935082_AddingTaskTemplates.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802151806240_AddIndexAndSetStringLengths.resx">
+      <DependentUpon>201802151806240_AddIndexAndSetStringLengths.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802161752520_AddingNumber.resx">
+      <DependentUpon>201802161752520_AddingNumber.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -97,7 +97,7 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the customer</param>
         /// <param name="patch">The changes that should be made to the customer</param>
         /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The updated group</returns>
+        /// <returns>The updated customer</returns>
         public Customer Update(int id, Delta<Customer> patch, User currentUser)
         {
             var customer = db.Customers.Find(id);

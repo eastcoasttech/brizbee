@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.OData;
 
 namespace Brizbee.Repositories
 {
@@ -80,6 +81,40 @@ namespace Brizbee.Repositories
         public IQueryable<Job> GetAll(User currentUser)
         {
             return db.Jobs.AsQueryable<Job>();
+        }
+
+        /// <summary>
+        /// Updates the given job with the given delta of changes.
+        /// </summary>
+        /// <param name="id">The id of the job</param>
+        /// <param name="patch">The changes that should be made to the job</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        /// <returns>The updated job</returns>
+        public Job Update(int id, Delta<Job> patch, User currentUser)
+        {
+            var job = db.Jobs.Find(id);
+
+            // Ensure that object was found
+            if (job == null) { throw new Exception("No object was found with that ID in the database"); }
+
+            // Ensure that user is authorized
+            if (!JobPolicy.CanUpdate(job, currentUser))
+            {
+                throw new Exception("Not authorized to modify the object");
+            }
+
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("CustomerId"))
+            {
+                throw new Exception("Not authorized to modify the CustomerId");
+            }
+
+            // Peform the update
+            patch.Patch(job);
+
+            db.SaveChanges();
+
+            return job;
         }
     }
 }
