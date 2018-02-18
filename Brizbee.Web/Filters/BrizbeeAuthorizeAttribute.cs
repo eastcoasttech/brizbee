@@ -15,7 +15,8 @@ namespace Brizbee.Filters
         {
             if (actionContext.Request.RequestUri.AbsolutePath == "/$metadata" ||
                actionContext.Request.RequestUri.AbsolutePath == "/%24metadata" ||
-               actionContext.Request.RequestUri.AbsolutePath == "/odata/Users/Default.Authenticate")
+               actionContext.Request.RequestUri.AbsolutePath == "/odata/Users/Default.Authenticate" ||
+               actionContext.Request.RequestUri.AbsolutePath == "/odata/Users/Default.Register")
             {
                 return;
             }

@@ -1,4 +1,5 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Policies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,12 @@ namespace Brizbee.Repositories
         /// <returns>The created task template</returns>
         public TaskTemplate Create(TaskTemplate taskTemplate, User currentUser)
         {
+            // Ensure that user is authorized
+            if (!TaskTemplatePolicy.CanCreate(taskTemplate, currentUser))
+            {
+                throw new Exception("Not authorized to create the object");
+            }
+
             // Auto-generated
             taskTemplate.CreatedAt = DateTime.Now;
             taskTemplate.OrganizationId = currentUser.OrganizationId;
@@ -38,11 +45,11 @@ namespace Brizbee.Repositories
         {
             var taskTemplate = db.TaskTemplates.Find(id);
 
-            //// Ensure that user is authorized
-            //if (!TaskPolicy.CanDelete(task, currentUser))
-            //{
-            //    throw new Exception("Not authorized to delete the object");
-            //}
+            // Ensure that user is authorized
+            if (!TaskTemplatePolicy.CanDelete(taskTemplate, currentUser))
+            {
+                throw new Exception("Not authorized to delete the object");
+            }
 
             // Delete the object itself
             db.TaskTemplates.Remove(taskTemplate);

@@ -194,6 +194,7 @@
     <Compile Include="Policies\CustomerPolicy.cs" />
     <Compile Include="Policies\JobPolicy.cs" />
     <Compile Include="Policies\TaskPolicy.cs" />
+    <Compile Include="Policies\TaskTemplatePolicy.cs" />
     <Compile Include="Policies\UserPolicy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\CommitRepository.cs" />
@@ -208,6 +209,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\BrizbeeWeb - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
