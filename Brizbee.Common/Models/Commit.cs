@@ -14,6 +14,13 @@ namespace Brizbee.Common.Models
 
         [Required]
         public DateTime InAt { get; set; }
+        
+        [NotMapped]
+        public string Name {
+            get {
+                return string.Format("{0} - {1}", InAt.ToShortDateString(), OutAt.ToShortDateString());
+            }
+        }
 
         [Required]
         public int OrganizationId { get; set; }

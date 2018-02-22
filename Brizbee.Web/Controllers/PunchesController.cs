@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
@@ -59,6 +60,13 @@ namespace Brizbee.Controllers
             return Updated(punch);
         }
 
+        // DELETE: odata/Punches(5)
+        public IHttpActionResult Delete([FromODataUri] int key)
+        {
+            repo.Delete(key, CurrentUser());
+            return StatusCode(HttpStatusCode.NoContent);
+        }
+
         // GET: odata/Punches/Default.Current
         [HttpGet]
         [EnableQuery(MaxExpansionDepth =3)]
@@ -71,7 +79,14 @@ namespace Brizbee.Controllers
                 .OrderByDescending(p => p.InAt)
                 .Take(1);
 
-            return SingleResult.Create(punch);
+            try
+            {
+                return SingleResult.Create(punch);
+            }
+            catch (Exception)
+            {
+                return SingleResult.Create(Enumerable.Empty<Punch>().AsQueryable());
+            }
         }
 
         // POST: odata/Punches/Default.PunchIn

@@ -7,7 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Tests", "Brizbee.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Web", "Brizbee.Web\Brizbee.Web.csproj", "{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Common", "Brizbee.Common\Brizbee.Common.csproj", "{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Common", "Brizbee.Common\Brizbee.Common.csproj", "{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.QuickBooksConnector", "Brizbee.QuickBooksConnector\Brizbee.QuickBooksConnector.csproj", "{72C67228-8F63-4079-8419-7B67D6C8F08E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72C67228-8F63-4079-8419-7B67D6C8F08E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C67228-8F63-4079-8419-7B67D6C8F08E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C67228-8F63-4079-8419-7B67D6C8F08E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C67228-8F63-4079-8419-7B67D6C8F08E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

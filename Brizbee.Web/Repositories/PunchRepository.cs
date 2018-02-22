@@ -1,4 +1,5 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Policies;
 using System;
 using System.Linq;
 using System.Web.OData;
@@ -25,6 +26,27 @@ namespace Brizbee.Repositories
             db.SaveChanges();
 
             return punch;
+        }
+
+        /// <summary>
+        /// Deletes the punch with the given id.
+        /// </summary>
+        /// <param name="id">The id of the punch</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        public void Delete(int id, User currentUser)
+        {
+            var punch = db.Punches.Find(id);
+
+            // Ensure that user is authorized
+            if (!PunchPolicy.CanDelete(punch, currentUser))
+            {
+                throw new Exception("Not authorized to delete the object");
+            }
+
+            // Delete the object itself
+            db.Punches.Remove(punch);
+
+            db.SaveChanges();
         }
 
         /// <summary>

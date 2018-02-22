@@ -104,8 +104,9 @@ namespace Brizbee.Controllers
                     {
                         return BadRequest("Invalid Email Address and password combination");
                     }
-                    
-                    return Ok(GetCredentials(user));
+
+                    return Content(HttpStatusCode.Created, GetCredentials(user));
+                    //return Ok(GetCredentials(user));
                 case "pin":
                     // Validate both an organization code and user pin
                     if (session.PinUserPin == null || session.PinOrganizationCode == null)
@@ -125,7 +126,8 @@ namespace Brizbee.Controllers
                         return BadRequest("Invalid organization code and user pin combination");
                     }
 
-                    return Ok(GetCredentials(user));
+                    return Content(HttpStatusCode.Created, GetCredentials(user));
+                    //return Ok(GetCredentials(user));
                 default:
                     return BadRequest("Must authenticate via either Email or Pin method");
             }

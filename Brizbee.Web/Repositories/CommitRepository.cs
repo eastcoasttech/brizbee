@@ -28,6 +28,7 @@ namespace Brizbee.Repositories
             // Auto-generated
             commit.CreatedAt = DateTime.Now;
             commit.OrganizationId = currentUser.OrganizationId;
+            commit.UserId = currentUser.Id;
 
             // Commit all the punches within range
             db.Punches.Where(p => (p.InAt >= commit.InAt) && (p.OutAt <= commit.OutAt));

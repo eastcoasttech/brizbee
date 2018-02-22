@@ -193,6 +193,7 @@
     <Compile Include="Policies\CommitPolicy.cs" />
     <Compile Include="Policies\CustomerPolicy.cs" />
     <Compile Include="Policies\JobPolicy.cs" />
+    <Compile Include="Policies\PunchPolicy.cs" />
     <Compile Include="Policies\TaskPolicy.cs" />
     <Compile Include="Policies\TaskTemplatePolicy.cs" />
     <Compile Include="Policies\UserPolicy.cs" />
