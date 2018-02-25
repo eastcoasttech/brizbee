@@ -31,7 +31,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
 
-        public void Export()
+        public async System.Threading.Tasks.Task Export()
         {
             var now = DateTime.Now;
             var guid = Guid.NewGuid();
@@ -43,25 +43,39 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
             foreach (var punch in punches)
             {
-                //OdbcCommand cmdInsert = conn.CreateCommand();
-                //cmdInsert.CommandText = string.Format("INSERT INTO TimeTracking (DurationMinutes, TxnDate, CustomerRefFullName, ItemServiceRefFullName, PayrollItemWageRefFullName, EntityRefFullName) Values ({0},{{d'{1}'}},'{2}','{3}','{4}','{5}')", t.Minutes, date, string.Format("{0}:{1} - {2}", customer.Replace("'", "''"), t.Item.WorkOrder.Job.Number, t.Item.WorkOrder.Job.Name.Replace("'", "''")), t.ServiceItem, t.PayrollItem, t.User.QEmployeeName);
-                //cmdInsert.ExecuteNonQuery();
+                var date = punch.InAt.ToString("yyyy-MM-dd");
+                var customer = punch.Task.Job.Customer.Name.Replace("'", "''");
+                var employee = punch.User.Name.Replace("'", "''");
+                var minutes = punch.Minutes;
+                var payrollItem = punch.QuickBooksPayrollItem;
+                var serviceItem = punch.QuickBooksServiceItem;
+                var task = punch.Task.Name.Replace("'", "''");
 
-                //OdbcCommand cmdRead = conn.CreateCommand();
-                //cmdRead.CommandText = "sp_lastinsertid TimeTracking";
-                //OdbcDataReader rdr = cmdRead.ExecuteReader(System.Data.CommandBehavior.SingleRow);
-                //rdr.Read();
+                OdbcCommand cmdInsert = conn.CreateCommand();
+                cmdInsert.CommandText = string.Format("INSERT INTO TimeTracking (DurationMinutes, TxnDate, CustomerRefFullName, ItemServiceRefFullName, PayrollItemWageRefFullName, EntityRefFullName) Values ({0},{{d'{1}'}},'{2}','{3}','{4}','{5}')",
+                    minutes,
+                    date,
+                    string.Format("{0}:{1} - {2}", customer, punch.Task.Job.Number, punch.Task.Job.Name.Replace("'", "''")),
+                    serviceItem,
+                    payrollItem,
+                    employee);
+                cmdInsert.ExecuteNonQuery();
 
-                //t.ImportedAt = now;
-                //t.ImportedTxnID = rdr.GetString(0);
-                //t.ImportedBatchId = guid.ToString();
+                OdbcCommand cmdRead = conn.CreateCommand();
+                cmdRead.CommandText = "sp_lastinsertid TimeTracking";
+                OdbcDataReader rdr = cmdRead.ExecuteReader(System.Data.CommandBehavior.SingleRow);
+                rdr.Read();
 
-                //rdr.Close();
-                //cmdInsert.Dispose();
-                //cmdRead.Dispose();
+                t.ImportedAt = now;
+                t.ImportedTxnID = rdr.GetString(0);
+                t.ImportedBatchId = guid.ToString();
 
-                //conn.Close();
-                //conn.Dispose();
+                rdr.Close();
+                cmdInsert.Dispose();
+                cmdRead.Dispose();
+
+                conn.Close();
+                conn.Dispose();
             }
 
 
@@ -140,7 +154,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         {
             // Build request to retrieve punches
             var request = new RestRequest(
-                string.Format("odata/Punches?$filter=CommitId eq '{0}'", SelectedCommit.Id),
+                string.Format("odata/Punches?$expand=Task,Task/Job,Task/Job/Customer,User&$orderby=InAt&$filter=CommitId eq '{0}'", SelectedCommit.Id),
                 Method.GET);
 
             // Execute request to retrieve punches

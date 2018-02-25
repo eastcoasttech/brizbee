@@ -39,15 +39,15 @@ namespace Brizbee.QuickBooksConnector.Views
             (Application.Current.Properties["MessageBus"] as MessageBus).Subscribe(this);
         }
         
-        private void ExportButton_Click(object sender, RoutedEventArgs e)
+        private async void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                //await (DataContext as MainWindowViewModel)
+                await (DataContext as MainWindowViewModel).Export();
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message, "Could Not Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(ex.Message, "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

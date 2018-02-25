@@ -19,8 +19,28 @@ namespace Brizbee.Common.Models
 
         [Required]
         public DateTime InAt { get; set; }
-        
+
+        [NotMapped]
+        public double Minutes
+        {
+            get
+            {
+                if (this.OutAt.HasValue)
+                {
+                    return (this.OutAt.Value - this.InAt).TotalMinutes;
+                }
+                else
+                {
+                    return 0.0;
+                }
+            }
+        }
+
         public DateTime? OutAt { get; set; }
+
+        public string QuickBooksPayrollItem { get; set; }
+
+        public string QuickBooksServiceItem { get; set; }
 
         [Required]
         public int TaskId { get; set; }
