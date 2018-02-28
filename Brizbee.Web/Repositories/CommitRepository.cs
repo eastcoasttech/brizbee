@@ -30,10 +30,14 @@ namespace Brizbee.Repositories
             commit.OrganizationId = currentUser.OrganizationId;
             commit.UserId = currentUser.Id;
 
-            // Commit all the punches within range
-            db.Punches.Where(p => (p.InAt >= commit.InAt) && (p.OutAt <= commit.OutAt));
-
             db.Commits.Add(commit);
+
+            // Commit all the punches within range
+            var punches = db.Punches.Where(p => (p.InAt >= commit.InAt) && (p.OutAt <= commit.OutAt));
+            foreach (var punch in punches)
+            {
+                punch.CommitId = commit.Id;
+            }
 
             db.SaveChanges();
 

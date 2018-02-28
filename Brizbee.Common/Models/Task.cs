@@ -23,5 +23,9 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string Number { get; set; }
+        
+        public string QuickBooksPayrollItem { get; set; }
+
+        public string QuickBooksServiceItem { get; set; }
     }
 }

@@ -47,7 +47,7 @@ namespace Brizbee.QuickBooksConnector.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(ex.ToString(), "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

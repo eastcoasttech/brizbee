@@ -21,16 +21,14 @@ namespace Brizbee
 
             // Web API routes
             config.MapHttpAttributeRoutes();
-
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
 
-            // Custom authentication and exception handling
+            // Custom authentication
             config.Filters.Add(new BrizbeeAuthorizeAttribute());
-            //config.Filters.Add(new HttpBasicAuthorizeAttribute());
 
             // Web API configuration and services
             ODataModelBuilder builder = new ODataConventionModelBuilder();

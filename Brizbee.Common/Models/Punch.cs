@@ -38,10 +38,6 @@ namespace Brizbee.Common.Models
 
         public DateTime? OutAt { get; set; }
 
-        public string QuickBooksPayrollItem { get; set; }
-
-        public string QuickBooksServiceItem { get; set; }
-
         [Required]
         public int TaskId { get; set; }
 

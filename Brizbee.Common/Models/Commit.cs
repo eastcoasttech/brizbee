@@ -9,6 +9,10 @@ namespace Brizbee.Common.Models
         [Required]
         public DateTime CreatedAt { get; set; }
 
+        public DateTime? QuickBooksExportedAt { get; set; }
+
+        public Guid? QuickBooksExportedGuid { get; set; }
+
         [Key]
         public int Id { get; set; }
 

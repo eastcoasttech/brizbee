@@ -1,6 +1,7 @@
 ﻿using Hellang.MessageBus;
 using RestSharp;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -21,6 +22,11 @@ namespace Brizbee.QuickBooksConnector
                 action => Dispatcher.Invoke(DispatcherPriority.Normal, action);
             Application.Current.Properties["MessageBus"] =
                 new MessageBus(uiThreadMarshaller);
+
+            //if (!EventLog.SourceExists("BRIZBEE QuickBooks Connector"))
+            //{
+            //    EventLog.CreateEventSource("BRIZBEE QuickBooks Connector", "Application");
+            //}
         }
     }
 }
