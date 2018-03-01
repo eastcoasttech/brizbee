@@ -40,7 +40,6 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
             // Details of this export will be recorded with the commit
             var now = DateTime.Now;
-            var guid = Guid.NewGuid();
 
             // Get the punches for this commit from the API
             var punches = await GetPunches();
@@ -65,7 +64,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             // Add an element for each punch to be exported
             foreach (var punch in punches)
             {
-                BuildTimeTrackingAddRq(doc, inner, punch, guid);
+                BuildTimeTrackingAddRq(doc, inner, punch);
             }
 
             ExportButtonStatus = "Connecting to QuickBooks";
@@ -78,6 +77,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             ExportButtonStatus = "Exporting";
             OnPropertyChanged("ExportButtonStatus");
 
+            EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), doc.OuterXml, EventLogEntryType.Information);
+
             var response = req.ProcessRequest(ticket, doc.OuterXml);
             req.EndSession(ticket);
             req.CloseConnection();
@@ -88,7 +89,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             ExportButtonStatus = "Finishing Up";
             OnPropertyChanged("ExportButtonStatus");
 
-            await UpdateCommit(SelectedCommit, guid, now);
+            await UpdateCommit(SelectedCommit, now);
 
             ExportButtonStatus = "Exported Successfully!";
             OnPropertyChanged("ExportButtonStatus");
@@ -96,6 +97,9 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         public async System.Threading.Tasks.Task RefreshCommits()
         {
+            AccountButtonStatus = "Getting Commits from BRIZBEE";
+            OnPropertyChanged("AccountButtonStatus");
+
             // Build request to retrieve commits
             var request = new RestRequest("odata/Commits?$orderby=InAt", Method.GET);
 
@@ -107,27 +111,32 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 Commits = new ObservableCollection<Commit>(response.Data.Value);
                 IsEnabled = true;
                 SelectedCommit = Commits[0];
+                AccountButtonStatus = "Signed In";
                 OnPropertyChanged("Commits");
                 OnPropertyChanged("IsEnabled");
                 OnPropertyChanged("SelectedCommit");
+                OnPropertyChanged("AccountButtonStatus");
             }
             else
             {
                 Commits = new ObservableCollection<Commit>();
                 IsEnabled = true;
+                AccountButtonStatus = response.ErrorMessage;
                 OnPropertyChanged("Commits");
                 OnPropertyChanged("IsEnabled");
+                OnPropertyChanged("AccountButtonStatus");
             }
         }
 
-        private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch, Guid guid)
+        private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
         {
             var date = punch.InAt.ToString("yyyy-MM-dd");
             var customer = ReplaceCharacters(punch.Task.Job.Customer.Name);
             var job = ReplaceCharacters(punch.Task.Job.Name);
-            var employee = ReplaceCharacters(punch.User.Name);
+            var employee = ReplaceCharacters(punch.User.QuickBooksEmployee);
             TimeSpan span = punch.OutAt.Value.Subtract(punch.InAt);
             var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
+            var guid = string.Format("{{{0}}}", punch.Guid.ToString());
             var payrollItem = punch.Task.QuickBooksPayrollItem;
             var serviceItem = punch.Task.QuickBooksServiceItem;
             var task = ReplaceCharacters(punch.Task.Name);
@@ -182,7 +191,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             //// Set field value for IsBillable <!-- optional -->
             //TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "IsBillable", "1"));
             // Set field value for ExternalGUID <!-- optional -->
-            TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "ExternalGUID", guid.ToString()));
+            TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "ExternalGUID", guid));
 
             // Set field value for IncludeRetElement <!-- optional, may repeat -->
             //TimeTrackingAddRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "ab"));
@@ -243,14 +252,13 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             return replaced;
         }
 
-        private async System.Threading.Tasks.Task<Commit> UpdateCommit(Commit commit, Guid guid, DateTime exportedAt)
+        private async System.Threading.Tasks.Task<Commit> UpdateCommit(Commit commit, DateTime exportedAt)
         {
             // Build the request
             var url = string.Format("odata/Commits({0})", commit.Id);
             var request = new RestRequest(url, Method.PATCH);
             request.AddJsonBody(new
             {
-                QuickBooksExportGuid = guid.ToString(),
                 QuickBooksExportedAt = exportedAt
             });
 
@@ -273,6 +281,10 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             XmlDocument responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
+            EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(),
+                responseXmlDoc.OuterXml,
+                EventLogEntryType.Information);
+
             //Get the response for our request
             XmlNodeList TimeTrackingAddRsList = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");
             if (TimeTrackingAddRsList.Count == 1) //Should always be true since we only did one request in this sample
@@ -283,7 +295,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
                 string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
                 string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
-
+                
                 //status code = 0 all OK, > 0 is warning
                 if (Convert.ToInt32(statusCode) >= 0)
                 {

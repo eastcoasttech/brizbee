@@ -5,6 +5,7 @@ using Hellang.MessageBus;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,6 +48,7 @@ namespace Brizbee.QuickBooksConnector.Views
             }
             catch (Exception ex)
             {
+                EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
                 MessageBox.Show(ex.ToString(), "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -55,7 +57,6 @@ namespace Brizbee.QuickBooksConnector.Views
         {
             try
             {
-                //await (DataContext as MainWindowViewModel)
                 var window = new LoginWindow();
                 window.Owner = this;
                 window.ShowDialog();
@@ -89,6 +90,7 @@ namespace Brizbee.QuickBooksConnector.Views
             }
             catch (Exception ex)
             {
+                EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
                 MessageBox.Show(ex.Message, "Could Not Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

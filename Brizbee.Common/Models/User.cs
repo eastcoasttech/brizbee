@@ -36,6 +36,8 @@ namespace Brizbee.Common.Models
 
         public string Pin { get; set; }
 
+        public string QuickBooksEmployee { get; set; }
+
         [Required]
         [MaxLength(128)]
         public string Role { get; set; }

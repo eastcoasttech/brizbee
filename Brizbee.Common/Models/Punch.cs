@@ -14,6 +14,9 @@ namespace Brizbee.Common.Models
         [Required]
         public DateTime CreatedAt { get; set; }
 
+        [Required]
+        public Guid Guid { get; set; }
+
         [Key]
         public int Id { get; set; }
 

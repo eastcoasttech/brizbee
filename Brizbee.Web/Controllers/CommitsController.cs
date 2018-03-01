@@ -77,6 +77,20 @@ namespace Brizbee.Controllers
             }
         }
 
+        // PATCH: odata/Commits(5)
+        [AcceptVerbs("PATCH", "MERGE")]
+        public IHttpActionResult Patch([FromODataUri] int key, Delta<Commit> patch)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var commit = repo.Update(key, patch, CurrentUser());
+
+            return Updated(commit);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

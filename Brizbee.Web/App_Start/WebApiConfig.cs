@@ -30,6 +30,9 @@ namespace Brizbee
             // Custom authentication
             config.Filters.Add(new BrizbeeAuthorizeAttribute());
 
+            // Custom exception handling
+            config.Filters.Add(new CustomExceptionFilterAttribute());
+
             // Web API configuration and services
             ODataModelBuilder builder = new ODataConventionModelBuilder();
             config.Count().Filter().OrderBy().Expand().Select().MaxTop(null);

@@ -20,6 +20,7 @@ namespace Brizbee.Repositories
         {
             // Auto-generated
             punch.CreatedAt = DateTime.Now;
+            punch.Guid = Guid.NewGuid();
 
             db.Punches.Add(punch);
 

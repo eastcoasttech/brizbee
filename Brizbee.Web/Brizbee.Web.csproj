@@ -144,6 +144,7 @@
     <Compile Include="Controllers\TaskTemplatesController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Filters\BrizbeeAuthorizeAttribute.cs" />
+    <Compile Include="Filters\CustomExceptionFilterAttribute.cs" />
     <Compile Include="Filters\HttpBasicAuthorizeAttribute.cs" />
     <Compile Include="Filters\NotImplExceptionFilterAttribute.cs" />
     <Compile Include="Global.asax.cs">
@@ -196,6 +197,14 @@
     <Compile Include="Migrations\201802262341169_Changes.cs" />
     <Compile Include="Migrations\201802262341169_Changes.Designer.cs">
       <DependentUpon>201802262341169_Changes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803011519489_AddingQBEmployee.cs" />
+    <Compile Include="Migrations\201803011519489_AddingQBEmployee.Designer.cs">
+      <DependentUpon>201803011519489_AddingQBEmployee.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803011905308_RefactoringGuid.cs" />
+    <Compile Include="Migrations\201803011905308_RefactoringGuid.Designer.cs">
+      <DependentUpon>201803011905308_RefactoringGuid.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
@@ -273,6 +282,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201802262341169_Changes.resx">
       <DependentUpon>201802262341169_Changes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803011519489_AddingQBEmployee.resx">
+      <DependentUpon>201803011519489_AddingQBEmployee.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803011905308_RefactoringGuid.resx">
+      <DependentUpon>201803011905308_RefactoringGuid.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

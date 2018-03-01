@@ -12,5 +12,10 @@ namespace Brizbee.Policies
         {
             return true;
         }
+
+        public static Boolean CanUpdate(Commit commit, User currentUser)
+        {
+            return true;
+        }
     }
 }
