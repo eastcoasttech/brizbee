@@ -1,7 +1,10 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Exceptions;
+using Brizbee.Common.Models;
 using Brizbee.Policies;
+using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.OData;
@@ -140,7 +143,7 @@ namespace Brizbee.Repositories
             var duplicate = db.Users.Where(u => u.EmailAddress.ToLower().Equals(user.EmailAddress));
             if (duplicate.Any())
             {
-                throw new Exception("Email Address is already taken");
+                throw new DuplicateException("Email Address is already taken");
             }
 
             // Generates a password hash and salt
@@ -154,6 +157,39 @@ namespace Brizbee.Repositories
             user.CreatedAt = DateTime.Now;
             organization.CreatedAt = DateTime.Now;
 
+            try
+            {
+                // Create a Stripe customer object
+                var cOptions = new StripeCustomerCreateOptions
+                {
+                    Email = user.EmailAddress,
+                };
+                var cService = new StripeCustomerService();
+                StripeCustomer customer = cService.Create(cOptions);
+                organization.StripeCustomerId = customer.Id;
+
+                // Subscribe the customer to the default plan
+                var items = new List<StripeSubscriptionItemOption> {
+                    new StripeSubscriptionItemOption {
+                        PlanId = "plan_CQ78r61TXy57j8",
+                        Quantity = 1,
+                    }
+                };
+                var sOptions = new StripeSubscriptionCreateOptions
+                {
+                    Items = items,
+                    TrialPeriodDays = 30
+                };
+                var sService = new StripeSubscriptionService();
+                StripeSubscription subscription = sService.Create(customer.Id, sOptions);
+                organization.StripeSubscriptionId = subscription.Id;
+            }
+            catch (Exception ex)
+            {
+                throw new Common.Exceptions.StripeException(ex.Message);
+            }
+            
+            // Save the organization and user
             db.Organizations.Add(organization);
             user.OrganizationId = organization.Id;
 

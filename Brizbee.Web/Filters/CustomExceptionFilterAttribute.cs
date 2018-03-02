@@ -33,6 +33,17 @@ public class CustomExceptionFilterAttribute : ExceptionFilterAttribute
             });
             context.Response = response;
         }
+        else if (context.Exception is StripeException)
+        {
+            var e = (StripeException)context.Exception;
+
+            var response = context.Request.CreateErrorResponse(e.StatusCode, new ODataError
+            {
+                ErrorCode = e.StatusCodeString,
+                Message = e.Message
+            });
+            context.Response = response;
+        }
         else
         {
 

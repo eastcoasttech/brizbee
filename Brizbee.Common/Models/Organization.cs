@@ -16,5 +16,11 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string Code { get; set; }
+
+        [Required]
+        public string StripeCustomerId { get; set; }
+
+        [Required]
+        public string StripeSubscriptionId { get; set; }
     }
 }

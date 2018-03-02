@@ -132,10 +132,11 @@ namespace Brizbee.Repositories
         public void PunchIn(int taskId, User currentUser)
         {
             var punch = new Punch();
+            var now = DateTime.Now;
 
             // Auto-generated
             punch.CreatedAt = DateTime.Now;
-            punch.InAt = DateTime.Now;
+            punch.InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
             punch.TaskId = taskId;
             punch.UserId = currentUser.Id;
 
@@ -156,8 +157,9 @@ namespace Brizbee.Repositories
                 .Where(p => p.OutAt == null)
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
+            var now = DateTime.Now;
 
-            punch.OutAt = DateTime.Now;
+            punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
 
             db.SaveChanges();
         }
