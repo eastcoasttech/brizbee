@@ -215,6 +215,22 @@
     <Compile Include="Migrations\201803021719044_AddingStripeDetails.Designer.cs">
       <DependentUpon>201803021719044_AddingStripeDetails.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201803031647262_AddingPaymentIdToken.cs" />
+    <Compile Include="Migrations\201803031647262_AddingPaymentIdToken.Designer.cs">
+      <DependentUpon>201803031647262_AddingPaymentIdToken.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803051623518_PaymentIsOptional.cs" />
+    <Compile Include="Migrations\201803051623518_PaymentIsOptional.Designer.cs">
+      <DependentUpon>201803051623518_PaymentIsOptional.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803061735178_AddingLast4AndRenaming.cs" />
+    <Compile Include="Migrations\201803061735178_AddingLast4AndRenaming.Designer.cs">
+      <DependentUpon>201803061735178_AddingLast4AndRenaming.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803061842142_AddingStripeColumns.cs" />
+    <Compile Include="Migrations\201803061842142_AddingStripeColumns.Designer.cs">
+      <DependentUpon>201803061842142_AddingStripeColumns.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -300,6 +316,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201803021719044_AddingStripeDetails.resx">
       <DependentUpon>201803021719044_AddingStripeDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803031647262_AddingPaymentIdToken.resx">
+      <DependentUpon>201803031647262_AddingPaymentIdToken.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803051623518_PaymentIsOptional.resx">
+      <DependentUpon>201803051623518_PaymentIsOptional.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803061735178_AddingLast4AndRenaming.resx">
+      <DependentUpon>201803061735178_AddingLast4AndRenaming.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803061842142_AddingStripeColumns.resx">
+      <DependentUpon>201803061842142_AddingStripeColumns.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

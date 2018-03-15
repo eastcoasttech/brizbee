@@ -58,6 +58,19 @@ namespace Brizbee.Repositories
             user.CreatedAt = DateTime.Now;
             user.OrganizationId = currentUser.OrganizationId;
 
+            if (user.Password != null)
+            {
+                // Generates a password hash and salt
+                var service = new SecurityService();
+                user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                user.Password = null;
+            }
+            else
+            {
+                user.Password = null;
+            }
+
             db.Users.Add(user);
 
             db.SaveChanges();
@@ -162,7 +175,7 @@ namespace Brizbee.Repositories
                 // Create a Stripe customer object
                 var cOptions = new StripeCustomerCreateOptions
                 {
-                    Email = user.EmailAddress,
+                    Email = user.EmailAddress
                 };
                 var cService = new StripeCustomerService();
                 StripeCustomer customer = cService.Create(cOptions);
@@ -171,7 +184,7 @@ namespace Brizbee.Repositories
                 // Subscribe the customer to the default plan
                 var items = new List<StripeSubscriptionItemOption> {
                     new StripeSubscriptionItemOption {
-                        PlanId = "plan_CQ78r61TXy57j8",
+                        PlanId = "plan_CREJJE9VGQJjnN",
                         Quantity = 1,
                     }
                 };

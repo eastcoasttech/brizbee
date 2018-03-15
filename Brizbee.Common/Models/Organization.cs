@@ -20,6 +20,16 @@ namespace Brizbee.Common.Models
         [Required]
         public string StripeCustomerId { get; set; }
 
+        public string StripeSourceCardBrand { get; set; }
+
+        public string StripeSourceCardExpirationMonth { get; set; }
+
+        public string StripeSourceCardExpirationYear { get; set; }
+
+        public string StripeSourceCardLast4 { get; set; }
+        
+        public string StripeSourceId { get; set; }
+
         [Required]
         public string StripeSubscriptionId { get; set; }
     }

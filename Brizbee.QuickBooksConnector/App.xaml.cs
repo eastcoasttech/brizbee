@@ -24,11 +24,6 @@ namespace Brizbee.QuickBooksConnector
                 new MessageBus(uiThreadMarshaller);
             
             Application.Current.Properties["EventSource"] = "BRIZBEE QuickBooks Connector";
-
-            if (!EventLog.SourceExists(Application.Current.Properties["EventSource"].ToString()))
-            {
-                EventLog.CreateEventSource(Application.Current.Properties["EventSource"].ToString(), "Application");
-            }
         }
     }
 }

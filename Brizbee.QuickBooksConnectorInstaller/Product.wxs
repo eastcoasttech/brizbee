@@ -1,30 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-	<Product Id="*" Name="BRIZBEE QuickBooks Connector" Language="1033" Version="1.0.0.0" Manufacturer="" UpgradeCode="15d3cc0d-a367-4296-916a-9bc5a132aa7c">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="BRIZBEE QuickBooks Connector" Language="1033" Version="1.0.0.0" Manufacturer="BRIZBEE" UpgradeCode="15d3cc0d-a367-4296-916a-9bc5a132aa7c">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-		<MediaTemplate />
+    <!-- Require .NET Framework 4.7.1 -->
+    <!--<PropertyRef Id="NETFRAMEWORK471"/>-->
 
-		<Feature Id="ProductFeature" Title="Brizbee.QuickBooksConnectorInstaller" Level="1">
-			<ComponentGroupRef Id="ProductComponents" />
-		</Feature>
-	</Product>
+    <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.QuickBooksConnector.TargetPath)" />
 
-	<Fragment>
-		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLFOLDER" Name="Brizbee.QuickBooksConnectorInstaller" />
-			</Directory>
-		</Directory>
-	</Fragment>
+    <!-- Standard variable for the Add/Remove Programs icon -->
+    <Property Id="ARPPRODUCTICON" Value="ICON.ICO" />
 
-	<Fragment>
-		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-			<!-- <Component Id="ProductComponent"> -->
-				<!-- TODO: Insert files, registry keys, and other resources here. -->
-			<!-- </Component> -->
-		</ComponentGroup>
-	</Fragment>
+    <!--<Condition Message="This application requires at least the .NET Framework 4.7.1. Please install the .NET Framework then run this installer again.">
+      <![CDATA[Installed OR NETFRAMEWORK471]]>
+    </Condition>-->
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Start Menu shortcut -->
+    <DirectoryRef Id="APPLICATIONPROGRAMSFOLDER">
+      <Component Id="ApplicationShortcut" Guid="274ED1B3-3091-4906-A7F2-071CCDB9F8E1">
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="BRIZBEE QuickBooks Connector"
+              Target="[INSTALLFOLDER]Brizbee.QuickBooksConnector.exe" WorkingDirectory="INSTALLFOLDER"
+              Icon="ICON.ICO" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="APPLICATIONPROGRAMSFOLDER" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="ProductFeature" Title="BRIZBEE QuickBooks Connector" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <CustomAction Id="LaunchExecutable" FileKey="ConnectorExeFile" ExeCommand="" Return="asyncNoWait" />
+    <InstallExecuteSequence>
+      <Custom Action="LaunchExecutable" After="InstallFinalize">NOT Installed</Custom>
+    </InstallExecuteSequence>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Create a folder in the Program Files folder called BRIZBEE QuickBooks Connector. -->
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="BRIZBEE QuickBooks Connector" />
+      </Directory>
+
+      <!-- Step 1: Define the directory structure -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="APPLICATIONPROGRAMSFOLDER" Name="BRIZBEE QuickBooks Connector"/>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+
+      <!-- Connector CONFIG -->
+      <Component Id="ConnectorConfig" Guid="19B6E6D7-8E31-445D-BD65-C95967D4636A" Permanent="yes">
+        <File Id="ConnectorConfigFile" Source="$(var.Brizbee.QuickBooksConnector.TargetDir)\Brizbee.QuickBooksConnector.exe.config" KeyPath="yes" />
+      </Component>
+
+      <!-- Connector EXE -->
+      <Component Id="ConnectorExe" Guid="EB48DF09-3768-4D56-BE69-14C8C1068E85">
+        <File Id="ConnectorExeFile" Source="$(var.Brizbee.QuickBooksConnector.TargetPath)" KeyPath="yes" />
+        <!--<File Id="ConnectorIconFile" Source="$(var.Brizbee.QuickBooksConnector.TargetDir)/logo.ico" />-->
+      </Component>
+
+      <!-- Start Menu shortcut is a part of this component. -->
+      <ComponentRef Id="ApplicationShortcut" />
+
+      <!-- Event Source Creation -->
+      <Component Id="EventSource" Guid="83B903A6-CC4C-4EAC-8422-8440EE1367E7">
+        <CreateFolder/>
+        <!-- Create an Event Source -->
+        <Util:EventSource
+              xmlns:Util="http://schemas.microsoft.com/wix/UtilExtension"
+              Name="BRIZBEE QuickBooks Connector"
+              Log="Application"
+              EventMessageFile="[ConnectorExeFile]"/>
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
 </Wix>

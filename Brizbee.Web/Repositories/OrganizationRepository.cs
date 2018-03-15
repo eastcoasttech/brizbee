@@ -1,6 +1,8 @@
 ﻿using Brizbee.Common.Models;
+using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.OData;
@@ -41,6 +43,35 @@ namespace Brizbee.Repositories
 
             // Peform the update
             patch.Patch(organization);
+            
+            // Update the Stripe payment source if it is provided
+            if (patch.GetChangedPropertyNames().Contains("StripeSourceId"))
+            {
+                var customerService = new StripeCustomerService();
+                var sourceService = new StripeSourceService();
+                
+                // Attach the card source id to the customer
+                var attachOptions = new StripeSourceAttachOptions()
+                {
+                    Source = organization.StripeSourceId
+                };
+                sourceService.Attach(organization.StripeCustomerId, attachOptions);
+
+                // Update the customer's default source
+                var customerOptions = new StripeCustomerUpdateOptions()
+                {
+                    DefaultSource = organization.StripeSourceId
+                };
+                StripeCustomer customer = customerService.Update(organization.StripeCustomerId, customerOptions);
+
+                var source = sourceService.Get(organization.StripeSourceId);
+
+                // Record the card details
+                organization.StripeSourceCardLast4 = source.Card.Last4;
+                organization.StripeSourceCardBrand = source.Card.Brand;
+                organization.StripeSourceCardExpirationMonth = source.Card.ExpirationMonth.ToString();
+                organization.StripeSourceCardExpirationYear = source.Card.ExpirationYear.ToString();
+            }
 
             db.SaveChanges();
 
