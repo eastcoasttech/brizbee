@@ -24,9 +24,9 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
 
-        public void Login()
+        public async System.Threading.Tasks.Task Login()
         {
-            LoadCredentials();
+            await LoadCredentials();
         }
 
         protected void OnPropertyChanged(string propertyName)
@@ -37,7 +37,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             }
         }
 
-        private async void LoadCredentials()
+        private async System.Threading.Tasks.Task LoadCredentials()
         {
             IsEnabled = false;
             OnPropertyChanged("IsEnabled");
@@ -69,17 +69,17 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 client.AddDefaultHeader("AUTH_EXPIRATION", response.Data.AuthExpiration);
                 client.AddDefaultHeader("AUTH_TOKEN", response.Data.AuthToken);
 
-                LoadUser();
+                await LoadUser();
             }
             else
             {
                 IsEnabled = true;
                 OnPropertyChanged("IsEnabled");
-                Trace.TraceWarning(response.Content);
+                throw new Exception(response.Content);
             }
         }
 
-        private async void LoadUser()
+        private async System.Threading.Tasks.Task LoadUser()
         {
             // Build request to retrieve authenticated user
             var request = new RestRequest(string.Format("odata/Users({0})?$expand=Organization",
@@ -95,6 +95,11 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 IsEnabled = false;
                 OnPropertyChanged("IsEnabled");
 
+                // Send message to refresh user details
+                (Application.Current.Properties["MessageBus"] as MessageBus)
+                    .Publish(new SignedInMessage());
+
+                // Send message to refresh commits
                 (Application.Current.Properties["MessageBus"] as MessageBus)
                     .Publish(new RefreshCommitsMessage());
             }
@@ -102,7 +107,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             {
                 IsEnabled = true;
                 OnPropertyChanged("IsEnabled");
-                Trace.TraceWarning(response.Content);
+                throw new Exception(response.Content);
             }
         }
     }

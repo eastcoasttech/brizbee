@@ -24,7 +24,7 @@ namespace Brizbee.QuickBooksConnector.Views
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IHandle<RefreshCommitsMessage>
+    public partial class MainWindow : Window, IHandle<RefreshCommitsMessage>, IHandle<SignedInMessage>
     {
         public MainWindow()
         {
@@ -34,8 +34,7 @@ namespace Brizbee.QuickBooksConnector.Views
             {
                 AccountButtonTitle = "SIGN IN TO YOUR ACCOUNT",
                 AccountButtonStatus = "Not Signed In",
-                ExportButtonTitle = "EXPORT TO QUICKBOOKS",
-                ExportButtonStatus = "Click to connect to QuickBooks and export punches."
+                ExportButtonTitle = "EXPORT TO QUICKBOOKS"
             };
             (Application.Current.Properties["MessageBus"] as MessageBus).Subscribe(this);
         }
@@ -57,9 +56,16 @@ namespace Brizbee.QuickBooksConnector.Views
         {
             try
             {
-                var window = new LoginWindow();
-                window.Owner = this;
-                window.ShowDialog();
+                if (Application.Current.Properties["CurrentUser"] == null)
+                {
+                    var window = new LoginWindow();
+                    window.Owner = this;
+                    window.ShowDialog();
+                }
+                else
+                {
+                    (DataContext as MainWindowViewModel).SignOut();
+                }
             }
             catch (Exception ex)
             {
@@ -82,11 +88,29 @@ namespace Brizbee.QuickBooksConnector.Views
             RefreshCommits();
         }
 
+        public void Handle(SignedInMessage message)
+        {
+            RefreshSignedInUser();
+        }
+
         private async void RefreshCommits()
         {
             try
             {
                 await (DataContext as MainWindowViewModel).RefreshCommits();
+            }
+            catch (Exception ex)
+            {
+                EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
+                MessageBox.Show(ex.Message, "Could Not Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void RefreshSignedInUser()
+        {
+            try
+            {
+                (DataContext as MainWindowViewModel).RefreshSignedInUser();
             }
             catch (Exception ex)
             {

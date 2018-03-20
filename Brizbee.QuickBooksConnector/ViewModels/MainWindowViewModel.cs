@@ -23,6 +23,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         public string AccountButtonTitle { get; set; }
         public string AccountButtonStatus { get; set; }
+        public string CommitComboStatus { get; set; }
         public ObservableCollection<Commit> Commits { get; set; }
         public string ExportButtonTitle { get; set; }
         public string ExportButtonStatus { get; set; }
@@ -35,7 +36,14 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         public async System.Threading.Tasks.Task Export()
         {
-            ExportButtonStatus = "Starting";
+            if (SelectedCommit == null)
+            {
+                ExportButtonStatus = "You must select a commit to export.";
+                OnPropertyChanged("ExportButtonStatus");
+                return;
+            }
+
+            ExportButtonStatus = string.Format("{0} - Starting...\r\n", DateTime.Now.ToString());
             OnPropertyChanged("ExportButtonStatus");
 
             // Details of this export will be recorded with the commit
@@ -58,7 +66,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            ExportButtonStatus = "Preparing Export";
+            ExportButtonStatus += string.Format("{0} - Preparing export of {1} punches\r\n", DateTime.Now.ToString(), punches.Count);
             OnPropertyChanged("ExportButtonStatus");
 
             // Add an element for each punch to be exported
@@ -67,14 +75,14 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 BuildTimeTrackingAddRq(doc, inner, punch);
             }
 
-            ExportButtonStatus = "Connecting to QuickBooks";
+            ExportButtonStatus += string.Format("{0} - Connecting to QuickBooks...\r\n", DateTime.Now.ToString());
             OnPropertyChanged("ExportButtonStatus");
 
             var req = new RequestProcessor2();
             req.OpenConnection2("", "BRIZBEE Connector for QuickBooks", QBXMLRPConnectionType.localQBD);
             var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
-            ExportButtonStatus = "Exporting";
+            ExportButtonStatus += string.Format("{0} - Exporting...\r\n", DateTime.Now.ToString());
             OnPropertyChanged("ExportButtonStatus");
 
             EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), doc.OuterXml, EventLogEntryType.Information);
@@ -86,19 +94,19 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
             WalkTimeTrackingAddRs(response);
 
-            ExportButtonStatus = "Finishing Up";
+            ExportButtonStatus += string.Format("{0} - Finishing Up...\r\n", DateTime.Now.ToString());
             OnPropertyChanged("ExportButtonStatus");
 
             await UpdateCommit(SelectedCommit, now);
 
-            ExportButtonStatus = "Exported Successfully!";
+            ExportButtonStatus += string.Format("{0} - Exported Successfully\r\n", DateTime.Now.ToString());
             OnPropertyChanged("ExportButtonStatus");
         }
 
         public async System.Threading.Tasks.Task RefreshCommits()
         {
-            AccountButtonStatus = "Getting Commits from BRIZBEE";
-            OnPropertyChanged("AccountButtonStatus");
+            CommitComboStatus = "Getting commits from BRIZBEE";
+            OnPropertyChanged("CommitComboStatus");
 
             // Build request to retrieve commits
             var request = new RestRequest("odata/Commits?$orderby=InAt", Method.GET);
@@ -109,23 +117,65 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
                 Commits = new ObservableCollection<Commit>(response.Data.Value);
-                IsEnabled = true;
-                SelectedCommit = Commits[0];
-                AccountButtonStatus = "Signed In";
                 OnPropertyChanged("Commits");
+
+                if (Commits.Count == 0)
+                {
+                    CommitComboStatus = "You do not have any commits";
+                    SelectedCommit = null;
+                    OnPropertyChanged("CommitComboStatus");
+                    OnPropertyChanged("SelectedCommit");
+                }
+                else
+                {
+                    CommitComboStatus = "";
+                    SelectedCommit = Commits[0];
+                    OnPropertyChanged("CommitComboStatus");
+                    OnPropertyChanged("SelectedCommit");
+                }
+
+                IsEnabled = true;
                 OnPropertyChanged("IsEnabled");
-                OnPropertyChanged("SelectedCommit");
-                OnPropertyChanged("AccountButtonStatus");
             }
             else
             {
                 Commits = new ObservableCollection<Commit>();
                 IsEnabled = true;
-                AccountButtonStatus = response.ErrorMessage;
+                CommitComboStatus = response.ErrorMessage;
                 OnPropertyChanged("Commits");
                 OnPropertyChanged("IsEnabled");
-                OnPropertyChanged("AccountButtonStatus");
+                OnPropertyChanged("CommitComboStatus");
             }
+        }
+
+        public void RefreshSignedInUser()
+        {
+            AccountButtonTitle = "SIGN OUT";
+            AccountButtonStatus = string.Format("Signed In to {0}",
+                (Application.Current.Properties["CurrentUser"] as User).EmailAddress);
+            OnPropertyChanged("AccountButtonTitle");
+            OnPropertyChanged("AccountButtonStatus");
+        }
+
+        public void SignOut()
+        {
+            Application.Current.Properties.Remove("CurrentUser");
+            AccountButtonTitle = "SIGN IN TO YOUR ACCOUNT";
+            AccountButtonStatus = "Not Signed In";
+            CommitComboStatus = "";
+            SelectedCommit = null;
+            Commits = new ObservableCollection<Commit>();
+            ExportButtonTitle = "EXPORT TO QUICKBOOKS";
+            ExportButtonStatus = "";
+            IsEnabled = false;
+            OnPropertyChanged("AccountButtonTitle");
+            OnPropertyChanged("AccountButtonStatus");
+            OnPropertyChanged("CommitComboStatus");
+            OnPropertyChanged("SelectedCommit");
+            OnPropertyChanged("Commits");
+            OnPropertyChanged("ExportButtonTitle");
+            OnPropertyChanged("ExportButtonStatus");
+            OnPropertyChanged("IsEnabled");
         }
 
         private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
@@ -199,7 +249,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         private async Task<List<Punch>> GetPunches()
         {
-            ExportButtonStatus = "Getting Punches for Commit";
+            ExportButtonStatus += string.Format("{0} - Getting punches for {1} thru {2}\r\n", DateTime.Now.ToString(), SelectedCommit.InAt.ToString("yyyy-MM-dd"), SelectedCommit.OutAt.ToString("yyyy-MM-dd"));
             OnPropertyChanged("ExportButtonStatus");
 
             // Build request to retrieve punches
@@ -212,7 +262,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
-                ExportButtonStatus = "Got Punches From BRIZBEE";
+                ExportButtonStatus += string.Format("{0} - Got punches from server\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("ExportButtonStatus");
 
                 return response.Data.Value;

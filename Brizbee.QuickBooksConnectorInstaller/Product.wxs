@@ -6,7 +6,7 @@
     <!-- Require .NET Framework 4.7.1 -->
     <!--<PropertyRef Id="NETFRAMEWORK471"/>-->
 
-    <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.QuickBooksConnector.TargetPath)" />
+    <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.QuickBooksConnector.TargetDir)Images/icon.ico" />
 
     <!-- Standard variable for the Add/Remove Programs icon -->
     <Property Id="ARPPRODUCTICON" Value="ICON.ICO" />
@@ -64,7 +64,7 @@
       <!-- Connector EXE -->
       <Component Id="ConnectorExe" Guid="EB48DF09-3768-4D56-BE69-14C8C1068E85">
         <File Id="ConnectorExeFile" Source="$(var.Brizbee.QuickBooksConnector.TargetPath)" KeyPath="yes" />
-        <!--<File Id="ConnectorIconFile" Source="$(var.Brizbee.QuickBooksConnector.TargetDir)/logo.ico" />-->
+        <!--<File Id="ConnectorIconFile" Source="$(var.Brizbee.QuickBooksConnector.TargetDir)icon.ico" />-->
       </Component>
 
       <!-- Start Menu shortcut is a part of this component. -->

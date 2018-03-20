@@ -30,11 +30,11 @@ namespace Brizbee.QuickBooksConnector.Views
             };
         }
 
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                (DataContext as LoginWindowViewModel).Login();
+                await (DataContext as LoginWindowViewModel).Login();
                 this.Close();
             }
             catch (Exception ex)
