@@ -181,15 +181,13 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
         {
             var date = punch.InAt.ToString("yyyy-MM-dd");
-            var customer = ReplaceCharacters(punch.Task.Job.Customer.Name);
-            var job = ReplaceCharacters(punch.Task.Job.Name);
+            var customer = ReplaceCharacters(punch.Task.Job.QuickBooksCustomerJob);
             var employee = ReplaceCharacters(punch.User.QuickBooksEmployee);
             TimeSpan span = punch.OutAt.Value.Subtract(punch.InAt);
             var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
             var guid = string.Format("{{{0}}}", punch.Guid.ToString());
             var payrollItem = punch.Task.QuickBooksPayrollItem;
             var serviceItem = punch.Task.QuickBooksServiceItem;
-            var task = ReplaceCharacters(punch.Task.Name);
 
             // Create TimeTrackingAddRq aggregate and fill in field values for it
             XmlElement TimeTrackingAddRq = doc.CreateElement("TimeTrackingAddRq");

@@ -177,5 +177,20 @@ namespace Brizbee.Controllers
 
             return credential;
         }
+
+        /// <summary>
+        /// Disposes of the resources used during each request (instance)
+        /// of this controller.
+        /// </summary>
+        /// <param name="disposing">Whether or not the resources should be disposed</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+                repo.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }

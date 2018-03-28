@@ -91,6 +91,11 @@ namespace Brizbee.Controllers
             return Updated(commit);
         }
 
+        /// <summary>
+        /// Disposes of the resources used during each request (instance)
+        /// of this controller.
+        /// </summary>
+        /// <param name="disposing">Whether or not the resources should be disposed</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

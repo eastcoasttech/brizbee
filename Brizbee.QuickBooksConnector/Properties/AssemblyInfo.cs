@@ -7,12 +7,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Brizbee.QuickBooksConnector")]
+[assembly: AssemblyTitle("BRIZBEE QuickBooks Connector")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Brizbee.QuickBooksConnector")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCompany("East Coast Technology Services, LLC")]
+[assembly: AssemblyProduct("BRIZBEE QuickBooks Connector")]
+[assembly: AssemblyCopyright("Copyright © 2018 East Coast Technology Services, LLC")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

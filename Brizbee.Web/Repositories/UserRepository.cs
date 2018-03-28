@@ -169,6 +169,7 @@ namespace Brizbee.Repositories
             user.Role = "Administrator";
             user.CreatedAt = DateTime.Now;
             organization.CreatedAt = DateTime.Now;
+            organization.Code = organization.Name.Substring(0, 4).ToUpper();
 
             try
             {

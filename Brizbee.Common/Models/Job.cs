@@ -23,5 +23,7 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string Number { get; set; }
+
+        public string QuickBooksCustomerJob { get; set; }
     }
 }

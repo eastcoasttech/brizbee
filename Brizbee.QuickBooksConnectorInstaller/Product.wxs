@@ -6,7 +6,7 @@
     <!-- Require .NET Framework 4.7.1 -->
     <!--<PropertyRef Id="NETFRAMEWORK471"/>-->
 
-    <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.QuickBooksConnector.TargetDir)Images/icon.ico" />
+    <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.QuickBooksConnector.TargetDir)Images/favicon.ico" />
 
     <!-- Standard variable for the Add/Remove Programs icon -->
     <Property Id="ARPPRODUCTICON" Value="ICON.ICO" />

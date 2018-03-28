@@ -147,6 +147,7 @@
     <Compile Include="Controllers\PunchesController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\TaskTemplatesController.cs" />
+    <Compile Include="Controllers\TwilioController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Filters\BrizbeeAuthorizeAttribute.cs" />
     <Compile Include="Filters\CustomExceptionFilterAttribute.cs" />
@@ -231,6 +232,10 @@
     <Compile Include="Migrations\201803061842142_AddingStripeColumns.Designer.cs">
       <DependentUpon>201803061842142_AddingStripeColumns.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201803202220263_AddingQuickBooksCustomerJob.cs" />
+    <Compile Include="Migrations\201803202220263_AddingQuickBooksCustomerJob.Designer.cs">
+      <DependentUpon>201803202220263_AddingQuickBooksCustomerJob.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -251,6 +256,9 @@
     <Compile Include="Repositories\TaskTemplateRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
+    <Compile Include="Services\MinuteSplitter.cs" />
+    <Compile Include="Services\PunchSplitter.cs" />
+    <Compile Include="Services\HourSplitter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -328,6 +336,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201803061842142_AddingStripeColumns.resx">
       <DependentUpon>201803061842142_AddingStripeColumns.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803202220263_AddingQuickBooksCustomerJob.resx">
+      <DependentUpon>201803202220263_AddingQuickBooksCustomerJob.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

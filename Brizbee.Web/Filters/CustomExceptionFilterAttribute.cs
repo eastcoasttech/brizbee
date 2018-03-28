@@ -3,6 +3,7 @@
 using Brizbee.Common.Exceptions;
 using Microsoft.OData;
 using System;
+using System.Data.Entity.Validation;
 using System.Web.Http.Filters;
 using System.Web.OData.Extensions;
 
@@ -42,6 +43,26 @@ namespace Brizbee.Filters
                 {
                     ErrorCode = e.StatusCodeString,
                     Message = e.Message
+                });
+                context.Response = response;
+            }
+            else if (context.Exception is DbEntityValidationException)
+            {
+                var e = (DbEntityValidationException)context.Exception;
+                var message = "";
+
+                foreach (var eve in e.EntityValidationErrors)
+                {
+                    foreach (var ve in eve.ValidationErrors)
+                    {
+                        message += string.Format("{0}: {1}", ve.PropertyName, ve.ErrorMessage);
+                    }
+                }
+
+                var response = context.Request.CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, new ODataError
+                {
+                    ErrorCode = System.Net.HttpStatusCode.BadRequest.ToString(),
+                    Message = message
                 });
                 context.Response = response;
             }
