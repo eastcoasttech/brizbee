@@ -1,13 +1,13 @@
 ﻿using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using Brizbee.Policies;
+using Microsoft.AspNet.OData;
 using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Web;
-using System.Web.OData;
 
 namespace Brizbee.Repositories
 {
@@ -174,12 +174,12 @@ namespace Brizbee.Repositories
             try
             {
                 // Create a Stripe customer object
-                var cOptions = new StripeCustomerCreateOptions
+                var customerOptions = new StripeCustomerCreateOptions
                 {
                     Email = user.EmailAddress
                 };
-                var cService = new StripeCustomerService();
-                StripeCustomer customer = cService.Create(cOptions);
+                var customers = new StripeCustomerService();
+                StripeCustomer customer = customers.Create(customerOptions);
                 organization.StripeCustomerId = customer.Id;
 
                 // Subscribe the customer to the default plan
@@ -189,18 +189,20 @@ namespace Brizbee.Repositories
                         Quantity = 1,
                     }
                 };
-                var sOptions = new StripeSubscriptionCreateOptions
+                var subscriptionOptions = new StripeSubscriptionCreateOptions
                 {
                     Items = items,
-                    TrialPeriodDays = 30
+                    TrialPeriodDays = 30,
+                    CustomerId = customer.Id
                 };
-                var sService = new StripeSubscriptionService();
-                StripeSubscription subscription = sService.Create(customer.Id, sOptions);
+                var subscriptions = new StripeSubscriptionService();
+                StripeSubscription subscription = subscriptions.Create(subscriptionOptions);
                 organization.StripeSubscriptionId = subscription.Id;
             }
             catch (Exception ex)
             {
-                throw new Common.Exceptions.StripeException(ex.Message);
+                Trace.TraceWarning(ex.ToString());
+                throw;
             }
             
             // Save the organization and user

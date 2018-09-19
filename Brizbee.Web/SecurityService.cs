@@ -9,6 +9,13 @@ namespace Brizbee
 {
     public class SecurityService
     {
+        public string NextInSequence(string str)
+        {
+            char firstChar = str[0];
+            char nextChar = (char)((int)firstChar + 1);
+            return nextChar.ToString();
+        }
+
         public string NxtKeyCode(string KeyCode)
         {
             byte[] ASCIIValues = ASCIIEncoding.ASCII.GetBytes(KeyCode);

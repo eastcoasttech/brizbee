@@ -1,11 +1,11 @@
 ﻿using Brizbee.Common.Models;
+using Microsoft.AspNet.OData;
 using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Web;
-using System.Web.OData;
 
 namespace Brizbee.Repositories
 {

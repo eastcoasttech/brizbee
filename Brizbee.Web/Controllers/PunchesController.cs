@@ -1,5 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
+using Brizbee.Services;
+using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -9,7 +11,6 @@ using System.Net;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
-using System.Web.OData;
 
 namespace Brizbee.Controllers
 {
@@ -121,6 +122,43 @@ namespace Brizbee.Controllers
                 Trace.TraceWarning(ex.ToString());
                 return BadRequest();
             }
+        }
+
+        // POST: odata/Punches/Default.Split
+        [HttpPost]
+        public IHttpActionResult Split(ODataActionParameters parameters)
+        {
+            var splitter = new PunchSplitter();
+            Trace.TraceInformation("Created splitter");
+            string type = parameters["Type"] as string;
+            Trace.TraceInformation(type);
+            DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
+            Trace.TraceInformation(inAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
+            Trace.TraceInformation(outAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            var currentUser = CurrentUser();
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+
+            switch (type)
+            {
+                case "minutes":
+                    int minutes = int.Parse(parameters["Minutes"] as string);
+                    splitter.SplitAtMinutes(userIds, inAt, outAt, minutes, currentUser);
+                    Trace.TraceInformation("Splitting at minutes " + parameters["Minutes"] as string);
+                    break;
+                case "time":
+                    string time = parameters["Time"] as string;
+                    var separated = time.Split(':');
+                    int hour = int.Parse(separated[0]);
+                    Trace.TraceInformation("Splitting at time " + parameters["Time"] as string);
+                    splitter.SplitAtHour(userIds, inAt, outAt, hour, currentUser);
+                    break;
+            }
+
+            return Ok();
         }
 
         protected override void Dispose(bool disposing)

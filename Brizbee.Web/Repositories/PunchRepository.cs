@@ -1,8 +1,8 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Policies;
+using Microsoft.AspNet.OData;
 using System;
 using System.Linq;
-using System.Web.OData;
 
 namespace Brizbee.Repositories
 {

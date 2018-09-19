@@ -1,6 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Repositories;
+using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web;
 using System.Web.Http;
-using System.Web.OData;
+using System.Web.Http.ModelBinding;
 
 namespace Brizbee.Controllers
 {

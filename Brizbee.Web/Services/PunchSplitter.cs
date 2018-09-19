@@ -1,15 +1,15 @@
 ﻿using Brizbee.Common.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Web;
 
 namespace Brizbee.Services
 {
     public class PunchSplitter
     {
         // 40 hours as minutes = 2400
-        public void SplitAtMinutes(int[] userIds, DateTime start, DateTime finish, int minute, User currentUser)
+        public void SplitAtMinutes(int[] userIds, DateTime start, DateTime finish, int minuteToSplit, User currentUser)
         {
             using (var db = new BrizbeeWebContext())
             {
@@ -35,22 +35,22 @@ namespace Brizbee.Services
                             foreach (var punch in punches)
                             {
                                 double spanMinutes = (punch.OutAt.Value - punch.InAt).TotalMinutes;
-
-                                // once we reach 40 hours, split the time then skip this user in the future
-                                // 40 hours = 2400 mins
-                                if ((minutes + spanMinutes) == 2400)
+                                
+                                // Once we reach the minutes at which to split
+                                // (ex. 2400 minutes would be 40 hours), then
+                                // split the punch and move to the next user
+                                if ((minutes + spanMinutes) == minuteToSplit)
                                 {
                                     finished.Add(punch.UserId); // mark overtime for user as complete
                                     continue;
                                 }
-                                else if ((minutes + spanMinutes) > 2400)
+                                else if ((minutes + spanMinutes) > minuteToSplit)
                                 {
                                     // 2465 - 2400 = 65
                                     // 9600 - 2400 = 9360
-                                    //Debug.WriteLine("Span added to total would be greater than 40 hours, 2400 minutes");
                                     // 2467 > 2400
-                                    var difference = (minutes + spanMinutes) - 2400;
-                                    SplitTimeAtDifference(t, difference);
+                                    var difference = (minutes + spanMinutes) - minuteToSplit;
+                                    SplitTimeAtDifference(punch, difference);
                                     finished.Add(punch.UserId); // mark overtime for user as complete
                                     continue;
                                 }
@@ -83,12 +83,16 @@ namespace Brizbee.Services
                 {
                     try
                     {
-                        var punches = db.Punches.Where(p => p.OutAt != null) // where punch is complete
+                        Trace.TraceInformation(userIds.Count().ToString());
+                        var punches = db.Punches
+                            .Where(p => p.OutAt != null) // where punch is complete
+                            .Where(p => !p.CommitId.HasValue) // only punches that have not been committed
                             .Where(p => p.InAt >= start) // where InAt is after or at start
                             .Where(p => p.OutAt <= finish) // where OutAt is before or at finish
                             .Where(p => userIds.Contains(p.UserId))
                             .OrderBy(p => p.InAt);
 
+                        Trace.TraceInformation(punches.Count().ToString());
                         foreach (var punch in punches)
                         {
                             if (punch.CommitId != null)
@@ -126,6 +130,41 @@ namespace Brizbee.Services
                         transaction.Rollback();
                     }
                 }
+            }
+        }
+        
+        /// <summary>
+        /// Creates two Time entries from a single Time entry split
+        /// at the given number of minutes from the "in at" DateTime.
+        /// 
+        /// Deletes the original time entry and creates two new ones.
+        /// </summary>
+        /// <param name="originalTime"></param>
+        /// <param name="difference"></param>
+        public void SplitTimeAtDifference(Punch originalTime, double difference)
+        {
+            using (var db = new BrizbeeWebContext())
+            {
+                Trace.TraceInformation(string.Format("{0} through {1} at {2} minutes", originalTime.InAt, originalTime.OutAt, difference));
+                Punch time1 = new Punch()
+                {
+                    InAt = originalTime.InAt,
+                    OutAt = originalTime.OutAt.Value.AddMinutes(-difference), // originalTime.InAt.AddMinutes(difference)
+                    TaskId = originalTime.TaskId,
+                    UserId = originalTime.UserId
+                };
+                Punch time2 = new Punch()
+                {
+                    InAt = originalTime.OutAt.Value.AddMinutes(-difference),
+                    OutAt = originalTime.OutAt,
+                    TaskId = originalTime.TaskId,
+                    UserId = originalTime.UserId
+                };
+                db.Punches.Remove(originalTime);
+                db.Punches.Add(time1);
+                db.Punches.Add(time2);
+
+                db.SaveChanges();
             }
         }
     }

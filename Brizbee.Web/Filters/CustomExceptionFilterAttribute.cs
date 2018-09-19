@@ -1,11 +1,8 @@
-﻿
-
-using Brizbee.Common.Exceptions;
+﻿using Brizbee.Common.Exceptions;
+using Microsoft.AspNet.OData.Extensions;
 using Microsoft.OData;
-using System;
 using System.Data.Entity.Validation;
 using System.Web.Http.Filters;
-using System.Web.OData.Extensions;
 
 namespace Brizbee.Filters
 {

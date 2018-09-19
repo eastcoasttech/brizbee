@@ -21,16 +21,16 @@ namespace Brizbee.Filters
                 return;
             }
 
-            // for AllowAnonymous
+            // Enable AllowAnonymous
             if (SkipAuthorization(actionContext))
             {
                 return;
             }
 
-            // verify the passed hash with the calculated one
+            // Now, verify the passed hash with the calculated one
             if (!AuthorizeRequest(actionContext))
             {
-                // raises an unauthorized status code
+                // Raises an unauthorized status code
                 HandleUnauthorizedRequest(actionContext);
             }
         }
@@ -107,6 +107,11 @@ namespace Brizbee.Filters
             }
         }
 
+        /// <summary>
+        /// Whether or not to skip authentication
+        /// </summary>
+        /// <param name="actionContext"></param>
+        /// <returns></returns>
         private static bool SkipAuthorization(HttpActionContext actionContext)
         {
             if (!Enumerable.Any<AllowAnonymousAttribute>((IEnumerable<AllowAnonymousAttribute>)actionContext.ActionDescriptor.GetCustomAttributes<AllowAnonymousAttribute>()))

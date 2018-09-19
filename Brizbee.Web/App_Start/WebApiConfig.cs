@@ -1,13 +1,14 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Filters;
+using Microsoft.AspNet.OData.Builder;
+using Microsoft.AspNet.OData.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Web.Http;
 using System.Web.Http.Cors;
-using System.Web.OData.Builder;
-using System.Web.OData.Extensions;
 
 namespace Brizbee
 {
@@ -21,6 +22,7 @@ namespace Brizbee
 
             // Web API routes
             config.MapHttpAttributeRoutes();
+
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",
@@ -57,7 +59,22 @@ namespace Brizbee
                 .Action("Authenticate");
             authenticate.Parameter<Session>("Session");
             authenticate.Returns<Credential>();
-            
+
+            // Collection Action - Customer - NextNumber
+            builder.EntityType<Customer>()
+                .Collection
+                .Action("NextNumber");
+
+            // Collection Action - Job - NextNumber
+            builder.EntityType<Job>()
+                .Collection
+                .Action("NextNumber");
+
+            // Collection Action - Task - NextNumber
+            builder.EntityType<Task>()
+                .Collection
+                .Action("NextNumber");
+
             // Collection Action - Register
             var register = builder.EntityType<User>()
                 .Collection
@@ -77,6 +94,16 @@ namespace Brizbee
                 .Collection
                 .Action("PunchOut");
 
+            // Collection Action - Split
+            var split = builder.EntityType<Punch>()
+                .Collection
+                .Action("Split");
+            split.Parameter<string>("InAt");
+            split.Parameter<string>("Minutes");
+            split.Parameter<string>("OutAt");
+            split.Parameter<string>("Time");
+            split.Parameter<string>("Type");
+
             // Member Action - Change Password
             ActionConfiguration changePassword = builder.EntityType<User>().Action("ChangePassword");
             changePassword.Parameter<string>("Password");
@@ -85,9 +112,9 @@ namespace Brizbee
             ActionConfiguration undo = builder.EntityType<Commit>().Action("Undo");
 
             config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
-            
+
             config.EnableDependencyInjection();
-            
+
             config.EnsureInitialized();
         }
     }

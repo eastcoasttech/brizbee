@@ -1,10 +1,10 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
+using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
-using System.Web.OData;
 
 namespace Brizbee.Controllers
 {

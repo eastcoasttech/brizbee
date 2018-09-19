@@ -1,11 +1,11 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
+using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
-using System.Web.OData;
 
 namespace Brizbee.Controllers
 {
@@ -77,6 +77,22 @@ namespace Brizbee.Controllers
         {
             repo.Delete(key, CurrentUser());
             return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        // POST: odata/Jobs/Default.NextNumber
+        public IHttpActionResult NextNumber()
+        {
+            var organizationId = CurrentUser().OrganizationId;
+            var customers = db.Customers
+                .Where(c => c.OrganizationId == organizationId)
+                .Select(c => c.Id);
+            var max = db.Jobs
+                .Where(j => customers.Contains(j.CustomerId))
+                .Select(j => j.Number)
+                .Max();
+            var service = new SecurityService();
+            var next = service.NxtKeyCode(max);
+            return Ok(next);
         }
 
         protected override void Dispose(bool disposing)
