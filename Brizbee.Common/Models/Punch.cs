@@ -41,6 +41,10 @@ namespace Brizbee.Common.Models
 
         public DateTime? OutAt { get; set; }
 
+        public string SourceForInAt { get; set; }
+
+        public string SourceForOutAt { get; set; }
+
         [Required]
         public int TaskId { get; set; }
 

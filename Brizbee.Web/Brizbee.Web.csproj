@@ -236,6 +236,14 @@
     <Compile Include="Migrations\201803202220263_AddingQuickBooksCustomerJob.Designer.cs">
       <DependentUpon>201803202220263_AddingQuickBooksCustomerJob.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201809241820048_AddingSource.cs" />
+    <Compile Include="Migrations\201809241820048_AddingSource.Designer.cs">
+      <DependentUpon>201809241820048_AddingSource.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201809241825108_AddingSourceForInAndOut.cs" />
+    <Compile Include="Migrations\201809241825108_AddingSourceForInAndOut.Designer.cs">
+      <DependentUpon>201809241825108_AddingSourceForInAndOut.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -339,6 +347,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201803202220263_AddingQuickBooksCustomerJob.resx">
       <DependentUpon>201803202220263_AddingQuickBooksCustomerJob.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201809241820048_AddingSource.resx">
+      <DependentUpon>201809241820048_AddingSource.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201809241825108_AddingSourceForInAndOut.resx">
+      <DependentUpon>201809241825108_AddingSourceForInAndOut.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
