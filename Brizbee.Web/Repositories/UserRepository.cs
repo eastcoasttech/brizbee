@@ -169,7 +169,7 @@ namespace Brizbee.Repositories
             user.Role = "Administrator";
             user.CreatedAt = DateTime.Now;
             organization.CreatedAt = DateTime.Now;
-            organization.Code = organization.Name.Substring(0, 4).ToUpper();
+            organization.Code = GenerateOrganizationCode();
 
             try
             {
@@ -214,6 +214,19 @@ namespace Brizbee.Repositories
             db.SaveChanges();
 
             return user;
+        }
+
+        private string GenerateOrganizationCode()
+        {
+            var code = new Random().Next(1000, 9999).ToString();
+            if (db.Organizations.Where(o => o.Code == code).Any())
+            {
+                return GenerateOrganizationCode();
+            }
+            else
+            {
+                return code;
+            }
         }
     }
 }
