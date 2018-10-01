@@ -70,7 +70,16 @@ namespace Brizbee.Repositories
         /// <returns>The task with the given id</returns>
         public Task Get(int id, User currentUser)
         {
-            return db.Tasks.Find(id);
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            var jobIds = db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Select(j => j.Id);
+            return db.Tasks
+                .Where(t => jobIds.Contains(t.JobId))
+                .Where(t => t.Id == id)
+                .FirstOrDefault();
         }
 
         /// <summary>
@@ -80,7 +89,15 @@ namespace Brizbee.Repositories
         /// <returns>The queryable collection of tasks</returns>
         public IQueryable<Task> GetAll(User currentUser)
         {
-            return db.Tasks.AsQueryable<Task>();
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            var jobIds = db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Select(j => j.Id);
+            return db.Tasks
+                .Where(t => jobIds.Contains(t.JobId))
+                .AsQueryable<Task>();
         }
 
         /// <summary>

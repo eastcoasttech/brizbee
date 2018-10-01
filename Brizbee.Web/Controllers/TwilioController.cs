@@ -210,8 +210,13 @@ namespace Brizbee.Controllers
         public HttpResponseMessage GetConfirmTaskNumber(string BrizbeeAuth = "", string UserId = "", string Digits = "")
         {
             if (BrizbeeAuth != brizbeeAuth) { new Exception("Not Authorized"); }
-            
+
+            var user = db.Users.Find(int.Parse(UserId));
+
+            var customerIds = db.Customers.Where(c => c.OrganizationId == user.OrganizationId).Select(c => c.Id);
+            var jobIds = db.Jobs.Where(j => customerIds.Contains(j.CustomerId)).Select(j => j.Id);
             var task = db.Tasks
+                .Where(t => jobIds.Contains(t.JobId))
                 .Where(t => t.Number == Digits)
                 .FirstOrDefault();
 

@@ -66,7 +66,13 @@ namespace Brizbee.Repositories
         /// <returns>The punch with the given id</returns>
         public Punch Get(int id, User currentUser)
         {
-            return db.Punches.Find(id);
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+            return db.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.Id == id)
+                .FirstOrDefault();
         }
 
         /// <summary>
@@ -76,7 +82,11 @@ namespace Brizbee.Repositories
         /// <returns>The queryable collection of punches</returns>
         public IQueryable<Punch> GetAll(User currentUser)
         {
-            return db.Punches.AsQueryable<Punch>();
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+            return db.Punches.Where(p => userIds.Contains(p.UserId))
+                .AsQueryable<Punch>();
         }
 
         /// <summary>

@@ -70,7 +70,13 @@ namespace Brizbee.Repositories
         /// <returns>The job with the given id</returns>
         public Job Get(int id, User currentUser)
         {
-            return db.Jobs.Find(id);
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            return db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Where(j => j.Id == id)
+                .FirstOrDefault();
         }
 
         /// <summary>
@@ -80,7 +86,12 @@ namespace Brizbee.Repositories
         /// <returns>The queryable collection of jobs</returns>
         public IQueryable<Job> GetAll(User currentUser)
         {
-            return db.Jobs.AsQueryable<Job>();
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            return db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .AsQueryable<Job>();
         }
 
         /// <summary>
