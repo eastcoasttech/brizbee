@@ -122,16 +122,17 @@ namespace Brizbee.Repositories
             //    throw new HttpResponseException(resp);
             //}
 
-            //// Do not allow modifying some properties
-            //if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
-            //{
-            //    var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
-            //    {
-            //        Content = new StringContent("Cannot modify OrganizationId"),
-            //        ReasonPhrase = "Permission Denied"
-            //    };
-            //    throw new HttpResponseException(resp);
-            //}
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
+            {
+                //var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
+                //{
+                //    Content = new StringContent("Cannot modify OrganizationId"),
+                //    ReasonPhrase = "Permission Denied"
+                //};
+                //throw new HttpResponseException(resp);
+                throw new Exception("Cannot modify OrganizationId");
+            }
 
             // Peform the update
             patch.Patch(punch);

@@ -267,6 +267,7 @@ namespace Brizbee.Controllers
             if (BrizbeeAuth != brizbeeAuth) { new Exception("Not Authorized"); }
 
             var user = db.Users.Find(int.Parse(UserId));
+            var now = DateTime.UtcNow;
 
             if (Digits.Equals("1"))
             {
@@ -279,7 +280,7 @@ namespace Brizbee.Controllers
                 // Punch out the user on any existing tasks
                 if (existing != null)
                 {
-                    existing.OutAt = DateTime.Now;
+                    existing.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
                     existing.SourceForOutAt = From;
                 }
 
@@ -287,9 +288,9 @@ namespace Brizbee.Controllers
                 var task = db.Tasks.Find(int.Parse(TaskId));
                 var punch = new Punch()
                 {
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = now,
                     Guid = Guid.NewGuid(),
-                    InAt = DateTime.Now,
+                    InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0),
                     SourceForInAt = From,
                     TaskId = task.Id,
                     UserId = user.Id
@@ -344,11 +345,12 @@ namespace Brizbee.Controllers
         public HttpResponseMessage GetPunchOut(string BrizbeeAuth = "", string UserId = "", string Digits = "", string From = "")
         {
             var user = db.Users.Find(int.Parse(UserId));
+            var now = DateTime.UtcNow;
             var punch = db.Punches.Where(p => p.UserId == user.Id)
                 .Where(p => !p.OutAt.HasValue)
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
-            punch.OutAt = DateTime.Now;
+            punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
             punch.SourceForOutAt = From;
             db.SaveChanges();
 
