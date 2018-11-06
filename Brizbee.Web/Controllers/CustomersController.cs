@@ -15,7 +15,7 @@ namespace Brizbee.Controllers
         private CustomerRepository repo = new CustomerRepository();
 
         // GET: odata/Customers
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 20)]
         public IQueryable<Customer> GetCustomers()
         {
             try

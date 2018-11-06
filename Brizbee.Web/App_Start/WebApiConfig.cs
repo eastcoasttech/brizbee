@@ -86,13 +86,15 @@ namespace Brizbee
             // Collection Action - PunchIn
             var punchIn = builder.EntityType<Punch>()
                 .Collection
-                .Action("PunchIn");
+                .Action("PunchIn")
+                .ReturnsFromEntitySet<Punch>("Punches");
             punchIn.Parameter<int>("TaskId");
 
             // Collection Action - PunchOut
             var punchOut = builder.EntityType<Punch>()
                 .Collection
-                .Action("PunchOut");
+                .Action("PunchOut")
+                .ReturnsFromEntitySet<Punch>("Punches");
 
             // Collection Action - Split
             var split = builder.EntityType<Punch>()

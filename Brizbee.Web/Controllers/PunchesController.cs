@@ -70,7 +70,7 @@ namespace Brizbee.Controllers
 
         // GET: odata/Punches/Default.Current
         [HttpGet]
-        [EnableQuery(MaxExpansionDepth =3)]
+        [EnableQuery(MaxExpansionDepth = 3)]
         public SingleResult<Punch> Current()
         {
             var userId = CurrentUser().Id;
@@ -80,11 +80,11 @@ namespace Brizbee.Controllers
                 .OrderByDescending(p => p.InAt)
                 .Take(1);
 
-            try
+            if (punch != null)
             {
                 return SingleResult.Create(punch);
             }
-            catch (Exception)
+            else
             {
                 return SingleResult.Create(Enumerable.Empty<Punch>().AsQueryable());
             }
@@ -98,13 +98,13 @@ namespace Brizbee.Controllers
 
             try
             {
-                repo.PunchIn(taskId, CurrentUser());
-                return Ok();
+                var punch = repo.PunchIn(taskId, CurrentUser());
+                return Created(punch);
             }
             catch (Exception ex)
             {
                 Trace.TraceWarning(ex.ToString());
-                return BadRequest();
+                return Content(HttpStatusCode.NoContent, ex.ToString());
             }
         }
 
@@ -114,13 +114,13 @@ namespace Brizbee.Controllers
         {
             try
             {
-                repo.PunchOut(CurrentUser());
-                return Ok();
+                var punch = repo.PunchOut(CurrentUser());
+                return Created(punch);
             }
             catch (Exception ex)
             {
                 Trace.TraceWarning(ex.ToString());
-                return BadRequest();
+                return Content(HttpStatusCode.NoContent, ex.ToString());
             }
         }
 

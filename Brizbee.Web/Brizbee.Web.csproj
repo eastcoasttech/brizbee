@@ -52,6 +52,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="itextsharp, Version=5.5.13.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
+      <HintPath>..\packages\iTextSharp.5.5.13\lib\itextsharp.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.OData, Version=7.0.1.20718, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.OData.7.0.1\lib\net45\Microsoft.AspNet.OData.dll</HintPath>
     </Reference>
@@ -145,6 +148,7 @@
     <Compile Include="Controllers\JobsController.cs" />
     <Compile Include="Controllers\OrganizationsController.cs" />
     <Compile Include="Controllers\PunchesController.cs" />
+    <Compile Include="Controllers\ReportsController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\TaskTemplatesController.cs" />
     <Compile Include="Controllers\TwilioController.cs" />
@@ -244,6 +248,10 @@
     <Compile Include="Migrations\201809241825108_AddingSourceForInAndOut.Designer.cs">
       <DependentUpon>201809241825108_AddingSourceForInAndOut.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811052148394_AddingUniqueIndexToPunches.cs" />
+    <Compile Include="Migrations\201811052148394_AddingUniqueIndexToPunches.Designer.cs">
+      <DependentUpon>201811052148394_AddingUniqueIndexToPunches.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -266,6 +274,7 @@
     <Compile Include="SecurityService.cs" />
     <Compile Include="Services\PunchSplitter.cs" />
     <Compile Include="Services\HourSplitter.cs" />
+    <Compile Include="Services\ReportBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -353,6 +362,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201809241825108_AddingSourceForInAndOut.resx">
       <DependentUpon>201809241825108_AddingSourceForInAndOut.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811052148394_AddingUniqueIndexToPunches.resx">
+      <DependentUpon>201811052148394_AddingUniqueIndexToPunches.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

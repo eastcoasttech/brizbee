@@ -18,9 +18,17 @@ namespace Brizbee.Repositories
         /// <returns>The created punch</returns>
         public Punch Create(Punch punch, User currentUser)
         {
+            var now = DateTime.UtcNow;
+
             // Auto-generated
-            punch.CreatedAt = DateTime.Now;
+            punch.CreatedAt = now;
             punch.Guid = Guid.NewGuid();
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0);
+            
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 59);
+            }
 
             db.Punches.Add(punch);
 
@@ -139,20 +147,34 @@ namespace Brizbee.Repositories
         /// </summary>
         /// <param name="taskId">The id of the task</param>
         /// <param name="currentUser">The user to punch in</param>
-        public void PunchIn(int taskId, User currentUser)
+        public Punch PunchIn(int taskId, User currentUser)
         {
             var punch = new Punch();
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
+
+            var existing = db.Punches.Where(p => p.UserId == currentUser.Id)
+                .Where(p => p.OutAt == null)
+                .OrderByDescending(p => p.InAt)
+                .FirstOrDefault();
+
+            if (existing != null)
+            {
+                // Punch out the user
+                existing.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
+            }
 
             // Auto-generated
-            punch.CreatedAt = DateTime.Now;
+            punch.CreatedAt = now;
             punch.InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
             punch.TaskId = taskId;
             punch.UserId = currentUser.Id;
+            punch.Guid = Guid.NewGuid();
 
             db.Punches.Add(punch);
 
             db.SaveChanges();
+
+            return punch;
         }
 
         /// <summary>
@@ -161,17 +183,19 @@ namespace Brizbee.Repositories
         /// to be the current timestamp.
         /// </summary>
         /// <param name="currentUser">The user to punch out</param>
-        public void PunchOut(User currentUser)
+        public Punch PunchOut(User currentUser)
         {
             var punch = db.Punches.Where(p => p.UserId == currentUser.Id)
                 .Where(p => p.OutAt == null)
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
 
             db.SaveChanges();
+
+            return punch;
         }
     }
 }

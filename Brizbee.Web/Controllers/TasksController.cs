@@ -16,7 +16,7 @@ namespace Brizbee.Controllers
         private TaskRepository repo = new TaskRepository();
 
         // GET: odata/Tasks
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
         public IQueryable<Task> GetTasks()
         {
             try
@@ -31,7 +31,7 @@ namespace Brizbee.Controllers
         }
 
         // GET: odata/Tasks(5)
-        [EnableQuery]
+        [EnableQuery(MaxExpansionDepth = 3)]
         public SingleResult<Task> GetTask ([FromODataUri] int key)
         {
             try

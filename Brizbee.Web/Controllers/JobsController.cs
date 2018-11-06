@@ -15,7 +15,7 @@ namespace Brizbee.Controllers
         private JobRepository repo = new JobRepository();
 
         // GET: odata/Jobs
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 20)]
         public IQueryable<Job> GetJobs()
         {
             try
