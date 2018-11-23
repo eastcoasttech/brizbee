@@ -1,5 +1,6 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
+using Brizbee.Serialization;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;

@@ -1,6 +1,7 @@
 ﻿using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using Brizbee.Policies;
+using Brizbee.Services;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,8 @@ namespace Brizbee.Repositories
                 throw new NotAuthorizedException("You are not authorized to create the commit");
             }
 
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+
             // Ensure that no two commits overlap
             var overlap = db.Commits
                 .Where(c => (commit.InAt < c.OutAt) && (c.InAt < commit.OutAt))
@@ -43,13 +46,26 @@ namespace Brizbee.Repositories
             }
 
             // Auto-generated
-            commit.CreatedAt = DateTime.Now;
+            commit.CreatedAt = DateTime.UtcNow;
             commit.OrganizationId = currentUser.OrganizationId;
             commit.UserId = currentUser.Id;
 
             db.Commits.Add(commit);
 
             db.SaveChanges();
+
+            // Split at midnight every night
+            var splitter = new PunchSplitter();
+            DateTime inAt = commit.InAt;
+            DateTime outAt = commit.OutAt;
+            var localTz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var hourLocal = new DateTime(2018, 1, 1, 0, 0, 0);
+            var hourUtc = hourLocal.Hour;
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+            splitter.SplitAtHour(userIds, inAt, outAt, hourUtc, currentUser);
 
             // Commit all the punches within range
             var punches = db.Punches.Where(p => (p.InAt >= commit.InAt) && (p.OutAt <= commit.OutAt));

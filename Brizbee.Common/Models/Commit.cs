@@ -7,20 +7,23 @@ namespace Brizbee.Common.Models
     public partial class Commit
     {
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
+        [Column(TypeName = "datetime2")]
         public DateTime? QuickBooksExportedAt { get; set; }
 
         [Key]
         public int Id { get; set; }
 
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime InAt { get; set; }
         
         [NotMapped]
         public string Name {
             get {
-                return string.Format("{0} - {1}", InAt.ToShortDateString(), OutAt.ToShortDateString());
+                return string.Format("{0} - {1}", InAt.ToString("d"), OutAt.ToString("d"));
             }
         }
 
@@ -31,6 +34,7 @@ namespace Brizbee.Common.Models
         public virtual Organization Organization { get; set; }
 
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime OutAt { get; set; }
 
         [Required]

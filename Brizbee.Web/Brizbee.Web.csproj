@@ -252,6 +252,18 @@
     <Compile Include="Migrations\201811052148394_AddingUniqueIndexToPunches.Designer.cs">
       <DependentUpon>201811052148394_AddingUniqueIndexToPunches.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811110334174_AddingTimeZones.cs" />
+    <Compile Include="Migrations\201811110334174_AddingTimeZones.Designer.cs">
+      <DependentUpon>201811110334174_AddingTimeZones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201811131919336_ConvertingToDateTimeOffset.cs" />
+    <Compile Include="Migrations\201811131919336_ConvertingToDateTimeOffset.Designer.cs">
+      <DependentUpon>201811131919336_ConvertingToDateTimeOffset.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.cs" />
+    <Compile Include="Migrations\201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.Designer.cs">
+      <DependentUpon>201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -272,6 +284,7 @@
     <Compile Include="Repositories\TaskTemplateRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
+    <Compile Include="Serialization\PseudoCommit.cs" />
     <Compile Include="Services\PunchSplitter.cs" />
     <Compile Include="Services\HourSplitter.cs" />
     <Compile Include="Services\ReportBuilder.cs" />
@@ -365,6 +378,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811052148394_AddingUniqueIndexToPunches.resx">
       <DependentUpon>201811052148394_AddingUniqueIndexToPunches.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811110334174_AddingTimeZones.resx">
+      <DependentUpon>201811110334174_AddingTimeZones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811131919336_ConvertingToDateTimeOffset.resx">
+      <DependentUpon>201811131919336_ConvertingToDateTimeOffset.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.resx">
+      <DependentUpon>201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

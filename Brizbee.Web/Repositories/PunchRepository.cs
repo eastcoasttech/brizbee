@@ -19,6 +19,8 @@ namespace Brizbee.Repositories
         public Punch Create(Punch punch, User currentUser)
         {
             var now = DateTime.UtcNow;
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             // Auto-generated
             punch.CreatedAt = now;
@@ -152,6 +154,8 @@ namespace Brizbee.Repositories
         {
             var punch = new Punch();
             var now = DateTime.UtcNow;
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             var existing = db.Punches.Where(p => p.UserId == currentUser.Id)
                 .Where(p => p.OutAt == null)
@@ -191,6 +195,8 @@ namespace Brizbee.Repositories
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
             var now = DateTime.UtcNow;
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
 

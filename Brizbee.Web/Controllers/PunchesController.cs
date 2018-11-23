@@ -129,9 +129,7 @@ namespace Brizbee.Controllers
         public IHttpActionResult Split(ODataActionParameters parameters)
         {
             var splitter = new PunchSplitter();
-            Trace.TraceInformation("Created splitter");
             string type = parameters["Type"] as string;
-            Trace.TraceInformation(type);
             DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
             Trace.TraceInformation(inAt.ToString("yyyy-MM-dd HH:mm:ss"));
             DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);

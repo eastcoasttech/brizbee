@@ -9,10 +9,15 @@ namespace Brizbee.Services
     public class PunchSplitter
     {
         // 40 hours as minutes = 2400
-        public void SplitAtMinutes(int[] userIds, DateTime start, DateTime finish, int minuteToSplit, User currentUser)
+        public void SplitAtMinutes(int[] userIds, DateTime startUtc, DateTime finishUtc, int minuteToSplit, User currentUser)
         {
             using (var db = new BrizbeeWebContext())
             {
+                var organization = db.Organizations.Find(currentUser.OrganizationId);
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+                //var startTz = TimeZoneInfo.ConvertTime(start, tz);
+                //var finishTz = TimeZoneInfo.ConvertTime(finish, tz);
+
                 using (var transaction = db.Database.BeginTransaction())
                 {
                     try
@@ -27,8 +32,8 @@ namespace Brizbee.Services
                             var minutes = zero;
 
                             var punches = db.Punches.Where(p => p.OutAt != null) // where punch is complete
-                                .Where(p => p.InAt >= start) // where InAt is after or at start
-                                .Where(p => p.OutAt <= finish) // where OutAt is before or at finish
+                                .Where(p => p.InAt >= startUtc) // where InAt is after or at start
+                                .Where(p => p.OutAt <= finishUtc) // where OutAt is before or at finish
                                 .Where(p => p.UserId == user.Id)
                                 .OrderBy(p => p.InAt);
 
@@ -75,10 +80,17 @@ namespace Brizbee.Services
         }
         
         // 7:00 AM = 7, 5:00 PM = 17
-        public void SplitAtHour(int[] userIds, DateTime start, DateTime finish, int hour, User currentUser)
+        public void SplitAtHour(int[] userIds, DateTime startUtc, DateTime finishUtc, int hour, User currentUser)
         {
+            Trace.TraceInformation("Splitting in UTC at " + hour.ToString());
+
             using (var db = new BrizbeeWebContext())
             {
+                var organization = db.Organizations.Find(currentUser.OrganizationId);
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+                //var startTz = TimeZoneInfo.ConvertTime(start, tz);
+                //var finishTz = TimeZoneInfo.ConvertTime(finish, tz);
+
                 using (var transaction = db.Database.BeginTransaction())
                 {
                     try
@@ -87,8 +99,8 @@ namespace Brizbee.Services
                         var punches = db.Punches
                             .Where(p => p.OutAt != null) // where punch is complete
                             .Where(p => !p.CommitId.HasValue) // only punches that have not been committed
-                            .Where(p => p.InAt >= start) // where InAt is after or at start
-                            .Where(p => p.OutAt <= finish) // where OutAt is before or at finish
+                            .Where(p => p.InAt >= startUtc) // where InAt is after or at start
+                            .Where(p => p.OutAt <= finishUtc) // where OutAt is before or at finish
                             .Where(p => userIds.Contains(p.UserId))
                             .OrderBy(p => p.InAt);
 
@@ -100,33 +112,41 @@ namespace Brizbee.Services
                                 throw new Exception("Cannot split a punch that has been committed");
                             }
 
-                            var splitter = new HourSplitter(punch.InAt, punch.OutAt.Value, hour);
+                            var splitter = new HourSplitter(TimeZoneInfo.ConvertTime(punch.InAt, tz),
+                                TimeZoneInfo.ConvertTime(punch.OutAt.Value, tz), hour);
 
                             // The old punch will be deleted from the
                             // database and replaced with each new punch
                             // that was created by splitting the original one
+                            Trace.TraceInformation("Removing a punch from the database");
                             db.Punches.Remove(punch);
 
                             foreach (Tuple<DateTime, DateTime> tuple in splitter.Results)
                             {
+                                Trace.TraceInformation("Adding a new punch to the database from the results" +
+                                    TimeZoneInfo.ConvertTimeToUtc(tuple.Item1, tz).ToString("yyyy-MM-dd HH:mm:ss") + " " + TimeZoneInfo.ConvertTimeToUtc(tuple.Item2, tz).ToString("yyyy-MM-dd HH:mm:ss"));
                                 db.Punches.Add(new Punch()
                                 {
                                     CreatedAt = punch.CreatedAt,
                                     Guid = Guid.NewGuid(),
-                                    InAt = tuple.Item1,
-                                    OutAt = tuple.Item2,
+                                    InAt = TimeZoneInfo.ConvertTimeToUtc(tuple.Item1, tz),
+                                    OutAt = TimeZoneInfo.ConvertTimeToUtc(tuple.Item2, tz),
+                                    SourceForInAt = punch.SourceForInAt,
+                                    SourceForOutAt = punch.SourceForOutAt,
                                     TaskId = punch.TaskId,
                                     UserId = punch.UserId
                                 });
                             }
-
-                            db.SaveChanges();
                         }
+
+                        Trace.TraceInformation("Saving changes");
+                        db.SaveChanges();
 
                         transaction.Commit();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        Trace.TraceInformation(ex.ToString());
                         transaction.Rollback();
                     }
                 }

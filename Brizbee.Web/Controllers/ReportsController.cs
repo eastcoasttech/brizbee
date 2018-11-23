@@ -57,10 +57,43 @@ namespace Brizbee.Controllers
         private BrizbeeWebContext db = new BrizbeeWebContext();
 
         // GET: api/Reports/PunchesByUser
-        public IHttpActionResult GetPunchesByUser([FromUri] int[] UserIds, DateTime Min, DateTime Max)
+        [Route("api/Reports/PunchesByUser")]
+        public IHttpActionResult GetPunchesByUser([FromUri] int[] UserIds, [FromUri] DateTime Min, [FromUri] DateTime Max)
         {
-            var bytes = new ReportBuilder().PunchesByUserAsPdf(UserIds, Min, Max);
-            return new FileActionResult(bytes, "application/pdf", "Punches by User.pdf", Request);
+            var bytes = new ReportBuilder().PunchesByUserAsPdf(UserIds, Min, Max, CurrentUser());
+            Trace.TraceInformation("bytes are " + bytes.Length.ToString());
+            return new FileActionResult(bytes, "application/pdf",
+                string.Format(
+                    "Punches by User {0} thru {1}.pdf",
+                    Min.ToShortDateString(),
+                    Max.ToShortDateString()),
+                Request);
+        }
+
+        // GET: api/Reports/PunchesByJob
+        [Route("api/Reports/PunchesByJob")]
+        public IHttpActionResult GetPunchesByJob([FromUri] int[] UserIds, [FromUri] int[] JobIds, [FromUri] DateTime Min, [FromUri] DateTime Max)
+        {
+            var bytes = new ReportBuilder().PunchesByJobAsPdf(UserIds, JobIds, Min, Max, CurrentUser());
+            return new FileActionResult(bytes, "application/pdf",
+                string.Format(
+                    "Punches by Job {0} thru {1}.pdf",
+                    Min.ToShortDateString(),
+                    Max.ToShortDateString()),
+                Request);
+        }
+
+        // GET: api/Reports/PunchesByDay
+        [Route("api/Reports/PunchesByDay")]
+        public IHttpActionResult GetPunchesByDay([FromUri] int[] UserIds, [FromUri] int[] JobIds, [FromUri] DateTime Min, [FromUri] DateTime Max)
+        {
+            var bytes = new ReportBuilder().PunchesByDayAsPdf(UserIds, JobIds, Min, Max, CurrentUser());
+            return new FileActionResult(bytes, "application/pdf",
+                string.Format(
+                    "Punches by Day {0} thru {1}.pdf",
+                    Min.ToShortDateString(),
+                    Max.ToShortDateString()),
+                Request);
         }
 
         public User CurrentUser()

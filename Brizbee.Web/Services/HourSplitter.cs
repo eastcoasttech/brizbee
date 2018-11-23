@@ -35,11 +35,11 @@ namespace Brizbee.Services
             // as long as the rounded-up hour is not greater than the original out punch
             while (adjustedOutAt < originalOutAt)
             {
-                if ((adjustedOutAt.Hour == hourToSplit) || (adjustedOutAt.Hour == 0))
+                if ((adjustedOutAt.Hour == hourToSplit)) // || (adjustedOutAt.Hour == 0)
                 {
                     // Add the split duration to the result, and run this method
                     // again with the remaining duration
-                    Results.Add(new Tuple<DateTime, DateTime>(inAt, adjustedOutAt));
+                    Results.Add(new Tuple<DateTime, DateTime>(inAt, new DateTime(adjustedOutAt.Year, adjustedOutAt.Month, adjustedOutAt.Day, adjustedOutAt.Hour, 59, 59).AddHours(-1)));
                     split(adjustedOutAt);
 
                     return;
@@ -58,7 +58,7 @@ namespace Brizbee.Services
             }
             else
             {
-                Results.Add(new Tuple<DateTime, DateTime>(inAt, adjustedOutAt));
+                Results.Add(new Tuple<DateTime, DateTime>(inAt, new DateTime(adjustedOutAt.Year, adjustedOutAt.Month, adjustedOutAt.Day, adjustedOutAt.Hour, 59, 59).AddHours(-1)));
             }
         }
     }

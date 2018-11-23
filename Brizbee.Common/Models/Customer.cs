@@ -9,6 +9,7 @@ namespace Brizbee.Common.Models
     public partial class Customer
     {
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
         [Key]

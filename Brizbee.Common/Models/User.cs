@@ -8,6 +8,7 @@ namespace Brizbee.Common.Models
     public partial class User
     {
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
         [EmailAddress]

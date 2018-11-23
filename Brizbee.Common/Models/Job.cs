@@ -7,6 +7,7 @@ namespace Brizbee.Common.Models
     public partial class Job
     {
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
         [Required]

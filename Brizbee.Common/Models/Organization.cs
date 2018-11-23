@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Common.Models
 {
     public partial class Organization
     {
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
         [Key]
@@ -32,5 +34,7 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string StripeSubscriptionId { get; set; }
+
+        public string TimeZone { get; set; }
     }
 }

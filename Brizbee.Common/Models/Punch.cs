@@ -12,6 +12,7 @@ namespace Brizbee.Common.Models
         public virtual Commit Commit { get; set; }
 
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
         [Required]
@@ -21,6 +22,7 @@ namespace Brizbee.Common.Models
         public int Id { get; set; }
 
         [Required]
+        [Column(TypeName = "datetime2")]
         public DateTime InAt { get; set; }
 
         [NotMapped]
@@ -39,6 +41,7 @@ namespace Brizbee.Common.Models
             }
         }
 
+        [Column(TypeName = "datetime2")]
         public DateTime? OutAt { get; set; }
 
         public string SourceForInAt { get; set; }
