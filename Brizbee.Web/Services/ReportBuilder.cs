@@ -17,6 +17,8 @@ namespace Brizbee.Services
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             // Create an instance of the document class which represents the PDF document itself.
             using (var document = new Document(PageSize.LETTER.Rotate(), 20, 20, 20, 20))
@@ -58,25 +60,22 @@ namespace Brizbee.Services
                     
                     var punches = db.Punches
                         .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => p.InAt >= min.ToUniversalTime() && p.OutAt <= max.ToUniversalTime())
                         .Where(p => p.UserId == user.Id)
                         .OrderBy(p => p.InAt)
                         .ToList();
                     Trace.TraceInformation("Count of punches are " + punches.Count().ToString());
-                    var dates = db.Punches
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
-                        .Where(p => p.UserId == user.Id)
-                        .GroupBy(p => DbFunctions.TruncateTime(p.InAt))
+                    var dates = punches
+                        .GroupBy(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date)
                         .Select(g => new {
-                            DateTime = g.Key.Value
+                            Date = g.Key
                         })
                         .ToList();
                     Trace.TraceInformation("Count of days are " + dates.Count().ToString());
                     foreach (var date in dates)
                     {
                         // Day
-                        var dayCell = new PdfPCell(new Paragraph(date.DateTime.ToString("D"), fontH2));
+                        var dayCell = new PdfPCell(new Paragraph(date.Date.ToString("D"), fontH2));
                         dayCell.Colspan = 7;
                         dayCell.VerticalAlignment = Element.ALIGN_MIDDLE;
                         dayCell.PaddingTop = 5;
@@ -87,7 +86,7 @@ namespace Brizbee.Services
                         
                         // Punches for this Day
                         var punchesForDay = punches
-                            .Where(p => p.InAt.Date == date.DateTime)
+                            .Where(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date == date.Date)
                             .ToList();
                         foreach (var punch in punchesForDay)
                         {

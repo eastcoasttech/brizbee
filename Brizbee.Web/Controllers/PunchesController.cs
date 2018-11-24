@@ -98,7 +98,7 @@ namespace Brizbee.Controllers
 
             try
             {
-                var punch = repo.PunchIn(taskId, CurrentUser());
+                var punch = repo.PunchIn(taskId, CurrentUser(), "Web");
                 return Created(punch);
             }
             catch (Exception ex)
@@ -114,7 +114,7 @@ namespace Brizbee.Controllers
         {
             try
             {
-                var punch = repo.PunchOut(CurrentUser());
+                var punch = repo.PunchOut(CurrentUser(), "Web");
                 return Created(punch);
             }
             catch (Exception ex)

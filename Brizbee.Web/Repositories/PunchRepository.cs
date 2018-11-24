@@ -150,7 +150,7 @@ namespace Brizbee.Repositories
         /// </summary>
         /// <param name="taskId">The id of the task</param>
         /// <param name="currentUser">The user to punch in</param>
-        public Punch PunchIn(int taskId, User currentUser)
+        public Punch PunchIn(int taskId, User currentUser, string source)
         {
             var punch = new Punch();
             var now = DateTime.UtcNow;
@@ -174,6 +174,7 @@ namespace Brizbee.Repositories
             punch.TaskId = taskId;
             punch.UserId = currentUser.Id;
             punch.Guid = Guid.NewGuid();
+            punch.SourceForInAt = source;
 
             db.Punches.Add(punch);
 
@@ -188,7 +189,7 @@ namespace Brizbee.Repositories
         /// to be the current timestamp.
         /// </summary>
         /// <param name="currentUser">The user to punch out</param>
-        public Punch PunchOut(User currentUser)
+        public Punch PunchOut(User currentUser, string source)
         {
             var punch = db.Punches.Where(p => p.UserId == currentUser.Id)
                 .Where(p => p.OutAt == null)
@@ -199,6 +200,7 @@ namespace Brizbee.Repositories
             var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
+            punch.SourceForOutAt = source;
 
             db.SaveChanges();
 
