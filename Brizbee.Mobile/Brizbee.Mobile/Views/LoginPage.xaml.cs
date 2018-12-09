@@ -12,9 +12,15 @@ namespace Brizbee.Mobile.Views
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class LoginPage : ContentPage
 	{
-		public LoginPage ()
+		public LoginPage()
 		{
-			InitializeComponent ();
-		}
-	}
+			InitializeComponent();
+        }
+
+        private void Button_Clicked(object sender, EventArgs e)
+        {
+            var nav = Application.Current.MainPage.Navigation;
+            nav.PushAsync(new WelcomePage());
+        }
+    }
 }

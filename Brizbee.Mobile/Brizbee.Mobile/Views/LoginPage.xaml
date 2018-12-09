@@ -3,12 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Brizbee.Mobile.Views.LoginPage">
     <ContentPage.Content>
-        <StackLayout>
-            <Image Source="Images/logo.png" HeightRequest="100" HorizontalOptions="Center" />
-            <Label Text="Let's get started!" HorizontalOptions="Center" />
+        <StackLayout Padding="30">
+            <Image Source="logo.png" HeightRequest="60" Margin="0,80,0,80" HorizontalOptions="Center" />
             <Entry Placeholder="Your Organization Code" />
             <Entry Placeholder="Your PIN Number" />
-            <Button Text="Login" />
+            <Button Text="Login" Clicked="Button_Clicked" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

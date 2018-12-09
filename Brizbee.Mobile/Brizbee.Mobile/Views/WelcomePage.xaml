@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Brizbee.Mobile.Views.WelcomePage"
+             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels">
+    <ContentPage.BindingContext>
+        <vm:WelcomeViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <StackLayout>
+            <Label Text="{Binding Hello}" />
+            <Label Text="{Binding Status}" />
+            <Button Text="Punch In" x:Name="btnPunchIn" Clicked="BtnPunchIn_Clicked" />
+            <Button Text="Punch In" x:Name="btnPunchOut" Clicked="BtnPunchOut_Clicked" />
+            <Button Text="Exit" x:Name="btnExit" Clicked="BtnExit_Clicked" />
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
