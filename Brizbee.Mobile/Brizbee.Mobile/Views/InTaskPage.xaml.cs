@@ -11,10 +11,17 @@ namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class InTaskPage : ContentPage
-	{
-		public InTaskPage ()
+    {
+        INavigation nav = Application.Current.MainPage.Navigation;
+
+        public InTaskPage ()
 		{
 			InitializeComponent ();
 		}
-	}
+
+        private void BtnCancel_Clicked(object sender, EventArgs e)
+        {
+            nav.PopAsync();
+        }
+    }
 }

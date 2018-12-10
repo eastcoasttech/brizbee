@@ -8,7 +8,7 @@
         <vm:InConfirmViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40">
+        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Label Text="Please Confirm" />
             <Button Text="Save and Continue" x:Name="btnContinue" />
             <Button Text="Cancel" x:Name="btnCancel" />

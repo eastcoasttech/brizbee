@@ -8,11 +8,11 @@
         <vm:LoginViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40">
+        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Image Source="logo.png" HeightRequest="60" Margin="0,80,0,80" HorizontalOptions="Center" />
             <Entry Placeholder="Your Organization Code" Text="{Binding OrganizationCode}" />
             <Entry Placeholder="Your PIN Number" Text="{Binding PinNumber}" />
-            <Button Text="Login" Command="{Binding LoginCommand}" />
+            <Button Text="LOGIN" Command="{Binding LoginCommand}" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

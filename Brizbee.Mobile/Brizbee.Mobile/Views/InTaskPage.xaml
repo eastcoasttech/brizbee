@@ -8,11 +8,11 @@
         <vm:InTaskViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40">
+        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Label Text="What is your Task Number?" />
             <Entry Placeholder="Task Number" />
-            <Button Text="Continue" x:Name="btnContinue" />
-            <Button Text="Cancel" x:Name="btnCancel" />
+            <Button Text="CONTINUE" x:Name="btnContinue" Command="{Binding ContinueCommand}" />
+            <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

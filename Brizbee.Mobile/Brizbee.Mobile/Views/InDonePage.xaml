@@ -8,7 +8,7 @@
         <vm:InDoneViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40">
+        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Label Text="All Done" />
             <Button Text="More Options" x:Name="btnStatus" />
             <Button Text="Exit" x:Name="btnExit" />
