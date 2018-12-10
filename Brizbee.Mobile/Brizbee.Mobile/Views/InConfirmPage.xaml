@@ -10,8 +10,40 @@
     <ContentPage.Content>
         <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Label Text="Please Confirm" />
-            <Button Text="Save and Continue" x:Name="btnContinue" />
-            <Button Text="Cancel" x:Name="btnCancel" />
+            <Label HorizontalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="You are " />
+                        <Span Text="PUNCHING IN" FontAttributes="Bold" ForegroundColor="Green" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label HorizontalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="on job " />
+                        <Span Text="{Binding JobNumberAndName}" FontAttributes="Bold" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label HorizontalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="for customer " />
+                        <Span Text="{Binding CustomerNumberAndName}" FontAttributes="Bold" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label HorizontalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="doing task " />
+                        <Span Text="{Binding TaskNumberAndName}" FontAttributes="Bold" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Button Text="SAVE AND CONTINUE" x:Name="btnContinue" />
+            <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

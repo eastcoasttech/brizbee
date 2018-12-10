@@ -22,6 +22,7 @@ namespace Brizbee.Mobile.ViewModels
 
         public LoginViewModel()
         {
+            IsEnabled = true;
             Title = "Login to BRIZBEE";
 
             LoginCommand = new Command(async () => await LoadCredentials());

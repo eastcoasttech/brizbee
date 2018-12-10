@@ -16,5 +16,10 @@ namespace Brizbee.Mobile.Views
 		{
 			InitializeComponent ();
 		}
-	}
+
+        private void BtnCancel_Clicked(object sender, EventArgs e)
+        {
+
+        }
+    }
 }

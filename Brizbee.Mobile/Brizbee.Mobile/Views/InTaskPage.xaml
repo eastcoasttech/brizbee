@@ -10,8 +10,8 @@
     <ContentPage.Content>
         <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Label Text="What is your Task Number?" />
-            <Entry Placeholder="Task Number" />
-            <Button Text="CONTINUE" x:Name="btnContinue" Command="{Binding ContinueCommand}" />
+            <Entry Placeholder="Task Number" Text="{Binding TaskNumber}" IsEnabled="{Binding IsEnabled}" />
+            <Button Text="CONTINUE" x:Name="btnContinue" Command="{Binding ContinueCommand}" IsEnabled="{Binding IsEnabled}" />
             <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
         </StackLayout>
     </ContentPage.Content>
