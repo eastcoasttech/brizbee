@@ -1,13 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Brizbee.Mobile.Views.WelcomePage"
-             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels">
+             x:Class="Brizbee.Mobile.Views.StatusPage"
+             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels"
+             Title="{Binding Title}">
     <ContentPage.BindingContext>
-        <vm:WelcomeViewModel />
+        <vm:StatusViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout>
+        <StackLayout Padding="40">
             <Label Text="{Binding Hello}" />
             <Label Text="{Binding Status}" />
             <Button Text="Punch In" x:Name="btnPunchIn" Clicked="BtnPunchIn_Clicked" />

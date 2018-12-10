@@ -1,18 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Brizbee.Mobile.Views.LoginPage"
+             x:Class="Brizbee.Mobile.Views.InDonePage"
              xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels"
              Title="{Binding Title}">
     <ContentPage.BindingContext>
-        <vm:LoginViewModel />
+        <vm:InDoneViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <StackLayout Padding="40">
-            <Image Source="logo.png" HeightRequest="60" Margin="0,80,0,80" HorizontalOptions="Center" />
-            <Entry Placeholder="Your Organization Code" Text="{Binding OrganizationCode}" />
-            <Entry Placeholder="Your PIN Number" Text="{Binding PinNumber}" />
-            <Button Text="Login" Command="{Binding LoginCommand}" />
+            <Label Text="All Done" />
+            <Button Text="More Options" x:Name="btnStatus" />
+            <Button Text="Exit" x:Name="btnExit" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

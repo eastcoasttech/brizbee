@@ -10,11 +10,11 @@ using Xamarin.Forms.Xaml;
 namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class WelcomePage : ContentPage
+	public partial class StatusPage : ContentPage
 	{
         INavigation nav = Application.Current.MainPage.Navigation;
 
-        public WelcomePage ()
+        public StatusPage ()
 		{
 			InitializeComponent ();
 		}
@@ -26,7 +26,7 @@ namespace Brizbee.Mobile.Views
 
         private void BtnPunchIn_Clicked(object sender, EventArgs e)
         {
-            //nav.PushAsync();
+            nav.PushAsync(new InTaskPage());
         }
 
         private void BtnPunchOut_Clicked(object sender, EventArgs e)

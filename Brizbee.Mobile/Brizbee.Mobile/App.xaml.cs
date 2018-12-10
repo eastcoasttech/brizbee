@@ -2,6 +2,7 @@
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using Brizbee.Mobile.Views;
+using RestSharp;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
 namespace Brizbee.Mobile
@@ -13,6 +14,7 @@ namespace Brizbee.Mobile
         {
             InitializeComponent();
 
+            Current.Properties["RestClient"] = new RestClient("https://brizbeeweb.azurewebsites.net/");
 
             //MainPage = new MainPage();
             MainPage = new NavigationPage(new LoginPage());

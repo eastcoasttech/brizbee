@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Brizbee.Mobile.ViewModels
 {
-    public class InTaskViewModel : BaseViewModel
+    public class InConfirmViewModel : BaseViewModel
     {
-        public InTaskViewModel()
+        public InConfirmViewModel()
         {
-            Title = "Enter Task Number";
+            Title = "Confirm Task Number";
         }
     }
 }

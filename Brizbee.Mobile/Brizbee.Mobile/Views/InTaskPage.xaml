@@ -2,13 +2,15 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Brizbee.Mobile.Views.InTaskPage"
-             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels">
+             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels"
+             Title="{Binding Title}">
     <ContentPage.BindingContext>
         <vm:InTaskViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout>
-            <Label Text="Welcome to Xamarin.Forms!" />
+        <StackLayout Padding="40">
+            <Label Text="What is your Task Number?" />
+            <Entry Placeholder="Task Number" />
             <Button Text="Continue" x:Name="btnContinue" />
             <Button Text="Cancel" x:Name="btnCancel" />
         </StackLayout>

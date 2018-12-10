@@ -10,11 +10,11 @@ using Xamarin.Forms.Xaml;
 namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class LoginPage : ContentPage
+	public partial class InConfirmPage : ContentPage
 	{
-		public LoginPage()
+		public InConfirmPage ()
 		{
-			InitializeComponent();
-        }
-    }
+			InitializeComponent ();
+		}
+	}
 }
