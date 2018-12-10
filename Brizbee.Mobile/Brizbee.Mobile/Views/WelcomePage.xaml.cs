@@ -26,7 +26,7 @@ namespace Brizbee.Mobile.Views
 
         private void BtnPunchIn_Clicked(object sender, EventArgs e)
         {
-            nav.PushAsync();
+            //nav.PushAsync();
         }
 
         private void BtnPunchOut_Clicked(object sender, EventArgs e)
