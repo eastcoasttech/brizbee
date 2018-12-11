@@ -15,8 +15,8 @@ namespace Brizbee.Mobile.ViewModels
         {
             var user = Application.Current.Properties["CurrentUser"] as User;
             Title = "Status";
-            Hello = string.Format("Hello {0}", user.Name);
-            Status = "You are punched out";
+            Hello = user.Name;
+            Status = "PUNCHED OUT";
         }
     }
 }

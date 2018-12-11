@@ -11,8 +11,10 @@ namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class InDonePage : ContentPage
-	{
-		public InDonePage ()
+    {
+        INavigation nav = Application.Current.MainPage.Navigation;
+
+        public InDonePage ()
 		{
 			InitializeComponent ();
 		}

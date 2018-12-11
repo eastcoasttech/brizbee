@@ -10,9 +10,9 @@
     <ContentPage.Content>
         <StackLayout Padding="40" BackgroundColor="#f5f5f5">
             <Image Source="logo.png" HeightRequest="60" Margin="0,80,0,80" HorizontalOptions="Center" />
-            <Entry Placeholder="Your Organization Code" Text="{Binding OrganizationCode}" IsEnabled="{Binding IsEnabled}" />
-            <Entry Placeholder="Your PIN Number" Text="{Binding PinNumber}" IsEnabled="{Binding IsEnabled}" />
-            <Button Text="LOGIN" Command="{Binding LoginCommand}" IsEnabled="{Binding IsEnabled}" />
+            <Entry Placeholder="Your Organization Code" x:Name="txtOrganizationCode" Margin="0,3,0,3" Text="{Binding OrganizationCode}" IsEnabled="{Binding IsEnabled}" />
+            <Entry Placeholder="Your PIN Number" Margin="0,3,0,3" Text="{Binding PinNumber}" IsEnabled="{Binding IsEnabled}" />
+            <Button Text="LOGIN" Margin="0,3,0,3" Command="{Binding LoginCommand}" IsEnabled="{Binding IsEnabled}" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

@@ -16,5 +16,12 @@ namespace Brizbee.Mobile.Views
 		{
 			InitializeComponent();
         }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            
+            txtOrganizationCode.Focus();
+        }
     }
 }

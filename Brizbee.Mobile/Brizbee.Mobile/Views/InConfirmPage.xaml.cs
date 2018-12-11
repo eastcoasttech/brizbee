@@ -11,15 +11,17 @@ namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class InConfirmPage : ContentPage
-	{
-		public InConfirmPage ()
+    {
+        INavigation nav = Application.Current.MainPage.Navigation;
+
+        public InConfirmPage ()
 		{
 			InitializeComponent ();
 		}
 
         private void BtnCancel_Clicked(object sender, EventArgs e)
         {
-
+            nav.PopAsync();
         }
     }
 }

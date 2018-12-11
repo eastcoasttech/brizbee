@@ -9,8 +9,8 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <StackLayout Padding="40" BackgroundColor="#f5f5f5">
-            <Label Text="What is your Task Number?" />
-            <Entry Placeholder="Task Number" Text="{Binding TaskNumber}" IsEnabled="{Binding IsEnabled}" />
+            <Label Text="What is your Task Number?" HorizontalTextAlignment="Center" FontAttributes="Bold" Margin="0,40,0,40" />
+            <Entry Placeholder="Task Number" x:Name="txtTaskNumber" Text="{Binding TaskNumber}" IsEnabled="{Binding IsEnabled}" />
             <Button Text="CONTINUE" x:Name="btnContinue" Command="{Binding ContinueCommand}" IsEnabled="{Binding IsEnabled}" />
             <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
         </StackLayout>
