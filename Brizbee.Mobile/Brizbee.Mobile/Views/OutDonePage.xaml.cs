@@ -10,23 +10,23 @@ using Xamarin.Forms.Xaml;
 namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
-	public partial class InConfirmPage : ContentPage
+	public partial class OutDonePage : ContentPage
     {
         INavigation nav = Application.Current.MainPage.Navigation;
 
-        public InConfirmPage()
+        public OutDonePage()
 		{
 			InitializeComponent();
 		}
 
-        private void BtnCancel_Clicked(object sender, EventArgs e)
+        private void BtnExit_Clicked(object sender, EventArgs e)
         {
             nav.PopAsync();
         }
 
-        private void BtnSave_Clicked(object sender, EventArgs e)
+        private void BtnMore_Clicked(object sender, EventArgs e)
         {
-
+            nav.PopAsync();
         }
     }
 }

@@ -24,6 +24,8 @@ namespace Brizbee.Mobile.ViewModels
         {
             IsEnabled = true;
             Title = "Login to BRIZBEE";
+            OrganizationCode = "";
+            PinNumber = "";
 
             LoginCommand = new Command(async () => await LoadCredentials());
         }

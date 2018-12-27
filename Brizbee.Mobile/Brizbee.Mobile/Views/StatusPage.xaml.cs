@@ -11,12 +11,12 @@ namespace Brizbee.Mobile.Views
 {
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class StatusPage : ContentPage
-	{
+    {
         INavigation nav = Application.Current.MainPage.Navigation;
 
-        public StatusPage ()
+        public StatusPage()
 		{
-			InitializeComponent ();
+			InitializeComponent();
 		}
 
         private void BtnExit_Clicked(object sender, EventArgs e)
@@ -31,6 +31,7 @@ namespace Brizbee.Mobile.Views
 
         private void BtnPunchOut_Clicked(object sender, EventArgs e)
         {
+            nav.PushAsync(new OutConfirmPage());
         }
     }
 }

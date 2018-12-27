@@ -42,7 +42,7 @@
                     </FormattedString>
                 </Label.FormattedText>
             </Label>
-            <Button Text="SAVE AND CONTINUE" x:Name="btnContinue" />
+            <Button Text="SAVE AND CONTINUE" x:Name="btnSave" Clicked="BtnSave_Clicked" />
             <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
         </StackLayout>
     </ContentPage.Content>

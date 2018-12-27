@@ -30,10 +30,10 @@ namespace Brizbee.Mobile.ViewModels
         {
             IsEnabled = false;
 
-            // Build request to get task
+            // Build request
             var request = new RestRequest("odata/Tasks?$expand=Job($expand=Customer)&$filter=Number eq '" + TaskNumber + "'", Method.GET);
 
-            // Execute request to authenticate user
+            // Execute request
             var response = await client.ExecuteTaskAsync<ODataResponse<Task>>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))

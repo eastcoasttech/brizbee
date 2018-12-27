@@ -19,7 +19,7 @@ namespace Brizbee.Mobile.ViewModels
         public InConfirmViewModel()
         {
             IsEnabled = true;
-            Title = "Confirm Task Number";
+            Title = "Confirm Punch In";
 
             var task = Application.Current.Properties["SelectedTask"] as Task;
             JobNumberAndName = string.Format("{0} - {1}", task.Job.Number, task.Job.Name);
