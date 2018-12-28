@@ -23,5 +23,12 @@ namespace Brizbee.Mobile.Views
         {
             nav.PopAsync();
         }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+
+            txtTaskNumber.Focus();
+        }
     }
 }
