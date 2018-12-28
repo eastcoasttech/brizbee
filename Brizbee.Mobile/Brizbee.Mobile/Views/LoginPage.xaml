@@ -13,6 +13,10 @@
             <Entry Placeholder="Your Organization Code" x:Name="txtOrganizationCode" Margin="0,3,0,3" Text="{Binding OrganizationCode}" IsEnabled="{Binding IsEnabled}" />
             <Entry Placeholder="Your PIN Number" Margin="0,3,0,3" Text="{Binding PinNumber}" IsEnabled="{Binding IsEnabled}" />
             <Button Text="LOGIN" Margin="0,3,0,3" Command="{Binding LoginCommand}" IsEnabled="{Binding IsEnabled}" />
+            <ActivityIndicator
+                IsVisible="{Binding IsBusy}"
+                IsRunning="{Binding IsBusy}"
+                Color="Black" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

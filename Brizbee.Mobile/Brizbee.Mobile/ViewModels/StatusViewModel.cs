@@ -11,11 +11,10 @@ namespace Brizbee.Mobile.ViewModels
 {
     public class StatusViewModel : BaseViewModel
     {
-        public string CurrentCustomer { get; set; }
-        public string CurrentJob { get; set; }
-        public string CurrentTask { get; set; }
+        public string CustomerNumberAndName { get; set; }
+        public string JobNumberAndName { get; set; }
+        public string TaskNumberAndName { get; set; }
         public string Since { get; set; }
-        public bool LoadingCurrentPunch { get; set; }
         public string Name { get; set; }
         public bool IsPunchedIn { get; set; }
         public bool IsPunchedOut { get; set; }
@@ -26,7 +25,7 @@ namespace Brizbee.Mobile.ViewModels
         {
             var user = Application.Current.Properties["CurrentUser"] as User;
             Title = "Status";
-            Name = user.Name;
+            Name = user.Name.ToUpper();
             IsPunchedIn = false;
             IsPunchedOut = false;
             var t = RefreshCurrentPunch();
@@ -37,7 +36,7 @@ namespace Brizbee.Mobile.ViewModels
 
         private async System.Threading.Tasks.Task RefreshCurrentPunch()
         {
-            LoadingCurrentPunch = true;
+            IsBusy = true;
 
             // Build request
             var request = new RestRequest("odata/Punches/Default.Current?$expand=Task($expand=Job($expand=Customer))", Method.GET);
@@ -49,15 +48,15 @@ namespace Brizbee.Mobile.ViewModels
             {
                 if (response.Data != null)
                 {
-                    CurrentCustomer = string.Format("{0} - {1}",
+                    CustomerNumberAndName = string.Format("{0} - {1}",
                             response.Data.Task.Job.Customer.Number,
                             response.Data.Task.Job.Customer.Name)
                         .ToUpper();
-                    CurrentJob = string.Format("{0} - {1}",
+                    JobNumberAndName = string.Format("{0} - {1}",
                             response.Data.Task.Job.Number,
                             response.Data.Task.Job.Name)
                         .ToUpper();
-                    CurrentTask = string.Format("{0} - {1}",
+                    TaskNumberAndName = string.Format("{0} - {1}",
                             response.Data.Task.Number,
                             response.Data.Task.Name)
                         .ToUpper();
@@ -65,20 +64,24 @@ namespace Brizbee.Mobile.ViewModels
                             response.Data.CreatedAt.ToString("MMM d, yyyy h:mm tt"))
                         .ToUpper();
                     IsPunchedIn = true;
-                    OnPropertyChanged(Name = "CurrentTask");
-                    OnPropertyChanged(Name = "CurrentJob");
-                    OnPropertyChanged(Name = "CurrentCustomer");
+                    OnPropertyChanged(Name = "TaskNumberAndName");
+                    OnPropertyChanged(Name = "JobNumberAndName");
+                    OnPropertyChanged(Name = "CustomerNumberAndName");
                     OnPropertyChanged(Name = "Since");
                     OnPropertyChanged(Name = "IsPunchedIn");
+                    IsBusy = false;
                 }
                 else
                 {
+                    IsBusy = false;
                     throw new Exception("There is no current punch for the user");
                 }
             }
             else
             {
-                LoadingCurrentPunch = true;
+                IsPunchedOut = true;
+                OnPropertyChanged(Name = "IsPunchedOut");
+                IsBusy = false;
                 throw new Exception(response.Content);
             }
         }

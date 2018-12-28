@@ -33,6 +33,7 @@ namespace Brizbee.Mobile.ViewModels
         private async System.Threading.Tasks.Task LoadCredentials()
         {
             IsEnabled = false;
+            IsBusy = true;
 
             // Build request to authenticate user
             var request = new RestRequest("odata/Users/Default.Authenticate", Method.POST);

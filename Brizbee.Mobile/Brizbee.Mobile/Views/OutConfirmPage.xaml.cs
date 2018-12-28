@@ -23,10 +23,5 @@ namespace Brizbee.Mobile.Views
         {
             nav.PopAsync();
         }
-
-        private void BtnSave_Clicked(object sender, EventArgs e)
-        {
-
-        }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Mobile.Views;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Input;
 using Xamarin.Forms;
 
 namespace Brizbee.Mobile.ViewModels
@@ -16,15 +18,48 @@ namespace Brizbee.Mobile.ViewModels
 
         private RestClient client = Application.Current.Properties["RestClient"] as RestClient;
 
+        public ICommand PunchInCommand { get; }
+
         public InConfirmViewModel()
         {
             IsEnabled = true;
             Title = "Confirm Punch In";
 
+            PunchInCommand = new Command(async () => await PunchIn());
+
             var task = Application.Current.Properties["SelectedTask"] as Task;
             JobNumberAndName = string.Format("{0} - {1}", task.Job.Number, task.Job.Name);
             CustomerNumberAndName = string.Format("{0} - {1}", task.Job.Customer.Number, task.Job.Customer.Name);
             TaskNumberAndName = string.Format("{0} - {1}", task.Number, task.Name);
+        }
+
+        private async System.Threading.Tasks.Task PunchIn()
+        {
+            IsEnabled = false;
+            IsBusy = true;
+
+            // Build request
+            var request = new RestRequest("odata/Punches/Default.PunchIn", Method.POST);
+            request.AddJsonBody(new
+            {
+                TaskId = (Application.Current.Properties["SelectedTask"] as Task).Id
+            });
+
+            // Execute request
+            var response = await client.ExecuteTaskAsync(request);
+            if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                    (response.StatusCode == System.Net.HttpStatusCode.Created))
+            {
+                IsBusy = false;
+                var nav = Application.Current.MainPage.Navigation;
+                await nav.PushAsync(new InDonePage());
+            }
+            else
+            {
+                IsBusy = false;
+                IsEnabled = true;
+                throw new Exception(response.Content);
+            }
         }
     }
 }

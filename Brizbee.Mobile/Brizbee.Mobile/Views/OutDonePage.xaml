@@ -8,8 +8,8 @@
         <vm:OutDoneViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout>
-            <Label HorizontalTextAlignment="Center">
+        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+            <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
                 <Label.FormattedText>
                     <FormattedString>
                         <Span Text="YOU ARE NOW PUNCHED " />
