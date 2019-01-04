@@ -3,5 +3,5 @@
 	<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="27" />
 	<uses-permission android:name="android.permission.CAMERA" />
 	<uses-permission android:name="android.permission.FLASHLIGHT" />
-	<application android:label="Brizbee.Mobile.Android"></application>
+	<application android:label="BRIZBEE" android:theme="@style/MyTheme"></application>
 </manifest>

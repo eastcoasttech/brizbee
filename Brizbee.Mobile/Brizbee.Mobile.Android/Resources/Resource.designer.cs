@@ -4702,10 +4702,10 @@ namespace Brizbee.Mobile.Droid
 			public const int CardView_Light = 2131492878;
 			
 			// aapt resource value: 0x7f0c018f
-			public const int MainTheme = 2131493263;
+			public const int MyTheme = 2131493263;
 			
 			// aapt resource value: 0x7f0c0190
-			public const int MainTheme_Base = 2131493264;
+			public const int MyTheme_Base = 2131493264;
 			
 			// aapt resource value: 0x7f0c002d
 			public const int Platform_AppCompat = 2131492909;

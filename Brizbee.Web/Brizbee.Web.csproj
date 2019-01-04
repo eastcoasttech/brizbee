@@ -269,6 +269,10 @@
     <Compile Include="Migrations\201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.Designer.cs">
       <DependentUpon>201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201901011918525_AddingDescriptionToJob.cs" />
+    <Compile Include="Migrations\201901011918525_AddingDescriptionToJob.Designer.cs">
+      <DependentUpon>201901011918525_AddingDescriptionToJob.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -392,6 +396,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.resx">
       <DependentUpon>201811232036494_ConvertingToDateTime2AndRemoveUserTimeZone.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901011918525_AddingDescriptionToJob.resx">
+      <DependentUpon>201901011918525_AddingDescriptionToJob.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -16,6 +16,7 @@ namespace Brizbee.Services
         private Font fontH1 = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.WHITE);
         private Font fontH2 = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLDITALIC);
         private Font fontH3 = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
+        private Font fontH4 = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
         private Font fontP = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL);
         private Font fontFooter = new Font(Font.FontFamily.HELVETICA, 9, Font.NORMAL);
         private float pageWidth = 0f;
@@ -56,6 +57,7 @@ namespace Brizbee.Services
                 table.WidthPercentage = 100;
                 table.SetWidths(new float[] { 10, 7, 10, 7, 20, 20, 20, 6 });
 
+                Trace.TraceInformation("Getting users");
                 var users = db.Users.Where(u => userIds.Contains(u.Id)).OrderBy(u => u.Name).ToList();
                 foreach (var user in users)
                 {
@@ -81,13 +83,15 @@ namespace Brizbee.Services
                     };
                     table.AddCell(nameSpacerCell);
 
+                    Trace.TraceInformation("Getting punches");
                     var punches = db.Punches
                         .Where(p => p.OutAt.HasValue)
                         .Where(p => p.InAt >= min && p.OutAt <= max)
                         .Where(p => p.UserId == user.Id)
                         .OrderBy(p => p.InAt)
                         .ToList();
-                    
+
+                    Trace.TraceInformation("Check for zero punches");
                     // Add a message for no punches
                     if (punches.Count() == 0)
                     {
@@ -105,7 +109,8 @@ namespace Brizbee.Services
                         };
                         table.AddCell(noneCell);
                     }
-                    
+
+                    Trace.TraceInformation("Getting dates");
                     // Loop each date and print each punch
                     var dates = punches
                         .GroupBy(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date)
@@ -192,6 +197,7 @@ namespace Brizbee.Services
                         table.AddCell(totalHeaderCell);
 
                         // Punches for this Day
+                        Trace.TraceInformation("Getting punches for day");
                         var punchesForDay = punches
                             .Where(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date == date.Date)
                             .ToList();
@@ -271,6 +277,7 @@ namespace Brizbee.Services
                             table.AddCell(totalCell);
                         }
 
+                        Trace.TraceInformation("Setting daily totals");
                         // Daily Total and Spacer
                         double dailyTotalMinutes = 0;
                         foreach (var punch in punchesForDay)
@@ -306,6 +313,7 @@ namespace Brizbee.Services
                     }
 
                     // User Total
+                    Trace.TraceInformation("Setting user totals");
                     double userTotalMinutes = 0;
                     foreach (var punch in punches)
                     {
@@ -808,6 +816,112 @@ namespace Brizbee.Services
                             TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
                             TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
                         fontP));
+                }
+
+                document.Add(table);
+
+                // Make sure data has been written
+                writer.Flush();
+
+                // Close the document
+                document.Close();
+            }
+
+            buffer = output.GetBuffer();
+
+            // Page count must be added later due to nuances in iText
+            AddPageNumbers(buffer);
+
+            return buffer;
+        }
+        
+        public byte[] TasksByJobAsPdf(int jobId, User currentUser)
+        {
+            var buffer = new byte[0];
+            var output = new MemoryStream();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var job = db.Jobs.Where(j => j.Id == jobId).FirstOrDefault();
+
+            // Create an instance of document which represents the PDF document itself
+            using (var document = new Document(PageSize.LETTER, 30, 30, 60, 60))
+            {
+                var writer = PdfWriter.GetInstance(document, output);
+                pageWidth = document.PageSize.Width;
+
+                // Add meta information to the document
+                document.AddAuthor(currentUser.Name);
+                document.AddCreator("BRIZBEE");
+                document.AddTitle(string.Format(
+                    "Tasks by Job for {0} - {1}.pdf",
+                    job.Number,
+                    job.Name));
+
+                // Header
+                writer.PageEvent = new Header(
+                    string.Format("REPORT: TASKS BY JOB FOR {0} - {1}",
+                        job.Number,
+                        job.Name.ToUpper()),
+                    TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz));
+
+                // Open the document to enable you to write to the document
+                document.Open();
+
+                // Build table of tasks
+                PdfPTable table = new PdfPTable(2);
+                table.WidthPercentage = 100;
+                table.SetWidths(new float[] { 50, 50 });
+
+                // Job details
+                var details = new PdfPCell();
+                details.Padding = 20;
+                var customerParagraph = new Paragraph(string.Format("CUSTOMER: {0} - {1}", job.Customer.Number, job.Customer.Name.ToUpper()), fontH4);
+                customerParagraph.SpacingAfter = 0;
+                var jobParagraph = new Paragraph(string.Format("JOB: {0} - {1}", job.Number, job.Name.ToUpper()), fontH4);
+                jobParagraph.SpacingAfter = 10;
+                var descriptionParagraph = new Paragraph(string.Format("DESCRIPTION: {0}", job.Description), fontP);
+                details.AddElement(customerParagraph);
+                details.AddElement(jobParagraph);
+                details.AddElement(descriptionParagraph);
+                details.Colspan = 2;
+                table.AddCell(details);
+
+                var tasks = db.Tasks.Where(t => t.JobId == jobId);
+                foreach (var task in tasks)
+                {
+                    try
+                    {
+                        // Barcode
+                        Barcode128 barCode = new Barcode128();
+                        barCode.TextAlignment = Element.ALIGN_CENTER;
+                        barCode.Code = task.Number;
+                        barCode.StartStopText = false;
+                        barCode.CodeType = iTextSharp.text.pdf.Barcode128.CODE128;
+                        barCode.Extended = true;
+
+                        // Barcode image
+                        var drawing = barCode.CreateDrawingImage(System.Drawing.Color.Black, System.Drawing.Color.White);
+                        iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(drawing, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        image.ScaleAbsoluteHeight(50);
+
+                        // Cell
+                        var cell = new PdfPCell();
+                        cell.Padding = 20;
+                        cell.HorizontalAlignment = PdfPCell.ALIGN_CENTER;
+                        var code = new Paragraph();
+                        code.Alignment = 1;
+                        code.Add(new Chunk(image, 0, 0, true));
+                        cell.AddElement(code);
+                        var subtitle = new Paragraph();
+                        subtitle.Alignment = 1;
+                        subtitle.Add(new Chunk(string.Format("{0} - {1}", task.Number, task.Name.ToUpper()), fontH4));
+                        cell.AddElement(subtitle);
+                        table.AddCell(cell);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceError(ex.ToString());
+                    }
                 }
 
                 document.Add(table);

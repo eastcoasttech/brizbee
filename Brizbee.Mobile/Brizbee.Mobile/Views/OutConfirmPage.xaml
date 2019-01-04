@@ -8,22 +8,24 @@
         <vm:OutConfirmViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
-            <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
-                <Label.FormattedText>
-                    <FormattedString>
-                        <Span Text="ARE YOU SURE YOU WANT TO PUNCH " />
-                        <Span Text="OUT" FontAttributes="Bold" ForegroundColor="Red" />
-                        <Span Text="?" />
-                    </FormattedString>
-                </Label.FormattedText>
-            </Label>
-            <Button Text="SAVE AND EXIT" Command="{Binding PunchOutCommand}" />
-            <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
-            <ActivityIndicator
+        <ScrollView>
+            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+                <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="ARE YOU SURE YOU WANT TO PUNCH " />
+                            <Span Text="OUT" FontAttributes="Bold" ForegroundColor="Red" />
+                            <Span Text="?" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Button Text="SAVE AND CONTINUE" Command="{Binding PunchOutCommand}" />
+                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
+                <ActivityIndicator
                 IsVisible="{Binding IsBusy}"
                 IsRunning="{Binding IsBusy}"
                 Color="Black" />
-        </StackLayout>
+            </StackLayout>
+        </ScrollView>
     </ContentPage.Content>
 </ContentPage>

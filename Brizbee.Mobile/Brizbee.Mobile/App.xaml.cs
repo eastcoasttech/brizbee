@@ -18,6 +18,9 @@ namespace Brizbee.Mobile
 
             //MainPage = new MainPage();
             MainPage = new NavigationPage(new LoginPage());
+            //{
+            //    BarBackgroundColor = Color.DarkGray
+            //};
         }
 
         protected override void OnStart()

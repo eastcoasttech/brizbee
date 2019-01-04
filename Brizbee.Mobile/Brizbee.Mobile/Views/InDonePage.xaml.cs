@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Brizbee.Mobile.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,11 +13,14 @@ namespace Brizbee.Mobile.Views
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class InDonePage : ContentPage
     {
-        INavigation nav = Application.Current.MainPage.Navigation;
-
-        public InDonePage ()
+        public InDonePage()
 		{
-			InitializeComponent ();
+			InitializeComponent();
 		}
-	}
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+        }
+    }
 }

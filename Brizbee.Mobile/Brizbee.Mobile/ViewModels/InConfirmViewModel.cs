@@ -1,8 +1,10 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Mobile.Views;
+using Plugin.DeviceInfo;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Input;
 using Xamarin.Forms;
@@ -37,12 +39,31 @@ namespace Brizbee.Mobile.ViewModels
         {
             IsEnabled = false;
             IsBusy = true;
+            string device = "";
+            try
+            {
+                device = string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+                    CrossDeviceInfo.Current.Idiom,
+                    CrossDeviceInfo.Current.Platform,
+                    CrossDeviceInfo.Current.AppVersion,
+                    CrossDeviceInfo.Current.AppBuild,
+                    CrossDeviceInfo.Current.DeviceName,
+                    CrossDeviceInfo.Current.Manufacturer,
+                    CrossDeviceInfo.Current.Version,
+                    CrossDeviceInfo.Current.VersionNumber,
+                    CrossDeviceInfo.Current.Model);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.ToString());
+            }
 
             // Build request
             var request = new RestRequest("odata/Punches/Default.PunchIn", Method.POST);
             request.AddJsonBody(new
             {
-                TaskId = (Application.Current.Properties["SelectedTask"] as Task).Id
+                TaskId = (Application.Current.Properties["SelectedTask"] as Task).Id,
+                SourceForInAt = device
             });
 
             // Execute request

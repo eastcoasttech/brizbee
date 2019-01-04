@@ -28,6 +28,7 @@ namespace Brizbee.Mobile.ViewModels
             Name = user.Name.ToUpper();
             IsPunchedIn = false;
             IsPunchedOut = false;
+
             var t = RefreshCurrentPunch();
             t.ContinueWith(task => {
                 /* Log issue, deal with it or whatever! */
@@ -36,53 +37,62 @@ namespace Brizbee.Mobile.ViewModels
 
         private async System.Threading.Tasks.Task RefreshCurrentPunch()
         {
-            IsBusy = true;
-
-            // Build request
-            var request = new RestRequest("odata/Punches/Default.Current?$expand=Task($expand=Job($expand=Customer))", Method.GET);
-            
-            // Execute request
-            var response = await client.ExecuteTaskAsync<Punch>(request);
-            if ((response.ResponseStatus == ResponseStatus.Completed) &&
-                    (response.StatusCode == System.Net.HttpStatusCode.OK))
+            while (true)
             {
-                if (response.Data != null)
+                IsBusy = true;
+
+                // Build request
+                var request = new RestRequest("odata/Punches/Default.Current?$expand=Task($expand=Job($expand=Customer))", Method.GET);
+
+                // Execute request
+                var response = await client.ExecuteTaskAsync<Punch>(request);
+                if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                        (response.StatusCode == System.Net.HttpStatusCode.OK))
                 {
-                    CustomerNumberAndName = string.Format("{0} - {1}",
-                            response.Data.Task.Job.Customer.Number,
-                            response.Data.Task.Job.Customer.Name)
-                        .ToUpper();
-                    JobNumberAndName = string.Format("{0} - {1}",
-                            response.Data.Task.Job.Number,
-                            response.Data.Task.Job.Name)
-                        .ToUpper();
-                    TaskNumberAndName = string.Format("{0} - {1}",
-                            response.Data.Task.Number,
-                            response.Data.Task.Name)
-                        .ToUpper();
-                    Since = string.Format("SINCE {0}",
-                            response.Data.CreatedAt.ToString("MMM d, yyyy h:mm tt"))
-                        .ToUpper();
-                    IsPunchedIn = true;
-                    OnPropertyChanged(Name = "TaskNumberAndName");
-                    OnPropertyChanged(Name = "JobNumberAndName");
-                    OnPropertyChanged(Name = "CustomerNumberAndName");
-                    OnPropertyChanged(Name = "Since");
-                    OnPropertyChanged(Name = "IsPunchedIn");
-                    IsBusy = false;
+                    if (response.Data != null)
+                    {
+                        CustomerNumberAndName = string.Format("{0} - {1}",
+                                response.Data.Task.Job.Customer.Number,
+                                response.Data.Task.Job.Customer.Name)
+                            .ToUpper();
+                        JobNumberAndName = string.Format("{0} - {1}",
+                                response.Data.Task.Job.Number,
+                                response.Data.Task.Job.Name)
+                            .ToUpper();
+                        TaskNumberAndName = string.Format("{0} - {1}",
+                                response.Data.Task.Number,
+                                response.Data.Task.Name)
+                            .ToUpper();
+                        Since = string.Format("SINCE {0}",
+                                response.Data.CreatedAt.ToString("MMM d, yyyy h:mm tt"))
+                            .ToUpper();
+                        IsPunchedOut = false;
+                        IsPunchedIn = true;
+                        OnPropertyChanged(Name = "TaskNumberAndName");
+                        OnPropertyChanged(Name = "JobNumberAndName");
+                        OnPropertyChanged(Name = "CustomerNumberAndName");
+                        OnPropertyChanged(Name = "Since");
+                        OnPropertyChanged(Name = "IsPunchedOut");
+                        OnPropertyChanged(Name = "IsPunchedIn");
+                        IsBusy = false;
+                    }
+                    else
+                    {
+                        IsBusy = false;
+                        throw new Exception("There is no current punch for the user");
+                    }
                 }
                 else
                 {
+                    IsPunchedIn = false;
+                    IsPunchedOut = true;
+                    OnPropertyChanged(Name = "IsPunchedIn");
+                    OnPropertyChanged(Name = "IsPunchedOut");
                     IsBusy = false;
-                    throw new Exception("There is no current punch for the user");
+                    throw new Exception(response.Content);
                 }
-            }
-            else
-            {
-                IsPunchedOut = true;
-                OnPropertyChanged(Name = "IsPunchedOut");
-                IsBusy = false;
-                throw new Exception(response.Content);
+
+                await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(15));
             }
         }
     }

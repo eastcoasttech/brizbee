@@ -95,10 +95,11 @@ namespace Brizbee.Controllers
         public IHttpActionResult PunchIn(ODataActionParameters parameters)
         {
             var taskId = (int)parameters["TaskId"];
+            var source = (string)parameters["SourceForInAt"];
 
             try
             {
-                var punch = repo.PunchIn(taskId, CurrentUser(), "Web");
+                var punch = repo.PunchIn(taskId, CurrentUser(), source);
                 return Created(punch);
             }
             catch (Exception ex)
@@ -112,9 +113,11 @@ namespace Brizbee.Controllers
         [HttpPost]
         public IHttpActionResult PunchOut(ODataActionParameters parameters)
         {
+            var source = (string)parameters["SourceForOutAt"];
+
             try
             {
-                var punch = repo.PunchOut(CurrentUser(), "Web");
+                var punch = repo.PunchOut(CurrentUser(), source);
                 return Created(punch);
             }
             catch (Exception ex)

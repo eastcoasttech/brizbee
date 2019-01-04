@@ -12,6 +12,8 @@ namespace Brizbee.Mobile.ViewModels
         public ICommand ExitCommand { get; }
         public ICommand MoreCommand { get; }
 
+        private INavigation nav = Application.Current.MainPage.Navigation;
+
         public InDoneViewModel()
         {
             Title = "All Done";
@@ -21,13 +23,11 @@ namespace Brizbee.Mobile.ViewModels
 
         private async System.Threading.Tasks.Task Exit()
         {
-            var nav = Application.Current.MainPage.Navigation;
             await nav.PopToRootAsync();
         }
 
         private async System.Threading.Tasks.Task More()
         {
-            var nav = Application.Current.MainPage.Navigation;
             await nav.PopAsync();
             await nav.PushAsync(new StatusPage());
         }

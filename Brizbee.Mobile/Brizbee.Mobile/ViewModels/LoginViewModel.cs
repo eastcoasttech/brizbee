@@ -14,7 +14,10 @@ namespace Brizbee.Mobile.ViewModels
     {
         public string OrganizationCode { get; set; }
         public string PinNumber { get; set; }
-        public bool IsEnabled { get; set; }
+        public bool IsEnabled
+        {
+            get { return !IsBusy; }
+        }
 
         private RestClient client = Application.Current.Properties["RestClient"] as RestClient;
 
@@ -22,18 +25,27 @@ namespace Brizbee.Mobile.ViewModels
 
         public LoginViewModel()
         {
-            IsEnabled = true;
             Title = "Login to BRIZBEE";
-            OrganizationCode = "";
-            PinNumber = "";
+
+            ResetPage();
 
             LoginCommand = new Command(async () => await LoadCredentials());
         }
 
+        public void ResetPage()
+        {
+            OrganizationCode = "";
+            PinNumber = "";
+            OnPropertyChanged("OrganizationCode");
+            OnPropertyChanged("PinNumber");
+            IsBusy = false;
+            OnPropertyChanged("IsEnabled");
+        }
+
         private async System.Threading.Tasks.Task LoadCredentials()
         {
-            IsEnabled = false;
             IsBusy = true;
+            OnPropertyChanged("IsEnabled");
 
             // Build request to authenticate user
             var request = new RestRequest("odata/Users/Default.Authenticate", Method.POST);
@@ -69,7 +81,8 @@ namespace Brizbee.Mobile.ViewModels
             }
             else
             {
-                IsEnabled = true;
+                IsBusy = false;
+                OnPropertyChanged("IsEnabled");
                 throw new Exception(response.Content);
             }
         }
@@ -87,7 +100,6 @@ namespace Brizbee.Mobile.ViewModels
             {
                 // Save the authenticated user for later
                 Application.Current.Properties["CurrentUser"] = response.Data;
-                IsEnabled = false;
 
                 // Send message to refresh user details
                 //(Application.Current.Properties["MessageBus"] as MessageBus)
@@ -99,7 +111,8 @@ namespace Brizbee.Mobile.ViewModels
             }
             else
             {
-                IsEnabled = true;
+                IsBusy = false;
+                OnPropertyChanged("IsEnabled");
                 throw new Exception(response.Content);
             }
         }

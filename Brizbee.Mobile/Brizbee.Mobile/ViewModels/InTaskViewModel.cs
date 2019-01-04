@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Input;
 using Xamarin.Forms;
+using ZXing.Mobile;
+using ZXing.Net.Mobile.Forms;
 
 namespace Brizbee.Mobile.ViewModels
 {
@@ -17,13 +19,24 @@ namespace Brizbee.Mobile.ViewModels
         private RestClient client = Application.Current.Properties["RestClient"] as RestClient;
 
         public ICommand ContinueCommand { get; }
+        public ICommand ScanCommand { get; }
 
         public InTaskViewModel()
         {
             IsEnabled = true;
             Title = "Enter Task Number";
 
+            ResetPage();
+
             ContinueCommand = new Command(async () => await LoadTask());
+            ScanCommand = new Command(async () => await Scan());
+        }
+
+        public void ResetPage()
+        {
+            TaskNumber = "";
+            OnPropertyChanged("TaskNumber");
+            IsBusy = false;
         }
 
         private async System.Threading.Tasks.Task LoadTask()
@@ -55,6 +68,10 @@ namespace Brizbee.Mobile.ViewModels
                 IsEnabled = true;
                 throw new Exception(response.Content);
             }
+        }
+
+        private async System.Threading.Tasks.Task Scan()
+        {
         }
     }
 }

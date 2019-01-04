@@ -8,18 +8,19 @@
         <vm:OutDoneViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
-            <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
-                <Label.FormattedText>
-                    <FormattedString>
-                        <Span Text="YOU ARE NOW PUNCHED " />
-                        <Span Text="OUT" FontAttributes="Bold" ForegroundColor="Red" />
-                        <Span Text="." />
-                    </FormattedString>
-                </Label.FormattedText>
-            </Label>
-            <Button Text="MORE OPTIONS" x:Name="btnMore" Clicked="BtnMore_Clicked" />
-            <Button Text="EXIT" x:Name="btnExit" Clicked="BtnExit_Clicked" />
-        </StackLayout>
+        <ScrollView>
+            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+                <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="YOU ARE NOW PUNCHED " FontSize="Medium" />
+                            <Span Text="OUT" FontAttributes="Bold" FontSize="Medium" ForegroundColor="Red" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Button Text="MORE OPTIONS" Command="{Binding MoreCommand}" />
+                <Button Text="EXIT" Command="{Binding ExitCommand}" />
+            </StackLayout>
+        </ScrollView>
     </ContentPage.Content>
 </ContentPage>

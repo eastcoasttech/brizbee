@@ -8,39 +8,41 @@
         <vm:StatusViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout Padding="40" BackgroundColor="#f5f5f5">
-            <Label Text="HELLO" HorizontalTextAlignment="Center" FontSize="Micro" TextColor="Gray" Margin="0, 0, 0, 0" />
-            <Label Text="{Binding Name}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" Margin="0, 0, 0, 0" />
-            <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedOut}" Margin="0, 20, 0, 20">
-                <Label.FormattedText>
-                    <FormattedString>
-                        <Span Text="YOU ARE " />
-                        <Span Text="PUNCHED OUT" FontAttributes="Bold" ForegroundColor="Red" />
-                    </FormattedString>
-                </Label.FormattedText>
-            </Label>
-            <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" Margin="0, 20, 0, 20">
-                <Label.FormattedText>
-                    <FormattedString>
-                        <Span Text="YOU ARE " />
-                        <Span Text="PUNCHED IN" FontAttributes="Bold" ForegroundColor="Green" />
-                    </FormattedString>
-                </Label.FormattedText>
-            </Label>
-            <Label Text="ON JOB" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 25, 0, 0" />
-            <Label Text="{Binding JobNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
-            <Label Text="FOR CUSTOMER" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 20, 0, 0" />
-            <Label Text="{Binding CustomerNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
-            <Label Text="DOING TASK" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 20, 0, 0" />
-            <Label Text="{Binding TaskNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
-            <Label Text="{Binding Since}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 35, 0, 50" />
-            <ActivityIndicator
+        <ScrollView>
+            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+                <Label Text="HELLO" HorizontalTextAlignment="Center" FontSize="Micro" TextColor="Gray" Margin="0" />
+                <Label Text="{Binding Name}" HorizontalTextAlignment="Center" FontSize="Small" FontAttributes="Bold" Margin="0" />
+                <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedOut}" Margin="0, 30, 0, 40">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="YOU ARE " FontSize="Medium" />
+                            <Span Text="PUNCHED OUT" FontAttributes="Bold" ForegroundColor="Red" FontSize="Medium" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" Margin="0, 30, 0, 10">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="YOU ARE " FontSize="Medium" />
+                            <Span Text="PUNCHED IN" FontAttributes="Bold" ForegroundColor="Green" FontSize="Medium" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Label Text="ON JOB" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 25, 0, 0" />
+                <Label Text="{Binding JobNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
+                <Label Text="FOR CUSTOMER" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 20, 0, 0" />
+                <Label Text="{Binding CustomerNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
+                <Label Text="DOING TASK" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 20, 0, 0" />
+                <Label Text="{Binding TaskNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
+                <Label Text="{Binding Since}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 35, 0, 50" />
+                <Button Text="PUNCH IN" x:Name="btnPunchIn" Clicked="BtnPunchIn_Clicked" />
+                <Button Text="PUNCH OUT" x:Name="btnPunchOut" Clicked="BtnPunchOut_Clicked" IsVisible="{Binding IsPunchedIn}" />
+                <Button Text="EXIT" x:Name="btnExit" Clicked="BtnExit_Clicked" />
+                <ActivityIndicator
                 IsVisible="{Binding IsBusy}"
                 IsRunning="{Binding IsBusy}"
                 Color="Black" />
-            <Button Text="PUNCH IN" x:Name="btnPunchIn" Clicked="BtnPunchIn_Clicked" />
-            <Button Text="PUNCH OUT" x:Name="btnPunchOut" Clicked="BtnPunchOut_Clicked" IsVisible="{Binding IsPunchedIn}" />
-            <Button Text="EXIT" x:Name="btnExit" Clicked="BtnExit_Clicked" />
-        </StackLayout>
+            </StackLayout>
+        </ScrollView>
     </ContentPage.Content>
 </ContentPage>

@@ -101,6 +101,22 @@ namespace Brizbee.Controllers
                 Request);
         }
 
+        // GET: api/Reports/TasksByJob
+        [Route("api/Reports/TasksByJob")]
+        public IHttpActionResult GetTasksByJob([FromUri] int JobId)
+        {
+            var organization = db.Organizations.Find(CurrentUser().OrganizationId);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var job = db.Jobs.Where(j => j.Id == JobId).FirstOrDefault();
+            var bytes = new ReportBuilder().TasksByJobAsPdf(JobId, CurrentUser());
+            return new FileActionResult(bytes, "application/pdf",
+                string.Format(
+                    "Tasks by Job for {0} - {1}.pdf",
+                    job.Number,
+                    job.Name),
+                Request);
+        }
+
         public User CurrentUser()
         {
             if (ActionContext.RequestContext.Principal.Identity.Name.Length > 0)
