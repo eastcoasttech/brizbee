@@ -37,6 +37,8 @@ namespace Brizbee.Common.Models
         [Column(TypeName = "datetime2")]
         public DateTime OutAt { get; set; }
 
+        public int PunchCount { get; set; }
+
         [Required]
         public int UserId { get; set; }
 

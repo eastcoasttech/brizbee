@@ -27,7 +27,7 @@ namespace Brizbee.Repositories
             }
 
             // Auto-generated
-            customer.CreatedAt = DateTime.Now;
+            customer.CreatedAt = DateTime.UtcNow;
             customer.OrganizationId = currentUser.OrganizationId;
 
             db.Customers.Add(customer);

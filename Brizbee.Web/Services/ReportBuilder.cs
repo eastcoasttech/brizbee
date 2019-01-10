@@ -53,9 +53,9 @@ namespace Brizbee.Services
                 document.Open();
                 
                 // Build table of punches
-                PdfPTable table = new PdfPTable(8);
+                PdfPTable table = new PdfPTable(9);
                 table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 10, 7, 10, 7, 20, 20, 20, 6 });
+                table.SetWidths(new float[] { 10, 7, 10, 7, 18, 18, 18, 6, 6 });
 
                 Trace.TraceInformation("Getting users");
                 var users = db.Users.Where(u => userIds.Contains(u.Id)).OrderBy(u => u.Name).ToList();
@@ -65,7 +65,7 @@ namespace Brizbee.Services
                     var nameCell = new PdfPCell(new Phrase(string.Format("User {0}", user.Name), fontH1))
                     {
                         VerticalAlignment = Element.ALIGN_MIDDLE,
-                        Colspan = 8,
+                        Colspan = 9,
                         Padding = 5,
                         PaddingTop = 8,
                         PaddingBottom = 8,
@@ -75,7 +75,7 @@ namespace Brizbee.Services
                     table.AddCell(nameCell);
                     var nameSpacerCell = new PdfPCell(new Phrase(" "))
                     {
-                        Colspan = 8,
+                        Colspan = 9,
                         Padding = 0,
                         PaddingBottom = 8,
                         BorderWidthLeft = 0,
@@ -102,7 +102,7 @@ namespace Brizbee.Services
                                 TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
                             fontP))
                         {
-                            Colspan = 8,
+                            Colspan = 9,
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
                             UseAscender = true
@@ -123,7 +123,7 @@ namespace Brizbee.Services
                         // Day
                         var dayCell = new PdfPCell(new Phrase(date.Date.ToString("D"), fontH1))
                         {
-                            Colspan = 8,
+                            Colspan = 9,
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
                             BackgroundColor = BaseColor.BLACK,
@@ -187,6 +187,14 @@ namespace Brizbee.Services
                             UseAscender = true
                         };
                         table.AddCell(customerHeaderCell);
+
+                        var committedHeaderCell = new PdfPCell(new Phrase("Cmted", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(committedHeaderCell);
 
                         var totalHeaderCell = new PdfPCell(new Phrase("Total", fontH3))
                         {
@@ -266,6 +274,17 @@ namespace Brizbee.Services
                             };
                             table.AddCell(customerCell);
 
+                            // Committed
+                            var committed = punch.CommitId.HasValue ? "X" : "";
+                            var committedCell = new PdfPCell(new Phrase(committed, fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                HorizontalAlignment = Element.ALIGN_CENTER,
+                                Padding = 5,
+                                UseAscender = true
+                            };
+                            table.AddCell(committedCell);
+
                             // Total
                             var total = Math.Round((punch.OutAt.Value - punch.InAt).TotalMinutes / 60, 2).ToString("0.00");
                             var totalCell = new PdfPCell(new Phrase(total.ToString(), fontP))
@@ -289,7 +308,7 @@ namespace Brizbee.Services
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             HorizontalAlignment = Element.ALIGN_RIGHT,
-                            Colspan = 7,
+                            Colspan = 8,
                             Padding = 5,
                             UseAscender = true
                         };
@@ -303,7 +322,7 @@ namespace Brizbee.Services
                         table.AddCell(dailyTotalValueCell);
                         var dailyTotalSpacerCell = new PdfPCell(new Phrase(" "))
                         {
-                            Colspan = 8,
+                            Colspan = 9,
                             Padding = 0,
                             PaddingBottom = 4,
                             BorderWidthLeft = 0,
@@ -324,7 +343,7 @@ namespace Brizbee.Services
                     {
                         VerticalAlignment = Element.ALIGN_MIDDLE,
                         HorizontalAlignment = Element.ALIGN_RIGHT,
-                        Colspan = 7,
+                        Colspan = 8,
                         Padding = 5
                     };
                     table.AddCell(userTotalHeaderCell);

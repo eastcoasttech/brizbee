@@ -38,6 +38,10 @@ namespace Brizbee
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.EmailAddress)
                 .IsUnique();
+
+            modelBuilder.Entity<Organization>()
+                .HasIndex(o => o.Code)
+                .IsUnique();
         }
     }
 }

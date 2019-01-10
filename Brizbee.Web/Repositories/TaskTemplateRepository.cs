@@ -27,7 +27,7 @@ namespace Brizbee.Repositories
             }
 
             // Auto-generated
-            taskTemplate.CreatedAt = DateTime.Now;
+            taskTemplate.CreatedAt = DateTime.UtcNow;
             taskTemplate.OrganizationId = currentUser.OrganizationId;
 
             db.TaskTemplates.Add(taskTemplate);

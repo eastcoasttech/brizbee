@@ -14,13 +14,11 @@ namespace Brizbee.Mobile
         {
             InitializeComponent();
 
-            Current.Properties["RestClient"] = new RestClient("https://brizbeeweb.azurewebsites.net/");
+            //Current.Properties["RestClient"] = new RestClient("https://brizbeeweb.azurewebsites.net/");
+            Current.Properties["RestClient"] = new RestClient("http://localhost:54313/");
 
             //MainPage = new MainPage();
             MainPage = new NavigationPage(new LoginPage());
-            //{
-            //    BarBackgroundColor = Color.DarkGray
-            //};
         }
 
         protected override void OnStart()

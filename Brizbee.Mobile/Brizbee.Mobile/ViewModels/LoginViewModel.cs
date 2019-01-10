@@ -4,6 +4,7 @@ using Brizbee.Mobile.Views;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Input;
 using Xamarin.Forms;
@@ -58,7 +59,7 @@ namespace Brizbee.Mobile.ViewModels
                     PinUserPin = PinNumber
                 }
             });
-
+            
             // Execute request to authenticate user
             var response = await client.ExecuteTaskAsync<Credential>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
@@ -83,7 +84,7 @@ namespace Brizbee.Mobile.ViewModels
             {
                 IsBusy = false;
                 OnPropertyChanged("IsEnabled");
-                throw new Exception(response.Content);
+                Trace.TraceWarning(response.Content);
             }
         }
 
@@ -113,7 +114,7 @@ namespace Brizbee.Mobile.ViewModels
             {
                 IsBusy = false;
                 OnPropertyChanged("IsEnabled");
-                throw new Exception(response.Content);
+                Trace.TraceWarning(response.Content);
             }
         }
     }

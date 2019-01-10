@@ -273,6 +273,14 @@
     <Compile Include="Migrations\201901011918525_AddingDescriptionToJob.Designer.cs">
       <DependentUpon>201901011918525_AddingDescriptionToJob.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201901051910149_MakingOrganizationCodeUnique.cs" />
+    <Compile Include="Migrations\201901051910149_MakingOrganizationCodeUnique.Designer.cs">
+      <DependentUpon>201901051910149_MakingOrganizationCodeUnique.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201901101511089_AddingPunchCount.cs" />
+    <Compile Include="Migrations\201901101511089_AddingPunchCount.Designer.cs">
+      <DependentUpon>201901101511089_AddingPunchCount.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -399,6 +407,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201901011918525_AddingDescriptionToJob.resx">
       <DependentUpon>201901011918525_AddingDescriptionToJob.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901051910149_MakingOrganizationCodeUnique.resx">
+      <DependentUpon>201901051910149_MakingOrganizationCodeUnique.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901101511089_AddingPunchCount.resx">
+      <DependentUpon>201901101511089_AddingPunchCount.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

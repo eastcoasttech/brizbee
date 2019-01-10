@@ -23,6 +23,7 @@ namespace Brizbee.Repositories
         /// <returns>The created commit</returns>
         public Commit Create(Commit commit, User currentUser)
         {
+
             // Ensure that user is authorized
             if (!CommitPolicy.CanCreate(commit, currentUser))
             {
@@ -30,10 +31,17 @@ namespace Brizbee.Repositories
             }
 
             var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            
+            var inAtUnspecified = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
+            var inAtUtc = TimeZoneInfo.ConvertTimeToUtc(inAtUnspecified, tz);
+
+            var outAtUnspecified = new DateTime(commit.OutAt.Year, commit.OutAt.Month, commit.OutAt.Day, 23, 59, 59, DateTimeKind.Unspecified);
+            var outAtUtc = TimeZoneInfo.ConvertTimeToUtc(outAtUnspecified, tz);
 
             // Ensure that no two commits overlap
             var overlap = db.Commits
-                .Where(c => (commit.InAt < c.OutAt) && (c.InAt < commit.OutAt))
+                .Where(c => (inAtUtc < c.OutAt) && (c.InAt < outAtUtc))
                 .FirstOrDefault();
             if (overlap != null)
             {
@@ -49,6 +57,8 @@ namespace Brizbee.Repositories
             commit.CreatedAt = DateTime.UtcNow;
             commit.OrganizationId = currentUser.OrganizationId;
             commit.UserId = currentUser.Id;
+            commit.InAt = inAtUtc;
+            commit.OutAt = outAtUtc;
 
             db.Commits.Add(commit);
 
@@ -56,8 +66,6 @@ namespace Brizbee.Repositories
 
             // Split at midnight every night
             var splitter = new PunchSplitter();
-            DateTime inAt = commit.InAt;
-            DateTime outAt = commit.OutAt;
             var localTz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
             var hourLocal = new DateTime(2018, 1, 1, 0, 0, 0);
             var hourUtc = hourLocal.Hour;
@@ -65,14 +73,15 @@ namespace Brizbee.Repositories
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id)
                 .ToArray();
-            splitter.SplitAtHour(userIds, inAt, outAt, hourUtc, currentUser);
+            splitter.SplitAtHour(userIds, inAtUtc, outAtUtc, hourUtc, currentUser);
 
-            // Commit all the punches within range
-            var punches = db.Punches.Where(p => (p.InAt >= commit.InAt) && (p.OutAt <= commit.OutAt));
+            // Commit all the punches within range and save the PunchCount
+            var punches = db.Punches.Where(p => (p.InAt >= inAtUtc) && (p.OutAt <= outAtUtc));
             foreach (var punch in punches)
             {
                 punch.CommitId = commit.Id;
             }
+            commit.PunchCount = punches.Count();
 
             db.SaveChanges();
 

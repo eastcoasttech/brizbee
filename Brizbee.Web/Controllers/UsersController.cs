@@ -170,7 +170,7 @@ namespace Brizbee.Controllers
 
             var service = new SecurityService();
 
-            var now = DateTime.Now.Ticks.ToString();
+            var now = DateTime.UtcNow.Ticks.ToString();
             var token = string.Format("{0} {1} {2}", "SECRET KEY", user.Id.ToString(), now);
             credential.AuthToken = service.GenerateHash(token);
             credential.AuthExpiration = now;

@@ -17,6 +17,7 @@ namespace Brizbee.Common.Models
         public string Name { get; set; }
 
         [Required]
+        [MaxLength(8)]
         public string Code { get; set; }
 
         [Required]

@@ -23,7 +23,7 @@ namespace Brizbee.Repositories
             var customer = db.Customers.Find(job.CustomerId);
 
             // Auto-generated
-            job.CreatedAt = DateTime.Now;
+            job.CreatedAt = DateTime.UtcNow;
             job.CustomerId = customer.Id;
 
             db.Jobs.Add(job);

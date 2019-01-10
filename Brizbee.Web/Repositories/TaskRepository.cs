@@ -23,7 +23,7 @@ namespace Brizbee.Repositories
             var job = db.Jobs.Find(task.JobId);
 
             // Auto-generated
-            task.CreatedAt = DateTime.Now;
+            task.CreatedAt = DateTime.UtcNow;
             task.JobId = job.Id;
 
             db.Tasks.Add(task);

@@ -37,6 +37,9 @@ namespace Brizbee.Mobile.ViewModels
 
         private async System.Threading.Tasks.Task RefreshCurrentPunch()
         {
+            var user = Application.Current.Properties["CurrentUser"] as User;
+            var organization = user.Organization;
+
             while (true)
             {
                 IsBusy = true;
@@ -51,6 +54,10 @@ namespace Brizbee.Mobile.ViewModels
                 {
                     if (response.Data != null)
                     {
+                        var inAt = TimeZoneInfo
+                            .ConvertTimeBySystemTimeZoneId(response.Data.InAt,
+                                organization.TimeZone);
+
                         CustomerNumberAndName = string.Format("{0} - {1}",
                                 response.Data.Task.Job.Customer.Number,
                                 response.Data.Task.Job.Customer.Name)
@@ -64,7 +71,7 @@ namespace Brizbee.Mobile.ViewModels
                                 response.Data.Task.Name)
                             .ToUpper();
                         Since = string.Format("SINCE {0}",
-                                response.Data.CreatedAt.ToString("MMM d, yyyy h:mm tt"))
+                                inAt.ToString("MMM d, yyyy h:mm tt"))
                             .ToUpper();
                         IsPunchedOut = false;
                         IsPunchedIn = true;
@@ -92,7 +99,7 @@ namespace Brizbee.Mobile.ViewModels
                     throw new Exception(response.Content);
                 }
 
-                await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(15));
+                await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(30));
             }
         }
     }

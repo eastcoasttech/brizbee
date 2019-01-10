@@ -55,7 +55,7 @@ namespace Brizbee.Repositories
             }
 
             // Auto-generated
-            user.CreatedAt = DateTime.Now;
+            user.CreatedAt = DateTime.UtcNow;
             user.OrganizationId = currentUser.OrganizationId;
 
             if (user.Password != null)
@@ -152,68 +152,88 @@ namespace Brizbee.Repositories
 
         public User Register(User user, Organization organization)
         {
-            // Ensure Email address is unique
-            var duplicate = db.Users.Where(u => u.EmailAddress.ToLower().Equals(user.EmailAddress));
-            if (duplicate.Any())
+            using (var transaction = db.Database.BeginTransaction())
             {
-                throw new DuplicateException("Email Address is already taken");
-            }
-
-            // Generates a password hash and salt
-            var service = new SecurityService();
-            user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
-            user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
-            user.Password = null;
-
-            // Auto-generated
-            user.Role = "Administrator";
-            user.CreatedAt = DateTime.Now;
-            organization.CreatedAt = DateTime.Now;
-            organization.Code = GenerateOrganizationCode();
-
-            try
-            {
-                // Create a Stripe customer object
-                var customerOptions = new StripeCustomerCreateOptions
+                try
                 {
-                    Email = user.EmailAddress
-                };
-                var customers = new StripeCustomerService();
-                StripeCustomer customer = customers.Create(customerOptions);
-                organization.StripeCustomerId = customer.Id;
-
-                // Subscribe the customer to the default plan
-                var items = new List<StripeSubscriptionItemOption> {
-                    new StripeSubscriptionItemOption {
-                        PlanId = "plan_CREJJE9VGQJjnN",
-                        Quantity = 1,
+                    // Ensure Email address is unique
+                    var duplicate = db.Users.Where(u => u.EmailAddress.ToLower().Equals(user.EmailAddress));
+                    if (duplicate.Any())
+                    {
+                        throw new DuplicateException("Email Address is already taken");
                     }
-                };
-                var subscriptionOptions = new StripeSubscriptionCreateOptions
+
+                    // Generates a password hash and salt
+                    var service = new SecurityService();
+                    user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                    user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                    user.Password = null;
+
+                    // Auto-generated
+                    user.Role = "Administrator";
+                    user.CreatedAt = DateTime.UtcNow;
+                    organization.CreatedAt = DateTime.UtcNow;
+                    organization.Code = GenerateOrganizationCode();
+
+                    try
+                    {
+                        // Create a Stripe customer object
+                        var customerOptions = new StripeCustomerCreateOptions
+                        {
+                            Email = user.EmailAddress
+                        };
+                        var customers = new StripeCustomerService();
+                        StripeCustomer customer = customers.Create(customerOptions);
+                        organization.StripeCustomerId = customer.Id;
+
+                        // Subscribe the customer to the default plan
+                        var items = new List<StripeSubscriptionItemOption> {
+                            new StripeSubscriptionItemOption {
+                                PlanId = "plan_CREJJE9VGQJjnN",
+                                Quantity = 1,
+                            }
+                        };
+                        var subscriptionOptions = new StripeSubscriptionCreateOptions
+                        {
+                            Items = items,
+                            TrialPeriodDays = 30,
+                            CustomerId = customer.Id
+                        };
+                        var subscriptions = new StripeSubscriptionService();
+                        StripeSubscription subscription = subscriptions.Create(subscriptionOptions);
+                        organization.StripeSubscriptionId = subscription.Id;
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceWarning(ex.ToString());
+                        #if DEBUG
+                        organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
+                        organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
+                        #endif
+                        #if !DEBUG
+                        throw;
+                        #endif
+                    }
+
+                    // Save the organization and user
+                    db.Organizations.Add(organization);
+                    user.OrganizationId = organization.Id;
+
+                    db.Users.Add(user);
+
+                    db.SaveChanges();
+
+                    transaction.Commit();
+
+                    return user;
+                }
+                catch (Exception ex)
                 {
-                    Items = items,
-                    TrialPeriodDays = 30,
-                    CustomerId = customer.Id
-                };
-                var subscriptions = new StripeSubscriptionService();
-                StripeSubscription subscription = subscriptions.Create(subscriptionOptions);
-                organization.StripeSubscriptionId = subscription.Id;
+                    Trace.TraceWarning(ex.ToString());
+                    transaction.Rollback();
+                    throw;
+                }
             }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning(ex.ToString());
-                throw;
-            }
-            
-            // Save the organization and user
-            db.Organizations.Add(organization);
-            user.OrganizationId = organization.Id;
-
-            db.Users.Add(user);
-
-            db.SaveChanges();
-
-            return user;
         }
 
         private string GenerateOrganizationCode()
