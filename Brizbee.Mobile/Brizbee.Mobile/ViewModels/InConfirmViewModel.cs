@@ -13,6 +13,7 @@ namespace Brizbee.Mobile.ViewModels
 {
     public class InConfirmViewModel : BaseViewModel
     {
+        public Page Page { get; set; }
         public bool IsEnabled { get; set; }
         public string JobNumberAndName { get; set; }
         public string CustomerNumberAndName { get; set; }
@@ -79,7 +80,7 @@ namespace Brizbee.Mobile.ViewModels
             {
                 IsBusy = false;
                 IsEnabled = true;
-                throw new Exception(response.Content);
+                await Page.DisplayAlert("Oops!", response.Content, "Try again");
             }
         }
     }

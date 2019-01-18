@@ -13,13 +13,13 @@ namespace Brizbee.Mobile.ViewModels
 {
     public class InTaskViewModel : BaseViewModel
     {
+        public Page Page { get; set; }
         public string TaskNumber { get; set; }
         public bool IsEnabled { get; set; }
 
         private RestClient client = Application.Current.Properties["RestClient"] as RestClient;
 
         public ICommand ContinueCommand { get; }
-        public ICommand ScanCommand { get; }
 
         public InTaskViewModel()
         {
@@ -29,7 +29,6 @@ namespace Brizbee.Mobile.ViewModels
             ResetPage();
 
             ContinueCommand = new Command(async () => await LoadTask());
-            ScanCommand = new Command(async () => await Scan());
         }
 
         public void ResetPage()
@@ -60,18 +59,14 @@ namespace Brizbee.Mobile.ViewModels
                 }
                 else
                 {
-                    throw new Exception("There is no task with that number");
+                    await Page.DisplayAlert("Oops!", "There is no task with that number", "Try again");
                 }
             }
             else
             {
                 IsEnabled = true;
-                throw new Exception(response.Content);
+                await Page.DisplayAlert("Oops!", response.Content, "Try again");
             }
-        }
-
-        private async System.Threading.Tasks.Task Scan()
-        {
         }
     }
 }

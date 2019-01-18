@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Brizbee.Mobile.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,8 @@ namespace Brizbee.Mobile.Views
         public OutDonePage()
 		{
 			InitializeComponent();
-		}
+            (BindingContext as OutDoneViewModel).Page = this;
+        }
 
         protected override void OnAppearing()
         {

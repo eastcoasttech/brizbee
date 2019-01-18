@@ -13,6 +13,7 @@ namespace Brizbee.Mobile.ViewModels
 {
     public class LoginViewModel : BaseViewModel
     {
+        public Page Page { get; set; }
         public string OrganizationCode { get; set; }
         public string PinNumber { get; set; }
         public bool IsEnabled
@@ -84,7 +85,7 @@ namespace Brizbee.Mobile.ViewModels
             {
                 IsBusy = false;
                 OnPropertyChanged("IsEnabled");
-                Trace.TraceWarning(response.Content);
+                await Page.DisplayAlert("Oops!", response.Content, "Try again");
             }
         }
 
@@ -114,7 +115,7 @@ namespace Brizbee.Mobile.ViewModels
             {
                 IsBusy = false;
                 OnPropertyChanged("IsEnabled");
-                Trace.TraceWarning(response.Content);
+                await Page.DisplayAlert("Oops!", response.Content, "Try again");
             }
         }
     }

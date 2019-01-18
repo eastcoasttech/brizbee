@@ -16,6 +16,7 @@ namespace Brizbee.Mobile.Views
 		public LoginPage()
 		{
 			InitializeComponent();
+            (BindingContext as LoginViewModel).Page = this;
         }
 
         protected override void OnAppearing()

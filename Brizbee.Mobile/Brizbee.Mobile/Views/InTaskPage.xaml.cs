@@ -17,10 +17,11 @@ namespace Brizbee.Mobile.Views
     {
         INavigation nav = Application.Current.MainPage.Navigation;
 
-        public InTaskPage ()
+        public InTaskPage()
 		{
-			InitializeComponent ();
-		}
+			InitializeComponent();
+            (BindingContext as InTaskViewModel).Page = this;
+        }
 
         private void BtnCancel_Clicked(object sender, EventArgs e)
         {

@@ -16,7 +16,8 @@ namespace Brizbee.Mobile.Views
         public InDonePage()
 		{
 			InitializeComponent();
-		}
+            (BindingContext as InDoneViewModel).Page = this;
+        }
 
         protected override void OnAppearing()
         {

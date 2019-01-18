@@ -9,6 +9,7 @@ namespace Brizbee.Mobile.ViewModels
 {
     public class InDoneViewModel : BaseViewModel
     {
+        public Page Page { get; set; }
         public ICommand ExitCommand { get; }
         public ICommand MoreCommand { get; }
 

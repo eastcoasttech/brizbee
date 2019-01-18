@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Brizbee.Mobile.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,25 @@ namespace Brizbee.Mobile.Views
         public StatusPage()
 		{
 			InitializeComponent();
-		}
+            (BindingContext as StatusViewModel).Page = this;
+        }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+
+            // Refresh every 15 seconds
+            Device.StartTimer(TimeSpan.FromSeconds(15), () => {
+                // Run on the main thread so that the interface is updated
+                Device.BeginInvokeOnMainThread(() =>
+                    (BindingContext as StatusViewModel).RefreshCurrentPunch()
+                );
+                return true;
+            });
+
+            // Refresh now
+            (BindingContext as StatusViewModel).RefreshCurrentPunch();
+        }
 
         private void BtnExit_Clicked(object sender, EventArgs e)
         {

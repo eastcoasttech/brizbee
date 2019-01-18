@@ -12,6 +12,7 @@ namespace Brizbee.Mobile.ViewModels
 {
     public class OutConfirmViewModel : BaseViewModel
     {
+        public Page Page { get; set; }
         public bool IsEnabled { get; set; }
 
         private RestClient client = Application.Current.Properties["RestClient"] as RestClient;
@@ -69,7 +70,7 @@ namespace Brizbee.Mobile.ViewModels
             {
                 IsBusy = false;
                 IsEnabled = true;
-                throw new Exception(response.Content);
+                await Page.DisplayAlert("Oops!", response.Content, "Try again");
             }
         }
     }

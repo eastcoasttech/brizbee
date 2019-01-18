@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Brizbee.Mobile.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +15,11 @@ namespace Brizbee.Mobile.Views
     {
         INavigation nav = Application.Current.MainPage.Navigation;
 
-        public OutConfirmPage ()
+        public OutConfirmPage()
 		{
-			InitializeComponent ();
-		}
+			InitializeComponent();
+            (BindingContext as OutConfirmViewModel).Page = this;
+        }
 
         private void BtnCancel_Clicked(object sender, EventArgs e)
         {
