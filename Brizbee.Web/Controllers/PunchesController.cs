@@ -96,10 +96,16 @@ namespace Brizbee.Controllers
         {
             var taskId = (int)parameters["TaskId"];
             var source = (string)parameters["SourceForInAt"];
+            var timezone = (string)parameters["InAtTimeZone"];
 
             try
             {
-                var punch = repo.PunchIn(taskId, CurrentUser(), source);
+                var punch = repo.PunchIn(taskId, CurrentUser(),
+                    string.Format("{0} @ {1} @ {2}",
+                        source,
+                        HttpContext.Current.Request.UserHostAddress,
+                        HttpContext.Current.Request.UserAgent),
+                    timezone);
                 return Created(punch);
             }
             catch (Exception ex)
@@ -114,10 +120,16 @@ namespace Brizbee.Controllers
         public IHttpActionResult PunchOut(ODataActionParameters parameters)
         {
             var source = (string)parameters["SourceForOutAt"];
+            var timezone = (string)parameters["OutAtTimeZone"];
 
             try
             {
-                var punch = repo.PunchOut(CurrentUser(), source);
+                var punch = repo.PunchOut(CurrentUser(),
+                    string.Format("{0} @ {1} @ {2}",
+                        source,
+                        HttpContext.Current.Request.UserHostAddress,
+                        HttpContext.Current.Request.UserAgent),
+                    timezone);
                 return Created(punch);
             }
             catch (Exception ex)

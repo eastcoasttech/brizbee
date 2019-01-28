@@ -22,6 +22,19 @@ namespace Brizbee.Repositories
         }
 
         /// <summary>
+        /// Returns the organization with the given id.
+        /// </summary>
+        /// <param name="id">The id of the organization</param>
+        /// <param name="currentUser">The organization to check for permissions</param>
+        /// <returns>The organization with the given id</returns>
+        public Organization Get(int id, User currentUser)
+        {
+            return db.Organizations
+                .Where(o => o.Id == currentUser.OrganizationId)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
         /// Updates the given organization with the given delta of changes.
         /// </summary>
         /// <param name="id">The id of the organization</param>

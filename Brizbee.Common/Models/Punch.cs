@@ -25,6 +25,8 @@ namespace Brizbee.Common.Models
         [Column(TypeName = "datetime2")]
         public DateTime InAt { get; set; }
 
+        public string InAtTimeZone { get; set; }
+
         [NotMapped]
         public double Minutes
         {
@@ -43,6 +45,8 @@ namespace Brizbee.Common.Models
 
         [Column(TypeName = "datetime2")]
         public DateTime? OutAt { get; set; }
+
+        public string OutAtTimeZone { get; set; }
 
         public string SourceForInAt { get; set; }
 

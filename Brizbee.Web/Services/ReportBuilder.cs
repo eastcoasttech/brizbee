@@ -1,8 +1,9 @@
 ﻿using Brizbee.Common.Models;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using NodaTime;
 using System;
-using System.Data.Entity;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -21,13 +22,13 @@ namespace Brizbee.Services
         private Font fontFooter = new Font(Font.FontFamily.HELVETICA, 9, Font.NORMAL);
         private float pageWidth = 0f;
 
-        public byte[] PunchesByUserAsPdf(int[] userIds, DateTime min, DateTime max, User currentUser)
+        public byte[] PunchesByUserAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime minUtc, DateTime maxUtc, User currentUser)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
             var organization = db.Organizations.Find(currentUser.OrganizationId);
             var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
-
+            
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
             {
@@ -39,14 +40,14 @@ namespace Brizbee.Services
                 document.AddCreator("BRIZBEE");
                 document.AddTitle(string.Format(
                     "Punches by User {0} thru {1}.pdf",
-                    TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                    TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()));
+                    TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
+                    TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()));
 
                 // Header
                 writer.PageEvent = new Header(
                     string.Format("REPORT: PUNCHES BY USER {0} thru {1}",
-                        TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                        TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
+                        TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
+                        TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()),
                     TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz));
                 
                 // Open the document to enable you to write to the document
@@ -56,9 +57,23 @@ namespace Brizbee.Services
                 PdfPTable table = new PdfPTable(9);
                 table.WidthPercentage = 100;
                 table.SetWidths(new float[] { 10, 7, 10, 7, 18, 18, 18, 6, 6 });
-
-                Trace.TraceInformation("Getting users");
-                var users = db.Users.Where(u => userIds.Contains(u.Id)).OrderBy(u => u.Name).ToList();
+                
+                // Get the users depending on the filtered scope
+                List<User> users;
+                if (userScope == "specific")
+                {
+                    users = db.Users
+                        .Where(u => userIds.Contains(u.Id))
+                        .OrderBy(u => u.Name)
+                        .ToList();
+                }
+                else
+                {
+                    users = db.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .OrderBy(u => u.Name)
+                        .ToList();
+                }
                 foreach (var user in users)
                 {
                     // User Name and Spacer
@@ -83,23 +98,38 @@ namespace Brizbee.Services
                     };
                     table.AddCell(nameSpacerCell);
 
-                    Trace.TraceInformation("Getting punches");
-                    var punches = db.Punches
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
-                        .Where(p => p.UserId == user.Id)
-                        .OrderBy(p => p.InAt)
-                        .ToList();
-
-                    Trace.TraceInformation("Check for zero punches");
-                    // Add a message for no punches
+                    // Get all the punches for the user
+                    // either for any job or a specific job
+                    List<Punch> punches;
+                    if (jobScope == "specific")
+                    {
+                        punches = db.Punches
+                            .Include("Task")
+                            .Where(p => p.OutAt.HasValue)
+                            .Where(p => p.InAt >= minUtc && p.OutAt <= maxUtc)
+                            .Where(p => p.UserId == user.Id)
+                            .Where(p => jobIds.Contains(p.Task.JobId))
+                            .OrderBy(p => p.InAt)
+                            .ToList();
+                    }
+                    else
+                    {
+                        punches = db.Punches
+                            .Where(p => p.OutAt.HasValue)
+                            .Where(p => p.InAt >= minUtc && p.OutAt <= maxUtc)
+                            .Where(p => p.UserId == user.Id)
+                            .OrderBy(p => p.InAt)
+                            .ToList();
+                    }
+                    
                     if (punches.Count() == 0)
                     {
+                        // Add a message if there are no punches
                         var noneCell = new PdfPCell(new Phrase(
                             string.Format("There are no punches for {0} between {1} and {2}",
                                 user.Name,
-                                TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                                TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
+                                TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
+                                TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()),
                             fontP))
                         {
                             Colspan = 9,
@@ -109,8 +139,7 @@ namespace Brizbee.Services
                         };
                         table.AddCell(noneCell);
                     }
-
-                    Trace.TraceInformation("Getting dates");
+                    
                     // Loop each date and print each punch
                     var dates = punches
                         .GroupBy(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date)
@@ -366,8 +395,8 @@ namespace Brizbee.Services
                 {
                     document.Add(new Phrase(
                         string.Format("There are no users with punches between {0} and {1}",
-                            TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                            TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
+                            TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
+                            TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()),
                         fontP));
                 }
 
@@ -388,7 +417,7 @@ namespace Brizbee.Services
             return buffer;
         }
 
-        public byte[] PunchesByJobAndTaskAsPdf(int[] userIds, int[] jobIds, DateTime min, DateTime max, User currentUser)
+        public byte[] PunchesByJobAndTaskAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, User currentUser)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
@@ -423,31 +452,44 @@ namespace Brizbee.Services
                 PdfPTable table = new PdfPTable(7);
                 table.WidthPercentage = 100;
 
-                // Select all job ids to generate report if no jobs are filtered
-                int[] filteredJobIds;
-                if (jobIds.Count() == 0)
+                // Get all the job ids for this organization
+                // if the job scope is not for specific job ids
+                if (jobScope != "specific")
                 {
                     var customerIds = db.Customers
                         .Where(c => c.OrganizationId == currentUser.OrganizationId)
                         .Select(c => c.Id);
-                    filteredJobIds = db.Jobs
+                    jobIds = db.Jobs
                         .Where(j => customerIds.Contains(j.CustomerId))
                         .Select(j => j.Id)
                         .ToArray();
                 }
+
+                // Get all the punches for either specific users
+                // or all the users in this organization
+                List<Punch> punches;
+                if (userScope == "specific")
+                {
+                    punches = db.Punches
+                        .Include("Task")
+                        .Include("Task.Job")
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => jobIds.Contains(p.Task.JobId))
+                        .Where(p => userIds.Contains(p.UserId))
+                        .ToList();
+                }
                 else
                 {
-                    filteredJobIds = jobIds;
+                    punches = db.Punches
+                        .Include("Task")
+                        .Include("Task.Job")
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => jobIds.Contains(p.Task.JobId))
+                        .ToList();
                 }
 
-                var punches = db.Punches
-                    .Include("Task")
-                    .Include("Task.Job")
-                    .Where(p => p.OutAt.HasValue)
-                    .Where(p => p.InAt >= min && p.OutAt <= max)
-                    .Where(p => filteredJobIds.Contains(p.Task.JobId))
-                    .ToList();
-                
                 var groupedJobIds = punches
                     .GroupBy(p => p.Task.JobId)
                     .Select(g => g.Key)
@@ -595,7 +637,7 @@ namespace Brizbee.Services
                 }
 
                 // Add a message for no jobs
-                if (filteredJobIds.Count() == 0)
+                if (jobIds.Count() == 0)
                 {
                     document.Add(new Paragraph(
                         string.Format("There are no jobs with punches between {0} and {1}",
@@ -621,7 +663,7 @@ namespace Brizbee.Services
             return buffer;
         }
 
-        public byte[] PunchesByDayAsPdf(int[] userIds, int[] jobIds, DateTime min, DateTime max, User currentUser)
+        public byte[] PunchesByDayAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, User currentUser)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
@@ -657,30 +699,44 @@ namespace Brizbee.Services
                 table.WidthPercentage = 100;
                 table.SetWidths(new float[] { 6, 6, 6, 6, 17, 17, 17, 17, 8 });
 
-                // Select all job ids to generate report if no jobs are filtered
-                int[] filteredJobIds;
-                if (jobIds.Count() == 0)
+
+                // Get all the job ids for this organization
+                // if the job scope is not for specific job ids
+                if (jobScope != "specific")
                 {
                     var customerIds = db.Customers
                         .Where(c => c.OrganizationId == currentUser.OrganizationId)
                         .Select(c => c.Id);
-                    filteredJobIds = db.Jobs
+                    jobIds = db.Jobs
                         .Where(j => customerIds.Contains(j.CustomerId))
                         .Select(j => j.Id)
                         .ToArray();
                 }
+
+                // Get all the punches for either specific users
+                // or all the users in this organization
+                List<Punch> punches;
+                if (userScope == "specific")
+                {
+                    punches = db.Punches
+                        .Include("Task")
+                        .Include("Task.Job")
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => jobIds.Contains(p.Task.JobId))
+                        .Where(p => userIds.Contains(p.UserId))
+                        .ToList();
+                }
                 else
                 {
-                    filteredJobIds = jobIds;
+                    punches = db.Punches
+                        .Include("Task")
+                        .Include("Task.Job")
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => jobIds.Contains(p.Task.JobId))
+                        .ToList();
                 }
-
-                var punches = db.Punches
-                    .Include("Task")
-                    .Include("Task.Job")
-                    .Where(p => p.OutAt.HasValue)
-                    .Where(p => p.InAt >= min && p.OutAt <= max)
-                    .Where(p => filteredJobIds.Contains(p.Task.JobId))
-                    .ToList();
                 
                 // Loop each date and print each punch
                 var dates = punches

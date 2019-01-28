@@ -1,4 +1,5 @@
 ﻿using Brizbee.Common.Models;
+using NodaTime;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -46,9 +47,12 @@ namespace Brizbee.Mobile.ViewModels
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    var inAt = TimeZoneInfo
-                        .ConvertTimeBySystemTimeZoneId(response.Data.InAt,
-                            organization.TimeZone);
+                    var inAt = DateTime.SpecifyKind(response.Data.InAt, DateTimeKind.Local);
+
+                    // Get abbreviation for time zone of InAt
+                    var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(response.Data.InAtTimeZone);
+                    var nowInstant = SystemClock.Instance.GetCurrentInstant();
+                    var nowLocal = nowInstant.InZone(tz);
 
                     CustomerNumberAndName = string.Format("{0} - {1}",
                             response.Data.Task.Job.Customer.Number,
@@ -62,8 +66,9 @@ namespace Brizbee.Mobile.ViewModels
                             response.Data.Task.Number,
                             response.Data.Task.Name)
                         .ToUpper();
-                    Since = string.Format("SINCE {0}",
-                            inAt.ToString("MMM d, yyyy h:mm tt"))
+                    Since = string.Format("SINCE {0} {1}",
+                            inAt.ToString("MMM d, yyyy h:mm tt"),
+                            nowLocal.ToDateTimeUnspecified().ToString("z"))
                         .ToUpper();
                     IsPunchedOut = false;
                     IsPunchedIn = true;

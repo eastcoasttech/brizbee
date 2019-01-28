@@ -1,4 +1,5 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -267,36 +268,38 @@ namespace Brizbee.Controllers
             if (BrizbeeAuth != brizbeeAuth) { new Exception("Not Authorized"); }
 
             var user = db.Users.Find(int.Parse(UserId));
-            var now = DateTime.UtcNow;
+            var timezone = user.TimeZone;
+            var task = db.Tasks.Find(int.Parse(TaskId));
 
             if (Digits.Equals("1"))
             {
-                var existing = db.Punches
-                    .Where(p => p.UserId == user.Id)
-                    .Where(p => !p.OutAt.HasValue)
-                    .OrderByDescending(p => p.InAt)
-                    .FirstOrDefault();
+                var punch = new PunchRepository().PunchIn(task.Id, user, From, timezone);
 
-                // Punch out the user on any existing tasks
-                if (existing != null)
-                {
-                    existing.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
-                    existing.SourceForOutAt = From;
-                }
+                //var existing = db.Punches
+                //    .Where(p => p.UserId == user.Id)
+                //    .Where(p => !p.OutAt.HasValue)
+                //    .OrderByDescending(p => p.InAt)
+                //    .FirstOrDefault();
 
-                // Save the punch and hang up
-                var task = db.Tasks.Find(int.Parse(TaskId));
-                var punch = new Punch()
-                {
-                    CreatedAt = now,
-                    Guid = Guid.NewGuid(),
-                    InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0),
-                    SourceForInAt = From,
-                    TaskId = task.Id,
-                    UserId = user.Id
-                };
-                db.Punches.Add(punch);
-                db.SaveChanges();
+                //// Punch out the user on any existing tasks
+                //if (existing != null)
+                //{
+                //    existing.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
+                //    existing.SourceForOutAt = From;
+                //}
+
+                //// Save the punch and hang up
+                //var punch = new Punch()
+                //{
+                //    CreatedAt = now,
+                //    Guid = Guid.NewGuid(),
+                //    InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0),
+                //    SourceForInAt = From,
+                //    TaskId = task.Id,
+                //    UserId = user.Id
+                //};
+                //db.Punches.Add(punch);
+                //db.SaveChanges();
                 
                 string template = "<?xml version = '1.0'?>";
                 template += "<Response>";
@@ -345,14 +348,18 @@ namespace Brizbee.Controllers
         public HttpResponseMessage GetPunchOut(string BrizbeeAuth = "", string UserId = "", string Digits = "", string From = "")
         {
             var user = db.Users.Find(int.Parse(UserId));
-            var now = DateTime.UtcNow;
-            var punch = db.Punches.Where(p => p.UserId == user.Id)
-                .Where(p => !p.OutAt.HasValue)
-                .OrderByDescending(p => p.InAt)
-                .FirstOrDefault();
-            punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
-            punch.SourceForOutAt = From;
-            db.SaveChanges();
+            var timezone = user.TimeZone;
+
+            new PunchRepository().PunchOut(user, From, timezone);
+            
+            //var now = DateTime.UtcNow;
+            //var punch = db.Punches.Where(p => p.UserId == user.Id)
+            //    .Where(p => !p.OutAt.HasValue)
+            //    .OrderByDescending(p => p.InAt)
+            //    .FirstOrDefault();
+            //punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
+            //punch.SourceForOutAt = From;
+            //db.SaveChanges();
 
             string template = "<?xml version = '1.0'?>";
             template += "<Response>";

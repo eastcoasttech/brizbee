@@ -29,6 +29,9 @@ namespace Brizbee
                 defaults: new { id = RouteParameter.Optional }
             );
 
+            // Set timezone
+            config.SetTimeZoneInfo(TimeZoneInfo.Utc);
+
             // Custom authentication
             config.Filters.Add(new BrizbeeAuthorizeAttribute());
 
@@ -75,6 +78,12 @@ namespace Brizbee
                 .Collection
                 .Action("NextNumber");
 
+            // Collection Action - Organization - TimeZones
+            var timeZones = builder.EntityType<Organization>()
+                .Collection
+                .Function("TimeZones");
+            timeZones.ReturnsCollection<string>();
+
             // Collection Action - Register
             var register = builder.EntityType<User>()
                 .Collection
@@ -90,6 +99,7 @@ namespace Brizbee
                 .ReturnsFromEntitySet<Punch>("Punches");
             punchIn.Parameter<int>("TaskId");
             punchIn.Parameter<string>("SourceForInAt");
+            punchIn.Parameter<string>("InAtTimeZone");
 
             // Collection Action - PunchOut
             var punchOut = builder.EntityType<Punch>()
@@ -97,6 +107,7 @@ namespace Brizbee
                 .Action("PunchOut")
                 .ReturnsFromEntitySet<Punch>("Punches");
             punchOut.Parameter<string>("SourceForOutAt");
+            punchOut.Parameter<string>("OutAtTimeZone");
 
             // Collection Action - Split
             var split = builder.EntityType<Punch>()

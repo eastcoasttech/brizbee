@@ -1,7 +1,9 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Policies;
 using Microsoft.AspNet.OData;
+using NodaTime;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Brizbee.Repositories
@@ -20,7 +22,7 @@ namespace Brizbee.Repositories
         {
             var now = DateTime.UtcNow;
             var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            //var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             // Auto-generated
             punch.CreatedAt = now;
@@ -150,12 +152,27 @@ namespace Brizbee.Repositories
         /// </summary>
         /// <param name="taskId">The id of the task</param>
         /// <param name="currentUser">The user to punch in</param>
-        public Punch PunchIn(int taskId, User currentUser, string source)
+        public Punch PunchIn(int taskId, User currentUser, string source, string timezone)
         {
             var punch = new Punch();
-            var now = DateTime.UtcNow;
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var fiftyNine = new DateTime(
+                nowDateTime.Year,
+                nowDateTime.Month,
+                nowDateTime.Day,
+                nowDateTime.Hour,
+                nowDateTime.Minute,
+                59);
+            var zero = new DateTime(
+                nowDateTime.Year,
+                nowDateTime.Month,
+                nowDateTime.Day,
+                nowDateTime.Hour,
+                nowDateTime.Minute,
+                0);
 
             var existing = db.Punches.Where(p => p.UserId == currentUser.Id)
                 .Where(p => p.OutAt == null)
@@ -165,16 +182,22 @@ namespace Brizbee.Repositories
             if (existing != null)
             {
                 // Punch out the user
-                existing.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
+                existing.OutAt = fiftyNine;
+                existing.OutAtTimeZone = timezone;
+                punch.InAt = zero.AddMinutes(1);
+            }
+            else
+            {
+                punch.InAt = zero;
             }
 
             // Auto-generated
-            punch.CreatedAt = now;
-            punch.InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
+            punch.CreatedAt = nowInstant.InUtc().ToDateTimeUtc();
             punch.TaskId = taskId;
             punch.UserId = currentUser.Id;
             punch.Guid = Guid.NewGuid();
             punch.SourceForInAt = source;
+            punch.InAtTimeZone = timezone;
 
             db.Punches.Add(punch);
 
@@ -189,18 +212,28 @@ namespace Brizbee.Repositories
         /// to be the current timestamp.
         /// </summary>
         /// <param name="currentUser">The user to punch out</param>
-        public Punch PunchOut(User currentUser, string source)
+        public Punch PunchOut(User currentUser, string source, string timezone)
         {
-            var punch = db.Punches.Where(p => p.UserId == currentUser.Id)
-                .Where(p => p.OutAt == null)
+            var punch = db.Punches
+                .Where(p => p.UserId == currentUser.Id)
+                .Where(p => !p.OutAt.HasValue)
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
-            var now = DateTime.UtcNow;
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
-
-            punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var fiftyNine = new DateTime(
+                nowDateTime.Year,
+                nowDateTime.Month,
+                nowDateTime.Day,
+                nowDateTime.Hour,
+                nowDateTime.Minute,
+                59);
+            
+            punch.OutAt = fiftyNine;
             punch.SourceForOutAt = source;
+            punch.OutAtTimeZone = timezone;
 
             db.SaveChanges();
 

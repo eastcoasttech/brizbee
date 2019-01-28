@@ -156,6 +156,9 @@
     <Reference Include="Xamarin.iOS" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="NodaTime">
+      <Version>2.4.4</Version>
+    </PackageReference>
     <PackageReference Include="RestSharp">
       <Version>106.5.4</Version>
     </PackageReference>

@@ -42,5 +42,7 @@ namespace Brizbee.Common.Models
         [Required]
         [MaxLength(128)]
         public string Role { get; set; }
+
+        public string TimeZone { get; set; }
     }
 }
