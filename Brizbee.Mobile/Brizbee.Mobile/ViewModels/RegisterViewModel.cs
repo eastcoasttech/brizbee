@@ -139,37 +139,47 @@ namespace Brizbee.Mobile.ViewModels
 
         private async System.Threading.Tasks.Task Register()
         {
-            IsBusy = true;
-            OnPropertyChanged("IsEnabled");
-
-            // Build request to create user and organization
-            var request = new RestRequest("odata/Users/Default.Register", Method.POST);
-            request.AddJsonBody(new
+            try
             {
-                Organization = new
-                {
-                    Name = OrganizationName
-                },
-                User = new {
-                    FullName = FullName,
-                    EmailAddress = EmailAddress,
-                    Password = Password,
-                    TimeZone = SelectedTimeZone.Id
-                }
-            });
-
-            // Execute request to authenticate user
-            var response = await client.ExecuteTaskAsync(request);
-            if ((response.ResponseStatus == ResponseStatus.Completed) &&
-                    (response.StatusCode == System.Net.HttpStatusCode.Created))
-            {
-                // Do something
-            }
-            else
-            {
-                IsBusy = false;
+                IsBusy = true;
                 OnPropertyChanged("IsEnabled");
-                await Page.DisplayAlert("Oops!", response.Content, "Try again");
+
+                Trace.TraceInformation(SelectedTimeZone.Id);
+
+                // Build request to create user and organization
+                var request = new RestRequest("odata/Users/Default.Register", Method.POST);
+                request.AddJsonBody(new
+                {
+                    Organization = new
+                    {
+                        Name = OrganizationName
+                    },
+                    User = new
+                    {
+                        Name = FullName,
+                        EmailAddress = EmailAddress,
+                        Password = Password,
+                        TimeZone = SelectedTimeZone.Id
+                    }
+                });
+
+                // Execute request to authenticate user
+                var response = await client.ExecuteTaskAsync<User>(request);
+                if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                        (response.StatusCode == System.Net.HttpStatusCode.OK))
+                {
+                    await LoadCredentials();
+                }
+                else
+                {
+                    IsBusy = false;
+                    OnPropertyChanged("IsEnabled");
+                    await Page.DisplayAlert("Oops!", response.Content, "Try again");
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
             }
         }
     }

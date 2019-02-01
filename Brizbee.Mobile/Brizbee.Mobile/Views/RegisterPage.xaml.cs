@@ -16,7 +16,8 @@ namespace Brizbee.Mobile.Views
 		public RegisterPage ()
 		{
 			InitializeComponent ();
-		}
+            (BindingContext as RegisterViewModel).Page = this;
+        }
 
         private void PickerCountry_SelectedIndexChanged(object sender, EventArgs e)
         {
