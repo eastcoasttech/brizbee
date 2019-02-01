@@ -14,7 +14,7 @@ namespace Brizbee.Services
             using (var db = new BrizbeeWebContext())
             {
                 var organization = db.Organizations.Find(currentUser.OrganizationId);
-                var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
                 //var startTz = TimeZoneInfo.ConvertTime(start, tz);
                 //var finishTz = TimeZoneInfo.ConvertTime(finish, tz);
 
@@ -87,7 +87,7 @@ namespace Brizbee.Services
             using (var db = new BrizbeeWebContext())
             {
                 var organization = db.Organizations.Find(currentUser.OrganizationId);
-                var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
                 //var startTz = TimeZoneInfo.ConvertTime(start, tz);
                 //var finishTz = TimeZoneInfo.ConvertTime(finish, tz);
 

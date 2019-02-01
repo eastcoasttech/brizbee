@@ -9,7 +9,7 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
                 <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
                     <Label.FormattedText>
                         <FormattedString>
@@ -18,8 +18,10 @@
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>
-                <Button Text="MORE OPTIONS" Command="{Binding MoreCommand}" />
-                <Button Text="EXIT" Command="{Binding ExitCommand}" />
+                <Button Text="MORE OPTIONS" Command="{Binding MoreCommand}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="EXIT" Command="{Binding ExitCommand}"
+                    Style="{StaticResource buttonStyle}" />
             </StackLayout>
         </ScrollView>
     </ContentPage.Content>

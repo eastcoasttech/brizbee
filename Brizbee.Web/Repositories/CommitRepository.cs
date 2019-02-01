@@ -30,8 +30,8 @@ namespace Brizbee.Repositories
                 throw new NotAuthorizedException("You are not authorized to create the commit");
             }
 
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            //var organization = db.Organizations.Find(currentUser.OrganizationId);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             
             var inAtUnspecified = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
             var inAtUtc = TimeZoneInfo.ConvertTimeToUtc(inAtUnspecified, tz);
@@ -66,7 +66,7 @@ namespace Brizbee.Repositories
 
             // Split at midnight every night
             var splitter = new PunchSplitter();
-            var localTz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var localTz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             var hourLocal = new DateTime(2018, 1, 1, 0, 0, 0);
             var hourUtc = hourLocal.Hour;
             int[] userIds = db.Users

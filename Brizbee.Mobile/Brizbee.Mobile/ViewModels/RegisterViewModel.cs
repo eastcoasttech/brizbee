@@ -1,55 +1,65 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Brizbee.Common.Serialization;
+using Brizbee.Mobile.Models;
+using Brizbee.Mobile.Services;
 using Brizbee.Mobile.Views;
+using NodaTime;
+using NodaTime.TimeZones;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Windows.Input;
 using Xamarin.Forms;
 
 namespace Brizbee.Mobile.ViewModels
 {
-    public class LoginViewModel : BaseViewModel
+    public class RegisterViewModel : BaseViewModel
     {
+        public string EmailAddress { get; set; }
+        public string FullName { get; set; }
+        public string OrganizationName { get; set; }
         public Page Page { get; set; }
-        public string OrganizationCode { get; set; }
-        public string PinNumber { get; set; }
+        public string Password { get; set; }
+        public List<IanaTimeZone> TimeZones { get; set; }
+        public List<Country> Countries { get; set; }
+        public Country SelectedCountry { get; set; }
+        public IanaTimeZone SelectedTimeZone { get; set; }
         public bool IsEnabled
         {
             get { return !IsBusy; }
         }
+        public ICommand SaveCommand { get; }
 
         private RestClient client = Application.Current.Properties["RestClient"] as RestClient;
 
-        public ICommand LoginCommand { get; }
-        public ICommand RegisterCommand { get; }
-
-        public LoginViewModel()
+        public RegisterViewModel()
         {
-            Title = "Login to BRIZBEE";
+            Title = "Sign Up for BRIZBEE";
+            RefreshCountries();
 
-            ResetPage();
-
-            LoginCommand = new Command(async () => await LoadCredentials());
-            RegisterCommand = new Command(async () => await NavigateToRegister());
+            SaveCommand = new Command(async () => await Register());
         }
 
-        public void ResetPage()
+        public void RefreshCountries()
         {
-            OrganizationCode = "";
-            PinNumber = "";
-            OnPropertyChanged("OrganizationCode");
-            OnPropertyChanged("PinNumber");
-            IsBusy = false;
-            OnPropertyChanged("IsEnabled");
+            // Populate the list of countries
+            Countries = TimeZoneService.GetCountries();
+            OnPropertyChanged("Countries");
+            SelectedCountry = Countries.Where(c => c.Name == "United States").FirstOrDefault();
+            OnPropertyChanged("SelectedCountry");
         }
 
-        private async System.Threading.Tasks.Task NavigateToRegister()
+        public void RefreshTimeZones()
         {
-            var nav = Application.Current.MainPage.Navigation;
-            await nav.PushAsync(new RegisterPage());
+            // Populate the list of IANA time zones
+            TimeZones = TimeZoneService.GetTimeZones(SelectedCountry.CountryCode);
+            OnPropertyChanged("TimeZones");
+            SelectedTimeZone = TimeZones.FirstOrDefault();
+            OnPropertyChanged("SelectedTimeZone");
         }
 
         private async System.Threading.Tasks.Task LoadCredentials()
@@ -63,12 +73,12 @@ namespace Brizbee.Mobile.ViewModels
             {
                 Session = new
                 {
-                    Method = "pin",
-                    PinOrganizationCode = OrganizationCode,
-                    PinUserPin = PinNumber
+                    Method = "email",
+                    EmailAddress = EmailAddress,
+                    EmailPassword = Password
                 }
             });
-            
+
             // Execute request to authenticate user
             var response = await client.ExecuteTaskAsync<Credential>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
@@ -118,6 +128,42 @@ namespace Brizbee.Mobile.ViewModels
                 // Send message to refresh commits
                 //(Application.Current.Properties["MessageBus"] as MessageBus)
                 //    .Publish(new RefreshCommitsMessage());
+            }
+            else
+            {
+                IsBusy = false;
+                OnPropertyChanged("IsEnabled");
+                await Page.DisplayAlert("Oops!", response.Content, "Try again");
+            }
+        }
+
+        private async System.Threading.Tasks.Task Register()
+        {
+            IsBusy = true;
+            OnPropertyChanged("IsEnabled");
+
+            // Build request to create user and organization
+            var request = new RestRequest("odata/Users/Default.Register", Method.POST);
+            request.AddJsonBody(new
+            {
+                Organization = new
+                {
+                    Name = OrganizationName
+                },
+                User = new {
+                    FullName = FullName,
+                    EmailAddress = EmailAddress,
+                    Password = Password,
+                    TimeZone = SelectedTimeZone.Id
+                }
+            });
+
+            // Execute request to authenticate user
+            var response = await client.ExecuteTaskAsync(request);
+            if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                    (response.StatusCode == System.Net.HttpStatusCode.Created))
+            {
+                // Do something
             }
             else
             {

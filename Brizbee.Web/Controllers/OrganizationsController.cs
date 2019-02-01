@@ -1,10 +1,13 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Common.Serialization;
 using Brizbee.Repositories;
 using Microsoft.AspNet.OData;
 using NodaTime;
 using NodaTime.TimeZones;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -46,21 +49,42 @@ namespace Brizbee.Controllers
             return Updated(organization);
         }
 
-        // GET: odata/Organizations/Default.TimeZones
+        // GET: odata/Organizations/Default.Countries
+        [HttpGet]
+        [AllowAnonymous]
+        public IHttpActionResult Countries()
+        {
+            List<Country> countries = new List<Country>();
+
+            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+            foreach (var culture in cultures)
+            {
+                var region = new RegionInfo(culture.LCID);
+                if (!countries.Where(c => c.Name == region.EnglishName).Any())
+                {
+                    countries.Add(new Country() { CountryCode = region.TwoLetterISORegionName, Name = region.EnglishName });
+                }
+            }
+
+            return Ok(countries.OrderBy(c => c.Name).ToList());
+        }
+
+        // GET: odata/Organizations/Default.Countries
         [HttpGet]
         [AllowAnonymous]
         public IHttpActionResult TimeZones()
         {
-            List<string> zones = new List<string>();
+            List<IanaTimeZone> zones = new List<IanaTimeZone>();
             var now = SystemClock.Instance.GetCurrentInstant();
             var tzdb = DateTimeZoneProviders.Tzdb;
-            var countryCode = "US";
+            var countryCode = "";
 
             var list =
                 from location in TzdbDateTimeZoneSource.Default.ZoneLocations
                 where string.IsNullOrEmpty(countryCode) ||
                       location.CountryCode.Equals(countryCode,
-                                                  StringComparison.OrdinalIgnoreCase)
+                        StringComparison.OrdinalIgnoreCase)
                 let zoneId = location.ZoneId
                 let tz = tzdb[zoneId]
                 let offset = tz.GetZoneInterval(now).StandardOffset
@@ -68,22 +92,15 @@ namespace Brizbee.Controllers
                 select new
                 {
                     Id = zoneId,
-                    DisplayValue = string.Format("({0:+HH:mm}) {1}", offset, zoneId)
+                    CountryCode = location.CountryCode
                 };
-
-            //return list.ToDictionary(x => x.Id, x => x.DisplayValue);
             
             foreach (var z in list)
             {
-                zones.Add(z.Id);
+                //zones.Add(z.Id);
+                zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
             }
-
-
-            //foreach (TimeZoneInfo timeZone in TimeZoneInfo.GetSystemTimeZones())
-            //{
-            //    //zones.Add(timeZone.DisplayName.Substring(12));
-            //    zones.Add(timeZone.Id);
-            //}
+            
             return Ok(zones);
         }
 

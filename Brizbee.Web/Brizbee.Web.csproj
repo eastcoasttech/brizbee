@@ -301,6 +301,18 @@
     <Compile Include="Migrations\201901270543442_AddingInAtAndOutAtTimeZones.Designer.cs">
       <DependentUpon>201901270543442_AddingInAtAndOutAtTimeZones.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201901312033521_AddingCountryToOrganizations.cs" />
+    <Compile Include="Migrations\201901312033521_AddingCountryToOrganizations.Designer.cs">
+      <DependentUpon>201901312033521_AddingCountryToOrganizations.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902011600464_RenamingCountryToCountryCode.cs" />
+    <Compile Include="Migrations\201902011600464_RenamingCountryToCountryCode.Designer.cs">
+      <DependentUpon>201902011600464_RenamingCountryToCountryCode.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902011755109_RemovingTimeZoneAndCountryCode.cs" />
+    <Compile Include="Migrations\201902011755109_RemovingTimeZoneAndCountryCode.Designer.cs">
+      <DependentUpon>201902011755109_RemovingTimeZoneAndCountryCode.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -445,6 +457,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201901270543442_AddingInAtAndOutAtTimeZones.resx">
       <DependentUpon>201901270543442_AddingInAtAndOutAtTimeZones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901312033521_AddingCountryToOrganizations.resx">
+      <DependentUpon>201901312033521_AddingCountryToOrganizations.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902011600464_RenamingCountryToCountryCode.resx">
+      <DependentUpon>201902011600464_RenamingCountryToCountryCode.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902011755109_RemovingTimeZoneAndCountryCode.resx">
+      <DependentUpon>201902011755109_RemovingTimeZoneAndCountryCode.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

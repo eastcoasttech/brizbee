@@ -1,5 +1,6 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Brizbee.Common.Serialization;
 using Brizbee.Filters;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -78,11 +79,17 @@ namespace Brizbee
                 .Collection
                 .Action("NextNumber");
 
+            // Collection Action - Organization - Countries
+            var countries = builder.EntityType<Organization>()
+                .Collection
+                .Function("Countries");
+            countries.ReturnsCollection<Country>();
+
             // Collection Action - Organization - TimeZones
             var timeZones = builder.EntityType<Organization>()
                 .Collection
                 .Function("TimeZones");
-            timeZones.ReturnsCollection<string>();
+            timeZones.ReturnsCollection<IanaTimeZone>();
 
             // Collection Action - Register
             var register = builder.EntityType<User>()

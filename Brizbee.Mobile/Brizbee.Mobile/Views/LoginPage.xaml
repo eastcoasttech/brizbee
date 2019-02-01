@@ -9,10 +9,10 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
                 <Image Source="logo.png"
-                   HeightRequest="40"
-                   Margin="0,50,0,50"
+                   HeightRequest="30"
+                   Margin="0,20,0,30"
                    HorizontalOptions="Center" />
                 <Entry Placeholder="Your Organization Code"
                    x:Name="txtOrganizationCode"
@@ -28,16 +28,30 @@
                 <Button Text="LOGIN"
                     Margin="0,3,0,3"
                     Command="{Binding LoginCommand}"
-                    IsEnabled="{Binding IsEnabled}" />
+                    IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <Label HorizontalTextAlignment="Center"
+                    TextColor="#333333"
+                    FontSize="Small"
+                    Margin="0,30,0,2" Text="Don't have an account?" />
+                <Button Text="START TRACKING TIME FOR FREE"
+                    Margin="0,2,0,2"
+                    Command="{Binding RegisterCommand}"
+                    IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <Label HorizontalTextAlignment="Center"
+                    TextColor="#333333"
+                    FontSize="Small"
+                    Margin="0,2,0,2" Text="Free 30 day trial. No credit card required." />
                 <ActivityIndicator
-                IsVisible="{Binding IsBusy}"
-                IsRunning="{Binding IsBusy}"
-                Color="Black" />
-                <Label Text="Copyright 2019, East Coast Technology Services, LLC"
+                    IsVisible="{Binding IsBusy}"
+                    IsRunning="{Binding IsBusy}"
+                    Color="#333333" />
+                <Label Text="© 2019 East Coast Technology Services, LLC"
                    HorizontalTextAlignment="Center"
-                   TextColor="Gray"
                    FontSize="Micro"
-                   Margin="0, 60, 0, 0" />
+                    TextColor="#333333"
+                   Margin="0, 30, 0, 0" />
             </StackLayout>
         </ScrollView>
     </ContentPage.Content>

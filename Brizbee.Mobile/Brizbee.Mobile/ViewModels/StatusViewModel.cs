@@ -18,6 +18,7 @@ namespace Brizbee.Mobile.ViewModels
         public string TaskNumberAndName { get; set; }
         public string Since { get; set; }
         public string Name { get; set; }
+        public string TimeZone { get; set; }
         public bool IsPunchedIn { get; set; }
         public bool IsPunchedOut { get; set; }
 
@@ -66,26 +67,27 @@ namespace Brizbee.Mobile.ViewModels
                             response.Data.Task.Number,
                             response.Data.Task.Name)
                         .ToUpper();
-                    Since = string.Format("SINCE {0} {1}",
-                            inAt.ToString("MMM d, yyyy h:mm tt"),
-                            nowLocal.ToDateTimeUnspecified().ToString("z"))
+                    Since = string.Format("SINCE {0}",
+                            inAt.ToString("MMM d, yyyy h:mm tt"))
                         .ToUpper();
+                    TimeZone = response.Data.InAtTimeZone.ToUpper();
                     IsPunchedOut = false;
                     IsPunchedIn = true;
-                    OnPropertyChanged(Name = "TaskNumberAndName");
-                    OnPropertyChanged(Name = "JobNumberAndName");
-                    OnPropertyChanged(Name = "CustomerNumberAndName");
-                    OnPropertyChanged(Name = "Since");
-                    OnPropertyChanged(Name = "IsPunchedOut");
-                    OnPropertyChanged(Name = "IsPunchedIn");
+                    OnPropertyChanged("TaskNumberAndName");
+                    OnPropertyChanged("JobNumberAndName");
+                    OnPropertyChanged("CustomerNumberAndName");
+                    OnPropertyChanged("Since");
+                    OnPropertyChanged("TimeZone");
+                    OnPropertyChanged("IsPunchedOut");
+                    OnPropertyChanged("IsPunchedIn");
                     IsBusy = false;
                 }
                 else
                 {
                     IsPunchedIn = false;
                     IsPunchedOut = true;
-                    OnPropertyChanged(Name = "IsPunchedIn");
-                    OnPropertyChanged(Name = "IsPunchedOut");
+                    OnPropertyChanged("IsPunchedIn");
+                    OnPropertyChanged("IsPunchedOut");
                     IsBusy = false;
                 }
             }

@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Brizbee.Mobile.Views.RegisterPage"
+             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels"
+             Title="{Binding Title}">
+    <ContentPage.BindingContext>
+        <vm:RegisterViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <ScrollView>
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
+                <Image Source="logo.png"
+                    HeightRequest="30"
+                    Margin="0,20,0,30"
+                    HorizontalOptions="Center" />
+                <Entry Placeholder="Email Address"
+                    x:Name="txtEmailAddress"
+                    Margin="0,3,0,3"
+                    Text="{Binding EmailAddress}"
+                    IsEnabled="{Binding IsEnabled}" />
+                <Entry Placeholder="Your Name"
+                    Margin="0,3,0,3"
+                    Text="{Binding FullName}"
+                    IsEnabled="{Binding IsEnabled}" />
+                <Entry Placeholder="Your Company Name"
+                    Margin="0,3,0,3"
+                    Text="{Binding OrganizationName}"
+                    IsEnabled="{Binding IsEnabled}" />
+                <Entry Placeholder="Password"
+                    Margin="0,3,0,3"
+                    Text="{Binding Password}"
+                    IsEnabled="{Binding IsEnabled}" />
+                <Picker Title="Your Country"
+                    x:Name="pickerCountry"
+                    ItemsSource="{Binding Countries}"
+                    ItemDisplayBinding="{Binding Name}"
+                    Margin="0,3,0,3"
+                    SelectedIndexChanged="PickerCountry_SelectedIndexChanged"
+                    SelectedItem="{Binding SelectedCountry}" />
+                <Picker Title="City in Your Time Zone"
+                    x:Name="pickerTimeZone"
+                    ItemsSource="{Binding TimeZones}"
+                    ItemDisplayBinding="{Binding Id}"
+                    Margin="0,3,0,3"
+                    SelectedItem="{Binding SelectedTimeZone}" />
+                <Label Text="Your punches will default to this time zone unless you specify otherwise."
+                    Margin="0,3,0,20" FontSize="Micro" />
+                <Button Text="SAVE AND CONTINUE"
+                    Margin="0,3,0,3"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <ActivityIndicator
+                    IsVisible="{Binding IsBusy}"
+                    IsRunning="{Binding IsBusy}"
+                    Color="#333333" />
+                <Label Text="© 2019 East Coast Technology Services, LLC"
+                    HorizontalTextAlignment="Center"
+                    FontSize="Micro"
+                    TextColor="#333333"
+                    Margin="0, 30, 0, 0" />
+            </StackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

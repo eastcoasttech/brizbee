@@ -9,8 +9,8 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
-                <Label Text="HELLO" HorizontalTextAlignment="Center" FontSize="Micro" TextColor="Gray" Margin="0" />
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
+                <Label Text="HELLO" HorizontalTextAlignment="Center" FontSize="Micro" Margin="0" />
                 <Label Text="{Binding Name}" HorizontalTextAlignment="Center" FontSize="Small" FontAttributes="Bold" Margin="0" />
                 <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedOut}" Margin="0, 30, 0, 40">
                     <Label.FormattedText>
@@ -34,10 +34,14 @@
                 <Label Text="{Binding CustomerNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
                 <Label Text="DOING TASK" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 20, 0, 0" />
                 <Label Text="{Binding TaskNumberAndName}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Medium" FontAttributes="Bold" />
-                <Label Text="{Binding Since}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 35, 0, 50" />
-                <Button Text="PUNCH IN" x:Name="btnPunchIn" Clicked="BtnPunchIn_Clicked" />
-                <Button Text="PUNCH OUT" x:Name="btnPunchOut" Clicked="BtnPunchOut_Clicked" IsVisible="{Binding IsPunchedIn}" />
-                <Button Text="EXIT" x:Name="btnExit" Clicked="BtnExit_Clicked" />
+                <Label Text="{Binding Since}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 35, 0, 2" />
+                <Label Text="{Binding TimeZone}" HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" FontSize="Micro" Margin="0, 2, 0, 50" />
+                <Button Text="PUNCH IN" x:Name="btnPunchIn" Clicked="BtnPunchIn_Clicked"
+                    Style="{StaticResource buttonStyle}" BackgroundColor="Green" />
+                <Button Text="PUNCH OUT" x:Name="btnPunchOut" Clicked="BtnPunchOut_Clicked" IsVisible="{Binding IsPunchedIn}"
+                    Style="{StaticResource buttonStyle}" BackgroundColor="Red" />
+                <Button Text="EXIT" x:Name="btnExit" Clicked="BtnExit_Clicked"
+                    Style="{StaticResource buttonStyle}" />
                 <ActivityIndicator
                 IsVisible="{Binding IsBusy}"
                 IsRunning="{Binding IsBusy}"

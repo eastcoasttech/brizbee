@@ -35,7 +35,5 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string StripeSubscriptionId { get; set; }
-
-        public string TimeZone { get; set; }
     }
 }

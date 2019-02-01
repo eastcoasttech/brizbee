@@ -60,9 +60,9 @@ namespace Brizbee.Controllers
         [Route("api/Reports/PunchesByUser")]
         public IHttpActionResult GetPunchesByUser([FromUri] string UserScope, [FromUri] int[] UserIds, [FromUri] string JobScope, [FromUri] int[] JobIds, [FromUri] DateTime Min, [FromUri] DateTime Max)
         {
-            var organization = db.Organizations.Find(CurrentUser().OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
-            var bytes = new ReportBuilder().PunchesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CurrentUser());
+            var currentUser = CurrentUser();
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
+            var bytes = new ReportBuilder().PunchesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
                     "Punches by User {0} thru {1}.pdf",
@@ -75,8 +75,8 @@ namespace Brizbee.Controllers
         [Route("api/Reports/PunchesByJob")]
         public IHttpActionResult GetPunchesByJob([FromUri] string UserScope, [FromUri] int[] UserIds, [FromUri] string JobScope, [FromUri] int[] JobIds, [FromUri] DateTime Min, [FromUri] DateTime Max)
         {
-            var organization = db.Organizations.Find(CurrentUser().OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var currentUser = CurrentUser();
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CurrentUser());
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -90,8 +90,8 @@ namespace Brizbee.Controllers
         [Route("api/Reports/PunchesByDay")]
         public IHttpActionResult GetPunchesByDay([FromUri] string UserScope, [FromUri] int[] UserIds, [FromUri] string JobScope, [FromUri] int[] JobIds, [FromUri] DateTime Min, [FromUri] DateTime Max)
         {
-            var organization = db.Organizations.Find(CurrentUser().OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var currentUser = CurrentUser();
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CurrentUser());
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -105,8 +105,8 @@ namespace Brizbee.Controllers
         [Route("api/Reports/TasksByJob")]
         public IHttpActionResult GetTasksByJob([FromUri] int JobId)
         {
-            var organization = db.Organizations.Find(CurrentUser().OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var currentUser = CurrentUser();
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             var job = db.Jobs.Where(j => j.Id == JobId).FirstOrDefault();
             var bytes = new ReportBuilder().TasksByJobAsPdf(JobId, CurrentUser());
             return new FileActionResult(bytes, "application/pdf",

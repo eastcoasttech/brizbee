@@ -26,8 +26,7 @@ namespace Brizbee.Services
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -421,8 +420,7 @@ namespace Brizbee.Services
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -667,8 +665,7 @@ namespace Brizbee.Services
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -914,8 +911,7 @@ namespace Brizbee.Services
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             var job = db.Jobs.Where(j => j.Id == jobId).FirstOrDefault();
 
             // Create an instance of document which represents the PDF document itself

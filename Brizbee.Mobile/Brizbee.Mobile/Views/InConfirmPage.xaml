@@ -9,23 +9,41 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
                 <Label HorizontalTextAlignment="Center" IsVisible="{Binding IsPunchedIn}" Margin="0, 20, 0, 20">
                     <Label.FormattedText>
                         <FormattedString>
-                            <Span Text="YOU ARE " />
-                            <Span Text="PUNCHING IN" FontAttributes="Bold" ForegroundColor="Green" />
+                            <Span Text="YOU ARE " FontSize="Medium" />
+                            <Span Text="PUNCHING IN" FontSize="Medium" FontAttributes="Bold" ForegroundColor="Green" />
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>
                 <Label Text="ON JOB" HorizontalTextAlignment="Center" FontSize="Micro" Margin="0, 25, 0, 0" />
                 <Label Text="{Binding JobNumberAndName}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" />
+                
                 <Label Text="FOR CUSTOMER" HorizontalTextAlignment="Center" FontSize="Micro" Margin="0, 20, 0, 0" />
                 <Label Text="{Binding CustomerNumberAndName}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" />
+                
                 <Label Text="DOING TASK" HorizontalTextAlignment="Center" FontSize="Micro" Margin="0, 20, 0, 0" />
-                <Label Text="{Binding TaskNumberAndName}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" Margin="0, 0, 0, 50" />
-                <Button Text="SAVE AND CONTINUE" Command="{Binding PunchInCommand}" />
-                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
+                <Label Text="{Binding TaskNumberAndName}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" />
+                
+                <Label Text="IN TIME ZONE" HorizontalTextAlignment="Center" FontSize="Micro" Margin="0, 20, 0, 0" />
+                <Label Text="{Binding TimeZone}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" Margin="0, 0, 0, 50" />
+                
+                <Button Text="SAVE AND CONTINUE" Command="{Binding PunchInCommand}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="CHANGE TIME ZONE" x:Name="btnChangeTimeZone"
+                    Style="{StaticResource buttonStyle}"
+                    IsVisible="{Binding ShowTimeZones}" />
+                <Picker Title="Choose Your Time Zone"
+                    x:Name="pickerTimeZone"
+                    ItemsSource="{Binding TimeZones}"
+                    ItemDisplayBinding="{Binding Name}"
+                    Margin="0,3,0,3"
+                    SelectedItem="{Binding SelectedTimeZone}"
+                    IsVisible="{Binding ShowTimeZones}" />
+                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked"
+                    Style="{StaticResource buttonStyle}" />
                 <ActivityIndicator
                 IsVisible="{Binding IsBusy}"
                 IsRunning="{Binding IsBusy}"

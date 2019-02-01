@@ -9,7 +9,7 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
                 <StackLayout Margin="0, 30, 0, 30">
                     <Label Text="WHAT IS YOUR TASK NUMBER?" HorizontalTextAlignment="Center" />
                     <Entry Placeholder="Task Number"
@@ -18,9 +18,12 @@
                         IsEnabled="{Binding IsEnabled}"
                         Keyboard="Numeric" />
                 </StackLayout>
-                <Button Text="SCAN BARCODE" x:Name="btnScan" Clicked="BtnScan_Clicked" IsEnabled="{Binding IsEnabled}" />
-                <Button Text="CONTINUE" Command="{Binding ContinueCommand}" IsEnabled="{Binding IsEnabled}" />
-                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
+                <Button Text="SCAN BARCODE" x:Name="btnScan" Clicked="BtnScan_Clicked" IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="CONTINUE" Command="{Binding ContinueCommand}" IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked"
+                    Style="{StaticResource buttonStyle}" />
             </StackLayout>
         </ScrollView>
     </ContentPage.Content>

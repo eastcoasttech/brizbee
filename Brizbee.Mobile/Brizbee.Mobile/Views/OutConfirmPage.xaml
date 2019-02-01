@@ -9,7 +9,7 @@
     </ContentPage.BindingContext>
     <ContentPage.Content>
         <ScrollView>
-            <StackLayout Padding="40" BackgroundColor="#f5f5f5">
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
                 <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
                     <Label.FormattedText>
                         <FormattedString>
@@ -19,8 +19,23 @@
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>
-                <Button Text="SAVE AND CONTINUE" Command="{Binding PunchOutCommand}" />
-                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked" />
+                <Label Text="IN TIME ZONE" HorizontalTextAlignment="Center" FontSize="Micro" Margin="0, 20, 0, 0" />
+                <Label Text="{Binding TimeZone}" HorizontalTextAlignment="Center" FontSize="Medium" FontAttributes="Bold" Margin="0, 0, 0, 50" />
+
+                <Button Text="SAVE AND CONTINUE" Command="{Binding PunchOutCommand}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="CHANGE TIME ZONE" x:Name="btnChangeTimeZone"
+                    Style="{StaticResource buttonStyle}"
+                    IsVisible="{Binding ShowTimeZones}" />
+                <Picker Title="Choose Your Time Zone"
+                    x:Name="pickerTimeZone"
+                    ItemsSource="{Binding TimeZones}"
+                    ItemDisplayBinding="{Binding Name}"
+                    Margin="0,3,0,3"
+                    SelectedItem="{Binding SelectedTimeZone}"
+                    IsVisible="{Binding ShowTimeZones}" />
+                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked"
+                    Style="{StaticResource buttonStyle}" />
                 <ActivityIndicator
                 IsVisible="{Binding IsBusy}"
                 IsRunning="{Binding IsBusy}"
