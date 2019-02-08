@@ -76,15 +76,14 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the punch</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The punch with the given id</returns>
-        public Punch Get(int id, User currentUser)
+        public IQueryable<Punch> Get(int id, User currentUser)
         {
             var userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id);
             return db.Punches
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.Id == id)
-                .FirstOrDefault();
+                .Where(p => p.Id == id);
         }
 
         /// <summary>
@@ -97,8 +96,7 @@ namespace Brizbee.Repositories
             var userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id);
-            return db.Punches.Where(p => userIds.Contains(p.UserId))
-                .AsQueryable<Punch>();
+            return db.Punches.Where(p => userIds.Contains(p.UserId));
         }
 
         /// <summary>

@@ -38,7 +38,7 @@
                 <Picker Title="Choose Your Time Zone"
                     x:Name="pickerTimeZone"
                     ItemsSource="{Binding TimeZones}"
-                    ItemDisplayBinding="{Binding Name}"
+                    ItemDisplayBinding="{Binding Id}"
                     Margin="0,3,0,3"
                     SelectedItem="{Binding SelectedTimeZone}"
                     IsVisible="{Binding ShowTimeZones}" />

@@ -18,31 +18,14 @@ namespace Brizbee.Controllers
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<Commit> GetCommits()
         {
-            try
-            {
-                return repo.GetAll(CurrentUser());
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return Enumerable.Empty<Commit>().AsQueryable();
-            }
+            return repo.GetAll(CurrentUser());
         }
 
         // GET: odata/Commits(5)
         [EnableQuery]
         public SingleResult<Commit> GetCommit([FromODataUri] int key)
         {
-            try
-            {
-                var queryable = new List<Commit>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-                return SingleResult.Create(queryable);
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return SingleResult.Create(Enumerable.Empty<Commit>().AsQueryable());
-            }
+            return SingleResult.Create(repo.Get(key, CurrentUser()));
         }
 
         // POST: odata/Commits

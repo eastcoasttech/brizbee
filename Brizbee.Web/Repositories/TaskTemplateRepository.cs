@@ -72,9 +72,11 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the task template</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The task template with the given id</returns>
-        public TaskTemplate Get(int id, User currentUser)
+        public IQueryable<TaskTemplate> Get(int id, User currentUser)
         {
-            return db.TaskTemplates.Find(id);
+            return db.TaskTemplates
+                .Where(t => t.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Id == id);
         }
 
         /// <summary>
@@ -84,7 +86,8 @@ namespace Brizbee.Repositories
         /// <returns>The queryable collection of task templates</returns>
         public IQueryable<TaskTemplate> GetAll(User currentUser)
         {
-            return db.TaskTemplates.AsQueryable<TaskTemplate>();
+            return db.TaskTemplates
+                .Where(t => t.OrganizationId == currentUser.OrganizationId);
         }
     }
 }

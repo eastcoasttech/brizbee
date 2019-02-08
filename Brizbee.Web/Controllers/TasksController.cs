@@ -1,11 +1,8 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
 using Microsoft.AspNet.OData;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Http;
 
 namespace Brizbee.Controllers
@@ -19,31 +16,14 @@ namespace Brizbee.Controllers
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
         public IQueryable<Task> GetTasks()
         {
-            try
-            {
-                return repo.GetAll(CurrentUser());
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return Enumerable.Empty<Task>().AsQueryable();
-            }
+            return repo.GetAll(CurrentUser());
         }
 
         // GET: odata/Tasks(5)
         [EnableQuery(MaxExpansionDepth = 3)]
         public SingleResult<Task> GetTask ([FromODataUri] int key)
         {
-            try
-            {
-                var queryable = new List<Task>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-                return SingleResult.Create(queryable);
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return SingleResult.Create(Enumerable.Empty<Task>().AsQueryable());
-            }
+            return SingleResult.Create(repo.Get(key, CurrentUser()));
         }
 
         // POST: odata/Tasks

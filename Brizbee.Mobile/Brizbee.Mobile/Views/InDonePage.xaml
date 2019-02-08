@@ -14,7 +14,7 @@
                     <Label.FormattedText>
                         <FormattedString>
                             <Span Text="YOU ARE NOW PUNCHED " FontSize="Medium" />
-                            <Span Text="IN" FontAttributes="Bold" FontSize="Medium" ForegroundColor="Green" />
+                            <Span Text="IN" FontSize="Medium" FontAttributes="Bold" ForegroundColor="Green" />
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>

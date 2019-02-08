@@ -1,8 +1,6 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Repositories;
 using Microsoft.AspNet.OData;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -18,31 +16,14 @@ namespace Brizbee.Controllers
         [EnableQuery(PageSize = 20)]
         public IQueryable<Job> GetJobs()
         {
-            try
-            {
-                return repo.GetAll(CurrentUser());
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return Enumerable.Empty<Job>().AsQueryable();
-            }
+            return repo.GetAll(CurrentUser());
         }
 
         // GET: odata/Jobs(5)
         [EnableQuery]
         public SingleResult<Job> GetJob([FromODataUri] int key)
         {
-            try
-            {
-                var queryable = new List<Job>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-                return SingleResult.Create(queryable);
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return SingleResult.Create(Enumerable.Empty<Job>().AsQueryable());
-            }
+            return SingleResult.Create(repo.Get(key, CurrentUser()));
         }
 
         // POST: odata/Jobs

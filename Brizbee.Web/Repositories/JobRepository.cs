@@ -68,15 +68,14 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the job</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The job with the given id</returns>
-        public Job Get(int id, User currentUser)
+        public IQueryable<Job> Get(int id, User currentUser)
         {
             var customerIds = db.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Select(c => c.Id);
             return db.Jobs
                 .Where(j => customerIds.Contains(j.CustomerId))
-                .Where(j => j.Id == id)
-                .FirstOrDefault();
+                .Where(j => j.Id == id);
         }
 
         /// <summary>
@@ -90,8 +89,7 @@ namespace Brizbee.Repositories
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Select(c => c.Id);
             return db.Jobs
-                .Where(j => customerIds.Contains(j.CustomerId))
-                .AsQueryable<Job>();
+                .Where(j => customerIds.Contains(j.CustomerId));
         }
 
         /// <summary>

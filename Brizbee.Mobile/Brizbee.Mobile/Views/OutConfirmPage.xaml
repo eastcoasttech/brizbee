@@ -13,8 +13,8 @@
                 <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
                     <Label.FormattedText>
                         <FormattedString>
-                            <Span Text="ARE YOU SURE YOU WANT TO PUNCH " />
-                            <Span Text="OUT" FontAttributes="Bold" ForegroundColor="Red" />
+                            <Span Text="ARE YOU SURE YOU WANT TO PUNCH " FontSize="Medium" />
+                            <Span Text="OUT" FontSize="Medium" FontAttributes="Bold" ForegroundColor="Red" />
                             <Span Text="?" />
                         </FormattedString>
                     </Label.FormattedText>
@@ -30,7 +30,7 @@
                 <Picker Title="Choose Your Time Zone"
                     x:Name="pickerTimeZone"
                     ItemsSource="{Binding TimeZones}"
-                    ItemDisplayBinding="{Binding Name}"
+                    ItemDisplayBinding="{Binding Id}"
                     Margin="0,3,0,3"
                     SelectedItem="{Binding SelectedTimeZone}"
                     IsVisible="{Binding ShowTimeZones}" />

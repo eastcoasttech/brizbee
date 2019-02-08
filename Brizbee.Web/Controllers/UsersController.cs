@@ -3,14 +3,9 @@ using Brizbee.Common.Security;
 using Brizbee.Repositories;
 using Microsoft.AspNet.OData;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Web;
 using System.Web.Http;
-using System.Web.Http.ModelBinding;
 
 namespace Brizbee.Controllers
 {
@@ -23,31 +18,14 @@ namespace Brizbee.Controllers
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<User> GetUsers()
         {
-            try
-            {
-                return repo.GetAll(CurrentUser());
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return Enumerable.Empty<User>().AsQueryable();
-            }
+            return repo.GetAll(CurrentUser());
         }
 
         // GET: odata/Users(5)
         [EnableQuery]
         public SingleResult<User> GetUser([FromODataUri] int key)
         {
-            try
-            {
-                var queryable = new List<User>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-                return SingleResult.Create(queryable);
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return SingleResult.Create(Enumerable.Empty<User>().AsQueryable());
-            }
+            return SingleResult.Create(repo.Get(key, CurrentUser()));
         }
 
         // POST: odata/Users

@@ -6,10 +6,8 @@ using NodaTime;
 using NodaTime.TimeZones;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Web.Http;
 
 namespace Brizbee.Controllers
@@ -23,16 +21,7 @@ namespace Brizbee.Controllers
         [EnableQuery]
         public SingleResult<Organization> GetOrganization([FromODataUri] int key)
         {
-            try
-            {
-                var queryable = new List<Organization>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-                return SingleResult.Create(queryable);
-            }
-            catch (Exception)
-            {
-                // Return an empty result if there are errors
-                return SingleResult.Create(Enumerable.Empty<Organization>().AsQueryable());
-            }
+            return SingleResult.Create(repo.Get(key, CurrentUser()));
         }
 
         // PATCH: odata/Organizations(5)

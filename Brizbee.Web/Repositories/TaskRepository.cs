@@ -68,7 +68,7 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the task</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The task with the given id</returns>
-        public Task Get(int id, User currentUser)
+        public IQueryable<Task> Get(int id, User currentUser)
         {
             var customerIds = db.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
@@ -78,8 +78,7 @@ namespace Brizbee.Repositories
                 .Select(j => j.Id);
             return db.Tasks
                 .Where(t => jobIds.Contains(t.JobId))
-                .Where(t => t.Id == id)
-                .FirstOrDefault();
+                .Where(t => t.Id == id);
         }
 
         /// <summary>
@@ -96,8 +95,7 @@ namespace Brizbee.Repositories
                 .Where(j => customerIds.Contains(j.CustomerId))
                 .Select(j => j.Id);
             return db.Tasks
-                .Where(t => jobIds.Contains(t.JobId))
-                .AsQueryable<Task>();
+                .Where(t => jobIds.Contains(t.JobId));
         }
 
         /// <summary>

@@ -24,13 +24,17 @@
                     Text="{Binding FullName}"
                     IsEnabled="{Binding IsEnabled}" />
                 <Entry Placeholder="Your Company Name"
-                    Margin="0,3,0,3"
+                    Margin="0,3,0,0"
                     Text="{Binding OrganizationName}"
                     IsEnabled="{Binding IsEnabled}" />
+                <Label Text="Ex. Martin Corporation, Bill's Auto Shop, First Baptist Church."
+                    Margin="0,0,0,6" FontSize="Micro" />
                 <Entry Placeholder="Password"
-                    Margin="0,3,0,3"
+                    Margin="0,3,0,0"
                     Text="{Binding Password}"
                     IsEnabled="{Binding IsEnabled}" />
+                <Label Text="Must be 8+ characters and include both numbers and letters."
+                    Margin="0,0,0,6" FontSize="Micro" />
                 <Picker Title="Your Country"
                     x:Name="pickerCountry"
                     ItemsSource="{Binding Countries}"
@@ -42,10 +46,10 @@
                     x:Name="pickerTimeZone"
                     ItemsSource="{Binding TimeZones}"
                     ItemDisplayBinding="{Binding Id}"
-                    Margin="0,3,0,3"
+                    Margin="0,3,0,0"
                     SelectedItem="{Binding SelectedTimeZone}" />
                 <Label Text="Your punches will default to this time zone unless you specify otherwise."
-                    Margin="0,3,0,20" FontSize="Micro" />
+                    Margin="0,0,0,20" FontSize="Micro" />
                 <Button Text="SAVE AND CONTINUE"
                     Margin="0,3,0,3"
                     Command="{Binding SaveCommand}"

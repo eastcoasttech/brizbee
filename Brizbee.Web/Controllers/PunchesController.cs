@@ -3,14 +3,12 @@ using Brizbee.Repositories;
 using Brizbee.Services;
 using Microsoft.AspNet.OData;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Http;
-using System.Web.Http.ModelBinding;
 
 namespace Brizbee.Controllers
 {
@@ -30,8 +28,7 @@ namespace Brizbee.Controllers
         [EnableQuery]
         public SingleResult<Punch> GetPunch([FromODataUri] int key)
         {
-            var queryable = new List<Punch>() { repo.Get(key, CurrentUser()) }.AsQueryable();
-            return SingleResult.Create(queryable);
+            return SingleResult.Create(repo.Get(key, CurrentUser()));
         }
 
         // POST: odata/Punches

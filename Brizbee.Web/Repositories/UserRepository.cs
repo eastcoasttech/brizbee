@@ -92,11 +92,17 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the user</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The user with the given id</returns>
-        public User Get(int id, User currentUser)
+        public IQueryable<User> Get(int id, User currentUser)
         {
+            // Only Administrators can see other users in the organization
+            if (currentUser.Role != "Administrator" && currentUser.Id != id)
+            {
+                return Enumerable.Empty<User>().AsQueryable();
+            }
+
             return db.Users
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .FirstOrDefault(c => c.Id == id);
+                .Where(c => c.Id == id);
         }
 
         /// <summary>
@@ -106,9 +112,14 @@ namespace Brizbee.Repositories
         /// <returns>The queryable collection of users</returns>
         public IQueryable<User> GetAll(User currentUser)
         {
+            // Only Administrators can see other users in the organization
+            if (currentUser.Role != "Administrator")
+            {
+                return Enumerable.Empty<User>().AsQueryable();
+            }
+
             return db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .AsQueryable<User>();
+                .Where(u => u.OrganizationId == currentUser.OrganizationId);
         }
 
         /// <summary>

@@ -72,11 +72,11 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the customer</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The customer with the given id</returns>
-        public Customer Get(int id, User currentUser)
+        public IQueryable<Customer> Get(int id, User currentUser)
         {
             return db.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .FirstOrDefault(c => c.Id == id);
+                .Where(c => c.Id == id);
         }
 
         /// <summary>
@@ -87,8 +87,7 @@ namespace Brizbee.Repositories
         public IQueryable<Customer> GetAll(User currentUser)
         {
             return db.Customers
-                .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .AsQueryable<Customer>();
+                .Where(c => c.OrganizationId == currentUser.OrganizationId);
         }
 
         /// <summary>

@@ -102,11 +102,11 @@ namespace Brizbee.Repositories
         /// <param name="id">The id of the commit</param>
         /// <param name="currentUser">The user to check for permissions</param>
         /// <returns>The commit with the given id</returns>
-        public Commit Get(int id, User currentUser)
+        public IQueryable<Commit> Get(int id, User currentUser)
         {
             return db.Commits
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .FirstOrDefault(c => c.Id == id);
+                .Where(c => c.Id == id);
         }
 
         /// <summary>
@@ -117,8 +117,7 @@ namespace Brizbee.Repositories
         public IQueryable<Commit> GetAll(User currentUser)
         {
             return db.Commits
-                .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .AsQueryable<Commit>();
+                .Where(c => c.OrganizationId == currentUser.OrganizationId);
         }
 
         /// <summary>
