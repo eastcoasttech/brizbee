@@ -242,7 +242,7 @@ namespace Brizbee.Repositories
                         // Subscribe the customer to the default plan
                         var items = new List<StripeSubscriptionItemOption> {
                             new StripeSubscriptionItemOption {
-                                PlanId = "plan_EOd1WamGWDH0tS",
+                                PlanId = "plan_EOcuCOKkFCDiFZ", // plan_EOd1WamGWDH0tS
                                 Quantity = 1,
                             }
                         };
