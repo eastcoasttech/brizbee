@@ -23,7 +23,10 @@ namespace Brizbee.Repositories
         /// <param name="currentUser">The user to check for permissions</param>
         public void ChangePassword(int id, string password, User currentUser)
         {
-            var user = db.Users.Find(id);
+            var user = db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.Id == id)
+                .FirstOrDefault();
 
             // Ensure that user is authorized
             if (!UserPolicy.CanChangePassword(user, currentUser))
@@ -79,6 +82,29 @@ namespace Brizbee.Repositories
         }
 
         /// <summary>
+        /// Deletes the user with the given id.
+        /// </summary>
+        /// <param name="id">The id of the user</param>
+        /// <param name="currentUser">The user to check for permissions</param>
+        public void Delete(int id, User currentUser)
+        {
+            var user = db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.Id == id)
+                .FirstOrDefault();
+
+            // Ensure that user is authorized
+            if (!UserPolicy.CanDelete(user, currentUser))
+            {
+                throw new Exception("Not authorized to delete the object");
+            }
+
+            user.IsDeleted = true;
+
+            db.SaveChanges();
+        }
+
+        /// <summary>
         /// Disposes of the database connection.
         /// </summary>
         public void Dispose()
@@ -101,8 +127,9 @@ namespace Brizbee.Repositories
             }
 
             return db.Users
-                .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Where(c => c.Id == id);
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.Id == id);
         }
 
         /// <summary>
@@ -119,6 +146,7 @@ namespace Brizbee.Repositories
             }
 
             return db.Users
+                .Where(u => !u.IsDeleted)
                 .Where(u => u.OrganizationId == currentUser.OrganizationId);
         }
 
@@ -131,13 +159,28 @@ namespace Brizbee.Repositories
         /// <returns>The updated user</returns>
         public User Update(int id, Delta<User> patch, User currentUser)
         {
-            var user = db.Users.Find(id);
+            var user = db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.Id == id)
+                .FirstOrDefault();
             
             // Do not allow modifying some properties
             if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
                 patch.GetChangedPropertyNames().Contains("EmailAddress"))
             {
                 throw new Exception("Cannot modify OrganizationId or EmailAddress");
+            }
+
+            // Ensure that Pin is unique in the organization
+            if (patch.GetChangedPropertyNames().Contains("Pin"))
+            {
+                patch.TryGetPropertyValue("Pin", out object pin);
+                if (db.Users
+                    .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                    .Where(u => u.Pin == pin).Any())
+                {
+                    throw new Exception("Another user in the organization already has that Pin");
+                }
             }
 
             // Peform the update
@@ -184,7 +227,6 @@ namespace Brizbee.Repositories
                     user.Role = "Administrator";
                     user.CreatedAt = DateTime.UtcNow;
                     organization.CreatedAt = DateTime.UtcNow;
-                    organization.Code = GenerateOrganizationCode();
 
                     try
                     {

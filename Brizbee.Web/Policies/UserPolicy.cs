@@ -18,6 +18,11 @@ namespace Brizbee.Policies
             return true;
         }
 
+        public static Boolean CanDelete(User user, User currentUser)
+        {
+            return true;
+        }
+
         public static Boolean CanUpdate(User user, User currentUser)
         {
             return true;

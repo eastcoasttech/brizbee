@@ -74,9 +74,16 @@ namespace Brizbee.Controllers
                 .Where(t => jobs.Contains(t.JobId))
                 .Select(t => t.Number)
                 .Max();
-            var service = new SecurityService();
-            var next = service.NxtKeyCode(max);
-            return Ok(next);
+            if (max == null)
+            {
+                return Ok("1000");
+            }
+            else
+            {
+                var service = new SecurityService();
+                var next = service.NxtKeyCode(max);
+                return Ok(next);
+            }
         }
 
         protected override void Dispose(bool disposing)

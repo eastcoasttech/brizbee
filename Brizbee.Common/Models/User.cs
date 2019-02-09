@@ -12,12 +12,14 @@ namespace Brizbee.Common.Models
         public DateTime CreatedAt { get; set; }
 
         [EmailAddress]
-        [Required]
         [MaxLength(254)]
         public string EmailAddress { get; set; }
 
         [Key]
         public int Id { get; set; }
+
+        [Required]
+        public bool IsDeleted { get; set; }
 
         [Required]
         [MaxLength(128)]
@@ -29,12 +31,16 @@ namespace Brizbee.Common.Models
         [ForeignKey("OrganizationId")]
         public virtual Organization Organization { get; set; }
 
+        // Password is ignored in BrizbeeWebContext configuration
         public string Password { get; set; }
+
         [IgnoreDataMember]
         public string PasswordSalt { get; set; }
+
         [IgnoreDataMember]
         public string PasswordHash { get; set; }
 
+        [Required]
         public string Pin { get; set; }
 
         public string QuickBooksEmployee { get; set; }
@@ -43,6 +49,7 @@ namespace Brizbee.Common.Models
         [MaxLength(128)]
         public string Role { get; set; }
 
+        [Required]
         public string TimeZone { get; set; }
     }
 }

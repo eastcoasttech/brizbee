@@ -55,6 +55,13 @@ namespace Brizbee.Controllers
             return Updated(user);
         }
 
+        // DELETE: odata/Users(5)
+        public IHttpActionResult Delete([FromODataUri] int key)
+        {
+            repo.Delete(key, CurrentUser());
+            return StatusCode(HttpStatusCode.NoContent);
+        }
+
         // POST: odata/Users/Default.Authenticate
         [HttpPost]
         public IHttpActionResult Authenticate(ODataActionParameters parameters)

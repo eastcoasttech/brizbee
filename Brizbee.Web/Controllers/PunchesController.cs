@@ -68,23 +68,14 @@ namespace Brizbee.Controllers
         // GET: odata/Punches/Default.Current
         [HttpGet]
         [EnableQuery(MaxExpansionDepth = 3)]
-        public SingleResult<Punch> Current()
+        public IQueryable<Punch> Current()
         {
             var userId = CurrentUser().Id;
-            var punch = db.Punches
+            return db.Punches
                 .Where(p => p.UserId == userId)
                 .Where(p => p.OutAt == null)
                 .OrderByDescending(p => p.InAt)
                 .Take(1);
-
-            if (punch != null)
-            {
-                return SingleResult.Create(punch);
-            }
-            else
-            {
-                return SingleResult.Create(Enumerable.Empty<Punch>().AsQueryable());
-            }
         }
 
         // POST: odata/Punches/Default.PunchIn

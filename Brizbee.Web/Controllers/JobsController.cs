@@ -71,9 +71,16 @@ namespace Brizbee.Controllers
                 .Where(j => customers.Contains(j.CustomerId))
                 .Select(j => j.Number)
                 .Max();
-            var service = new SecurityService();
-            var next = service.NxtKeyCode(max);
-            return Ok(next);
+            if (max == null)
+            {
+                return Ok("1000");
+            }
+            else
+            {
+                var service = new SecurityService();
+                var next = service.NxtKeyCode(max);
+                return Ok(next);
+            }
         }
 
         protected override void Dispose(bool disposing)

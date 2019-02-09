@@ -35,10 +35,8 @@ namespace Brizbee
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.EmailAddress)
-                .IsUnique();
 
+            modelBuilder.Entity<User>().Ignore(u => u.Password);
             modelBuilder.Entity<Organization>()
                 .HasIndex(o => o.Code)
                 .IsUnique();

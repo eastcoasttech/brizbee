@@ -313,6 +313,26 @@
     <Compile Include="Migrations\201902011755109_RemovingTimeZoneAndCountryCode.Designer.cs">
       <DependentUpon>201902011755109_RemovingTimeZoneAndCountryCode.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201902082213356_ConvertEmailAddressIndexToNullable.cs" />
+    <Compile Include="Migrations\201902082213356_ConvertEmailAddressIndexToNullable.Designer.cs">
+      <DependentUpon>201902082213356_ConvertEmailAddressIndexToNullable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902082228312_RemovingUniqueOptionForEmailAddress.cs" />
+    <Compile Include="Migrations\201902082228312_RemovingUniqueOptionForEmailAddress.Designer.cs">
+      <DependentUpon>201902082228312_RemovingUniqueOptionForEmailAddress.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902082231182_RemovingRequiredAttributeForEmailAddress.cs" />
+    <Compile Include="Migrations\201902082231182_RemovingRequiredAttributeForEmailAddress.Designer.cs">
+      <DependentUpon>201902082231182_RemovingRequiredAttributeForEmailAddress.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902090319105_AddingIsDeletedToUsers.cs" />
+    <Compile Include="Migrations\201902090319105_AddingIsDeletedToUsers.Designer.cs">
+      <DependentUpon>201902090319105_AddingIsDeletedToUsers.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902090347029_MakingIsDeletedRequiredAndRemovingPassword.cs" />
+    <Compile Include="Migrations\201902090347029_MakingIsDeletedRequiredAndRemovingPassword.Designer.cs">
+      <DependentUpon>201902090347029_MakingIsDeletedRequiredAndRemovingPassword.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -466,6 +486,21 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201902011755109_RemovingTimeZoneAndCountryCode.resx">
       <DependentUpon>201902011755109_RemovingTimeZoneAndCountryCode.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902082213356_ConvertEmailAddressIndexToNullable.resx">
+      <DependentUpon>201902082213356_ConvertEmailAddressIndexToNullable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902082228312_RemovingUniqueOptionForEmailAddress.resx">
+      <DependentUpon>201902082228312_RemovingUniqueOptionForEmailAddress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902082231182_RemovingRequiredAttributeForEmailAddress.resx">
+      <DependentUpon>201902082231182_RemovingRequiredAttributeForEmailAddress.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902090319105_AddingIsDeletedToUsers.resx">
+      <DependentUpon>201902090319105_AddingIsDeletedToUsers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902090347029_MakingIsDeletedRequiredAndRemovingPassword.resx">
+      <DependentUpon>201902090347029_MakingIsDeletedRequiredAndRemovingPassword.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
