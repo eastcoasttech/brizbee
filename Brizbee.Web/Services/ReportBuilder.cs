@@ -22,12 +22,15 @@ namespace Brizbee.Services
         private Font fontFooter = new Font(Font.FontFamily.HELVETICA, 9, Font.NORMAL);
         private float pageWidth = 0f;
 
-        public byte[] PunchesByUserAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime minUtc, DateTime maxUtc, User currentUser)
+        public byte[] PunchesByUserAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, string commitStatus, User currentUser)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
-            
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(currentUser.TimeZone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
             {
@@ -39,15 +42,15 @@ namespace Brizbee.Services
                 document.AddCreator("BRIZBEE");
                 document.AddTitle(string.Format(
                     "Punches by User {0} thru {1}.pdf",
-                    TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
-                    TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()));
+                    min.ToShortDateString(),
+                    max.ToShortDateString()));
 
                 // Header
                 writer.PageEvent = new Header(
                     string.Format("REPORT: PUNCHES BY USER {0} thru {1}",
-                        TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
-                        TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()),
-                    TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz));
+                        min.ToShortDateString(),
+                        max.ToShortDateString()),
+                    nowDateTime);
                 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -55,7 +58,7 @@ namespace Brizbee.Services
                 // Build table of punches
                 PdfPTable table = new PdfPTable(9);
                 table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 10, 7, 10, 7, 18, 18, 18, 6, 6 });
+                table.SetWidths(new float[] { 7, 4, 7, 4, 22, 22, 22, 6, 6 });
                 
                 // Get the users depending on the filtered scope
                 List<User> users;
@@ -93,42 +96,48 @@ namespace Brizbee.Services
                         Padding = 0,
                         PaddingBottom = 8,
                         BorderWidthLeft = 0,
-                        BorderWidthRight = 0
+                        BorderWidthRight = 0,
+                        UseAscender = true
                     };
                     table.AddCell(nameSpacerCell);
 
                     // Get all the punches for the user
                     // either for any job or a specific job
-                    List<Punch> punches;
+                    IQueryable<Punch> punchesQueryable = db.Punches
+                        .Include("Task")
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => p.UserId == user.Id);
+                    
+                    // Filter by job
                     if (jobScope == "specific")
                     {
-                        punches = db.Punches
-                            .Include("Task")
-                            .Where(p => p.OutAt.HasValue)
-                            .Where(p => p.InAt >= minUtc && p.OutAt <= maxUtc)
-                            .Where(p => p.UserId == user.Id)
-                            .Where(p => jobIds.Contains(p.Task.JobId))
-                            .OrderBy(p => p.InAt)
-                            .ToList();
+                        punchesQueryable = db.Punches
+                            .Where(p => jobIds.Contains(p.Task.JobId));
                     }
-                    else
+
+                    // Filter by commit
+                    if (commitStatus == "only")
                     {
-                        punches = db.Punches
-                            .Where(p => p.OutAt.HasValue)
-                            .Where(p => p.InAt >= minUtc && p.OutAt <= maxUtc)
-                            .Where(p => p.UserId == user.Id)
-                            .OrderBy(p => p.InAt)
-                            .ToList();
+                        punchesQueryable = punchesQueryable.Where(p => p.CommitId != null);
                     }
-                    
+                    else if (commitStatus == "uncommitted")
+                    {
+                        punchesQueryable = punchesQueryable.Where(p => p.CommitId == null);
+                    }
+
+                    var punches = punchesQueryable
+                        .OrderBy(p => p.InAt)
+                        .ToList();
+
                     if (punches.Count() == 0)
                     {
                         // Add a message if there are no punches
                         var noneCell = new PdfPCell(new Phrase(
                             string.Format("There are no punches for {0} between {1} and {2}",
                                 user.Name,
-                                TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
-                                TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()),
+                                min.ToShortDateString(),
+                                max.ToShortDateString()),
                             fontP))
                         {
                             Colspan = 9,
@@ -141,7 +150,7 @@ namespace Brizbee.Services
                     
                     // Loop each date and print each punch
                     var dates = punches
-                        .GroupBy(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date)
+                        .GroupBy(p => p.InAt.Date)
                         .Select(g => new {
                             Date = g.Key
                         })
@@ -168,7 +177,7 @@ namespace Brizbee.Services
                         };
                         table.AddCell(inHeaderCell);
 
-                        var sourceInHeaderCell = new PdfPCell(new Phrase("Source", fontH3))
+                        var sourceInHeaderCell = new PdfPCell(new Phrase("Src", fontH3))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
@@ -184,7 +193,7 @@ namespace Brizbee.Services
                         };
                         table.AddCell(outHeaderCell);
 
-                        var sourceOutHeaderCell = new PdfPCell(new Phrase("Source", fontH3))
+                        var sourceOutHeaderCell = new PdfPCell(new Phrase("Src", fontH3))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
@@ -227,20 +236,20 @@ namespace Brizbee.Services
                         var totalHeaderCell = new PdfPCell(new Phrase("Total", fontH3))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
                             Padding = 5,
                             UseAscender = true
                         };
                         table.AddCell(totalHeaderCell);
 
                         // Punches for this Day
-                        Trace.TraceInformation("Getting punches for day");
                         var punchesForDay = punches
-                            .Where(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date == date.Date)
+                            .Where(p => p.InAt.Date == date.Date)
                             .ToList();
                         foreach (var punch in punchesForDay)
                         {
                             // In At
-                            var inCell = new PdfPCell(new Phrase(TimeZoneInfo.ConvertTime(punch.InAt, tz).ToString("h:mmtt").ToLower(), fontP))
+                            var inCell = new PdfPCell(new Phrase(punch.InAt.ToString("h:mmtt").ToLower(), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -258,7 +267,7 @@ namespace Brizbee.Services
                             table.AddCell(sourceInCell);
 
                             // Out At
-                            var outCell = new PdfPCell(new Phrase(TimeZoneInfo.ConvertTime(punch.OutAt.Value, tz).ToString("h:mmtt").ToLower(), fontP))
+                            var outCell = new PdfPCell(new Phrase(punch.OutAt.Value.ToString("h:mmtt").ToLower(), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -318,13 +327,13 @@ namespace Brizbee.Services
                             var totalCell = new PdfPCell(new Phrase(total.ToString(), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
+                                HorizontalAlignment = Element.ALIGN_RIGHT,
                                 Padding = 5,
                                 UseAscender = true
                             };
                             table.AddCell(totalCell);
                         }
-
-                        Trace.TraceInformation("Setting daily totals");
+                        
                         // Daily Total and Spacer
                         double dailyTotalMinutes = 0;
                         foreach (var punch in punchesForDay)
@@ -344,6 +353,7 @@ namespace Brizbee.Services
                         var dailyTotalValueCell = new PdfPCell(new Phrase(dailyTotal.ToString(), fontH3))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
                             Padding = 5,
                             UseAscender = true
                         };
@@ -354,13 +364,13 @@ namespace Brizbee.Services
                             Padding = 0,
                             PaddingBottom = 4,
                             BorderWidthLeft = 0,
-                            BorderWidthRight = 0
+                            BorderWidthRight = 0,
+                            UseAscender = true
                         };
                         table.AddCell(dailyTotalSpacerCell);
                     }
 
                     // User Total
-                    Trace.TraceInformation("Setting user totals");
                     double userTotalMinutes = 0;
                     foreach (var punch in punches)
                     {
@@ -372,15 +382,29 @@ namespace Brizbee.Services
                         VerticalAlignment = Element.ALIGN_MIDDLE,
                         HorizontalAlignment = Element.ALIGN_RIGHT,
                         Colspan = 8,
-                        Padding = 5
+                        Padding = 5,
+                        UseAscender = true
                     };
                     table.AddCell(userTotalHeaderCell);
                     var userTotalValueCell = new PdfPCell(new Phrase(userTotal.ToString(), fontH3))
                     {
                         VerticalAlignment = Element.ALIGN_MIDDLE,
-                        Padding = 5
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 5,
+                        UseAscender = true
                     };
                     table.AddCell(userTotalValueCell);
+
+                    var totalSpacerCell = new PdfPCell(new Phrase(" "))
+                    {
+                        Colspan = 9,
+                        Padding = 0,
+                        PaddingBottom = 8,
+                        BorderWidthLeft = 0,
+                        BorderWidthRight = 0,
+                        UseAscender = true
+                    };
+                    table.AddCell(totalSpacerCell);
 
                     // Page break
                     if (users.Last() == user)
@@ -394,8 +418,8 @@ namespace Brizbee.Services
                 {
                     document.Add(new Phrase(
                         string.Format("There are no users with punches between {0} and {1}",
-                            TimeZoneInfo.ConvertTime(minUtc, tz).ToShortDateString(),
-                            TimeZoneInfo.ConvertTime(maxUtc, tz).ToShortDateString()),
+                            min.ToShortDateString(),
+                            max.ToShortDateString()),
                         fontP));
                 }
 
@@ -408,7 +432,7 @@ namespace Brizbee.Services
                 document.Close();
             }
 
-            buffer = output.GetBuffer();
+            buffer = output.ToArray();
 
             // Page count must be added later due to nuances in iText
             AddPageNumbers(buffer);
@@ -416,11 +440,14 @@ namespace Brizbee.Services
             return buffer;
         }
 
-        public byte[] PunchesByJobAndTaskAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, User currentUser)
+        public byte[] PunchesByJobAndTaskAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, string commitStatus, User currentUser)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(currentUser.TimeZone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -433,22 +460,23 @@ namespace Brizbee.Services
                 document.AddCreator("BRIZBEE");
                 document.AddTitle(string.Format(
                     "Punches by Job and Task {0} thru {1}.pdf",
-                    TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                    TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()));
+                    min.ToShortDateString(),
+                    max.ToShortDateString()));
 
                 // Header
                 writer.PageEvent = new Header(
                     string.Format("REPORT: PUNCHES BY JOB AND TASK {0} thru {1}",
-                        TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                        TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
-                    TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz));
+                        min.ToShortDateString(),
+                        max.ToShortDateString()),
+                    nowDateTime);
 
                 // Open the document to enable you to write to the document
                 document.Open();
 
                 // Build table of punches
-                PdfPTable table = new PdfPTable(7);
+                PdfPTable table = new PdfPTable(8);
                 table.WidthPercentage = 100;
+                table.SetWidths(new float[] { 9, 7, 9, 7, 26, 26, 7, 9 });
 
                 // Get all the job ids for this organization
                 // if the job scope is not for specific job ids
@@ -463,31 +491,36 @@ namespace Brizbee.Services
                         .ToArray();
                 }
 
-                // Get all the punches for either specific users
-                // or all the users in this organization
-                List<Punch> punches;
+                // Get all the job ids for this organization
+                // if the job scope is not for specific job ids
+                IQueryable<Punch> punchesQueryable = db.Punches
+                    .Include("Task")
+                    .Include("Task.Job")
+                    .Where(p => p.OutAt.HasValue)
+                    .Where(p => p.InAt >= min && p.OutAt <= max)
+                    .Where(p => jobIds.Contains(p.Task.JobId));
+
+                // Filter by user
                 if (userScope == "specific")
                 {
-                    punches = db.Punches
-                        .Include("Task")
-                        .Include("Task.Job")
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
-                        .Where(p => jobIds.Contains(p.Task.JobId))
-                        .Where(p => userIds.Contains(p.UserId))
-                        .ToList();
-                }
-                else
-                {
-                    punches = db.Punches
-                        .Include("Task")
-                        .Include("Task.Job")
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
-                        .Where(p => jobIds.Contains(p.Task.JobId))
-                        .ToList();
+                    punchesQueryable = db.Punches
+                        .Where(p => userIds.Contains(p.UserId));
                 }
 
+                // Filter by commit
+                if (commitStatus == "only")
+                {
+                    punchesQueryable = punchesQueryable.Where(p => p.CommitId != null);
+                }
+                else if (commitStatus == "uncommitted")
+                {
+                    punchesQueryable = punchesQueryable.Where(p => p.CommitId == null);
+                }
+
+                var punches = punchesQueryable
+                    .OrderBy(p => p.InAt)
+                    .ToList();
+                
                 var groupedJobIds = punches
                     .GroupBy(p => p.Task.JobId)
                     .Select(g => g.Key)
@@ -502,17 +535,19 @@ namespace Brizbee.Services
                         .ToList();
 
                     // Job Name
-                    var jobCell = new PdfPCell(new Paragraph(string.Format("Job {0} - {1} for Customer {2} - {3}", job.Number, job.Name, job.Customer.Number, job.Customer.Name), fontH1));
-                    jobCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    jobCell.Colspan = 7;
-                    jobCell.Padding = 5;
-                    jobCell.PaddingBottom = 15;
-                    jobCell.BackgroundColor = BaseColor.BLACK;
+                    var jobCell = new PdfPCell(new Paragraph(string.Format("Job {0} - {1} for Customer {2} - {3}", job.Number, job.Name, job.Customer.Number, job.Customer.Name), fontH1))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        BackgroundColor = BaseColor.BLACK,
+                        Colspan = 8,
+                        Padding = 5,
+                        PaddingBottom = 15
+                    };
                     table.AddCell(jobCell);
                     
                     // Loop each date and print each punch
                     var dates = punches
-                        .GroupBy(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date)
+                        .GroupBy(p => p.InAt.Date)
                         .Select(g => new {
                             Date = g.Key
                         })
@@ -520,97 +555,163 @@ namespace Brizbee.Services
                     foreach (var date in dates)
                     {
                         // Day
-                        var dayCell = new PdfPCell(new Paragraph(date.Date.ToString("D"), fontH1));
-                        dayCell.Colspan = 7;
-                        dayCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        dayCell.Padding = 5;
-                        dayCell.BackgroundColor = BaseColor.BLACK;
+                        var dayCell = new PdfPCell(new Paragraph(date.Date.ToString("D"), fontH1))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            BackgroundColor = BaseColor.BLACK,
+                            Colspan = 8,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(dayCell);
 
                         // Column Headers
-                        var inHeaderCell = new PdfPCell(new Paragraph("In", fontH3));
-                        inHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        inHeaderCell.Padding = 5;
+                        var inHeaderCell = new PdfPCell(new Paragraph("In", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(inHeaderCell);
 
-                        var sourceInHeaderCell = new PdfPCell(new Paragraph("Source", fontH3));
-                        sourceInHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        sourceInHeaderCell.Padding = 5;
+                        var sourceInHeaderCell = new PdfPCell(new Paragraph("Src", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(sourceInHeaderCell);
 
-                        var outHeaderCell = new PdfPCell(new Paragraph("Out", fontH3));
-                        outHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        outHeaderCell.Padding = 5;
+                        var outHeaderCell = new PdfPCell(new Paragraph("Out", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(outHeaderCell);
 
-                        var sourceOutHeaderCell = new PdfPCell(new Paragraph("Source", fontH3));
-                        sourceOutHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        sourceOutHeaderCell.Padding = 5;
+                        var sourceOutHeaderCell = new PdfPCell(new Paragraph("Src", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(sourceOutHeaderCell);
 
-                        var userHeaderCell = new PdfPCell(new Paragraph("User", fontH3));
-                        userHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        userHeaderCell.Padding = 5;
+                        var userHeaderCell = new PdfPCell(new Paragraph("User", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(userHeaderCell);
 
-                        var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3));
-                        taskHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        taskHeaderCell.Padding = 5;
+                        var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(taskHeaderCell);
 
-                        var totalHeaderCell = new PdfPCell(new Paragraph("Total", fontH3));
-                        totalHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        totalHeaderCell.Padding = 5;
+                        var committedHeaderCell = new PdfPCell(new Phrase("Cmted", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(committedHeaderCell);
+
+                        var totalHeaderCell = new PdfPCell(new Paragraph("Total", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(totalHeaderCell);
 
                         // Punches for this job
                         var punchesForJobAndDay = punches
-                            .Where(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date == date.Date)
+                            .Where(p => p.InAt.Date == date.Date)
                             .Where(p => groupedTaskIds.Contains(p.TaskId))
                             .ToList();
                         foreach (var punch in punchesForJobAndDay)
                         {
                             // In At
-                            var inCell = new PdfPCell(new Paragraph(string.Format("{0} {1}", TimeZoneInfo.ConvertTime(punch.InAt, tz).ToString("MMM dd, yyyy"), TimeZoneInfo.ConvertTime(punch.InAt, tz).ToString("h:mmtt").ToLower()), fontP));
-                            inCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            inCell.Padding = 5;
+                            var inCell = new PdfPCell(new Paragraph(string.Format("{0}", punch.InAt.ToString("h:mmtt").ToLower()), fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(inCell);
 
                             // In At Source
-                            var sourceInCell = new PdfPCell(new Paragraph(punch.SourceForInAt[0].ToString(), fontP));
-                            sourceInCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            sourceInCell.Padding = 5;
+                            var sourceInCell = new PdfPCell(new Paragraph(punch.SourceForInAt[0].ToString(), fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(sourceInCell);
 
                             // Out At
-                            var outCell = new PdfPCell(new Paragraph(string.Format("{0} {1}", TimeZoneInfo.ConvertTime(punch.OutAt.Value, tz).ToString("MMM dd, yyyy"), TimeZoneInfo.ConvertTime(punch.OutAt.Value, tz).ToString("h:mmtt").ToLower()), fontP));
-                            outCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            outCell.Padding = 5;
+                            var outCell = new PdfPCell(new Paragraph(string.Format("{0}", punch.OutAt.Value.ToString("h:mmtt").ToLower()), fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(outCell);
 
                             // Out At Source
-                            var sourceOutCell = new PdfPCell(new Paragraph(punch.SourceForOutAt[0].ToString(), fontP));
-                            sourceOutCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            sourceOutCell.Padding = 5;
+                            var sourceOutCell = new PdfPCell(new Paragraph(punch.SourceForOutAt[0].ToString(), fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(sourceOutCell);
 
                             // User
-                            var userCell = new PdfPCell(new Paragraph(punch.User.Name, fontP));
-                            userCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            userCell.Padding = 5;
+                            var userCell = new PdfPCell(new Paragraph(punch.User.Name, fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(userCell);
 
                             // Task
-                            var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Number, punch.Task.Name), fontP));
-                            taskCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            taskCell.Padding = 5;
+                            var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Number, punch.Task.Name), fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(taskCell);
+
+                            // Committed
+                            var committed = punch.CommitId.HasValue ? "X" : "";
+                            var committedCell = new PdfPCell(new Phrase(committed, fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                HorizontalAlignment = Element.ALIGN_CENTER,
+                                Padding = 5,
+                                UseAscender = true
+                            };
+                            table.AddCell(committedCell);
 
                             // Total
                             var total = Math.Round((punch.OutAt.Value - punch.InAt).TotalMinutes / 60, 2).ToString("0.00");
-                            var totalCell = new PdfPCell(new Paragraph(total.ToString(), fontP));
-                            totalCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                            totalCell.Padding = 5;
+                            var totalCell = new PdfPCell(new Paragraph(total.ToString(), fontP))
+                            {
+                                VerticalAlignment = Element.ALIGN_MIDDLE,
+                                HorizontalAlignment = Element.ALIGN_RIGHT,
+                                Padding = 5,
+                                UseAscender = true
+                            };
                             table.AddCell(totalCell);
                         }
 
@@ -621,15 +722,22 @@ namespace Brizbee.Services
                             dailyTotalMinutes += (punch.OutAt.Value - punch.InAt).TotalMinutes;
                         }
                         var dailyTotal = Math.Round(dailyTotalMinutes / 60, 2).ToString("0.00");
-                        var dailyTotalHeaderCell = new PdfPCell(new Paragraph("Daily Total", fontH3));
-                        dailyTotalHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        dailyTotalHeaderCell.HorizontalAlignment = Element.ALIGN_RIGHT;
-                        dailyTotalHeaderCell.Colspan = 6;
-                        dailyTotalHeaderCell.Padding = 5;
+                        var dailyTotalHeaderCell = new PdfPCell(new Paragraph("Daily Total", fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Colspan = 7,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(dailyTotalHeaderCell);
-                        var dailyTotalValueCell = new PdfPCell(new Paragraph(dailyTotal.ToString(), fontH3));
-                        dailyTotalValueCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        dailyTotalValueCell.Padding = 5;
+                        var dailyTotalValueCell = new PdfPCell(new Paragraph(dailyTotal.ToString(), fontH3))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(dailyTotalValueCell);
                     }
                 }
@@ -639,8 +747,8 @@ namespace Brizbee.Services
                 {
                     document.Add(new Paragraph(
                         string.Format("There are no jobs with punches between {0} and {1}",
-                            TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                            TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
+                            min.ToShortDateString(),
+                            max.ToShortDateString()),
                         fontP));
                 }
 
@@ -653,7 +761,7 @@ namespace Brizbee.Services
                 document.Close();
             }
 
-            buffer = output.GetBuffer();
+            buffer = output.ToArray();
 
             // Page count must be added later due to nuances in iText
             AddPageNumbers(buffer);
@@ -661,11 +769,14 @@ namespace Brizbee.Services
             return buffer;
         }
 
-        public byte[] PunchesByDayAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, User currentUser)
+        public byte[] PunchesByDayAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, string commitStatus, User currentUser)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(currentUser.TimeZone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -678,25 +789,24 @@ namespace Brizbee.Services
                 document.AddCreator("BRIZBEE");
                 document.AddTitle(string.Format(
                     "Punches by Day {0} thru {1}.pdf",
-                    TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                    TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()));
+                    min.ToShortDateString(),
+                    max.ToShortDateString()));
 
                 // Header
                 writer.PageEvent = new Header(
                     string.Format("REPORT: PUNCHES BY DAY {0} thru {1}",
-                        TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                        TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
-                    TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz));
+                        min.ToShortDateString(),
+                        max.ToShortDateString()),
+                    nowDateTime);
 
                 // Open the document to enable you to write to the document
                 document.Open();
 
                 // Build table of punches
-                PdfPTable table = new PdfPTable(9);
+                PdfPTable table = new PdfPTable(10);
                 table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 6, 6, 6, 6, 17, 17, 17, 17, 8 });
-
-
+                table.SetWidths(new float[] { 6, 4, 6, 4, 17, 17, 17, 17, 6, 6 });
+                
                 // Get all the job ids for this organization
                 // if the job scope is not for specific job ids
                 if (jobScope != "specific")
@@ -712,32 +822,37 @@ namespace Brizbee.Services
 
                 // Get all the punches for either specific users
                 // or all the users in this organization
-                List<Punch> punches;
+                IQueryable<Punch> punchesQueryable = db.Punches
+                    .Include("Task")
+                    .Include("Task.Job")
+                    .Where(p => p.OutAt.HasValue)
+                    .Where(p => p.InAt >= min && p.OutAt <= max)
+                    .Where(p => jobIds.Contains(p.Task.JobId));
+
+                // Filter by user
                 if (userScope == "specific")
                 {
-                    punches = db.Punches
-                        .Include("Task")
-                        .Include("Task.Job")
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
-                        .Where(p => jobIds.Contains(p.Task.JobId))
-                        .Where(p => userIds.Contains(p.UserId))
-                        .ToList();
+                    punchesQueryable = db.Punches
+                        .Where(p => userIds.Contains(p.UserId));
                 }
-                else
+
+                // Filter by commit
+                if (commitStatus == "only")
                 {
-                    punches = db.Punches
-                        .Include("Task")
-                        .Include("Task.Job")
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
-                        .Where(p => jobIds.Contains(p.Task.JobId))
-                        .ToList();
+                    punchesQueryable = punchesQueryable.Where(p => p.CommitId != null);
                 }
+                else if (commitStatus == "uncommitted")
+                {
+                    punchesQueryable = punchesQueryable.Where(p => p.CommitId == null);
+                }
+
+                var punches = punchesQueryable
+                    .OrderBy(p => p.InAt)
+                    .ToList();
                 
                 // Loop each date and print each punch
                 var dates = punches
-                    .GroupBy(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date)
+                    .GroupBy(p => p.InAt.Date)
                     .Select(g => new {
                         Date = g.Key
                     })
@@ -746,7 +861,7 @@ namespace Brizbee.Services
                 {
                     // Day
                     var dayCell = new PdfPCell(new Paragraph(date.Date.ToString("D"), fontH1));
-                    dayCell.Colspan = 9;
+                    dayCell.Colspan = 10;
                     dayCell.VerticalAlignment = Element.ALIGN_MIDDLE;
                     dayCell.Padding = 5;
                     dayCell.PaddingBottom = 15;
@@ -754,110 +869,184 @@ namespace Brizbee.Services
                     table.AddCell(dayCell);
 
                     // Column Headers
-                    var inHeaderCell = new PdfPCell(new Paragraph("In", fontH3));
-                    inHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    inHeaderCell.Padding = 5;
+                    var inHeaderCell = new PdfPCell(new Paragraph("In", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(inHeaderCell);
 
-                    var sourceInHeaderCell = new PdfPCell(new Paragraph("Source", fontH3));
-                    sourceInHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    sourceInHeaderCell.Padding = 5;
+                    var sourceInHeaderCell = new PdfPCell(new Paragraph("Src", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(sourceInHeaderCell);
 
-                    var outHeaderCell = new PdfPCell(new Paragraph("Out", fontH3));
-                    outHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    outHeaderCell.Padding = 5;
+                    var outHeaderCell = new PdfPCell(new Paragraph("Out", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(outHeaderCell);
 
-                    var sourceOutHeaderCell = new PdfPCell(new Paragraph("Source", fontH3));
-                    sourceOutHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    sourceOutHeaderCell.Padding = 5;
+                    var sourceOutHeaderCell = new PdfPCell(new Paragraph("Src", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(sourceOutHeaderCell);
 
-                    var userHeaderCell = new PdfPCell(new Paragraph("User", fontH3));
-                    userHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    userHeaderCell.Padding = 5;
+                    var userHeaderCell = new PdfPCell(new Paragraph("User", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(userHeaderCell);
 
-                    var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3));
-                    taskHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    taskHeaderCell.Padding = 5;
+                    var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(taskHeaderCell);
 
-                    var jobHeaderCell = new PdfPCell(new Paragraph("Job", fontH3));
-                    jobHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    jobHeaderCell.Padding = 5;
+                    var jobHeaderCell = new PdfPCell(new Paragraph("Job", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(jobHeaderCell);
 
-                    var customerHeaderCell = new PdfPCell(new Paragraph("Customer", fontH3));
-                    customerHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    customerHeaderCell.Padding = 5;
+                    var customerHeaderCell = new PdfPCell(new Paragraph("Customer", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(customerHeaderCell);
 
-                    var totalHeaderCell = new PdfPCell(new Paragraph("Total", fontH3));
-                    totalHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    totalHeaderCell.Padding = 5;
+                    var committedHeaderCell = new PdfPCell(new Phrase("Cmted", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(committedHeaderCell);
+
+                    var totalHeaderCell = new PdfPCell(new Paragraph("Total", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(totalHeaderCell);
 
                     // Punches for this Day
                     var punchesForDay = punches
-                        .Where(p => TimeZoneInfo.ConvertTime(p.InAt, tz).Date == date.Date)
+                        .Where(p => p.InAt.Date == date.Date)
                         .ToList();
                     foreach (var punch in punchesForDay)
                     {
                         // In At
-                        var inCell = new PdfPCell(new Paragraph(TimeZoneInfo.ConvertTime(punch.InAt, tz).ToString("h:mmtt").ToLower(), fontP));
-                        inCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        inCell.Padding = 5;
+                        var inCell = new PdfPCell(new Paragraph(punch.InAt.ToString("h:mmtt").ToLower(), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(inCell);
 
                         // In At Source
-                        var sourceInCell = new PdfPCell(new Paragraph(punch.SourceForInAt[0].ToString(), fontP));
-                        sourceInCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        sourceInCell.Padding = 5;
+                        var sourceInCell = new PdfPCell(new Paragraph(punch.SourceForInAt[0].ToString(), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(sourceInCell);
 
                         // Out At
-                        var outCell = new PdfPCell(new Paragraph(TimeZoneInfo.ConvertTime(punch.OutAt.Value, tz).ToString("h:mmtt").ToLower(), fontP));
-                        outCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        outCell.Padding = 5;
+                        var outCell = new PdfPCell(new Paragraph(punch.OutAt.Value.ToString("h:mmtt").ToLower(), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(outCell);
 
                         // Out At Source
-                        var sourceOutCell = new PdfPCell(new Paragraph(punch.SourceForOutAt[0].ToString(), fontP));
-                        sourceOutCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        sourceOutCell.Padding = 5;
+                        var sourceOutCell = new PdfPCell(new Paragraph(punch.SourceForOutAt[0].ToString(), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(sourceOutCell);
 
                         // User
-                        var userCell = new PdfPCell(new Paragraph(punch.User.Name, fontP));
-                        userCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        userCell.Padding = 5;
+                        var userCell = new PdfPCell(new Paragraph(punch.User.Name, fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(userCell);
 
                         // Task
-                        var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Number, punch.Task.Name), fontP));
-                        taskCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        taskCell.Padding = 5;
+                        var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Number, punch.Task.Name), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(taskCell);
 
                         // Job
-                        var jobCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Number, punch.Task.Job.Name), fontP));
-                        jobCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        jobCell.Padding = 5;
+                        var jobCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Number, punch.Task.Job.Name), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(jobCell);
 
                         // Customer
-                        var customerCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Customer.Number, punch.Task.Job.Customer.Name), fontP));
-                        customerCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        customerCell.Padding = 5;
+                        var customerCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Customer.Number, punch.Task.Job.Customer.Name), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(customerCell);
+
+                        // Committed
+                        var committed = punch.CommitId.HasValue ? "X" : "";
+                        var committedCell = new PdfPCell(new Phrase(committed, fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_CENTER,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(committedCell);
 
                         // Total
                         var total = Math.Round((punch.OutAt.Value - punch.InAt).TotalMinutes / 60, 2).ToString("0.00");
-                        var totalCell = new PdfPCell(new Paragraph(total.ToString(), fontP));
-                        totalCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                        totalCell.Padding = 5;
+                        var totalCell = new PdfPCell(new Paragraph(total.ToString(), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Padding = 5,
+                            UseAscender = true
+                        };
                         table.AddCell(totalCell);
                     }
 
@@ -868,15 +1057,22 @@ namespace Brizbee.Services
                         dailyTotalMinutes += (punch.OutAt.Value - punch.InAt).TotalMinutes;
                     }
                     var dailyTotal = Math.Round(dailyTotalMinutes / 60, 2).ToString("0.00");
-                    var dailyTotalHeaderCell = new PdfPCell(new Paragraph("Daily Total", fontH3));
-                    dailyTotalHeaderCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    dailyTotalHeaderCell.HorizontalAlignment = Element.ALIGN_RIGHT;
-                    dailyTotalHeaderCell.Colspan = 8;
-                    dailyTotalHeaderCell.Padding = 5;
+                    var dailyTotalHeaderCell = new PdfPCell(new Paragraph("Daily Total", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 5,
+                        Colspan = 9,
+                        UseAscender = true
+                    };
                     table.AddCell(dailyTotalHeaderCell);
-                    var dailyTotalValueCell = new PdfPCell(new Paragraph(dailyTotal.ToString(), fontH3));
-                    dailyTotalValueCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                    dailyTotalValueCell.Padding = 5;
+                    var dailyTotalValueCell = new PdfPCell(new Paragraph(dailyTotal.ToString(), fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 5,
+                        UseAscender = true
+                    };
                     table.AddCell(dailyTotalValueCell);
                 }
                 
@@ -885,8 +1081,8 @@ namespace Brizbee.Services
                 {
                     document.Add(new Paragraph(
                         string.Format("There are no punches between {0} and {1}",
-                            TimeZoneInfo.ConvertTime(min, tz).ToShortDateString(),
-                            TimeZoneInfo.ConvertTime(max, tz).ToShortDateString()),
+                            min.ToShortDateString(),
+                            max.ToShortDateString()),
                         fontP));
                 }
 
@@ -899,7 +1095,7 @@ namespace Brizbee.Services
                 document.Close();
             }
 
-            buffer = output.GetBuffer();
+            buffer = output.ToArray();
 
             // Page count must be added later due to nuances in iText
             AddPageNumbers(buffer);
@@ -911,7 +1107,10 @@ namespace Brizbee.Services
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(currentUser.TimeZone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
             var job = db.Jobs.Where(j => j.Id == jobId).FirstOrDefault();
 
             // Create an instance of document which represents the PDF document itself
@@ -933,7 +1132,7 @@ namespace Brizbee.Services
                     string.Format("REPORT: TASKS BY JOB FOR {0} - {1}",
                         job.Number,
                         job.Name.ToUpper()),
-                    TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz));
+                    nowDateTime);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -1004,7 +1203,7 @@ namespace Brizbee.Services
                 document.Close();
             }
 
-            buffer = output.GetBuffer();
+            buffer = output.ToArray();
 
             // Page count must be added later due to nuances in iText
             AddPageNumbers(buffer);
@@ -1014,16 +1213,20 @@ namespace Brizbee.Services
 
         private void AddPageNumbers(byte[] buffer)
         {
+            Trace.TraceInformation("Adding page numbers");
             using (MemoryStream stream = new MemoryStream())
             {
                 PdfReader reader = new PdfReader(buffer);
                 using (PdfStamper stamper = new PdfStamper(reader, stream))
                 {
+                    Trace.TraceInformation(reader.NumberOfPages.ToString());
                     int pages = reader.NumberOfPages;
                     for (int i = 1; i <= pages; i++)
                     {
+                        Trace.TraceInformation("Looping page");
+                        Trace.TraceInformation(pageWidth.ToString());
                         var text = string.Format("Page {0} of {1}", i, pages);
-                        ColumnText.ShowTextAligned(stamper.GetUnderContent(i), Element.ALIGN_RIGHT, new Phrase(text, fontFooter), pageWidth - 30, 30f, 0);
+                        ColumnText.ShowTextAligned(stamper.GetOverContent(i), Element.ALIGN_RIGHT, new Phrase(text, fontFooter), pageWidth - 30f, 30f, 0);
                     }
                 }
                 buffer = stream.ToArray();
@@ -1081,7 +1284,7 @@ namespace Brizbee.Services
             PdfPTable tableHeader = new PdfPTable(2);
             
             PdfPCell headerCell1 = new PdfPCell(new Paragraph(Title, baseFontNormal));
-            PdfPCell headerCell2 = new PdfPCell(new Paragraph(string.Format("Printed {0}", PrintTime.ToString("F")), baseFontNormal));
+            PdfPCell headerCell2 = new PdfPCell(new Paragraph(string.Format("Generated {0}", PrintTime.ToString("F")), baseFontNormal));
             
             // Set cell styling
             headerCell1.HorizontalAlignment = Element.ALIGN_LEFT;

@@ -29,19 +29,13 @@ namespace Brizbee.Repositories
             {
                 throw new NotAuthorizedException("You are not authorized to create the commit");
             }
-
-            //var organization = db.Organizations.Find(currentUser.OrganizationId);
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
             
-            var inAtUnspecified = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
-            var inAtUtc = TimeZoneInfo.ConvertTimeToUtc(inAtUnspecified, tz);
-
-            var outAtUnspecified = new DateTime(commit.OutAt.Year, commit.OutAt.Month, commit.OutAt.Day, 23, 59, 59, DateTimeKind.Unspecified);
-            var outAtUtc = TimeZoneInfo.ConvertTimeToUtc(outAtUnspecified, tz);
+            var inAt = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
+            var outAt = new DateTime(commit.OutAt.Year, commit.OutAt.Month, commit.OutAt.Day, 23, 59, 59, DateTimeKind.Unspecified);
 
             // Ensure that no two commits overlap
             var overlap = db.Commits
-                .Where(c => (inAtUtc < c.OutAt) && (c.InAt < outAtUtc))
+                .Where(c => (inAt < c.OutAt) && (c.InAt < outAt))
                 .FirstOrDefault();
             if (overlap != null)
             {
@@ -57,8 +51,8 @@ namespace Brizbee.Repositories
             commit.CreatedAt = DateTime.UtcNow;
             commit.OrganizationId = currentUser.OrganizationId;
             commit.UserId = currentUser.Id;
-            commit.InAt = inAtUtc;
-            commit.OutAt = outAtUtc;
+            commit.InAt = inAt;
+            commit.OutAt = outAt;
 
             db.Commits.Add(commit);
 
@@ -66,17 +60,15 @@ namespace Brizbee.Repositories
 
             // Split at midnight every night
             var splitter = new PunchSplitter();
-            var localTz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
-            var hourLocal = new DateTime(2018, 1, 1, 0, 0, 0);
-            var hourUtc = hourLocal.Hour;
+            var midnight = new DateTime(2018, 1, 1, 0, 0, 0).Hour;
             int[] userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id)
                 .ToArray();
-            splitter.SplitAtHour(userIds, inAtUtc, outAtUtc, hourUtc, currentUser);
+            splitter.SplitAtHour(userIds, inAt, outAt, midnight, currentUser);
 
             // Commit all the punches within range and save the PunchCount
-            var punches = db.Punches.Where(p => (p.InAt >= inAtUtc) && (p.OutAt <= outAtUtc));
+            var punches = db.Punches.Where(p => (p.InAt >= inAt) && (p.OutAt <= outAt));
             foreach (var punch in punches)
             {
                 punch.CommitId = commit.Id;

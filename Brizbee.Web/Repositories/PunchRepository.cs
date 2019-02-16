@@ -22,7 +22,6 @@ namespace Brizbee.Repositories
         {
             var now = DateTime.UtcNow;
             var organization = db.Organizations.Find(currentUser.OrganizationId);
-            //var timezone = TimeZoneInfo.FindSystemTimeZoneById(organization.TimeZone);
 
             // Auto-generated
             punch.CreatedAt = now;

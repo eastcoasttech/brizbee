@@ -14,9 +14,6 @@ namespace Brizbee.Services
             using (var db = new BrizbeeWebContext())
             {
                 var organization = db.Organizations.Find(currentUser.OrganizationId);
-                var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
-                //var startTz = TimeZoneInfo.ConvertTime(start, tz);
-                //var finishTz = TimeZoneInfo.ConvertTime(finish, tz);
 
                 using (var transaction = db.Database.BeginTransaction())
                 {
@@ -82,20 +79,14 @@ namespace Brizbee.Services
         // 7:00 AM = 7, 5:00 PM = 17
         public void SplitAtHour(int[] userIds, DateTime startUtc, DateTime finishUtc, int hour, User currentUser)
         {
-            Trace.TraceInformation("Splitting in UTC at " + hour.ToString());
-
             using (var db = new BrizbeeWebContext())
             {
                 var organization = db.Organizations.Find(currentUser.OrganizationId);
-                var tz = TimeZoneInfo.FindSystemTimeZoneById(currentUser.TimeZone);
-                //var startTz = TimeZoneInfo.ConvertTime(start, tz);
-                //var finishTz = TimeZoneInfo.ConvertTime(finish, tz);
 
                 using (var transaction = db.Database.BeginTransaction())
                 {
                     try
                     {
-                        Trace.TraceInformation(userIds.Count().ToString());
                         var punches = db.Punches
                             .Where(p => p.OutAt != null) // where punch is complete
                             .Where(p => !p.CommitId.HasValue) // only punches that have not been committed
@@ -103,8 +94,7 @@ namespace Brizbee.Services
                             .Where(p => p.OutAt <= finishUtc) // where OutAt is before or at finish
                             .Where(p => userIds.Contains(p.UserId))
                             .OrderBy(p => p.InAt);
-
-                        Trace.TraceInformation(punches.Count().ToString());
+                        
                         foreach (var punch in punches)
                         {
                             if (punch.CommitId != null)
@@ -112,25 +102,21 @@ namespace Brizbee.Services
                                 throw new Exception("Cannot split a punch that has been committed");
                             }
 
-                            var splitter = new HourSplitter(TimeZoneInfo.ConvertTime(punch.InAt, tz),
-                                TimeZoneInfo.ConvertTime(punch.OutAt.Value, tz), hour);
+                            var splitter = new HourSplitter(punch.InAt, punch.OutAt.Value, hour);
 
                             // The old punch will be deleted from the
                             // database and replaced with each new punch
                             // that was created by splitting the original one
-                            Trace.TraceInformation("Removing a punch from the database");
                             db.Punches.Remove(punch);
 
                             foreach (Tuple<DateTime, DateTime> tuple in splitter.Results)
                             {
-                                Trace.TraceInformation("Adding a new punch to the database from the results" +
-                                    TimeZoneInfo.ConvertTimeToUtc(tuple.Item1, tz).ToString("yyyy-MM-dd HH:mm:ss") + " " + TimeZoneInfo.ConvertTimeToUtc(tuple.Item2, tz).ToString("yyyy-MM-dd HH:mm:ss"));
                                 db.Punches.Add(new Punch()
                                 {
                                     CreatedAt = punch.CreatedAt,
                                     Guid = Guid.NewGuid(),
-                                    InAt = TimeZoneInfo.ConvertTimeToUtc(tuple.Item1, tz),
-                                    OutAt = TimeZoneInfo.ConvertTimeToUtc(tuple.Item2, tz),
+                                    InAt = tuple.Item1,
+                                    OutAt = tuple.Item2,
                                     SourceForInAt = punch.SourceForInAt,
                                     SourceForOutAt = punch.SourceForOutAt,
                                     TaskId = punch.TaskId,
@@ -138,15 +124,14 @@ namespace Brizbee.Services
                                 });
                             }
                         }
-
-                        Trace.TraceInformation("Saving changes");
+                        
                         db.SaveChanges();
 
                         transaction.Commit();
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceInformation(ex.ToString());
+                        Trace.TraceWarning(ex.ToString());
                         transaction.Rollback();
                     }
                 }

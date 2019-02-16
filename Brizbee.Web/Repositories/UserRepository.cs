@@ -60,6 +60,14 @@ namespace Brizbee.Repositories
             // Auto-generated
             user.CreatedAt = DateTime.UtcNow;
             user.OrganizationId = currentUser.OrganizationId;
+            
+            // Ensure that Pin is unique in the organization
+            if (db.Users
+                .Where(u => u.OrganizationId == user.OrganizationId)
+                .Where(u => u.Pin == user.Pin).Any())
+            {
+                throw new Exception("Another user in the organization already has that Pin");
+            }
 
             if (user.Password != null)
             {
@@ -176,7 +184,7 @@ namespace Brizbee.Repositories
             {
                 patch.TryGetPropertyValue("Pin", out object pin);
                 if (db.Users
-                    .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                    .Where(u => u.OrganizationId == user.OrganizationId)
                     .Where(u => u.Pin == pin).Any())
                 {
                     throw new Exception("Another user in the organization already has that Pin");

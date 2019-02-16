@@ -333,6 +333,10 @@
     <Compile Include="Migrations\201902090347029_MakingIsDeletedRequiredAndRemovingPassword.Designer.cs">
       <DependentUpon>201902090347029_MakingIsDeletedRequiredAndRemovingPassword.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201902160337081_AddingDescriptionToCustomers.cs" />
+    <Compile Include="Migrations\201902160337081_AddingDescriptionToCustomers.Designer.cs">
+      <DependentUpon>201902160337081_AddingDescriptionToCustomers.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -360,8 +364,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Properties\PublishProfiles\BrizbeeWeb - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\BrizbeeWeb - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\MARTIN-01 - BrizbeeWebProduction - FTP.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -501,6 +505,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201902090347029_MakingIsDeletedRequiredAndRemovingPassword.resx">
       <DependentUpon>201902090347029_MakingIsDeletedRequiredAndRemovingPassword.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902160337081_AddingDescriptionToCustomers.resx">
+      <DependentUpon>201902160337081_AddingDescriptionToCustomers.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
