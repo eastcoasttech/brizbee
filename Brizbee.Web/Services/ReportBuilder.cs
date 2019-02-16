@@ -909,13 +909,13 @@ namespace Brizbee.Services
                     };
                     table.AddCell(userHeaderCell);
 
-                    var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3))
+                    var customerHeaderCell = new PdfPCell(new Paragraph("Customer", fontH3))
                     {
                         VerticalAlignment = Element.ALIGN_MIDDLE,
                         Padding = 5,
                         UseAscender = true
                     };
-                    table.AddCell(taskHeaderCell);
+                    table.AddCell(customerHeaderCell);
 
                     var jobHeaderCell = new PdfPCell(new Paragraph("Job", fontH3))
                     {
@@ -925,13 +925,13 @@ namespace Brizbee.Services
                     };
                     table.AddCell(jobHeaderCell);
 
-                    var customerHeaderCell = new PdfPCell(new Paragraph("Customer", fontH3))
+                    var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3))
                     {
                         VerticalAlignment = Element.ALIGN_MIDDLE,
                         Padding = 5,
                         UseAscender = true
                     };
-                    table.AddCell(customerHeaderCell);
+                    table.AddCell(taskHeaderCell);
 
                     var committedHeaderCell = new PdfPCell(new Phrase("Cmted", fontH3))
                     {
@@ -1000,14 +1000,14 @@ namespace Brizbee.Services
                         };
                         table.AddCell(userCell);
 
-                        // Task
-                        var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Number, punch.Task.Name), fontP))
+                        // Customer
+                        var customerCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Customer.Number, punch.Task.Job.Customer.Name), fontP))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
                             UseAscender = true
                         };
-                        table.AddCell(taskCell);
+                        table.AddCell(customerCell);
 
                         // Job
                         var jobCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Number, punch.Task.Job.Name), fontP))
@@ -1018,14 +1018,14 @@ namespace Brizbee.Services
                         };
                         table.AddCell(jobCell);
 
-                        // Customer
-                        var customerCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Job.Customer.Number, punch.Task.Job.Customer.Name), fontP))
+                        // Task
+                        var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", punch.Task.Number, punch.Task.Name), fontP))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
                             UseAscender = true
                         };
-                        table.AddCell(customerCell);
+                        table.AddCell(taskCell);
 
                         // Committed
                         var committed = punch.CommitId.HasValue ? "X" : "";
