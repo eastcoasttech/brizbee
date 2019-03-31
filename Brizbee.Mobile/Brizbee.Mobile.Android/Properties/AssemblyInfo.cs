@@ -9,10 +9,10 @@ using Android.App;
 [assembly: AssemblyTitle("Brizbee.Mobile.Android")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("East Coast Technology Services, LLC")]
 [assembly: AssemblyProduct("Brizbee.Mobile.Android")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCopyright("Copyright © 2019")]
+[assembly: AssemblyTrademark("East Coast Technology Services, LLC")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 
@@ -37,3 +37,9 @@ using Android.App;
 [assembly: UsesFeature("android.hardware.location", Required = false)]
 [assembly: UsesFeature("android.hardware.location.gps", Required = false)]
 [assembly: UsesFeature("android.hardware.location.network", Required = false)]
+
+#if DEBUG
+[assembly: Application(Debuggable=true)]
+#else
+[assembly: Application(Debuggable = false)]
+#endif

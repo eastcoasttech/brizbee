@@ -51,5 +51,13 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string TimeZone { get; set; }
+
+        public bool UsesMobileClock { get; set; }
+
+        public bool UsesTouchToneClock { get; set; }
+
+        public bool UsesWebClock { get; set; }
+
+        public bool UsesTimesheets { get; set; }
     }
 }

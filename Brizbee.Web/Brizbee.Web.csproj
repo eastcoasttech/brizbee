@@ -160,6 +160,7 @@
     <Compile Include="Controllers\ReportsController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\TaskTemplatesController.cs" />
+    <Compile Include="Controllers\TimesheetEntriesController.cs" />
     <Compile Include="Controllers\TwilioController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Filters\BrizbeeAuthorizeAttribute.cs" />
@@ -337,6 +338,18 @@
     <Compile Include="Migrations\201902160337081_AddingDescriptionToCustomers.Designer.cs">
       <DependentUpon>201902160337081_AddingDescriptionToCustomers.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201902181858526_AddingTimesheetEntries.cs" />
+    <Compile Include="Migrations\201902181858526_AddingTimesheetEntries.Designer.cs">
+      <DependentUpon>201902181858526_AddingTimesheetEntries.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902201642300_AddingFeatureOptions.cs" />
+    <Compile Include="Migrations\201902201642300_AddingFeatureOptions.Designer.cs">
+      <DependentUpon>201902201642300_AddingFeatureOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201902201830073_AddingMinutesFormat.cs" />
+    <Compile Include="Migrations\201902201830073_AddingMinutesFormat.Designer.cs">
+      <DependentUpon>201902201830073_AddingMinutesFormat.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -346,6 +359,7 @@
     <Compile Include="Policies\PunchPolicy.cs" />
     <Compile Include="Policies\TaskPolicy.cs" />
     <Compile Include="Policies\TaskTemplatePolicy.cs" />
+    <Compile Include="Policies\TimesheetEntryPolicy.cs" />
     <Compile Include="Policies\UserPolicy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\CommitRepository.cs" />
@@ -355,6 +369,7 @@
     <Compile Include="Repositories\PunchRepository.cs" />
     <Compile Include="Repositories\TaskRepository.cs" />
     <Compile Include="Repositories\TaskTemplateRepository.cs" />
+    <Compile Include="Repositories\TimesheetEntryRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
     <Compile Include="Serialization\PseudoCommit.cs" />
@@ -365,7 +380,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\BrizbeeWeb - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\MARTIN-01 - BrizbeeWebProduction - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\ectsvm1 - BrizbeeWebProduction - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -508,6 +523,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201902160337081_AddingDescriptionToCustomers.resx">
       <DependentUpon>201902160337081_AddingDescriptionToCustomers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902181858526_AddingTimesheetEntries.resx">
+      <DependentUpon>201902181858526_AddingTimesheetEntries.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902201642300_AddingFeatureOptions.resx">
+      <DependentUpon>201902201642300_AddingFeatureOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201902201830073_AddingMinutesFormat.resx">
+      <DependentUpon>201902201830073_AddingMinutesFormat.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

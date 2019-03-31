@@ -235,6 +235,7 @@ namespace Brizbee.Repositories
                     user.Role = "Administrator";
                     user.CreatedAt = DateTime.UtcNow;
                     organization.CreatedAt = DateTime.UtcNow;
+                    organization.MinutesFormat = "minutes";
 
                     try
                     {

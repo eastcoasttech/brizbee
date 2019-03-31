@@ -30,6 +30,7 @@ namespace Brizbee
         public DbSet<Punch> Punches { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<TaskTemplate> TaskTemplates { get; set; }
+        public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
         public DbSet<User> Users { get; set; }
         
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

@@ -333,7 +333,72 @@ namespace Brizbee.Services
                             };
                             table.AddCell(totalCell);
                         }
-                        
+
+                        //// Timesheet entries for this Day
+                        //var entriesForDay = db.TimesheetEntries
+                        //    .Where(e => e.EnteredAt.Date == date.Date)
+                        //    .ToList();
+                        //foreach (var entry in entriesForDay)
+                        //{
+                        //    var emptyCell = new PdfPCell(new Phrase(""))
+                        //    {
+                        //        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        //        Padding = 5,
+                        //        UseAscender = true,
+                        //        Colspan = 4
+                        //    };
+                        //    table.AddCell(emptyCell);
+
+                        //    // Task
+                        //    var taskCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", entry.Task.Number, entry.Task.Name), fontP))
+                        //    {
+                        //        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        //        Padding = 5,
+                        //        UseAscender = true
+                        //    };
+                        //    table.AddCell(taskCell);
+
+                        //    // Job
+                        //    var jobCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", entry.Task.Job.Number, entry.Task.Job.Name), fontP))
+                        //    {
+                        //        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        //        Padding = 5,
+                        //        UseAscender = true
+                        //    };
+                        //    table.AddCell(jobCell);
+
+                        //    // Customer
+                        //    var customerCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", entry.Task.Job.Customer.Number, entry.Task.Job.Customer.Name), fontP))
+                        //    {
+                        //        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        //        Padding = 5,
+                        //        UseAscender = true
+                        //    };
+                        //    table.AddCell(customerCell);
+
+                        //    // Committed
+                        //    //var committed = punch.CommitId.HasValue ? "X" : "";
+                        //    var committedCell = new PdfPCell(new Phrase("", fontP))
+                        //    {
+                        //        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        //        HorizontalAlignment = Element.ALIGN_CENTER,
+                        //        Padding = 5,
+                        //        UseAscender = true
+                        //    };
+                        //    table.AddCell(committedCell);
+
+                        //    // Total
+                        //    var total = Math.Round((double)entry.Minutes / 60, 2).ToString("0.00");
+                        //    var totalCell = new PdfPCell(new Phrase(total.ToString(), fontP))
+                        //    {
+                        //        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        //        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        //        Padding = 5,
+                        //        UseAscender = true
+                        //    };
+                        //    table.AddCell(totalCell);
+                        //}
+
                         // Daily Total and Spacer
                         double dailyTotalMinutes = 0;
                         foreach (var punch in punchesForDay)
