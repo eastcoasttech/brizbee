@@ -14,7 +14,7 @@ namespace Brizbee.QuickBooksConnector
     {
         public App()
         {
-            var client = new RestClient("https://brizbeeweb.azurewebsites.net/");
+            var client = new RestClient("https://brizbee.gowitheast.com/");
             Application.Current.Properties["Client"] = client;
 
             // Initialize MessageBus Using Dispatcher
