@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Exceptions;
+using Brizbee.Common.Models;
 using Brizbee.Policies;
 using Microsoft.AspNet.OData;
 using System;
@@ -23,7 +24,7 @@ namespace Brizbee.Repositories
             // Ensure that user is authorized
             if (!CustomerPolicy.CanCreate(customer, currentUser))
             {
-                throw new Exception("Not authorized to create the object");
+                throw new NotAuthorizedException("Not authorized to create the object");
             }
 
             // Auto-generated
@@ -49,7 +50,7 @@ namespace Brizbee.Repositories
             // Ensure that user is authorized
             if (!CustomerPolicy.CanDelete(customer, currentUser))
             {
-                throw new Exception("Not authorized to delete the object");
+                throw new NotAuthorizedException("Not authorized to delete the object");
             }
 
             // Delete the object itself
@@ -102,18 +103,18 @@ namespace Brizbee.Repositories
             var customer = db.Customers.Find(id);
 
             // Ensure that object was found
-            if (customer == null) { throw new Exception("No object was found with that ID in the database"); }
+            if (customer == null) { throw new NotFoundException("No object was found with that ID in the database"); }
             
             // Ensure that user is authorized
             if (!CustomerPolicy.CanUpdate(customer, currentUser))
             {
-                throw new Exception("Not authorized to modify the object");
+                throw new NotAuthorizedException("Not authorized to modify the object");
             }
 
             // Do not allow modifying some properties
             if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
             {
-                throw new Exception("Not authorized to modify the OrganizationId");
+                throw new NotAuthorizedException("Not authorized to modify the OrganizationId");
             }
 
             // Peform the update

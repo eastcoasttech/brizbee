@@ -350,6 +350,10 @@
     <Compile Include="Migrations\201902201830073_AddingMinutesFormat.Designer.cs">
       <DependentUpon>201902201830073_AddingMinutesFormat.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904241811513_AddingCommitGuid.cs" />
+    <Compile Include="Migrations\201904241811513_AddingCommitGuid.Designer.cs">
+      <DependentUpon>201904241811513_AddingCommitGuid.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -532,6 +536,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201902201830073_AddingMinutesFormat.resx">
       <DependentUpon>201902201830073_AddingMinutesFormat.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904241811513_AddingCommitGuid.resx">
+      <DependentUpon>201904241811513_AddingCommitGuid.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

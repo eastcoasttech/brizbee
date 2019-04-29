@@ -49,6 +49,7 @@ namespace Brizbee.Repositories
 
             // Auto-generated
             commit.CreatedAt = DateTime.UtcNow;
+            commit.Guid = Guid.NewGuid();
             commit.OrganizationId = currentUser.OrganizationId;
             commit.UserId = currentUser.Id;
             commit.InAt = inAt;

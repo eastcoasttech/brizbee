@@ -13,6 +13,8 @@ namespace Brizbee.Common.Models
         [Column(TypeName = "datetime2")]
         public DateTime? QuickBooksExportedAt { get; set; }
 
+        public Guid Guid { get; set; }
+
         [Key]
         public int Id { get; set; }
 
@@ -23,7 +25,10 @@ namespace Brizbee.Common.Models
         [NotMapped]
         public string Name {
             get {
-                return string.Format("{0} - {1}", InAt.ToString("d"), OutAt.ToString("d"));
+                return string.Format("{0} - {1} - {2}",
+                    Guid.ToString().Split('-')[4],
+                    InAt.ToString("d"),
+                    OutAt.ToString("d"));
             }
         }
 
