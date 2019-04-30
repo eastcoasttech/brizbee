@@ -240,29 +240,29 @@ namespace Brizbee.Repositories
                     try
                     {
                         // Create a Stripe customer object
-                        var customerOptions = new StripeCustomerCreateOptions
+                        var customerOptions = new CustomerCreateOptions
                         {
                             Email = user.EmailAddress
                         };
-                        var customers = new StripeCustomerService();
-                        StripeCustomer customer = customers.Create(customerOptions);
+                        var customers = new CustomerService();
+                        Stripe.Customer customer = customers.Create(customerOptions);
                         organization.StripeCustomerId = customer.Id;
 
                         // Subscribe the customer to the default plan
-                        var items = new List<StripeSubscriptionItemOption> {
-                            new StripeSubscriptionItemOption {
+                        var items = new List<SubscriptionItemOption> {
+                            new SubscriptionItemOption {
                                 PlanId = "plan_EOcuCOKkFCDiFZ", // plan_EOd1WamGWDH0tS
                                 Quantity = 1,
                             }
                         };
-                        var subscriptionOptions = new StripeSubscriptionCreateOptions
+                        var subscriptionOptions = new SubscriptionCreateOptions
                         {
                             Items = items,
                             TrialPeriodDays = 30,
                             CustomerId = customer.Id
                         };
-                        var subscriptions = new StripeSubscriptionService();
-                        StripeSubscription subscription = subscriptions.Create(subscriptionOptions);
+                        var subscriptions = new SubscriptionService();
+                        Subscription subscription = subscriptions.Create(subscriptionOptions);
                         organization.StripeSubscriptionId = subscription.Id;
                     }
                     catch (Exception ex)

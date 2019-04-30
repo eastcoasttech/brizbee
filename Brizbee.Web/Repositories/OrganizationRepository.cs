@@ -60,30 +60,30 @@ namespace Brizbee.Repositories
             // Update the Stripe payment source if it is provided
             if (patch.GetChangedPropertyNames().Contains("StripeSourceId"))
             {
-                var customerService = new StripeCustomerService();
-                var sourceService = new StripeSourceService();
+                var customerService = new CustomerService();
+                var sourceService = new SourceService();
                 
                 // Attach the card source id to the customer
-                var attachOptions = new StripeSourceAttachOptions()
+                var attachOptions = new SourceAttachOptions()
                 {
                     Source = organization.StripeSourceId
                 };
                 sourceService.Attach(organization.StripeCustomerId, attachOptions);
 
                 // Update the customer's default source
-                var customerOptions = new StripeCustomerUpdateOptions()
+                var customerOptions = new CustomerUpdateOptions()
                 {
                     DefaultSource = organization.StripeSourceId
                 };
-                StripeCustomer customer = customerService.Update(organization.StripeCustomerId, customerOptions);
+                Stripe.Customer customer = customerService.Update(organization.StripeCustomerId, customerOptions);
 
                 var source = sourceService.Get(organization.StripeSourceId);
 
                 // Record the card details
                 organization.StripeSourceCardLast4 = source.Card.Last4;
                 organization.StripeSourceCardBrand = source.Card.Brand;
-                organization.StripeSourceCardExpirationMonth = source.Card.ExpirationMonth.ToString();
-                organization.StripeSourceCardExpirationYear = source.Card.ExpirationYear.ToString();
+                organization.StripeSourceCardExpirationMonth = source.Card.ExpMonth.ToString();
+                organization.StripeSourceCardExpirationYear = source.Card.ExpYear.ToString();
             }
 
             db.SaveChanges();
