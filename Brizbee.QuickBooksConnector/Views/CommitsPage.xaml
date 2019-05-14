@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:Brizbee.QuickBooksConnector.Views"
         mc:Ignorable="d"
         d:DesignHeight="480" d:DesignWidth="640"
-        WindowTitle="Choose a Commit to Export">
+        WindowTitle="Choose a Commit to Export"
+        Loaded="Page_Loaded">
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>

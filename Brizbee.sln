@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Tests", "Brizbee.Tests\Brizbee.Tests.csproj", "{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Web", "Brizbee.Web\Brizbee.Web.csproj", "{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Common", "Brizbee.Common\Brizbee.Common.csproj", "{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}"
@@ -19,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Mobile.iOS", "Brizb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Mobile.UWP", "Brizbee.Mobile\Brizbee.Mobile.UWP\Brizbee.Mobile.UWP.csproj", "{9E323D34-ED52-4063-BA0F-6932B4D5254F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Mobile", "Brizbee.Mobile\Brizbee.Mobile\Brizbee.Mobile.csproj", "{CA18E224-4AE6-4E09-B683-EDAF35B0C3DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Mobile", "Brizbee.Mobile\Brizbee.Mobile\Brizbee.Mobile.csproj", "{CA18E224-4AE6-4E09-B683-EDAF35B0C3DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,30 +35,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|ARM.Build.0 = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|iPhone.ActiveCfg = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|iPhone.Build.0 = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|x64.Build.0 = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Debug|x86.Build.0 = Debug|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|ARM.ActiveCfg = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|ARM.Build.0 = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|iPhone.ActiveCfg = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|iPhone.Build.0 = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|x64.ActiveCfg = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|x64.Build.0 = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|x86.ActiveCfg = Release|Any CPU
-		{26AA5A8F-E15B-4CFD-8032-B8507681FB2A}.Release|x86.Build.0 = Release|Any CPU
 		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C4D0DC9-B4BB-4086-A422-8255EE02FE7C}.Debug|ARM.ActiveCfg = Debug|Any CPU

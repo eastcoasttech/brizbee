@@ -29,11 +29,6 @@ namespace Brizbee.QuickBooksConnector.Views
             {
                 IsEnabled = true
             };
-            
-            // Refresh the commits on load
-            //Task.Run(() =>
-            //    (DataContext as CommitsPageViewModel)
-            //        .RefreshCommits()).Wait();
         }
 
         private void ContinueButton_Click(object sender, RoutedEventArgs e)
@@ -42,6 +37,18 @@ namespace Brizbee.QuickBooksConnector.Views
         }
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await (DataContext as CommitsPageViewModel).RefreshCommits();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Refresh Commits", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
