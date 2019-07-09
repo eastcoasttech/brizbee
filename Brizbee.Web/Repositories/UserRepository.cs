@@ -1,6 +1,6 @@
 ﻿using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
-using Brizbee.Policies;
+using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using Stripe;
 using System;
@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Web;
 
-namespace Brizbee.Repositories
+namespace Brizbee.Web.Repositories
 {
     public class UserRepository : IDisposable
     {

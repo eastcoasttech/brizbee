@@ -1,6 +1,6 @@
 ﻿using Brizbee.Common.Models;
-using Brizbee.Repositories;
-using Brizbee.Services;
+using Brizbee.Web.Repositories;
+using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using System;
 using System.Data.Entity;
@@ -10,7 +10,7 @@ using System.Net;
 using System.Web;
 using System.Web.Http;
 
-namespace Brizbee.Controllers
+namespace Brizbee.Web.Controllers
 {
     public class PunchesController : BaseODataController
     {

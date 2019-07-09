@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Web;
 
-namespace Brizbee.Repositories
+namespace Brizbee.Web.Repositories
 {
     public class OrganizationRepository : IDisposable
     {

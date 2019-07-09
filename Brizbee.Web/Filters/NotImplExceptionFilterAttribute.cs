@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http.Filters;
 
-namespace Brizbee.Filters
+namespace Brizbee.Web.Filters
 {
     public class NotImplExceptionFilterAttribute : ExceptionFilterAttribute
     {

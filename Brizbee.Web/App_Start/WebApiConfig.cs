@@ -1,7 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Common.Serialization;
-using Brizbee.Filters;
+using Brizbee.Web.Filters;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using System;
@@ -52,47 +52,53 @@ namespace Brizbee
             builder.EntitySet<TimesheetEntry>("TimesheetEntries");
             builder.EntitySet<User>("Users");
 
-            // Collection Function - Current
+            // Collection Function - Punches/Current
             builder.EntityType<Punch>()
                 .Collection
                 .Function("Current")
                 .ReturnsFromEntitySet<Punch>("Punches");
 
-            // Collection Action - Authenticate
+            // Member Function - Commit/Export
+            var export = builder.EntityType<Commit>()
+                .Function("Export")
+                .Returns<string>();
+            export.Parameter<string>("Delimiter");
+
+            // Collection Action - Users/Authenticate
             var authenticate = builder.EntityType<User>()
                 .Collection
                 .Action("Authenticate");
             authenticate.Parameter<Session>("Session");
             authenticate.Returns<Credential>();
 
-            // Collection Action - Customer - NextNumber
+            // Collection Action - Customers/NextNumber
             builder.EntityType<Customer>()
                 .Collection
                 .Action("NextNumber");
 
-            // Collection Action - Job - NextNumber
+            // Collection Action - Jobs/NextNumber
             builder.EntityType<Job>()
                 .Collection
                 .Action("NextNumber");
 
-            // Collection Action - Task - NextNumber
+            // Collection Action - Tasks/NextNumber
             builder.EntityType<Task>()
                 .Collection
                 .Action("NextNumber");
 
-            // Collection Action - Organization - Countries
+            // Collection Action - Organizations/Countries
             var countries = builder.EntityType<Organization>()
                 .Collection
                 .Function("Countries");
             countries.ReturnsCollection<Country>();
 
-            // Collection Action - Organization - TimeZones
+            // Collection Action - Organizations/TimeZones
             var timeZones = builder.EntityType<Organization>()
                 .Collection
                 .Function("TimeZones");
             timeZones.ReturnsCollection<IanaTimeZone>();
 
-            // Collection Action - Register
+            // Collection Action - Users/Register
             var register = builder.EntityType<User>()
                 .Collection
                 .Action("Register");
@@ -100,7 +106,7 @@ namespace Brizbee
             register.Parameter<User>("User");
             register.ReturnsFromEntitySet<User>("Users");
 
-            // Collection Action - PunchIn
+            // Collection Action - Punches/PunchIn
             var punchIn = builder.EntityType<Punch>()
                 .Collection
                 .Action("PunchIn")
@@ -109,7 +115,7 @@ namespace Brizbee
             punchIn.Parameter<string>("SourceForInAt");
             punchIn.Parameter<string>("InAtTimeZone");
 
-            // Collection Action - PunchOut
+            // Collection Action - Punches/PunchOut
             var punchOut = builder.EntityType<Punch>()
                 .Collection
                 .Action("PunchOut")
@@ -117,7 +123,7 @@ namespace Brizbee
             punchOut.Parameter<string>("SourceForOutAt");
             punchOut.Parameter<string>("OutAtTimeZone");
 
-            // Collection Action - Split
+            // Collection Action - Punches/Split
             var split = builder.EntityType<Punch>()
                 .Collection
                 .Action("Split");
@@ -127,12 +133,14 @@ namespace Brizbee
             split.Parameter<string>("Time");
             split.Parameter<string>("Type");
 
-            // Member Action - Change Password
-            ActionConfiguration changePassword = builder.EntityType<User>().Action("ChangePassword");
+            // Member Action - User/ChangePassword
+            ActionConfiguration changePassword = builder.EntityType<User>()
+                .Action("ChangePassword");
             changePassword.Parameter<string>("Password");
 
-            // Member Action - Undo
-            ActionConfiguration undo = builder.EntityType<Commit>().Action("Undo");
+            // Member Action - Commit/Undo
+            ActionConfiguration undo = builder.EntityType<Commit>()
+                .Action("Undo");
 
             config.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
 

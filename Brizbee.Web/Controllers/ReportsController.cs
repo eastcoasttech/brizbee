@@ -1,5 +1,5 @@
 ﻿using Brizbee.Common.Models;
-using Brizbee.Services;
+using Brizbee.Web.Services;
 using NodaTime;
 using System;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Web.Http;
 
-namespace Brizbee.Controllers
+namespace Brizbee.Web.Controllers
 {
     public class ReportsController : ApiController
     {

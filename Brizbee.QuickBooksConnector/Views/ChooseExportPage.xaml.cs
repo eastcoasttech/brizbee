@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Brizbee.QuickBooksConnector.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,8 @@ namespace Brizbee.QuickBooksConnector.Views
         public ChooseExportPage()
         {
             InitializeComponent();
+
+            DataContext = new ChooseExportPageViewModel();
         }
 
         private void QuickBooksButton_Click(object sender, RoutedEventArgs e)

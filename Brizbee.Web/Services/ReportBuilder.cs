@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Web.Hosting;
 
-namespace Brizbee.Services
+namespace Brizbee.Web.Services
 {
     public class ReportBuilder
     {
@@ -105,8 +105,8 @@ namespace Brizbee.Services
                     // either for any job or a specific job
                     IQueryable<Punch> punchesQueryable = db.Punches
                         .Include("Task")
-                        .Where(p => p.OutAt.HasValue)
-                        .Where(p => p.InAt >= min && p.OutAt <= max)
+                        .Where(p => p.OutAt.HasValue == true)
+                        .Where(p => p.InAt >= min && p.OutAt.Value <= max)
                         .Where(p => p.UserId == user.Id);
                     
                     // Filter by job
@@ -258,7 +258,8 @@ namespace Brizbee.Services
                             table.AddCell(inCell);
 
                             // In At Source
-                            var sourceInCell = new PdfPCell(new Phrase(punch.SourceForInAt[0].ToString(), fontP))
+                            var sourceForInAt = string.IsNullOrEmpty(punch.SourceForInAt) ? "" : punch.SourceForInAt[0].ToString();
+                            var sourceInCell = new PdfPCell(new Phrase(sourceForInAt, fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -276,7 +277,8 @@ namespace Brizbee.Services
                             table.AddCell(outCell);
 
                             // Out At Source
-                            var sourceOutCell = new PdfPCell(new Phrase(punch.SourceForOutAt[0].ToString(), fontP))
+                            var sourceForOutAt = string.IsNullOrEmpty(punch.SourceForOutAt) ? "" : punch.SourceForOutAt[0].ToString();
+                            var sourceOutCell = new PdfPCell(new Phrase(sourceForOutAt, fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -561,8 +563,8 @@ namespace Brizbee.Services
                 IQueryable<Punch> punchesQueryable = db.Punches
                     .Include("Task")
                     .Include("Task.Job")
-                    .Where(p => p.OutAt.HasValue)
-                    .Where(p => p.InAt >= min && p.OutAt <= max)
+                    .Where(p => p.OutAt.HasValue == true)
+                    .Where(p => p.InAt >= min && p.OutAt.Value <= max)
                     .Where(p => jobIds.Contains(p.Task.JobId));
 
                 // Filter by user
@@ -713,7 +715,8 @@ namespace Brizbee.Services
                             table.AddCell(inCell);
 
                             // In At Source
-                            var sourceInCell = new PdfPCell(new Paragraph(punch.SourceForInAt[0].ToString(), fontP))
+                            var sourceForInAt = string.IsNullOrEmpty(punch.SourceForInAt) ? "" : punch.SourceForInAt[0].ToString();
+                            var sourceInCell = new PdfPCell(new Paragraph(sourceForInAt.ToString(), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -731,7 +734,8 @@ namespace Brizbee.Services
                             table.AddCell(outCell);
 
                             // Out At Source
-                            var sourceOutCell = new PdfPCell(new Paragraph(punch.SourceForOutAt[0].ToString(), fontP))
+                            var sourceForOutAt = string.IsNullOrEmpty(punch.SourceForOutAt) ? "" : punch.SourceForOutAt[0].ToString();
+                            var sourceOutCell = new PdfPCell(new Paragraph(sourceForOutAt, fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -890,8 +894,8 @@ namespace Brizbee.Services
                 IQueryable<Punch> punchesQueryable = db.Punches
                     .Include("Task")
                     .Include("Task.Job")
-                    .Where(p => p.OutAt.HasValue)
-                    .Where(p => p.InAt >= min && p.OutAt <= max)
+                    .Where(p => p.OutAt.HasValue == true)
+                    .Where(p => p.InAt >= min && p.OutAt.Value <= max)
                     .Where(p => jobIds.Contains(p.Task.JobId));
 
                 // Filter by user
@@ -1030,7 +1034,8 @@ namespace Brizbee.Services
                         table.AddCell(inCell);
 
                         // In At Source
-                        var sourceInCell = new PdfPCell(new Paragraph(punch.SourceForInAt[0].ToString(), fontP))
+                        var sourceForInAt = string.IsNullOrEmpty(punch.SourceForInAt) ? "" : punch.SourceForInAt[0].ToString();
+                        var sourceInCell = new PdfPCell(new Paragraph(sourceForInAt, fontP))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
@@ -1048,7 +1053,8 @@ namespace Brizbee.Services
                         table.AddCell(outCell);
 
                         // Out At Source
-                        var sourceOutCell = new PdfPCell(new Paragraph(punch.SourceForOutAt[0].ToString(), fontP))
+                        var sourceForOutAt = string.IsNullOrEmpty(punch.SourceForOutAt) ? "" : punch.SourceForOutAt[0].ToString();
+                        var sourceOutCell = new PdfPCell(new Paragraph(sourceForOutAt, fontP))
                         {
                             VerticalAlignment = Element.ALIGN_MIDDLE,
                             Padding = 5,
@@ -1331,11 +1337,13 @@ namespace Brizbee.Services
                 headerTemplate = cb.CreateTemplate(width, 30);
                 footerTemplate = cb.CreateTemplate(width, 30);
             }
-            catch (DocumentException)
+            catch (DocumentException ex)
             {
+                Trace.TraceError(ex.ToString());
             }
-            catch (IOException)
+            catch (IOException ex)
             {
+                Trace.TraceError(ex.ToString());
             }
         }
 

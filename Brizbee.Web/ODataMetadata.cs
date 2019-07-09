@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Brizbee
+namespace Brizbee.Web
 {
     public class ODataMetadata<T> where T : class
     {

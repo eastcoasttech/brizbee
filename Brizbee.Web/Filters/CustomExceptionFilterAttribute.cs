@@ -4,7 +4,7 @@ using Microsoft.OData;
 using System.Data.Entity.Validation;
 using System.Web.Http.Filters;
 
-namespace Brizbee.Filters
+namespace Brizbee.Web.Filters
 {
     public class CustomExceptionFilterAttribute : ExceptionFilterAttribute
     {

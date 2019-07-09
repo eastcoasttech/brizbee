@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace Brizbee.Policies
+namespace Brizbee.Web.Policies
 {
     public class PunchPolicy
     {

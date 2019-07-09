@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Web;
 
-namespace Brizbee
+namespace Brizbee.Web
 {
     public class BrizbeeWebContext : DbContext
     {

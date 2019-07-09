@@ -15,9 +15,12 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-            <TextBlock TextWrapping="WrapWithOverflow" Padding="0 0 0 15" Margin="0" LineStackingStrategy="BlockLineHeight" LineHeight="18">
-                Please choose where you want to export the punches for the commit between x and x?
-            </TextBlock>
+            <TextBlock TextWrapping="WrapWithOverflow"
+                       Padding="0 0 0 15"
+                       Margin="0"
+                       LineStackingStrategy="BlockLineHeight"
+                       LineHeight="18"
+                       Text="{Binding HelpText}" />
             <Button Padding="15 7 15 7"
                     Name="QuickBooksButton"
                     Click="QuickBooksButton_Click">Export to QuickBooks</Button>

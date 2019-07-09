@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Brizbee
+namespace Brizbee.Web
 {
     public class ODataHandler : DelegatingHandler
     {

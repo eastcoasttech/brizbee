@@ -1,11 +1,11 @@
-﻿using Brizbee.Repositories;
+﻿using Brizbee.Web.Repositories;
 using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 
-namespace Brizbee.Controllers
+namespace Brizbee.Web.Controllers
 {
     public class TwilioController : ApiController
     {

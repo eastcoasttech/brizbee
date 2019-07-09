@@ -2,7 +2,7 @@
 using Microsoft.AspNet.OData;
 using System.Linq;
 
-namespace Brizbee.Controllers
+namespace Brizbee.Web.Controllers
 {
     public class BaseODataController : ODataController
     {

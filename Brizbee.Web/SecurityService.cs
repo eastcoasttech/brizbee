@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Web;
 
-namespace Brizbee
+namespace Brizbee.Web
 {
     public class SecurityService
     {

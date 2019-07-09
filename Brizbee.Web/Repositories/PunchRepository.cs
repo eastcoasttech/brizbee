@@ -1,12 +1,12 @@
 ﻿using Brizbee.Common.Models;
-using Brizbee.Policies;
+using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using NodaTime;
 using System;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Brizbee.Repositories
+namespace Brizbee.Web.Repositories
 {
     public class PunchRepository : IDisposable
     {

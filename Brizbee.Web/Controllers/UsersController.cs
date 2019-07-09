@@ -1,13 +1,13 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
-using Brizbee.Repositories;
+using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
 
-namespace Brizbee.Controllers
+namespace Brizbee.Web.Controllers
 {
     public class UsersController : BaseODataController
     {

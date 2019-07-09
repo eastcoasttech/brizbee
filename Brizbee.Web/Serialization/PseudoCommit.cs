@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace Brizbee.Serialization
+namespace Brizbee.Web.Serialization
 {
     public class PseudoCommit : Commit
     {

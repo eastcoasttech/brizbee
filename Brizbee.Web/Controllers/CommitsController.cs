@@ -1,13 +1,16 @@
 ﻿using Brizbee.Common.Models;
-using Brizbee.Repositories;
-using Brizbee.Serialization;
+using Brizbee.Web.Repositories;
+using Brizbee.Web.Serialization;
+using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Web.Http;
 
-namespace Brizbee.Controllers
+namespace Brizbee.Web.Controllers
 {
     public class CommitsController : BaseODataController
     {
@@ -73,6 +76,20 @@ namespace Brizbee.Controllers
             var commit = repo.Update(key, patch, CurrentUser());
 
             return Updated(commit);
+        }
+
+        // GET: odata/Commits(5)/Default.Export
+        [HttpGet]
+        public HttpResponseMessage Export([FromODataUri] int key, [FromODataUri] string Delimiter)
+        {
+            var commitId = key;
+
+            var exportService = new ExportService(commitId);
+            string csv = exportService.BuildCsv(Delimiter);
+
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new StringContent(csv, System.Text.Encoding.UTF8, "text/plain");
+            return response;
         }
 
         /// <summary>

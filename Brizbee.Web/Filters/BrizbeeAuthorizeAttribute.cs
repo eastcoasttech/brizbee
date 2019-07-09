@@ -7,7 +7,7 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 
-namespace Brizbee.Filters
+namespace Brizbee.Web.Filters
 {
     public class BrizbeeAuthorizeAttribute : AuthorizeAttribute
     {

@@ -126,6 +126,7 @@
     <Compile Include="Messages\SignedInMessage.cs" />
     <Compile Include="ODataResponse.cs" />
     <Compile Include="PasswordHelper.cs" />
+    <Compile Include="ViewModels\ChooseExportPageViewModel.cs" />
     <Compile Include="ViewModels\CommitsPageViewModel.cs" />
     <Compile Include="ViewModels\LoginPageViewModel.cs" />
     <Compile Include="ViewModels\LoginWindowViewModel.cs" />
