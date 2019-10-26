@@ -90,18 +90,13 @@ namespace Brizbee.Web.Controllers
 
             try
             {
-                var punch = repo.PunchIn(taskId, CurrentUser(),
-                    string.Format("{0} @ {1} @ {2}",
-                        source,
-                        HttpContext.Current.Request.UserHostAddress,
-                        HttpContext.Current.Request.UserAgent),
+                var punch = repo.PunchIn(taskId, CurrentUser(), source,
                     timezone, latitudeForInAt, longitudeForInAt);
                 return Created(punch);
             }
             catch (Exception ex)
             {
-                Trace.TraceWarning(ex.ToString());
-                return Content(HttpStatusCode.NoContent, ex.ToString());
+                return Content(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
