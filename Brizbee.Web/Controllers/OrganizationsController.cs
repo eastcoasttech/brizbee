@@ -59,7 +59,7 @@ namespace Brizbee.Web.Controllers
             return Ok(countries.OrderBy(c => c.Name).ToList());
         }
 
-        // GET: odata/Organizations/Default.Countries
+        // GET: odata/Organizations/Default.TimeZones
         [HttpGet]
         [AllowAnonymous]
         public IHttpActionResult TimeZones()

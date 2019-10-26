@@ -114,6 +114,8 @@ namespace Brizbee
             punchIn.Parameter<int>("TaskId");
             punchIn.Parameter<string>("SourceForInAt");
             punchIn.Parameter<string>("InAtTimeZone");
+            punchIn.Parameter<string>("LatitudeForInAt");
+            punchIn.Parameter<string>("LongitudeForInAt");
 
             // Collection Action - Punches/PunchOut
             var punchOut = builder.EntityType<Punch>()
@@ -122,6 +124,8 @@ namespace Brizbee
                 .ReturnsFromEntitySet<Punch>("Punches");
             punchOut.Parameter<string>("SourceForOutAt");
             punchOut.Parameter<string>("OutAtTimeZone");
+            punchOut.Parameter<string>("LatitudeForOutAt");
+            punchOut.Parameter<string>("LongitudeForOutAt");
 
             // Collection Action - Punches/Split
             var split = builder.EntityType<Punch>()

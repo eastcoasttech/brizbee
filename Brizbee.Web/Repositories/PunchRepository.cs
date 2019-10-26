@@ -149,7 +149,7 @@ namespace Brizbee.Web.Repositories
         /// </summary>
         /// <param name="taskId">The id of the task</param>
         /// <param name="currentUser">The user to punch in</param>
-        public Punch PunchIn(int taskId, User currentUser, string source, string timezone)
+        public Punch PunchIn(int taskId, User currentUser, string source, string timezone, string latitude = null, string longitude = null)
         {
             var punch = new Punch();
             var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezone);
@@ -195,6 +195,8 @@ namespace Brizbee.Web.Repositories
             punch.Guid = Guid.NewGuid();
             punch.SourceForInAt = source;
             punch.InAtTimeZone = timezone;
+            punch.LatitudeForInAt = latitude;
+            punch.LongitudeForInAt = longitude;
 
             db.Punches.Add(punch);
 

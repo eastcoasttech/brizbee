@@ -27,6 +27,18 @@ namespace Brizbee.Common.Models
 
         public string InAtTimeZone { get; set; }
 
+        [MaxLength(10)]
+        public string LatitudeForInAt { get; set; }
+
+        [MaxLength(10)]
+        public string LongitudeForInAt { get; set; }
+
+        [MaxLength(10)]
+        public string LatitudeForOutAt { get; set; }
+
+        [MaxLength(10)]
+        public string LongitudeForOutAt { get; set; }
+
         [NotMapped]
         public double Minutes
         {

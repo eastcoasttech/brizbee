@@ -45,6 +45,10 @@ namespace Brizbee.Common.Models
 
         public string QuickBooksEmployee { get; set; }
 
+        public bool RequiresLocation { get; set; }
+
+        public bool RequiresPhoto { get; set; }
+
         [Required]
         [MaxLength(128)]
         public string Role { get; set; }

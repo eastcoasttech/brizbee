@@ -28,6 +28,7 @@ namespace Brizbee.Web
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Punch> Punches { get; set; }
+        public DbSet<QuickBooksOnlineExport> QuickBooksOnlineExports { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<TaskTemplate> TaskTemplates { get; set; }
         public DbSet<TimesheetEntry> TimesheetEntries { get; set; }

@@ -1,5 +1,7 @@
-﻿using Intuit.Ipp.Core;
+﻿using Brizbee.Common.Models;
+using Intuit.Ipp.Core;
 using Intuit.Ipp.Data;
+using Intuit.Ipp.DataService;
 using Intuit.Ipp.OAuth2PlatformClient;
 using Intuit.Ipp.QueryFilter;
 using Intuit.Ipp.Security;
@@ -9,9 +11,7 @@ using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
 
 namespace Brizbee.Web.Controllers
@@ -29,7 +29,6 @@ namespace Brizbee.Web.Controllers
 
         // POST: api/QuickBooksOnline/Authenticate
         [HttpPost]
-        [AllowAnonymous]
         [Route("api/QuickBooksOnline/Authenticate")]
         public HttpResponseMessage PostAuthenticate()
         {
@@ -83,22 +82,47 @@ namespace Brizbee.Web.Controllers
             errorMessage = error;
 
             var response = Request.CreateResponse(HttpStatusCode.Found); // or Moved
-            var url = string.Format("https://app.brizbee.com/#!/export?stateMessage={0}&errorMessage={1}&realmId={2}&accessToken={3}&accessTokenExpiresAt={4}&refreshToken={5}&refreshTokenExpiresAt={6}",
-                stateMessage, errorMessage, realmId, accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt);
+            var url = string.Format("https://app.brizbee.com/#!/export-quickbooks-online?stateMessage={0}&errorMessage={1}&realmId={2}&accessToken={3}&accessTokenExpiresAt={4}&refreshToken={5}&refreshTokenExpiresAt={6}&step={7}",
+                stateMessage, errorMessage, realmId, accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, "company");
             response.Headers.Location = new Uri(url);
             return response;
         }
 
         // GET: api/QuickBooksOnline/CompanyInformation
         [HttpGet]
-        [AllowAnonymous]
         [Route("api/QuickBooksOnline/CompanyInformation")]
         public HttpResponseMessage GetCompanyInformation(string realmId = "", string accessToken = "")
         {
+            OAuth2RequestValidator oauthValidator = new OAuth2RequestValidator(accessToken);
+
+            // Create a ServiceContext with Auth tokens and realmId
+            ServiceContext serviceContext = new ServiceContext(realmId, IntuitServicesType.QBO, oauthValidator);
+            serviceContext.IppConfiguration.MinorVersion.Qbo = "23";
+            serviceContext.IppConfiguration.BaseUrl.Qbo = "https://sandbox-quickbooks.api.intuit.com/";
+
+            // Create a QuickBooks QueryService using ServiceContext
+            QueryService<CompanyInfo> querySvc = new QueryService<CompanyInfo>(serviceContext);
+            CompanyInfo companyInfo = querySvc.ExecuteIdsQuery("SELECT * FROM CompanyInfo").FirstOrDefault();
+
+            var response = Request.CreateResponse(HttpStatusCode.OK);
+            response.Content = new StringContent(companyInfo.CompanyName, System.Text.Encoding.UTF8, "application/xml");
+            return response;
+        }
+
+        // POST: api/QuickBooksOnline/TimeActivities
+        [HttpPost]
+        [Route("api/QuickBooksOnline/TimeActivities")]
+        public HttpResponseMessage PostTimeActivities(string realmId = "", string accessToken = "", int? commitId = null, DateTime? inAt = null, DateTime? outAt = null)
+        {
             try
             {
-                //var principal = User as ClaimsPrincipal;
-                //OAuth2RequestValidator oauthValidator = new OAuth2RequestValidator(principal.FindFirst("access_token").Value);
+                var currentUser = CurrentUser();
+                var export = new QuickBooksOnlineExport()
+                {
+                    CreatedAt = DateTime.UtcNow,
+                    UserId = currentUser.Id
+                };
+
                 OAuth2RequestValidator oauthValidator = new OAuth2RequestValidator(accessToken);
 
                 // Create a ServiceContext with Auth tokens and realmId
@@ -106,14 +130,72 @@ namespace Brizbee.Web.Controllers
                 serviceContext.IppConfiguration.MinorVersion.Qbo = "23";
                 serviceContext.IppConfiguration.BaseUrl.Qbo = "https://sandbox-quickbooks.api.intuit.com/";
 
-                // Create a QuickBooks QueryService using ServiceContext
-                QueryService<CompanyInfo> querySvc = new QueryService<CompanyInfo>(serviceContext);
-                CompanyInfo companyInfo = querySvc.ExecuteIdsQuery("SELECT * FROM CompanyInfo").FirstOrDefault();
+                // DataService is used to create objects
+                DataService dataService = new DataService(serviceContext);
 
-                string output = "Company Name: " + companyInfo.CompanyName + " Company Address: " + companyInfo.CompanyAddr.Line1 + ", " + companyInfo.CompanyAddr.City + ", " + companyInfo.CompanyAddr.Country + " " + companyInfo.CompanyAddr.PostalCode;
-                //return View("ApiCallService", (object)("QBO API call Successful!! Response: " + output));
-                var response = Request.CreateResponse(HttpStatusCode.OK);
-                response.Content = new StringContent(output, System.Text.Encoding.UTF8, "application/xml");
+                // Create a QuickBooks QueryService using ServiceContext
+                QueryService<Employee> employeeSvc = new QueryService<Employee>(serviceContext);
+
+                DateTime parsedInAt;
+                DateTime parsedOutAt;
+                if (commitId.HasValue)
+                {
+                    var commit = db.Commits.Find(commitId.Value);
+                    parsedInAt = commit.InAt;
+                    parsedOutAt = commit.OutAt;
+                    export.InAt = parsedInAt;
+                    export.OutAt = parsedOutAt;
+                    export.CommitId = commitId.Value;
+                }
+                else if (inAt.HasValue && outAt.HasValue)
+                {
+                    parsedInAt = inAt.Value;
+                    parsedOutAt = outAt.Value;
+                    export.InAt = parsedInAt;
+                    export.OutAt = parsedOutAt;
+                }
+                else
+                {
+                    throw new Exception("Must specify a commit id or a range to export time activities.");
+                }
+
+                var punches = db.Punches
+                    .Include("User")
+                    .Where(p => p.InAt >= parsedInAt && p.OutAt.HasValue && p.OutAt <= parsedOutAt);
+                foreach (var punch in punches)
+                {
+                    var displayName = punch.User.QuickBooksEmployee.Replace("'", "\\'"); //Escape special characters
+                    var query = string.Format("SELECT * FROM Employee WHERE DisplayName = '{0}'", displayName);
+                    Employee employee = employeeSvc.ExecuteIdsQuery(query).FirstOrDefault();
+
+                    //if (employee != null)
+                    //{
+                    //}
+
+                    var time = new TimeActivity()
+                    {
+                        TxnDate = punch.InAt,
+                        TxnDateSpecified = true,
+                        StartTime = punch.InAt,
+                        EndTime = punch.OutAt.Value,
+                        NameOf = TimeActivityTypeEnum.Employee,
+                        NameOfSpecified = true,
+                        //ItemElementName = ItemChoiceType5.EmployeeRef,
+                        //ItemRef
+                        AnyIntuitObject = new ReferenceType()
+                        {
+                            name = employee.DisplayName,
+                            Value = employee.Id
+                        },
+                        HoursSpecified = false,
+                        EndTimeSpecified = true,
+                        StartTimeSpecified = true
+                    };
+                    dataService.Add(time);
+                }
+
+                var response = Request.CreateResponse(HttpStatusCode.Created);
+                response.Content = new StringContent("", System.Text.Encoding.UTF8, "application/xml");
                 return response;
             }
             catch (Exception ex)
@@ -121,7 +203,6 @@ namespace Brizbee.Web.Controllers
                 var response = Request.CreateResponse(HttpStatusCode.InternalServerError);
                 response.Content = new StringContent(ex.ToString(), System.Text.Encoding.UTF8, "application/xml");
                 return response;
-                //return View("ApiCallService", (object)("QBO API call Failed!" + " Error message: " + ex.Message));
             }
         }
 
@@ -132,6 +213,21 @@ namespace Brizbee.Web.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        public Common.Models.User CurrentUser()
+        {
+            if (ActionContext.RequestContext.Principal.Identity.Name.Length > 0)
+            {
+                var currentUserId = int.Parse(ActionContext.RequestContext.Principal.Identity.Name);
+                return db.Users
+                    .Where(u => u.Id == currentUserId)
+                    .FirstOrDefault();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

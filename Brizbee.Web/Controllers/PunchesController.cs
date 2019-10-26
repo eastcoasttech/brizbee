@@ -85,6 +85,8 @@ namespace Brizbee.Web.Controllers
             var taskId = (int)parameters["TaskId"];
             var source = (string)parameters["SourceForInAt"];
             var timezone = (string)parameters["InAtTimeZone"];
+            var latitudeForInAt = (string)parameters["LatitudeForInAt"];
+            var longitudeForInAt = (string)parameters["LongitudeForInAt"];
 
             try
             {
@@ -93,7 +95,7 @@ namespace Brizbee.Web.Controllers
                         source,
                         HttpContext.Current.Request.UserHostAddress,
                         HttpContext.Current.Request.UserAgent),
-                    timezone);
+                    timezone, latitudeForInAt, longitudeForInAt);
                 return Created(punch);
             }
             catch (Exception ex)
