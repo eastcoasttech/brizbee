@@ -4,6 +4,7 @@ using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using System;
 using System.Data.Entity;
+using System.Data.Entity.Validation;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -94,6 +95,20 @@ namespace Brizbee.Web.Controllers
                     timezone, latitudeForInAt, longitudeForInAt);
                 return Created(punch);
             }
+            catch (DbEntityValidationException e)
+            {
+                string message = "";
+
+                foreach (var eve in e.EntityValidationErrors)
+                {
+                    foreach (var ve in eve.ValidationErrors)
+                    {
+                        message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                    }
+                }
+
+                return Content(HttpStatusCode.BadRequest, message);
+            }
             catch (Exception ex)
             {
                 return Content(HttpStatusCode.BadRequest, ex.Message);
@@ -106,21 +121,32 @@ namespace Brizbee.Web.Controllers
         {
             var source = (string)parameters["SourceForOutAt"];
             var timezone = (string)parameters["OutAtTimeZone"];
+            var latitudeForOutAt = (string)parameters["LatitudeForOutAt"];
+            var longitudeForOutAt = (string)parameters["LongitudeForOutAt"];
 
             try
             {
-                var punch = repo.PunchOut(CurrentUser(),
-                    string.Format("{0} @ {1} @ {2}",
-                        source,
-                        HttpContext.Current.Request.UserHostAddress,
-                        HttpContext.Current.Request.UserAgent),
-                    timezone);
+                var punch = repo.PunchOut(CurrentUser(), source, timezone,
+                    latitudeForOutAt, longitudeForOutAt);
                 return Created(punch);
+            }
+            catch (DbEntityValidationException e)
+            {
+                string message = "";
+
+                foreach (var eve in e.EntityValidationErrors)
+                {
+                    foreach (var ve in eve.ValidationErrors)
+                    {
+                        message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                    }
+                }
+
+                return Content(HttpStatusCode.BadRequest, message);
             }
             catch (Exception ex)
             {
-                Trace.TraceWarning(ex.ToString());
-                return Content(HttpStatusCode.NoContent, ex.ToString());
+                return Content(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 

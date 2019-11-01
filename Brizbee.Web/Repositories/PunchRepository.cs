@@ -211,7 +211,7 @@ namespace Brizbee.Web.Repositories
         /// to be the current timestamp.
         /// </summary>
         /// <param name="currentUser">The user to punch out</param>
-        public Punch PunchOut(User currentUser, string source, string timezone)
+        public Punch PunchOut(User currentUser, string source, string timezone, string latitude = null, string longitude = null)
         {
             var punch = db.Punches
                 .Where(p => p.UserId == currentUser.Id)
@@ -233,6 +233,8 @@ namespace Brizbee.Web.Repositories
             punch.OutAt = fiftyNine;
             punch.SourceForOutAt = source;
             punch.OutAtTimeZone = timezone;
+            punch.LatitudeForOutAt = latitude;
+            punch.LongitudeForOutAt = longitude;
 
             db.SaveChanges();
 

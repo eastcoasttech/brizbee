@@ -318,6 +318,10 @@
     <Compile Include="Migrations\201908270051538_AddingRequiresForUsers.Designer.cs">
       <DependentUpon>201908270051538_AddingRequiresForUsers.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201910271405218_IncreasingLengthForCoordinates.cs" />
+    <Compile Include="Migrations\201910271405218_IncreasingLengthForCoordinates.Designer.cs">
+      <DependentUpon>201910271405218_IncreasingLengthForCoordinates.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -392,6 +396,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201908270051538_AddingRequiresForUsers.resx">
       <DependentUpon>201908270051538_AddingRequiresForUsers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201910271405218_IncreasingLengthForCoordinates.resx">
+      <DependentUpon>201910271405218_IncreasingLengthForCoordinates.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
