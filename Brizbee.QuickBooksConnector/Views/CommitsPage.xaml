@@ -24,11 +24,6 @@
                 DisplayMemberPath="Name"
                 ItemsSource="{Binding Commits}"
                 SelectedItem="{Binding SelectedCommit}"/>
-            <!--<Button Content="{StaticResource Refresh}" Width="26" Height="26"
-                HorizontalAlignment="Left"
-                Margin="4 0 0 0" IsEnabled="{Binding IsEnabled}"
-                Name="RefreshButton"
-                Background="Transparent" BorderThickness="0" />-->
             <Label Content="{Binding CommitComboStatus}"
                 Height="22" Padding="0 3 3 3" Foreground="DarkGray"/>
 
@@ -43,12 +38,12 @@
                     Click="RefreshButton_Click"
                     Padding="15 5 15 5"
                     Margin="0 0 5 0"
-                    IsEnabled="{Binding IsEnabled}" IsDefault="True" />
+                    IsEnabled="{Binding IsRefreshEnabled}" IsDefault="True" />
                 <Button Grid.Column="2" Content="Continue"
                     Name="ContinueButton"
                     Click="ContinueButton_Click"
                     Padding="15 5 15 5"
-                    IsEnabled="{Binding IsEnabled}" IsDefault="True" />
+                    IsEnabled="{Binding IsContinueEnabled}" IsDefault="True" />
             </Grid>
         </StackPanel>
     </Grid>

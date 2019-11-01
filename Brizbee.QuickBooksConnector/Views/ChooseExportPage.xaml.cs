@@ -1,6 +1,7 @@
 ﻿using Brizbee.QuickBooksConnector.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,14 +29,17 @@ namespace Brizbee.QuickBooksConnector.Views
             DataContext = new ChooseExportPageViewModel();
         }
 
-        private void QuickBooksButton_Click(object sender, RoutedEventArgs e)
+        private async void QuickBooksButton_Click(object sender, RoutedEventArgs e)
         {
-
-        }
-
-        private void CsvButton_Click(object sender, RoutedEventArgs e)
-        {
-
+            try
+            {
+                await (DataContext as ChooseExportPageViewModel).Export();
+            }
+            catch (Exception ex)
+            {
+                EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
+                MessageBox.Show(ex.ToString(), "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

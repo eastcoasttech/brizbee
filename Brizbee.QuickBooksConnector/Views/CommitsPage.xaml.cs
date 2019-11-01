@@ -27,7 +27,8 @@ namespace Brizbee.QuickBooksConnector.Views
 
             DataContext = new CommitsPageViewModel()
             {
-                IsEnabled = true
+                IsRefreshEnabled = false,
+                IsContinueEnabled = false
             };
         }
 

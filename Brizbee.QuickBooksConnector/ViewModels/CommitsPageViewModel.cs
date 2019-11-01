@@ -15,7 +15,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
     {
         public string CommitComboStatus { get; set; }
         public ObservableCollection<Commit> Commits { get; set; }
-        public bool IsEnabled { get; set; }
+        public bool IsRefreshEnabled { get; set; }
+        public bool IsContinueEnabled { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
         public Commit SelectedCommit { get; set; }
 
@@ -24,7 +25,11 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         public async System.Threading.Tasks.Task RefreshCommits()
         {
             CommitComboStatus = "Downloading your commits";
+            IsRefreshEnabled = false;
+            IsContinueEnabled = false;
             OnPropertyChanged("CommitComboStatus");
+            OnPropertyChanged("IsRefreshEnabled");
+            OnPropertyChanged("IsContinueEnabled");
 
             // Build request to retrieve commits
             var request = new RestRequest("odata/Commits?$orderby=InAt", Method.GET);
@@ -41,27 +46,33 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 {
                     CommitComboStatus = "Uh oh, you do not have any commits";
                     SelectedCommit = null;
+                    IsContinueEnabled = false;
                     OnPropertyChanged("CommitComboStatus");
                     OnPropertyChanged("SelectedCommit");
+                    OnPropertyChanged("IsContinueEnabled");
                 }
                 else
                 {
                     CommitComboStatus = "";
                     SelectedCommit = Commits[0];
+                    IsContinueEnabled = true;
                     OnPropertyChanged("CommitComboStatus");
                     OnPropertyChanged("SelectedCommit");
+                    OnPropertyChanged("IsContinueEnabled");
                 }
 
-                IsEnabled = true;
-                OnPropertyChanged("IsEnabled");
+                IsRefreshEnabled = true;
+                OnPropertyChanged("IsRefreshEnabled");
             }
             else
             {
                 Commits = new ObservableCollection<Commit>();
-                IsEnabled = true;
+                IsRefreshEnabled = true;
+                IsContinueEnabled = false;
                 CommitComboStatus = response.ErrorMessage;
                 OnPropertyChanged("Commits");
-                OnPropertyChanged("IsEnabled");
+                OnPropertyChanged("IsRefreshEnabled");
+                OnPropertyChanged("IsContinueEnabled");
                 OnPropertyChanged("CommitComboStatus");
             }
         }

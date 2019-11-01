@@ -24,9 +24,12 @@
             <Button Padding="15 7 15 7"
                     Name="QuickBooksButton"
                     Click="QuickBooksButton_Click">Export to QuickBooks</Button>
-            <Button Padding="15 7 15 7" Margin="0 20 0 0"
-                    Name="CsvButton"
-                    Click="CsvButton_Click">Export to CSV File</Button>
+            <TextBlock TextWrapping="WrapWithOverflow"
+                       Padding="0 0 0 15"
+                       Margin="0"
+                       LineStackingStrategy="BlockLineHeight"
+                       LineHeight="18"
+                       Text="{Binding StatusText}" />
         </StackPanel>
     </Grid>
 </Page>
