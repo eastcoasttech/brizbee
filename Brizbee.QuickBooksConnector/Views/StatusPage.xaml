@@ -1,0 +1,47 @@
+﻿<Page x:Class="Brizbee.QuickBooksConnector.Views.StatusPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:Brizbee.QuickBooksConnector.Views"
+    mc:Ignorable="d"
+    d:DesignHeight="480" d:DesignWidth="640"
+    WindowTitle="QuickBooks Export Utility for BRIZBEE"
+    ShowsNavigationUI="False"
+    Loaded="Page_Loaded">
+    <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Background="White">
+            <DockPanel>
+                <Label Content="Exporting..." VerticalAlignment="Center" Margin="10" />
+                <Image Source="/Images/logo.png" HorizontalAlignment="Right" Margin="15" Width="75" />
+            </DockPanel>
+            <Separator />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom" Background="White">
+            <Separator />
+            <Button Content="Finish" Width="85" Margin="5 8 15 11" HorizontalAlignment="Right" />
+        </StackPanel>
+        <Grid Margin="40">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="1">
+                <TextBlock TextWrapping="WrapWithOverflow"
+                       Padding="0 20 0 0"
+                       Margin="0"
+                       LineStackingStrategy="BlockLineHeight"
+                       LineHeight="24"
+                       FontSize="16"
+                       Text="Exporting to QuickBooks" />
+                <TextBlock TextWrapping="WrapWithOverflow"
+                       Padding="0 20 0 0"
+                       Margin="0"
+                       LineStackingStrategy="BlockLineHeight"
+                       LineHeight="22"
+                       FontSize="14"
+                       Text="{Binding StatusText}" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Page>

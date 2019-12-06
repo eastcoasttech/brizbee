@@ -37,7 +37,7 @@ namespace Brizbee.QuickBooksConnector.Views
             Application.Current.Properties["SelectedCommit"] =
                 (DataContext as CommitsPageViewModel).SelectedCommit;
 
-            NavigationService.Navigate(new Uri("Views/ChooseExportPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/ConfirmPage.xaml", UriKind.Relative));
         }
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)

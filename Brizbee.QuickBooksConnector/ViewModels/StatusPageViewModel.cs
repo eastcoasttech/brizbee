@@ -13,29 +13,23 @@ using System.Xml;
 
 namespace Brizbee.QuickBooksConnector.ViewModels
 {
-    public class ChooseExportPageViewModel : INotifyPropertyChanged
+    public class StatusPageViewModel : INotifyPropertyChanged
     {
-        public string HelpText { get; set; }
         public string StatusText { get; set; }
+        public string XmlText { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
 
-        public ChooseExportPageViewModel()
+        public StatusPageViewModel()
         {
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
-            HelpText = string.Format("Are you sure you want to export the {0} punches for the commit {1} between {2} and {3}?",
-                commit.PunchCount,
-                commit.Guid.ToString().Split('-')[4],
-                commit.InAt.ToString("MMM dd, yyyy"),
-                commit.OutAt.ToString("MMM dd, yyyy"));
-            OnPropertyChanged("HelpText");
         }
 
         public async System.Threading.Tasks.Task Export()
         {
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
-            StatusText = string.Format("{0} - Starting...\r\n", DateTime.Now.ToString());
+            StatusText = string.Format("{0} - Starting\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
             // Details of this export will be recorded with the commit
@@ -67,17 +61,18 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 BuildTimeTrackingAddRq(doc, inner, punch);
             }
 
-            StatusText += string.Format("{0} - Connecting to QuickBooks...\r\n", DateTime.Now.ToString());
+            StatusText += string.Format("{0} - Connecting to QuickBooks\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
             var req = new RequestProcessor2();
-            req.OpenConnection2("", "BRIZBEE Connector for QuickBooks", QBXMLRPConnectionType.localQBD);
+            req.OpenConnection2("", "BRIZBEE QuickBooks Export Utility", QBXMLRPConnectionType.localQBD);
             var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
-            StatusText += string.Format("{0} - Exporting...\r\n", DateTime.Now.ToString());
+            StatusText += string.Format("{0} - Exporting\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
-            EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), doc.OuterXml, EventLogEntryType.Information);
+            // Save the XML for displaying
+            XmlText = doc.OuterXml;
 
             var response = req.ProcessRequest(ticket, doc.OuterXml);
             req.EndSession(ticket);
@@ -86,7 +81,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
             WalkTimeTrackingAddRs(response);
 
-            StatusText += string.Format("{0} - Finishing Up...\r\n", DateTime.Now.ToString());
+            StatusText += string.Format("{0} - Finishing Up\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
             await UpdateCommit(commit, now);
@@ -100,7 +95,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             var date = punch.InAt.ToString("yyyy-MM-dd");
             var customer = ReplaceCharacters(punch.Task.Job.QuickBooksCustomerJob);
             var employee = ReplaceCharacters(punch.User.QuickBooksEmployee);
-            TimeSpan span = punch.OutAt.Value.Subtract(punch.InAt);
+            var span = punch.OutAt.Value.Subtract(punch.InAt);
             var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
             var guid = string.Format("{{{0}}}", punch.Guid.ToString());
             var payrollItem = punch.Task.QuickBooksPayrollItem;
@@ -170,9 +165,11 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             OnPropertyChanged("StatusText");
 
             // Build request to retrieve punches
-            var request = new RestRequest(
-                string.Format("odata/Punches?$expand=User,Task($expand=Job($expand=Customer))&$orderby=InAt&$filter=CommitId eq {0}", commit.Id),
-                Method.GET);
+            var request = new RestRequest("odata/Punches", Method.GET);
+            request.Parameters.Add(new Parameter("$count", "true", ParameterType.QueryStringWithoutEncode));
+            request.Parameters.Add(new Parameter("$expand", "User,Task($expand=Job($expand=Customer))", ParameterType.QueryStringWithoutEncode));
+            request.Parameters.Add(new Parameter("$orderby", "InAt asc", ParameterType.QueryStringWithoutEncode));
+            request.Parameters.Add(new Parameter("$filter", string.Format("CommitId eq {0}", commit.Id), ParameterType.QueryStringWithoutEncode));
 
             // Execute request to retrieve punches
             var response = await client.ExecuteTaskAsync<ODataResponse<Punch>>(request);
@@ -186,6 +183,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             }
             else
             {
+                Trace.TraceError(response.Content);
                 throw new Exception(response.Content);
             }
         }
@@ -197,7 +195,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             return elem;
         }
 
-        private string ReplaceCharacters(string value)
+        private string ReplaceCharacters(string value = "")
         {
             var replaced = value;
 
@@ -248,9 +246,9 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             XmlDocument responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
-            EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(),
-                responseXmlDoc.OuterXml,
-                EventLogEntryType.Information);
+            //EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(),
+            //    responseXmlDoc.OuterXml,
+            //    EventLogEntryType.Information);
 
             //Get the response for our request
             XmlNodeList TimeTrackingAddRsList = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");

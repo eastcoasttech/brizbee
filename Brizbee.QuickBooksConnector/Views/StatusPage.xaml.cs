@@ -18,26 +18,26 @@ using System.Windows.Shapes;
 namespace Brizbee.QuickBooksConnector.Views
 {
     /// <summary>
-    /// Interaction logic for ChooseExportPage.xaml
+    /// Interaction logic for StatusPage.xaml
     /// </summary>
-    public partial class ChooseExportPage : Page
+    public partial class StatusPage : Page
     {
-        public ChooseExportPage()
+        public StatusPage()
         {
             InitializeComponent();
 
-            DataContext = new ChooseExportPageViewModel();
+            DataContext = new StatusPageViewModel();
         }
 
-        private async void QuickBooksButton_Click(object sender, RoutedEventArgs e)
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                await (DataContext as ChooseExportPageViewModel).Export();
+                await (DataContext as StatusPageViewModel).Export();
             }
             catch (Exception ex)
             {
-                EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
+                //EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
                 MessageBox.Show(ex.ToString(), "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

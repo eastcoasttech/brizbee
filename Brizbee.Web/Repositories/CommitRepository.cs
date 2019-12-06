@@ -23,7 +23,6 @@ namespace Brizbee.Web.Repositories
         /// <returns>The created commit</returns>
         public Commit Create(Commit commit, User currentUser)
         {
-
             // Ensure that user is authorized
             if (!CommitPolicy.CanCreate(commit, currentUser))
             {
@@ -69,7 +68,9 @@ namespace Brizbee.Web.Repositories
             splitter.SplitAtHour(userIds, inAt, outAt, midnight, currentUser);
 
             // Commit all the punches within range and save the PunchCount
-            var punches = db.Punches.Where(p => (p.InAt >= inAt) && (p.OutAt <= outAt));
+            var punches = db.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => (p.InAt >= inAt) && (p.OutAt <= outAt));
             foreach (var punch in punches)
             {
                 punch.CommitId = commit.Id;
