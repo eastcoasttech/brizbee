@@ -295,6 +295,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             //Parse the response XML string into an XmlDocument
             XmlDocument responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
+            Trace.TraceInformation(responseXmlDoc.OuterXml);
 
             //EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(),
             //    responseXmlDoc.OuterXml,
@@ -302,9 +303,10 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
             //Get the response for our request
             XmlNodeList TimeTrackingAddRsList = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");
-            if (TimeTrackingAddRsList.Count == 1) //Should always be true since we only did one request in this sample
+            foreach (var result in TimeTrackingAddRsList)
             {
                 XmlNode responseNode = TimeTrackingAddRsList.Item(0);
+
                 //Check the status code, info, and severity
                 XmlAttributeCollection rsAttributes = responseNode.Attributes;
                 string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
@@ -314,12 +316,14 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 //status code = 0 all OK, > 0 is warning
                 if (Convert.ToInt32(statusCode) >= 0)
                 {
-                    XmlNodeList TimeTrackingRetList = responseNode.SelectNodes("//TimeTrackingRet");//XPath Query
-                    for (int i = 0; i < TimeTrackingRetList.Count; i++)
-                    {
-                        XmlNode TimeTrackingRet = TimeTrackingRetList.Item(i);
-                        WalkTimeTrackingRet(TimeTrackingRet);
-                    }
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    OnPropertyChanged("StatusText");
+                    //XmlNodeList TimeTrackingRetList = responseNode.SelectNodes("//TimeTrackingRet");//XPath Query
+                    //for (int i = 0; i < TimeTrackingRetList.Count; i++)
+                    //{
+                    //    XmlNode TimeTrackingRet = TimeTrackingRetList.Item(i);
+                    //    WalkTimeTrackingRet(TimeTrackingRet);
+                    //}
                 }
             }
         }

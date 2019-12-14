@@ -44,23 +44,26 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-            <StackPanel Grid.Column="1">
+            <TextBlock TextWrapping="WrapWithOverflow"
+                Grid.Column="0" Grid.Row="0"
+                LineStackingStrategy="BlockLineHeight"
+                FontSize="16"
+                Text="Exporting to QuickBooks" />
+
+            <ScrollViewer Grid.Column="0" Grid.Row="1">
                 <TextBlock TextWrapping="WrapWithOverflow"
-                       Padding="0 20 0 0"
-                       Margin="0"
-                       LineStackingStrategy="BlockLineHeight"
-                       LineHeight="24"
-                       FontSize="16"
-                       Text="Exporting to QuickBooks" />
-                <TextBlock TextWrapping="WrapWithOverflow"
-                       Padding="0 20 0 0"
-                       Margin="0"
-                       LineStackingStrategy="BlockLineHeight"
-                       LineHeight="22"
-                       FontSize="14"
-                       Text="{Binding StatusText}" />
-            </StackPanel>
+                    Padding="0 20 0 0"
+                    Margin="0"
+                    LineStackingStrategy="BlockLineHeight"
+                    LineHeight="22"
+                    FontSize="14"
+                    Text="{Binding StatusText}"/>
+            </ScrollViewer>
         </Grid>
     </DockPanel>
 </Page>
