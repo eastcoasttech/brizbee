@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Brizbee.QuickBooksConnector.Views"
         mc:Ignorable="d"
-        Title="Punches to be Committed" Height="480" Width="640">
+        Title="Punches to be Committed" MinHeight="480" Height="540" Width="740" MinWidth="640"
+        Loaded="Window_Loaded">
     <Window.Resources>
         <!--DataGrid Cell Vertical Centering-->
         <Style x:Key="DataGrid_Cell_Centering"
@@ -25,35 +26,60 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        
-        <DataGrid ItemsSource="{Binding CustomMetaValues}" AutoGenerateColumns="False" Background="White"
-            IsReadOnly="True" CanUserResizeRows="False" CanUserAddRows="False"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+        </Grid.RowDefinitions>
+
+        <DataGrid ItemsSource="{Binding Punches}" AutoGenerateColumns="False" Background="White" Grid.Row="0"
+            IsReadOnly="True" CanUserResizeRows="False" CanUserAddRows="False" CanUserReorderColumns="False"
             HeadersVisibility="Column" RowHeight="24" ColumnHeaderHeight="24"
             HorizontalContentAlignment="Center" Name="DataGridPunches" Margin="5"
             CellStyle="{StaticResource DataGrid_Cell_Centering}"
             CanUserDeleteRows="False" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="LightGray">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding User.Name}"
-                                                        Width="2*" ClipboardContentBinding="{Binding User.Name}"
-                                                        Header="User"/>
+                    Width="2*"
+                    Header="User"/>
                 <DataGridTextColumn Binding="{Binding InAt}"
-                                                        Width="2*"
-                                                        ClipboardContentBinding="{Binding InAt}"
-                                                        Header="In"/>
+                    Width="2*"
+                    Header="In"/>
                 <DataGridTextColumn Binding="{Binding OutAt}"
-                                                        Width="2*"
-                                                        ClipboardContentBinding="{Binding OutAt}"
-                                                        Header="Out"/>
+                    Width="2*"
+                    Header="Out"/>
+                <DataGridTextColumn Binding="{Binding Task.Number}"
+                    Width="1*"
+                    Header="#"/>
                 <DataGridTextColumn Binding="{Binding Task.Name}"
-                                                        Width="3*" ClipboardContentBinding="{Binding User.Name}"
-                                                        Header="Task"/>
+                    Width="2*"
+                    Header="Task"/>
+                <DataGridTextColumn Binding="{Binding Task.Job.Number}"
+                    Width="1*"
+                    Header="#"/>
                 <DataGridTextColumn Binding="{Binding Task.Job.Name}"
-                                                        Width="3*" ClipboardContentBinding="{Binding User.Name}"
-                                                        Header="Job"/>
+                    Width="2*"
+                    Header="Job"/>
+                <DataGridTextColumn Binding="{Binding Task.Job.Customer.Number}"
+                    Width="1*"
+                    Header="#"/>
                 <DataGridTextColumn Binding="{Binding Task.Job.Customer.Name}"
-                                                        Width="3*" ClipboardContentBinding="{Binding User.Name}"
-                                                        Header="Customer"/>
+                    Width="2*"
+                    Header="Customer"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <StackPanel Grid.Row="1" Margin="5 0 5 5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="0 0 4 0" Content="&lt;&lt;" Command="{Binding FirstCommand}" Padding="6 2"/>
+            <Button Margin="4,0" Content="&lt;" Command="{Binding PreviousCommand}" Padding="6 2"/>
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" MinWidth="100">
+                <TextBlock Text="{Binding PunchesStart}"/>
+                <TextBlock Text=" to "/>
+                <TextBlock Text="{Binding PunchesEnd}"/>
+                <TextBlock Text=" of "/>
+                <TextBlock Text="{Binding PunchesCount}"/>
+            </StackPanel>
+            <Button Margin="4,0" Content="&gt;" Command="{Binding NextCommand}" Padding="6 2"/>
+            <Button Margin="4 0 0 0" Content="&gt;&gt;" Command="{Binding LastCommand}" Padding="6 2"/>
+        </StackPanel>
     </Grid>
 </Window>

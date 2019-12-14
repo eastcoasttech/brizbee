@@ -8,6 +8,7 @@ using System.Data.Entity.Validation;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Web;
 using System.Web.Http;
 
@@ -19,7 +20,7 @@ namespace Brizbee.Web.Controllers
         private PunchRepository repo = new PunchRepository();
 
         // GET: odata/Punches
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
+        [EnableQuery(PageSize = 500, MaxExpansionDepth = 3)]
         public IQueryable<Punch> GetPunches()
         {
             return repo.GetAll(CurrentUser());
@@ -77,6 +78,20 @@ namespace Brizbee.Web.Controllers
                 .Where(p => p.OutAt == null)
                 .OrderByDescending(p => p.InAt)
                 .Take(1);
+        }
+
+        // GET: odata/Punches/Default.Download
+        [HttpGet]
+        public IHttpActionResult Download([FromODataUri] int CommitId)
+        {
+            var punches = db.Punches
+                .Include(p => p.User)
+                .Include(p => p.Task.Job.Customer)
+                .Where(p => p.CommitId == CommitId)
+                .OrderBy(p => p.InAt)
+                .ToList();
+            
+            return Json(punches);
         }
 
         // POST: odata/Punches/Default.PunchIn

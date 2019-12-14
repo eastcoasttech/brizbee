@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Brizbee.Mobile.Views.OutDonePage"
+             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels"
+             Title="{Binding Title}">
+    <ContentPage.BindingContext>
+        <vm:OutDoneViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <ScrollView>
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
+                <Label HorizontalTextAlignment="Center" Margin="0, 30, 0, 30">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="YOU ARE NOW PUNCHED " FontSize="Medium" />
+                            <Span Text="OUT" FontSize="Medium" FontAttributes="Bold" ForegroundColor="Red" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Button Text="MORE OPTIONS" Command="{Binding MoreCommand}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="EXIT" Command="{Binding ExitCommand}"
+                    Style="{StaticResource buttonStyle}" />
+            </StackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

@@ -19,11 +19,14 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         public bool IsEnabled { get; set; }
         public string Password { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
-
-        private RestClient client = Application.Current.Properties["Client"] as RestClient;
+        private RestClient client;
 
         public async System.Threading.Tasks.Task Login()
         {
+            // Reintialize the HTTP client
+            client = new RestClient("https://brizbee.gowitheast.com/");
+            Application.Current.Properties["Client"] = client;
+
             await LoadCredentials();
         }
 

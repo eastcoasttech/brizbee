@@ -1,4 +1,5 @@
 ﻿using Brizbee.QuickBooksConnector.ViewModels;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,9 @@ namespace Brizbee.QuickBooksConnector.Views
 
             DataContext = new LoginPageViewModel()
             {
-                IsEnabled = true
+                IsEnabled = true,
+                EmailAddress = "",
+                Password = ""
             };
         }
 

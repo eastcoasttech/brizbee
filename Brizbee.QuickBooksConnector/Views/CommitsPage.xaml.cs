@@ -63,5 +63,10 @@ namespace Brizbee.QuickBooksConnector.Views
                 MessageBox.Show(ex.Message, "Could Not Refresh Commits", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
+        }
     }
 }

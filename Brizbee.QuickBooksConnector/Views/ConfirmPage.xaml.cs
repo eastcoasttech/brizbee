@@ -41,5 +41,19 @@ namespace Brizbee.QuickBooksConnector.Views
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             window.Show();
         }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            ViewPunchesWindow window = new ViewPunchesWindow();
+            window.Owner = this.Parent as Window;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            window.ShowDialog();
+            e.Handled = true;
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/CommitsPage.xaml", UriKind.Relative));
+        }
     }
 }

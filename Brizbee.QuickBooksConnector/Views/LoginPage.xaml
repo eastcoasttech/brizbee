@@ -23,6 +23,7 @@
                 Name="LoginButton"
                 Click="LoginButton_Click"
                 Margin="5 8 15 11"
+                Height="24"
                 HorizontalAlignment="Right"
                 IsEnabled="{Binding IsEnabled}" IsDefault="True" />
         </StackPanel>

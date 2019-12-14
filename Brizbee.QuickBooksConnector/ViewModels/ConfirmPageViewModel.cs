@@ -22,6 +22,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         public string HelpText { get; set; }
         public string StatusText { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
+
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
 
         public ConfirmPageViewModel()

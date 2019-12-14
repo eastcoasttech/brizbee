@@ -18,12 +18,19 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Bottom" Background="White">
             <Separator />
-            <Button Content="Next" Width="85"
-                Name="ConfirmButton"
-                Click="ConfirmButton_Click"
-                Margin="5 8 15 11"
-                HorizontalAlignment="Right"
-                IsEnabled="{Binding IsContinueEnabled}" IsDefault="True" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Next" Width="85"
+                    Name="ConfirmButton"
+                    Click="ConfirmButton_Click"
+                    Margin="5 8 15 11"
+                    Height="24"
+                    IsDefault="True" />
+                <Button Content="Cancel" Width="85"
+                    Name="CancelButton"
+                    Click="CancelButton_Click"
+                    Margin="5 8 15 11"
+                    Height="24" />
+            </StackPanel>
         </StackPanel>
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
@@ -40,6 +47,11 @@
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Number of punches:" Margin="0" />
                     <Label Content="{Binding PunchCount}" Margin="0" FontWeight="Bold" />
+                    <TextBlock Margin="10 0 0 0" Padding="0" VerticalAlignment="Center">
+                        <Hyperlink NavigateUri="http://www.google.com" RequestNavigate="Hyperlink_RequestNavigate">
+                            View Punches
+                        </Hyperlink>
+                    </TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Start Date:" Margin="0" />

@@ -37,9 +37,30 @@ namespace Brizbee.QuickBooksConnector.Views
             }
             catch (Exception ex)
             {
-                //EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(), ex.ToString(), EventLogEntryType.Warning);
-                MessageBox.Show(ex.ToString(), "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(ex.Message, "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        private async void TryButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await (DataContext as StatusPageViewModel).Export();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Export", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void StartOverButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }

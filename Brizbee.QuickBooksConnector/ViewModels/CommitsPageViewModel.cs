@@ -13,6 +13,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 {
     public class CommitsPageViewModel : INotifyPropertyChanged
     {
+        #region Public Fields
+
         public string CommitComboStatus { get; set; }
         public ObservableCollection<Commit> Commits { get; set; }
         public bool IsRefreshEnabled { get; set; }
@@ -20,8 +22,14 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         public Commit SelectedCommit { get; set; }
 
+        #endregion
+
+        #region Private Fields
+
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
-        
+
+        #endregion
+
         public async System.Threading.Tasks.Task RefreshCommits()
         {
             CommitComboStatus = "Downloading your commits";

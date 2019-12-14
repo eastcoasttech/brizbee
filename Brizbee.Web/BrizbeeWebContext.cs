@@ -15,10 +15,9 @@ namespace Brizbee.Web
         {
         }
 
-        // Context is configured to use the 'CollectorWebContext' connection string in the application's
-        // configuration file (Web.config)
         public BrizbeeWebContext() : base("name=BrizbeeWebContext")
         {
+            this.Configuration.LazyLoadingEnabled = false;
         }
 
         // Add a DbSet for each entity type that you want to include in your model. For more information 

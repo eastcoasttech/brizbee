@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,21 +16,36 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 {
     public class StatusPageViewModel : INotifyPropertyChanged
     {
+        #region Public Fields
+
+        public bool IsExitEnabled { get; set; }
+        public bool IsTryEnabled { get; set; }
+        public bool IsStartOverEnabled { get; set; }
         public string StatusText { get; set; }
         public string XmlText { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
+        #region Private Fields
+        
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
 
-        public StatusPageViewModel()
-        {
-            var commit = Application.Current.Properties["SelectedCommit"] as Commit;
-        }
+        #endregion
 
         public async System.Threading.Tasks.Task Export()
         {
+            // Disable the buttons
+            IsExitEnabled = false;
+            IsTryEnabled = false;
+            IsStartOverEnabled = false;
+            OnPropertyChanged("IsExitEnabled");
+            OnPropertyChanged("IsTryEnabled");
+            OnPropertyChanged("IsStartOverEnabled");
+
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
-            StatusText = string.Format("{0} - Starting\r\n", DateTime.Now.ToString());
+            StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
             // Details of this export will be recorded with the commit
@@ -52,7 +68,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            StatusText += string.Format("{0} - Preparing export of {1} punches\r\n", DateTime.Now.ToString(), punches.Count);
+            StatusText += string.Format("{0} - Preparing export of {1} punches.\r\n", DateTime.Now.ToString(), punches.Count);
             OnPropertyChanged("StatusText");
 
             // Add an element for each punch to be exported
@@ -61,33 +77,65 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 BuildTimeTrackingAddRq(doc, inner, punch);
             }
 
-            StatusText += string.Format("{0} - Connecting to QuickBooks\r\n", DateTime.Now.ToString());
+            StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
-            var req = new RequestProcessor2();
-            req.OpenConnection2("", "BRIZBEE QuickBooks Export Utility", QBXMLRPConnectionType.localQBD);
-            var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
+            try
+            {
+                var req = new RequestProcessor2();
+                req.OpenConnection2("", "BRIZBEE QuickBooks Export Utility", QBXMLRPConnectionType.localQBD);
+                var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
-            StatusText += string.Format("{0} - Exporting\r\n", DateTime.Now.ToString());
-            OnPropertyChanged("StatusText");
+                StatusText += string.Format("{0} - Exporting.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
 
-            // Save the XML for displaying
-            XmlText = doc.OuterXml;
+                // Save the XML for displaying
+                XmlText = doc.OuterXml;
 
-            var response = req.ProcessRequest(ticket, doc.OuterXml);
-            req.EndSession(ticket);
-            req.CloseConnection();
-            req = null;
+                var response = req.ProcessRequest(ticket, doc.OuterXml);
+                req.EndSession(ticket);
+                req.CloseConnection();
+                req = null;
 
-            WalkTimeTrackingAddRs(response);
+                WalkTimeTrackingAddRs(response);
 
-            StatusText += string.Format("{0} - Finishing Up\r\n", DateTime.Now.ToString());
-            OnPropertyChanged("StatusText");
+                StatusText += string.Format("{0} - Finishing Up.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
 
-            await UpdateCommit(commit, now);
+                await UpdateCommit(commit, now);
 
-            StatusText += string.Format("{0} - Exported Successfully\r\n", DateTime.Now.ToString());
-            OnPropertyChanged("StatusText");
+                StatusText += string.Format("{0} - Exported Successfully.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
+
+                // Enable the buttons
+                IsExitEnabled = true;
+                IsStartOverEnabled = true;
+                OnPropertyChanged("IsExitEnabled");
+                OnPropertyChanged("IsStartOverEnabled");
+            }
+            catch (COMException cex)
+            {
+                // Enable the buttons
+                IsExitEnabled = true;
+                IsTryEnabled = true;
+                IsStartOverEnabled = true;
+                OnPropertyChanged("IsExitEnabled");
+                OnPropertyChanged("IsTryEnabled");
+                OnPropertyChanged("IsStartOverEnabled");
+
+                if ((uint)cex.ErrorCode == 0x80040408)
+                {
+                    StatusText += string.Format("{0} - Export failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
+                    throw new Exception("You must open QuickBooks Desktop before you can export.");
+                }
+                else
+                {
+                    StatusText += string.Format("{0} - Export failed. {1}\r\n", DateTime.Now.ToString(), cex.Message);
+                    OnPropertyChanged("StatusText");
+                    throw;
+                }
+            }
         }
 
         private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
@@ -161,29 +209,31 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         {
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
-            StatusText += string.Format("{0} - Getting punches for {1} thru {2}\r\n", DateTime.Now.ToString(), commit.InAt.ToString("yyyy-MM-dd"), commit.OutAt.ToString("yyyy-MM-dd"));
+            StatusText += string.Format("{0} - Getting punches for {1} thru {2}.\r\n", DateTime.Now.ToString(), commit.InAt.ToString("yyyy-MM-dd"), commit.OutAt.ToString("yyyy-MM-dd"));
             OnPropertyChanged("StatusText");
 
             // Build request to retrieve punches
-            var request = new RestRequest("odata/Punches", Method.GET);
-            request.Parameters.Add(new Parameter("$count", "true", ParameterType.QueryStringWithoutEncode));
-            request.Parameters.Add(new Parameter("$expand", "User,Task($expand=Job($expand=Customer))", ParameterType.QueryStringWithoutEncode));
-            request.Parameters.Add(new Parameter("$orderby", "InAt asc", ParameterType.QueryStringWithoutEncode));
-            request.Parameters.Add(new Parameter("$filter", string.Format("CommitId eq {0}", commit.Id), ParameterType.QueryStringWithoutEncode));
+            var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.GET);
 
             // Execute request to retrieve punches
-            var response = await client.ExecuteTaskAsync<ODataResponse<Punch>>(request);
+            var response = await client.ExecuteTaskAsync<List<Punch>>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
-                StatusText += string.Format("{0} - Got punches from server\r\n", DateTime.Now.ToString());
+                StatusText += string.Format("{0} - Got punches from server.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                return response.Data.Value;
+                return response.Data;
             }
             else
             {
-                Trace.TraceError(response.Content);
+                // Enable the buttons
+                IsExitEnabled = true;
+                IsTryEnabled = true;
+                IsStartOverEnabled = true;
+                OnPropertyChanged("IsExitEnabled");
+                OnPropertyChanged("IsTryEnabled");
+                OnPropertyChanged("IsStartOverEnabled");
                 throw new Exception(response.Content);
             }
         }

@@ -137,6 +137,13 @@ namespace Brizbee
             split.Parameter<string>("Time");
             split.Parameter<string>("Type");
 
+            // Collection Function - Punches/Download
+            var download = builder.EntityType<Punch>()
+                .Collection
+                .Function("Download")
+                .Returns<string>();
+            download.Parameter<int>("CommitId");
+
             // Member Action - User/ChangePassword
             ActionConfiguration changePassword = builder.EntityType<User>()
                 .Action("ChangePassword");

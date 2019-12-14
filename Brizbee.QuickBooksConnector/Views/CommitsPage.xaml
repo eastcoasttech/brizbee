@@ -24,11 +24,13 @@
                     Name="ContinueButton"
                     Click="ContinueButton_Click"
                     Margin="5 8 15 11"
+                    Height="24"
                     IsEnabled="{Binding IsContinueEnabled}" IsDefault="True" />
                 <Button Content="Cancel" Width="85"
                     Name="CancelButton"
-                    Click="ContinueButton_Click"
+                    Click="CancelButton_Click"
                     Margin="5 8 15 11"
+                    Height="24"
                     IsEnabled="{Binding IsContinueEnabled}" />
             </StackPanel>
         </StackPanel>
@@ -56,12 +58,11 @@
                         <ColumnDefinition Width="3*"/>
                         <ColumnDefinition Width="1*" MinWidth="85"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="1" Content="Refresh"
-                    Name="RefreshButton"
-                    Click="RefreshButton_Click"
-                    Padding="15 5 15 5"
-                    Margin="0 0 5 0"
-                    IsEnabled="{Binding IsRefreshEnabled}" IsDefault="True" />
+                    <Button Grid.Column="1" Content="Refresh" Width="85"
+                        Name="RefreshButton"
+                        Click="RefreshButton_Click"
+                        Height="24"
+                        IsEnabled="{Binding IsRefreshEnabled}" IsDefault="True" />
                 </Grid>
             </StackPanel>
         </Grid>

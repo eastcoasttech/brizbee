@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Brizbee.Mobile.Views.InTaskPage"
+             xmlns:vm="clr-namespace:Brizbee.Mobile.ViewModels"
+             Title="{Binding Title}">
+    <ContentPage.BindingContext>
+        <vm:InTaskViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <ScrollView>
+            <StackLayout Padding="40" BackgroundColor="#ffc600">
+                <StackLayout Margin="0, 30, 0, 30">
+                    <Label Text="WHAT IS YOUR TASK NUMBER?" HorizontalTextAlignment="Center" />
+                    <Entry Placeholder="Task Number"
+                        x:Name="txtTaskNumber"
+                        Text="{Binding TaskNumber}"
+                        IsEnabled="{Binding IsEnabled}"
+                        Keyboard="Numeric" />
+                </StackLayout>
+                <Button Text="SCAN BARCODE" x:Name="btnScan" Clicked="BtnScan_Clicked" IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="CONTINUE" Command="{Binding ContinueCommand}" IsEnabled="{Binding IsEnabled}"
+                    Style="{StaticResource buttonStyle}" />
+                <Button Text="CANCEL" x:Name="btnCancel" Clicked="BtnCancel_Clicked"
+                    Style="{StaticResource buttonStyle}" />
+            </StackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

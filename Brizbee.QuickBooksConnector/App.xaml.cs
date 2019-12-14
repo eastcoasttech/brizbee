@@ -14,9 +14,6 @@ namespace Brizbee.QuickBooksConnector
     {
         public App()
         {
-            var client = new RestClient("https://brizbee.gowitheast.com/");
-            Application.Current.Properties["Client"] = client;
-
             // Initialize MessageBus Using Dispatcher
             Action<Action> uiThreadMarshaller =
                 action => Dispatcher.Invoke(DispatcherPriority.Normal, action);

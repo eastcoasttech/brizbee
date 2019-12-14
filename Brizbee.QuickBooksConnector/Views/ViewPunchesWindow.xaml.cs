@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Brizbee.QuickBooksConnector.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,20 @@ namespace Brizbee.QuickBooksConnector.Views
         public ViewPunchesWindow()
         {
             InitializeComponent();
+
+            DataContext = new ViewPunchesViewModel();
+        }
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await (DataContext as ViewPunchesViewModel).RefreshPunches();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Load the Punches", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

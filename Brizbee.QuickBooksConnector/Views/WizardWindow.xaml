@@ -6,6 +6,6 @@
     xmlns:local="clr-namespace:Brizbee.QuickBooksConnector.Views"
     mc:Ignorable="d"
     x:Class="Brizbee.QuickBooksConnector.Views.WizardWindow"
-    Height="480" Width="640"
+    Height="600" MinHeight="480" Width="800" MinWidth="640"
     WindowStartupLocation="CenterScreen"
     Source="LoginPage.xaml"/>
