@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
@@ -22,7 +23,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         public bool IsTryEnabled { get; set; }
         public bool IsStartOverEnabled { get; set; }
         public string StatusText { get; set; }
-        public string XmlText { get; set; }
+        public int AddErrorCount { get; set; }
+        public int ValidationErrorCount { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
@@ -30,6 +32,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         #region Private Fields
         
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
+        private List<Punch> punches;
 
         #endregion
 
@@ -43,6 +46,9 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             OnPropertyChanged("IsTryEnabled");
             OnPropertyChanged("IsStartOverEnabled");
 
+            // Reset error count
+            ValidationErrorCount = 0;
+
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
             StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
@@ -52,7 +58,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             var now = DateTime.Now;
 
             // Get the punches for this commit from the API
-            var punches = await GetPunches();
+            punches = await GetPunches();
 
             // Requests to the QuickBooks API are made in QBXML format
             var doc = new XmlDocument();
@@ -89,10 +95,36 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 StatusText += string.Format("{0} - Exporting.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                // Save the XML for displaying
-                XmlText = doc.OuterXml;
+                // Ensure that all the employees, customers and jobs, service
+                // and payroll items exist in the Company File and notify the user
+                ValidateEmployees(req, ticket);
+                ValidateServiceItems(req, ticket);
+                ValidatePayrollItems(req, ticket);
+                ValidateCustomers(req, ticket);
+
+                // Do not continue if there are validation errors
+                if (ValidationErrorCount > 0)
+                {
+                    // Close the QuickBooks connection
+                    req.EndSession(ticket);
+                    req.CloseConnection();
+                    req = null;
+
+                    StatusText += string.Format("{0} - Export failed. Please correct the {1} validation errors first.\r\n", DateTime.Now.ToString(), ValidationErrorCount);
+                    OnPropertyChanged("StatusText");
+
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
+
+                    return;
+                }
 
                 var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+                // Close the QuickBooks connection
                 req.EndSession(ticket);
                 req.CloseConnection();
                 req = null;
@@ -137,6 +169,92 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 }
             }
         }
+
+        private async Task<List<Punch>> GetPunches()
+        {
+            var commit = Application.Current.Properties["SelectedCommit"] as Commit;
+
+            StatusText += string.Format("{0} - Getting punches for {1} thru {2}.\r\n", DateTime.Now.ToString(), commit.InAt.ToString("yyyy-MM-dd"), commit.OutAt.ToString("yyyy-MM-dd"));
+            OnPropertyChanged("StatusText");
+
+            // Build request to retrieve punches
+            var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.GET);
+
+            // Execute request to retrieve punches
+            var response = await client.ExecuteTaskAsync<List<Punch>>(request);
+            if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                    (response.StatusCode == System.Net.HttpStatusCode.OK))
+            {
+                StatusText += string.Format("{0} - Got punches from server.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
+
+                return response.Data;
+            }
+            else
+            {
+                // Enable the buttons
+                IsExitEnabled = true;
+                IsTryEnabled = true;
+                IsStartOverEnabled = true;
+                OnPropertyChanged("IsExitEnabled");
+                OnPropertyChanged("IsTryEnabled");
+                OnPropertyChanged("IsStartOverEnabled");
+                throw new Exception(response.Content);
+            }
+        }
+
+        private async System.Threading.Tasks.Task<Commit> UpdateCommit(Commit commit, DateTime exportedAt)
+        {
+            // Build the request
+            var url = string.Format("odata/Commits({0})", commit.Id);
+            var request = new RestRequest(url, Method.PATCH);
+            request.AddJsonBody(new
+            {
+                QuickBooksExportedAt = exportedAt
+            });
+
+            // Execute request
+            var response = await client.ExecuteTaskAsync<Commit>(request);
+            if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                    (response.StatusCode == System.Net.HttpStatusCode.NoContent))
+            {
+                return response.Data;
+            }
+            else
+            {
+                throw new Exception(response.Content);
+            }
+        }
+
+        private XmlElement MakeSimpleElem(XmlDocument doc, string tagName, string tagVal)
+        {
+            XmlElement elem = doc.CreateElement(tagName);
+            elem.InnerText = tagVal;
+            return elem;
+        }
+
+        private string ReplaceCharacters(string value = "")
+        {
+            var replaced = value;
+
+            // < less than character should be changed to &lt;
+            replaced = replaced.Replace("<", "&lt;");
+
+            // > greater than character should be changed to &gt;
+            replaced = replaced.Replace(">", "&gt;");
+
+            // ' single quote character should be changed to &apos;
+            replaced = replaced.Replace("'", "&apos;");
+
+            // " double quote character should be changed to &quot;
+            replaced = replaced.Replace("\"", "&quot;");
+
+            // & ampersand character should be changed to &amp;
+            replaced = replaced.Replace("&", "&amp;");
+
+            return replaced;
+        }
+
 
         private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
         {
@@ -205,97 +323,64 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             //TimeTrackingAddRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "ab"));
         }
 
-        private async Task<List<Punch>> GetPunches()
+        private void BuildEmployeeQueryRq(XmlDocument doc, XmlElement parent, string employeeFullName)
         {
-            var commit = Application.Current.Properties["SelectedCommit"] as Commit;
+            // Create EmployeeQueryRq aggregate and fill in field values for it
+            XmlElement EmployeeQueryRq = doc.CreateElement("EmployeeQueryRq");
+            parent.AppendChild(EmployeeQueryRq);
 
-            StatusText += string.Format("{0} - Getting punches for {1} thru {2}.\r\n", DateTime.Now.ToString(), commit.InAt.ToString("yyyy-MM-dd"), commit.OutAt.ToString("yyyy-MM-dd"));
-            OnPropertyChanged("StatusText");
+            // Populate the FullName field
+            EmployeeQueryRq.AppendChild(MakeSimpleElem(doc, "FullName", employeeFullName));
 
-            // Build request to retrieve punches
-            var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.GET);
-
-            // Execute request to retrieve punches
-            var response = await client.ExecuteTaskAsync<List<Punch>>(request);
-            if ((response.ResponseStatus == ResponseStatus.Completed) &&
-                    (response.StatusCode == System.Net.HttpStatusCode.OK))
-            {
-                StatusText += string.Format("{0} - Got punches from server.\r\n", DateTime.Now.ToString());
-                OnPropertyChanged("StatusText");
-
-                return response.Data;
-            }
-            else
-            {
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
-                throw new Exception(response.Content);
-            }
+            // Only include certain fields
+            EmployeeQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
-        private XmlElement MakeSimpleElem(XmlDocument doc, string tagName, string tagVal)
+        private void BuildItemServiceQueryRq(XmlDocument doc, XmlElement parent, string serviceItemName)
         {
-            XmlElement elem = doc.CreateElement(tagName);
-            elem.InnerText = tagVal;
-            return elem;
+            // Create ItemServiceQueryRq aggregate and fill in field values for it
+            XmlElement ItemServiceQuery = doc.CreateElement("ItemServiceQueryRq");
+            parent.AppendChild(ItemServiceQuery);
+
+            // Populate the FullName field
+            ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
+
+            // Only include certain fields
+            ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
-        private string ReplaceCharacters(string value = "")
+        private void BuildPayrollItemWageQueryRq(XmlDocument doc, XmlElement parent, string serviceItemName)
         {
-            var replaced = value;
+            // Create PayrollItemWageQueryRq aggregate and fill in field values for it
+            XmlElement PayrollItemWageQuery = doc.CreateElement("PayrollItemWageQueryRq");
+            parent.AppendChild(PayrollItemWageQuery);
 
-            // < less than character should be changed to &lt;
-            replaced = replaced.Replace("<", "&lt;");
+            // Populate the FullName field
+            PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
 
-            // > greater than character should be changed to &gt;
-            replaced = replaced.Replace(">", "&gt;");
-
-            // ' single quote character should be changed to &apos;
-            replaced = replaced.Replace("'", "&apos;");
-
-            // " double quote character should be changed to &quot;
-            replaced = replaced.Replace("\"", "&quot;");
-
-            // & ampersand character should be changed to &amp;
-            replaced = replaced.Replace("&", "&amp;");
-
-            return replaced;
+            // Only include certain fields
+            PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
-        private async System.Threading.Tasks.Task<Commit> UpdateCommit(Commit commit, DateTime exportedAt)
+        private void BuildCustomerQueryRq(XmlDocument doc, XmlElement parent, string customerName)
         {
-            // Build the request
-            var url = string.Format("odata/Commits({0})", commit.Id);
-            var request = new RestRequest(url, Method.PATCH);
-            request.AddJsonBody(new
-            {
-                QuickBooksExportedAt = exportedAt
-            });
+            // Create CustomerQueryRq aggregate and fill in field values for it
+            XmlElement CustomerQuery = doc.CreateElement("CustomerQueryRq");
+            parent.AppendChild(CustomerQuery);
 
-            // Execute request
-            var response = await client.ExecuteTaskAsync<Commit>(request);
-            if ((response.ResponseStatus == ResponseStatus.Completed) &&
-                    (response.StatusCode == System.Net.HttpStatusCode.NoContent))
-            {
-                return response.Data;
-            }
-            else
-            {
-                throw new Exception(response.Content);
-            }
+            // Populate the FullName field
+            CustomerQuery.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
+
+            // Only include certain fields
+            CustomerQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
+
 
         private void WalkTimeTrackingAddRs(string response)
         {
             //Parse the response XML string into an XmlDocument
             XmlDocument responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
-            Trace.TraceInformation(responseXmlDoc.OuterXml);
 
             //EventLog.WriteEntry(Application.Current.Properties["EventSource"].ToString(),
             //    responseXmlDoc.OuterXml,
@@ -327,6 +412,183 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 }
             }
         }
+
+        private void WalkEmployeeQueryRs(string response)
+        {
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList EmployeeQueryRsList = responseXmlDoc.GetElementsByTagName("EmployeeQueryRs");
+            foreach (var result in EmployeeQueryRsList)
+            {
+                XmlNode responseNode = result as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                //status code = 0 all OK, > 0 is warning
+                if (iStatusCode == 500)
+                {
+                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    Match match = regex.Match(statusMessage);
+
+                    if (match.Success)
+                    {
+                        var employee = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing employee in the company file: {0}", employee);
+                        ValidationErrorCount += 1;
+                        StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
+                        OnPropertyChanged("StatusText");
+                    }
+                }
+                else if (iStatusCode > 0)
+                {
+                    ValidationErrorCount += 1;
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    OnPropertyChanged("StatusText");
+                }
+            }
+        }
+
+        private void WalkItemServiceQueryRs(string response)
+        {
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList ItemServiceQueryRsList = responseXmlDoc.GetElementsByTagName("ItemServiceQueryRs");
+            foreach (var result in ItemServiceQueryRsList)
+            {
+                XmlNode responseNode = result as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                //status code = 0 all OK, > 0 is warning
+                if (iStatusCode == 500)
+                {
+                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    Match match = regex.Match(statusMessage);
+
+                    if (match.Success)
+                    {
+                        var serviceItem = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing service item in the company file: {0}", serviceItem);
+                        ValidationErrorCount += 1;
+                        StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
+                        OnPropertyChanged("StatusText");
+                    }
+                }
+                else if (iStatusCode > 0)
+                {
+                    ValidationErrorCount += 1;
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    OnPropertyChanged("StatusText");
+                }
+            }
+        }
+
+        private void WalkPayrollItemWageQueryRs(string response)
+        {
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList PayrollItemWageQueryRsList = responseXmlDoc.GetElementsByTagName("PayrollItemWageQueryRs");
+            foreach (var result in PayrollItemWageQueryRsList)
+            {
+                XmlNode responseNode = result as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                //status code = 0 all OK, > 0 is warning
+                if (iStatusCode == 500)
+                {
+                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    Match match = regex.Match(statusMessage);
+
+                    if (match.Success)
+                    {
+                        var payrollItem = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing payroll item in the company file: {0}", payrollItem);
+                        ValidationErrorCount += 1;
+                        StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
+                        OnPropertyChanged("StatusText");
+                    }
+                }
+                else if (iStatusCode > 0)
+                {
+                    ValidationErrorCount += 1;
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    OnPropertyChanged("StatusText");
+                }
+            }
+        }
+
+        private void WalkCustomerQueryRs(string response)
+        {
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList CustomerQueryRsList = responseXmlDoc.GetElementsByTagName("CustomerQueryRs");
+            foreach (var result in CustomerQueryRsList)
+            {
+                XmlNode responseNode = result as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                //status code = 0 all OK, > 0 is warning
+                if (iStatusCode == 500)
+                {
+                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    Match match = regex.Match(statusMessage);
+
+                    if (match.Success)
+                    {
+                        var payrollItem = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing customer:job in the company file: {0}", payrollItem);
+                        ValidationErrorCount += 1;
+                        StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
+                        OnPropertyChanged("StatusText");
+                    }
+                }
+                else if (iStatusCode > 0)
+                {
+                    ValidationErrorCount += 1;
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    OnPropertyChanged("StatusText");
+                }
+            }
+        }
+
 
         private void WalkTimeTrackingRet(XmlNode TimeTrackingRet)
         {
@@ -456,6 +718,138 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             {
                 string IsBilled = TimeTrackingRet.SelectSingleNode("./IsBilled").InnerText;
             }
+        }
+
+        /// <summary>
+        /// Uses the given QuickBooks connection details to verify that the employees
+        /// in the list of punches exists.
+        /// </summary>
+        /// <param name="req">QuickBooks request processor</param>
+        /// <param name="ticket">Security token</param>
+        private void ValidateEmployees(RequestProcessor2 req, string ticket)
+        {
+            // Requests to the QuickBooks API are made in QBXML format
+            var doc = new XmlDocument();
+
+            // Add the prolog processing instructions
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            var employees = punches.GroupBy(p => p.User.QuickBooksEmployee).Select(g => g.Key);
+            foreach (var name in employees)
+            {
+                BuildEmployeeQueryRq(doc, inner, name);
+            }
+
+            var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            WalkEmployeeQueryRs(response);
+        }
+
+        /// <summary>
+        /// Uses the given QuickBooks connection details to verify that the service items
+        /// in the list of punches exists.
+        /// </summary>
+        /// <param name="req">QuickBooks request processor</param>
+        /// <param name="ticket">Security token</param>
+        private void ValidateServiceItems(RequestProcessor2 req, string ticket)
+        {
+            // Requests to the QuickBooks API are made in QBXML format
+            var doc = new XmlDocument();
+
+            // Add the prolog processing instructions
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            var serviceItems = punches.GroupBy(p => p.Task.QuickBooksServiceItem).Select(g => g.Key);
+            foreach (var name in serviceItems)
+            {
+                BuildItemServiceQueryRq(doc, inner, name);
+            }
+
+            var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            WalkItemServiceQueryRs(response);
+        }
+
+        /// <summary>
+        /// Uses the given QuickBooks connection details to verify that the payroll items
+        /// in the list of punches exists.
+        /// </summary>
+        /// <param name="req">QuickBooks request processor</param>
+        /// <param name="ticket">Security token</param>
+        private void ValidatePayrollItems(RequestProcessor2 req, string ticket)
+        {
+            // Requests to the QuickBooks API are made in QBXML format
+            var doc = new XmlDocument();
+
+            // Add the prolog processing instructions
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            var payrollItems = punches.GroupBy(p => p.Task.QuickBooksPayrollItem).Select(g => g.Key);
+            foreach (var name in payrollItems)
+            {
+                BuildPayrollItemWageQueryRq(doc, inner, name);
+            }
+
+            var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            WalkPayrollItemWageQueryRs(response);
+        }
+
+        /// <summary>
+        /// Uses the given QuickBooks connection details to verify that the customers
+        /// in the list of punches exists.
+        /// </summary>
+        /// <param name="req">QuickBooks request processor</param>
+        /// <param name="ticket">Security token</param>
+        private void ValidateCustomers(RequestProcessor2 req, string ticket)
+        {
+            // Requests to the QuickBooks API are made in QBXML format
+            var doc = new XmlDocument();
+
+            // Add the prolog processing instructions
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            var customers = punches.GroupBy(p => p.Task.Job.QuickBooksCustomerJob).Select(g => g.Key);
+            foreach (var name in customers)
+            {
+                BuildCustomerQueryRq(doc, inner, name);
+            }
+
+            var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            WalkCustomerQueryRs(response);
         }
 
         protected void OnPropertyChanged(string propertyName)
