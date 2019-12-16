@@ -289,6 +289,7 @@
     <Compile Include="BrizbeeWebContext.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
+    <Compile Include="Controllers\QuickBooksDesktopController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineController.cs" />
     <Compile Include="Controllers\QuickCallbackController.cs" />
     <Compile Include="Controllers\CommitsController.cs" />
@@ -321,6 +322,10 @@
     <Compile Include="Migrations\201910271405218_IncreasingLengthForCoordinates.cs" />
     <Compile Include="Migrations\201910271405218_IncreasingLengthForCoordinates.Designer.cs">
       <DependentUpon>201910271405218_IncreasingLengthForCoordinates.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.cs" />
+    <Compile Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.Designer.cs">
+      <DependentUpon>201912160513020_AddingQuickBooksDesktopExport.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
@@ -399,6 +404,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201910271405218_IncreasingLengthForCoordinates.resx">
       <DependentUpon>201910271405218_IncreasingLengthForCoordinates.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.resx">
+      <DependentUpon>201912160513020_AddingQuickBooksDesktopExport.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

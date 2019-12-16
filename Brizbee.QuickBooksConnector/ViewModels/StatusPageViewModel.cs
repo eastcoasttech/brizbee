@@ -1,4 +1,5 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Common.Serialization;
 using Interop.QBXMLRP2;
 using RestSharp;
 using System;
@@ -30,7 +31,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
         #endregion
 
         #region Private Fields
-        
+
+        private Commit commit;
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private List<Punch> punches;
 
@@ -95,6 +97,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 StatusText += string.Format("{0} - Exporting.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
+                SaveQuickBooksDesktopExport(req, ticket);
+
                 // Ensure that all the employees, customers and jobs, service
                 // and payroll items exist in the Company File and notify the user
                 ValidateEmployees(req, ticket);
@@ -134,7 +138,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 StatusText += string.Format("{0} - Finishing Up.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                await UpdateCommit(commit, now);
+                // Save export details
+                SaveQuickBooksDesktopExport(req, ticket);
 
                 StatusText += string.Format("{0} - Exported Successfully.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
@@ -172,7 +177,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
         private async Task<List<Punch>> GetPunches()
         {
-            var commit = Application.Current.Properties["SelectedCommit"] as Commit;
+            commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
             StatusText += string.Format("{0} - Getting punches for {1} thru {2}.\r\n", DateTime.Now.ToString(), commit.InAt.ToString("yyyy-MM-dd"), commit.OutAt.ToString("yyyy-MM-dd"));
             OnPropertyChanged("StatusText");
@@ -373,6 +378,20 @@ namespace Brizbee.QuickBooksConnector.ViewModels
 
             // Only include certain fields
             CustomerQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+        }
+
+        private void BuildHostQueryRq(XmlDocument doc, XmlElement parent)
+        {
+            // Create HostQueryRq aggregate and fill in field values for it
+            XmlElement HostQuery = doc.CreateElement("HostQueryRq");
+            parent.AppendChild(HostQuery);
+
+            // Only include certain fields
+            HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "ProductName"));
+            HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "MajorVersion"));
+            HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "MinorVersion"));
+            HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Country"));
+            HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "SupportedQBXMLVersion"));
         }
 
 
@@ -587,6 +606,62 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                     OnPropertyChanged("StatusText");
                 }
             }
+        }
+
+        private QuickBooksHostDetails WalkHostQueryRs(string response)
+        {
+            var supportedQBXMLVersions = new List<string>();
+            var quickBooksExport = new QuickBooksHostDetails();
+
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList HostQueryRsList = responseXmlDoc.GetElementsByTagName("HostQueryRs");
+            foreach (var hostQueryResult in HostQueryRsList)
+            {
+                XmlNode responseNode = hostQueryResult as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                if (iStatusCode == 0)
+                {
+                    XmlNode hostReturnResult = responseNode.FirstChild as XmlNode;
+                    foreach (var node in hostReturnResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+                        switch (xmlNode.Name)
+                        {
+                            case "ProductName":
+                                quickBooksExport.QBProductName = xmlNode.InnerText;
+                                break;
+                            case "MajorVersion":
+                                quickBooksExport.QBMajorVersion = xmlNode.InnerText;
+                                break;
+                            case "MinorVersion":
+                                quickBooksExport.QBMinorVersion = xmlNode.InnerText;
+                                break;
+                            case "Country":
+                                quickBooksExport.QBCountry = xmlNode.InnerText;
+                                break;
+                            case "SupportedQBXMLVersion":
+                                supportedQBXMLVersions.Add(xmlNode.InnerText);
+                                break;
+                        }
+                    }
+
+                    quickBooksExport.QBSupportedQBXMLVersions = string.Join(",", supportedQBXMLVersions);
+                }
+            }
+
+            return quickBooksExport;
         }
 
 
@@ -850,6 +925,60 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             var response = req.ProcessRequest(ticket, doc.OuterXml);
 
             WalkCustomerQueryRs(response);
+        }
+
+        private async void SaveQuickBooksDesktopExport(RequestProcessor2 req, string ticket)
+        {
+            // Requests to the QuickBooks API are made in QBXML format
+            var doc = new XmlDocument();
+
+            // Add the prolog processing instructions
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            BuildHostQueryRq(doc, inner);
+
+            var response = req.ProcessRequest(ticket, doc.OuterXml);
+            
+            // Get the details from QuickBooks
+            QuickBooksHostDetails details = WalkHostQueryRs(response);
+            var export = new QuickBooksDesktopExport()
+            {
+                QBProductName = details.QBProductName,
+                QBCountry = details.QBCountry,
+                QBMajorVersion = details.QBMajorVersion,
+                QBMinorVersion = details.QBMinorVersion,
+                QBSupportedQBXMLVersions = details.QBSupportedQBXMLVersions,
+                CreatedAt = DateTime.UtcNow,
+                UserId = int.Parse(Application.Current.Properties["AuthUserId"] as string),
+                CommitId = commit.Id,
+                InAt = commit.InAt,
+                OutAt = commit.OutAt
+            };
+
+            // Build the request
+            var url = "api/QuickBooksDesktop/SaveExportDetails";
+            var httpRequest = new RestRequest(url, Method.POST);
+            httpRequest.AddJsonBody(export);
+
+            // Execute request
+            var httpResponse = await client.ExecuteTaskAsync(httpRequest);
+            if ((httpResponse.ResponseStatus == ResponseStatus.Completed) &&
+                    (httpResponse.StatusCode == System.Net.HttpStatusCode.Created))
+            {
+                // Do something
+            }
+            else
+            {
+                Trace.TraceError(httpResponse.Content);
+            }
         }
 
         protected void OnPropertyChanged(string propertyName)
