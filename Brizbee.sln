@@ -7,9 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Web", "Brizbee.Web\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Common", "Brizbee.Common\Brizbee.Common.csproj", "{DA3900AE-3D80-4789-BF00-1C26B8AA21B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.QuickBooksConnector", "Brizbee.QuickBooksConnector\Brizbee.QuickBooksConnector.csproj", "{72C67228-8F63-4079-8419-7B67D6C8F08E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.QBExportUtility", "Brizbee.QBExportUtility\Brizbee.QBExportUtility.csproj", "{72C67228-8F63-4079-8419-7B67D6C8F08E}"
 EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Brizbee.QuickBooksConnectorInstaller", "Brizbee.QuickBooksConnectorInstaller\Brizbee.QuickBooksConnectorInstaller.wixproj", "{2289EE2F-F65E-4E01-AE57-BF9571694149}"
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Brizbee.QBExportUtilityInstaller", "Brizbee.QBExportUtilityInstaller\Brizbee.QBExportUtilityInstaller.wixproj", "{2289EE2F-F65E-4E01-AE57-BF9571694149}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
