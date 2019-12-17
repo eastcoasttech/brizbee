@@ -51,13 +51,8 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             // Reset error count
             ValidationErrorCount = 0;
 
-            var commit = Application.Current.Properties["SelectedCommit"] as Commit;
-
             StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
-
-            // Details of this export will be recorded with the commit
-            var now = DateTime.Now;
 
             // Get the punches for this commit from the API
             punches = await GetPunches();
@@ -97,8 +92,6 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 StatusText += string.Format("{0} - Exporting.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                SaveQuickBooksDesktopExport(req, ticket);
-
                 // Ensure that all the employees, customers and jobs, service
                 // and payroll items exist in the Company File and notify the user
                 ValidateEmployees(req, ticket);
@@ -109,11 +102,6 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 // Do not continue if there are validation errors
                 if (ValidationErrorCount > 0)
                 {
-                    // Close the QuickBooks connection
-                    req.EndSession(ticket);
-                    req.CloseConnection();
-                    req = null;
-
                     StatusText += string.Format("{0} - Export failed. Please correct the {1} validation errors first.\r\n", DateTime.Now.ToString(), ValidationErrorCount);
                     OnPropertyChanged("StatusText");
 
@@ -122,33 +110,35 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                     IsStartOverEnabled = true;
                     OnPropertyChanged("IsExitEnabled");
                     OnPropertyChanged("IsStartOverEnabled");
+                }
+                else
+                {
+                    var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                    return;
+                    WalkTimeTrackingAddRs(response);
+
+                    StatusText += string.Format("{0} - Finishing Up.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
+
+                    StatusText += string.Format("{0} - Exported Successfully.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
+
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsTryEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsTryEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
                 }
 
-                var response = req.ProcessRequest(ticket, doc.OuterXml);
+                // Save export details
+                await SaveQuickBooksDesktopExport(req, ticket);
 
                 // Close the QuickBooks connection
                 req.EndSession(ticket);
                 req.CloseConnection();
                 req = null;
-
-                WalkTimeTrackingAddRs(response);
-
-                StatusText += string.Format("{0} - Finishing Up.\r\n", DateTime.Now.ToString());
-                OnPropertyChanged("StatusText");
-
-                // Save export details
-                SaveQuickBooksDesktopExport(req, ticket);
-
-                StatusText += string.Format("{0} - Exported Successfully.\r\n", DateTime.Now.ToString());
-                OnPropertyChanged("StatusText");
-
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
             }
             catch (COMException cex)
             {
@@ -164,14 +154,34 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 {
                     StatusText += string.Format("{0} - Export failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
+
+                    // Bubbles exception up to user interface
                     throw new Exception("You must open QuickBooks Desktop before you can export.");
                 }
                 else
                 {
                     StatusText += string.Format("{0} - Export failed. {1}\r\n", DateTime.Now.ToString(), cex.Message);
                     OnPropertyChanged("StatusText");
+
+                    // Bubbles exception up to user interface
                     throw;
                 }
+            }
+            catch (Exception ex)
+            {
+                StatusText += string.Format("{0} - Export failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
+                OnPropertyChanged("StatusText");
+
+                // Enable the buttons
+                IsExitEnabled = true;
+                IsTryEnabled = true;
+                IsStartOverEnabled = true;
+                OnPropertyChanged("IsExitEnabled");
+                OnPropertyChanged("IsTryEnabled");
+                OnPropertyChanged("IsStartOverEnabled");
+
+                // Bubbles exception up to user interface
+                throw;
             }
         }
 
@@ -608,7 +618,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             }
         }
 
-        private QuickBooksHostDetails WalkHostQueryRs(string response)
+        private QuickBooksHostDetails WalkHostQueryRsAndParseHostDetails(string response)
         {
             var supportedQBXMLVersions = new List<string>();
             var quickBooksExport = new QuickBooksHostDetails();
@@ -927,7 +937,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             WalkCustomerQueryRs(response);
         }
 
-        private async void SaveQuickBooksDesktopExport(RequestProcessor2 req, string ticket)
+        private async System.Threading.Tasks.Task SaveQuickBooksDesktopExport(RequestProcessor2 req, string ticket)
         {
             // Requests to the QuickBooks API are made in QBXML format
             var doc = new XmlDocument();
@@ -948,7 +958,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             var response = req.ProcessRequest(ticket, doc.OuterXml);
             
             // Get the details from QuickBooks
-            QuickBooksHostDetails details = WalkHostQueryRs(response);
+            var details = WalkHostQueryRsAndParseHostDetails(response);
             var export = new QuickBooksDesktopExport()
             {
                 QBProductName = details.QBProductName,
@@ -960,11 +970,12 @@ namespace Brizbee.QuickBooksConnector.ViewModels
                 UserId = int.Parse(Application.Current.Properties["AuthUserId"] as string),
                 CommitId = commit.Id,
                 InAt = commit.InAt,
-                OutAt = commit.OutAt
+                OutAt = commit.OutAt,
+                Log = StatusText
             };
 
             // Build the request
-            var url = "api/QuickBooksDesktop/SaveExportDetails";
+            var url = "odata/QuickBooksDesktopExports";
             var httpRequest = new RestRequest(url, Method.POST);
             httpRequest.AddJsonBody(export);
 
@@ -977,7 +988,7 @@ namespace Brizbee.QuickBooksConnector.ViewModels
             }
             else
             {
-                Trace.TraceError(httpResponse.Content);
+                Trace.TraceWarning(httpResponse.Content);
             }
         }
 

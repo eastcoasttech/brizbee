@@ -289,7 +289,7 @@
     <Compile Include="BrizbeeWebContext.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
-    <Compile Include="Controllers\QuickBooksDesktopController.cs" />
+    <Compile Include="Controllers\QuickBooksDesktopExportsController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineController.cs" />
     <Compile Include="Controllers\QuickCallbackController.cs" />
     <Compile Include="Controllers\CommitsController.cs" />
@@ -326,6 +326,10 @@
     <Compile Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.cs" />
     <Compile Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.Designer.cs">
       <DependentUpon>201912160513020_AddingQuickBooksDesktopExport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.cs" />
+    <Compile Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.Designer.cs">
+      <DependentUpon>201912161841508_AddingLogToQuickBooksDesktopExports.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
@@ -407,6 +411,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.resx">
       <DependentUpon>201912160513020_AddingQuickBooksDesktopExport.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.resx">
+      <DependentUpon>201912161841508_AddingLogToQuickBooksDesktopExports.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -47,6 +47,7 @@ namespace Brizbee
             builder.EntitySet<Job>("Jobs");
             builder.EntitySet<Organization>("Organizations");
             builder.EntitySet<Punch>("Punches");
+            builder.EntitySet<QuickBooksDesktopExport>("QuickBooksDesktopExports");
             builder.EntitySet<Task>("Tasks");
             builder.EntitySet<TaskTemplate>("TaskTemplates");
             builder.EntitySet<TimesheetEntry>("TimesheetEntries");
