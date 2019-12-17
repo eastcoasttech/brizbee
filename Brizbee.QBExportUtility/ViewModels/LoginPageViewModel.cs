@@ -38,12 +38,6 @@ namespace Brizbee.QBExportUtility.ViewModels
             // Build request to check latest version of software
             var versionClient = new RestClient("https://ects1.blob.core.windows.net/");
             var versionRequest = new RestRequest("brizbee-public/latest.json", Method.GET);
-            versionRequest.AddParameter("sp", "rl");
-            versionRequest.AddParameter("st", "2019-01-01T05:00:00Z");
-            versionRequest.AddParameter("se", "2031-01-01T04:59:00Z");
-            versionRequest.AddParameter("sv", "2019-02-02");
-            versionRequest.AddParameter("sr", "b");
-            versionRequest.AddParameter(new Parameter("sig", "hjrnoAV6%2Fv9WuOpZsfsK3B6YsE%2FQy%2BwA%2BSkwx3EEp90%3D", ParameterType.QueryStringWithoutEncode));
 
             // Execute request to check the latest version
             var versionResponse = await versionClient.ExecuteTaskAsync(versionRequest);
