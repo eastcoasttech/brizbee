@@ -334,6 +334,10 @@
     <Compile Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.Designer.cs">
       <DependentUpon>201912161841508_AddingLogToQuickBooksDesktopExports.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202001091754454_AddingCreatedTimeActivityIdsToExports.cs" />
+    <Compile Include="Migrations\202001091754454_AddingCreatedTimeActivityIdsToExports.Designer.cs">
+      <DependentUpon>202001091754454_AddingCreatedTimeActivityIdsToExports.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -420,6 +424,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.resx">
       <DependentUpon>201912161841508_AddingLogToQuickBooksDesktopExports.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001091754454_AddingCreatedTimeActivityIdsToExports.resx">
+      <DependentUpon>202001091754454_AddingCreatedTimeActivityIdsToExports.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

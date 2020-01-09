@@ -26,6 +26,7 @@ namespace Brizbee.Web.Controllers
         public static string clientsecret = ConfigurationManager.AppSettings["clientsecret"];
         public static string redirectUrl = ConfigurationManager.AppSettings["redirectUrl"];
         public static string environment = ConfigurationManager.AppSettings["appEnvironment"];
+        private string baseUrl = "https://sandbox-quickbooks.api.intuit.com";
 
         public OAuth2Client auth2Client = new OAuth2Client(clientid, clientsecret, redirectUrl, environment);
 
@@ -113,10 +114,10 @@ namespace Brizbee.Web.Controllers
             return response;
         }
 
-        // POST: api/QuickBooksOnline/TimeActivities
+        // POST: api/QuickBooksOnline/ExportCommit
         [HttpPost]
-        [Route("api/QuickBooksOnline/TimeActivities")]
-        public HttpResponseMessage PostTimeActivities(string realmId = "", string accessToken = "", int? commitId = null, DateTime? inAt = null, DateTime? outAt = null)
+        [Route("api/QuickBooksOnline/ExportCommit")]
+        public HttpResponseMessage PostExportCommit(int commitId, string realmId = "", string accessToken = "")
         {
             try
             {
@@ -127,40 +128,23 @@ namespace Brizbee.Web.Controllers
                     UserId = currentUser.Id
                 };
 
-                DateTime parsedInAt;
-                DateTime parsedOutAt;
-                if (commitId.HasValue)
-                {
-                    var commit = db.Commits.Find(commitId.Value);
-                    parsedInAt = commit.InAt;
-                    parsedOutAt = commit.OutAt;
-                    export.InAt = parsedInAt;
-                    export.OutAt = parsedOutAt;
-                    export.CommitId = commitId.Value;
-                }
-                //else if (inAt.HasValue && outAt.HasValue)
-                //{
-                //    parsedInAt = inAt.Value;
-                //    parsedOutAt = outAt.Value;
-                //    export.InAt = parsedInAt;
-                //    export.OutAt = parsedOutAt;
-                //}
-                else
-                {
-                    throw new Exception("Must specify a commit id or a range to export time activities.");
-                }
+                var commit = db.Commits.Find(commitId);
+                DateTime parsedInAt = commit.InAt;
+                DateTime parsedOutAt = commit.OutAt;
+                export.InAt = parsedInAt;
+                export.OutAt = parsedOutAt;
+                export.CommitId = commit.Id;
 
                 var punches = db.Punches
                     .Include("User")
                     .Include("Task")
                     .Include("Task.Job")
                     .Include("Task.Job.Customer")
-                    .Where(p => p.CommitId == commitId.Value)
+                    .Where(p => p.CommitId == commitId)
                     .Where(p => p.InAt >= parsedInAt && p.OutAt.HasValue && p.OutAt <= parsedOutAt)
                     .ToList();
 
                 // Setup HTTP client with base URL and authentication
-                var baseUrl = "https://sandbox-quickbooks.api.intuit.com";
                 var client = new RestClient(baseUrl);
                 client.AddDefaultHeader("Authorization", string.Format("Bearer {0}", accessToken));
 
@@ -187,7 +171,6 @@ namespace Brizbee.Web.Controllers
                 // Loop the punches in groups of 30 and send the request
                 for (int i = 0; i < punches.Count; i = i + 30)
                 {
-                    Trace.TraceInformation(string.Format("Sending {0} to {1} of {2}", i, i + 30, punches.Count));
                     var subset = punches.OrderBy(p => p.Id).Skip(i).Take(30).ToArray();
                     var batch = new List<object>();
                     foreach (var punch in subset)
@@ -274,12 +257,13 @@ namespace Brizbee.Web.Controllers
                     System.Threading.Thread.Sleep(500);
                 }
 
+                // Save the new time activity ids to the export details
+                export.CreatedTimeActivitiesIds = string.Join(",", createdIds);
+                db.QuickBooksOnlineExports.Add(export);
+                db.SaveChanges();
+
                 var response = Request.CreateResponse(HttpStatusCode.Created);
-                var json = new
-                {
-                    CreatedIds = createdIds
-                };
-                response.Content = new StringContent(JObject.FromObject(json).ToString(), System.Text.Encoding.UTF8, "application/json");
+                response.Content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
                 return response;
             }
             catch (Exception)
@@ -379,6 +363,68 @@ namespace Brizbee.Web.Controllers
             //    response.Content = new StringContent(ex.ToString(), System.Text.Encoding.UTF8, "application/xml");
             //    return response;
             //}
+        }
+
+        // POST: api/QuickBooksOnline/ReverseCommit
+        [HttpPost]
+        [Route("api/QuickBooksOnline/ReverseCommit")]
+        public HttpResponseMessage PostReverseCommit(int commitId, string realmId = "", string accessToken = "")
+        {
+            var currentUser = CurrentUser();
+            var export = db.QuickBooksOnlineExports.Where(e => e.CommitId == commitId).FirstOrDefault();
+
+            // Setup HTTP client with base URL and authentication
+            var client = new RestClient(baseUrl);
+            client.AddDefaultHeader("Authorization", string.Format("Bearer {0}", accessToken));
+
+            var createdIds = export.CreatedTimeActivitiesIds.Split(',');
+
+            // Loop the time activities in groups of 30 and send the request
+            for (int i = 0; i < createdIds.Length; i = i + 30)
+            {
+                var subset = createdIds.Skip(i).Take(30).ToArray();
+                var batch = new List<object>();
+                foreach (var id in subset)
+                {
+                    batch.Add(new
+                    {
+                        bId = Guid.NewGuid().ToString(),
+                        operation = "delete",
+                        TimeActivity = new
+                        {
+                            SyncToken = "0",
+                            Id = id
+                        }
+                    });
+                }
+
+                // Build request to delete time activities in batches of 30
+                var timeActivityRequestUrl = string.Format("/v3/company/{0}/batch", realmId);
+                var batchRequest = new RestRequest(timeActivityRequestUrl, Method.POST);
+                batchRequest.AddJsonBody(new
+                {
+                    BatchItemRequest = batch.ToArray()
+                });
+
+                // Execute the request
+                var batchResponse = client.Execute(batchRequest);
+                if ((batchResponse.ResponseStatus == ResponseStatus.Completed) &&
+                        (batchResponse.StatusCode == HttpStatusCode.OK))
+                {
+                    // Do something with success
+                }
+                else
+                {
+                    // Do something with the error
+                    throw new Exception(string.Format("Could not batch delete time activities in QuickBooks Online: {0}", batchResponse.Content));
+                }
+
+                System.Threading.Thread.Sleep(500);
+            }
+
+            var response = Request.CreateResponse(HttpStatusCode.Created);
+            response.Content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
+            return response;
         }
 
         protected override void Dispose(bool disposing)
