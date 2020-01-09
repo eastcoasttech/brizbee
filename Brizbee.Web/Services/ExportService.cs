@@ -93,7 +93,7 @@ namespace Brizbee.Web.Services
                 using (var csv = new CsvWriter(writer))
                 {
                     csv.Configuration.Delimiter = delimiter;
-                    csv.WriteRecords(punches);
+                    csv.WriteRecords(list);
                     return writer.ToString();
                 }
             }
