@@ -8,49 +8,49 @@ using System.Web.Http;
 
 namespace Brizbee.Web.Controllers
 {
-    public class QuickBooksDesktopExportsController : BaseODataController
+    public class QuickBooksOnlineExportsController : BaseODataController
     {
         private BrizbeeWebContext db = new BrizbeeWebContext();
 
-        // GET: odata/QuickBooksDesktopExports
+        // GET: odata/QuickBooksOnlineExports
         [EnableQuery(PageSize = 20)]
-        public IQueryable<QuickBooksDesktopExport> GetQuickBooksDesktopExports()
+        public IQueryable<QuickBooksOnlineExport> GetQuickBooksOnlineExports()
         {
             var currentUser = CurrentUser();
             var commitIds = db.Commits
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Select(c => c.Id);
-            return db.QuickBooksDesktopExports
+            return db.QuickBooksOnlineExports
                 .Where(q => commitIds.Contains(q.CommitId.Value));
         }
 
-        // GET: odata/QuickBooksDesktopExports(5)
+        // GET: odata/QuickBooksOnlineExports(5)
         [EnableQuery]
-        public SingleResult<QuickBooksDesktopExport> GetQuickBooksDesktopExport([FromODataUri] int key)
+        public SingleResult<QuickBooksOnlineExport> GetQuickBooksOnlineExport([FromODataUri] int key)
         {
             var currentUser = CurrentUser();
             var commitIds = db.Commits
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Select(c => c.Id);
-            var quickBooksDesktopExport = db.QuickBooksDesktopExports
+            var quickBooksOnlineExport = db.QuickBooksOnlineExports
                 .Where(q => commitIds.Contains(q.CommitId.Value))
                 .Where(q => q.Id == key);
 
-            return SingleResult.Create(quickBooksDesktopExport);
+            return SingleResult.Create(quickBooksOnlineExport);
         }
 
-        // POST: odata/QuickBooksDesktopExports
-        public IHttpActionResult Post(QuickBooksDesktopExport quickBooksDesktopExport)
+        // POST: odata/QuickBooksOnlineExports
+        public IHttpActionResult Post(QuickBooksOnlineExport quickBooksOnlineExport)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            db.QuickBooksDesktopExports.Add(quickBooksDesktopExport);
+            db.QuickBooksOnlineExports.Add(quickBooksOnlineExport);
             db.SaveChanges();
 
-            return Created(quickBooksDesktopExport);
+            return Created(quickBooksOnlineExport);
         }
 
         protected override void Dispose(bool disposing)
