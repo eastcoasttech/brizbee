@@ -368,10 +368,10 @@ namespace Brizbee.Web.Controllers
         // POST: api/QuickBooksOnline/ReverseCommit
         [HttpPost]
         [Route("api/QuickBooksOnline/ReverseCommit")]
-        public HttpResponseMessage PostReverseCommit(int commitId, string realmId = "", string accessToken = "")
+        public HttpResponseMessage PostReverseCommit(int exportId, string realmId = "", string accessToken = "")
         {
             var currentUser = CurrentUser();
-            var export = db.QuickBooksOnlineExports.Where(e => e.CommitId == commitId).FirstOrDefault();
+            var export = db.QuickBooksOnlineExports.Where(x => x.Id == exportId).FirstOrDefault();
 
             // Setup HTTP client with base URL and authentication
             var client = new RestClient(baseUrl);
