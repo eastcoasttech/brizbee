@@ -307,13 +307,11 @@
     <Compile Include="Controllers\QuickBooksDesktopExportsController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineExportsController.cs" />
-    <Compile Include="Controllers\QuickCallbackController.cs" />
     <Compile Include="Controllers\CommitsController.cs" />
     <Compile Include="Controllers\CustomersController.cs" />
     <Compile Include="Controllers\JobsController.cs" />
     <Compile Include="Controllers\OrganizationsController.cs" />
     <Compile Include="Controllers\PunchesController.cs" />
-    <Compile Include="Controllers\QuickAuthController.cs" />
     <Compile Include="Controllers\ReportsController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\TaskTemplatesController.cs" />
@@ -354,6 +352,10 @@
     <Compile Include="Migrations\202001100437570_EnablingCommitOnQuickBooksOnlineExports.cs" />
     <Compile Include="Migrations\202001100437570_EnablingCommitOnQuickBooksOnlineExports.Designer.cs">
       <DependentUpon>202001100437570_EnablingCommitOnQuickBooksOnlineExports.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.cs" />
+    <Compile Include="Migrations\202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.Designer.cs">
+      <DependentUpon>202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
@@ -447,6 +449,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202001100437570_EnablingCommitOnQuickBooksOnlineExports.resx">
       <DependentUpon>202001100437570_EnablingCommitOnQuickBooksOnlineExports.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.resx">
+      <DependentUpon>202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

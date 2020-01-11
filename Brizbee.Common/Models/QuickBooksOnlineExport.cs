@@ -8,10 +8,6 @@ namespace Brizbee.Common.Models
 {
     public class QuickBooksOnlineExport
     {
-        public string AccessToken { get; set; }
-
-        public string AccessTokenExpiresAt { get; set; }
-
         public int? CommitId { get; set; }
 
         [ForeignKey("CommitId")]
@@ -20,6 +16,12 @@ namespace Brizbee.Common.Models
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
+
+        [Required]
+        public int CreatedByUserId { get; set; }
+
+        [ForeignKey("CreatedByUserId")]
+        public virtual User CreatedByUser { get; set; }
 
         public string CreatedTimeActivitiesIds { get; set; }
 
@@ -32,14 +34,12 @@ namespace Brizbee.Common.Models
         [Column(TypeName = "datetime2")]
         public DateTime? OutAt { get; set; }
 
-        public string RefreshToken { get; set; }
+        [Column(TypeName = "datetime2")]
+        public DateTime? ReversedAt { get; set; }
 
-        public string RefreshTokenExpiresAt { get; set; }
+        public int? ReversedByUserId { get; set; }
 
-        [Required]
-        public int UserId { get; set; }
-
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        [ForeignKey("ReversedByUserId")]
+        public virtual User ReversedByUser { get; set; }
     }
 }

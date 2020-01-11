@@ -24,21 +24,30 @@ namespace Brizbee.Web.Controllers
     {
         public static string clientid = ConfigurationManager.AppSettings["clientid"];
         public static string clientsecret = ConfigurationManager.AppSettings["clientsecret"];
-        public static string redirectUrl = ConfigurationManager.AppSettings["redirectUrl"];
         public static string environment = ConfigurationManager.AppSettings["appEnvironment"];
         private string baseUrl = "https://sandbox-quickbooks.api.intuit.com";
-
-        public OAuth2Client auth2Client = new OAuth2Client(clientid, clientsecret, redirectUrl, environment);
 
         private BrizbeeWebContext db = new BrizbeeWebContext();
 
         // POST: api/QuickBooksOnline/Authenticate
         [HttpPost]
         [Route("api/QuickBooksOnline/Authenticate")]
-        public HttpResponseMessage PostAuthenticate()
+        public HttpResponseMessage PostAuthenticate(string route = "qbo-export")
         {
             List<OidcScopes> scopes = new List<OidcScopes>();
             scopes.Add(OidcScopes.Accounting);
+
+            var redirectUrl = "";
+            switch (route)
+            {
+                case "qbo-export":
+                    redirectUrl = ConfigurationManager.AppSettings["qboExportRedirectUrl"];
+                    break;
+                case "qbo-reverse":
+                    redirectUrl = ConfigurationManager.AppSettings["qboReverseRedirectUrl"];
+                    break;
+            }
+            var auth2Client = new OAuth2Client(clientid, clientsecret, redirectUrl, environment);
             string authorizeUrl = auth2Client.GetAuthorizationURL(scopes);
 
             var response = Request.CreateResponse(HttpStatusCode.Moved);
@@ -46,11 +55,25 @@ namespace Brizbee.Web.Controllers
             return response;
         }
 
-        // GET: api/QuickBooksOnline/Callback
+        // GET: api/QuickBooksOnline/ExportCallback
         [HttpGet]
         [AllowAnonymous]
-        [Route("api/QuickBooksOnline/Callback")]
-        public async Task<HttpResponseMessage> GetCallback(string code = "none", string error = "none", string realmId = "none", string state = "")
+        [Route("api/QuickBooksOnline/ExportCallback")]
+        public async Task<HttpResponseMessage> GetExportCallback(string code = "", string error = "", string realmId = "", string state = "")
+        {
+            return await HandleExportOrReverse(code: code, error: error, realmId: realmId, state: state, route: "qbo-export");
+        }
+
+        // GET: api/QuickBooksOnline/ReverseCallback
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("api/QuickBooksOnline/ReverseCallback")]
+        public async Task<HttpResponseMessage> GetReverseCallback(string code = "", string error = "", string realmId = "", string state = "")
+        {
+            return await HandleExportOrReverse(code: code, error: error, realmId: realmId, state: state, route: "qbo-reverse");
+        }
+
+        private async Task<HttpResponseMessage> HandleExportOrReverse(string code = "", string error = "", string realmId = "", string state = "", string route = "qbo-export")
         {
             var stateMessage = "";
             var errorMessage = "";
@@ -59,8 +82,20 @@ namespace Brizbee.Web.Controllers
             var refreshToken = "";
             var refreshTokenExpiresAt = "";
 
+            var redirectUrl = "";
+            switch (route)
+            {
+                case "qbo-export":
+                    redirectUrl = ConfigurationManager.AppSettings["qboExportRedirectUrl"];
+                    break;
+                case "qbo-reverse":
+                    redirectUrl = ConfigurationManager.AppSettings["qboReverseRedirectUrl"];
+                    break;
+            }
+            var auth2Client = new OAuth2Client(clientid, clientsecret, redirectUrl, environment);
+
             // Sync the state info and update if it is not the same
-            if (state.Equals(QuickAuthController.auth2Client.CSRFToken, StringComparison.Ordinal))
+            if (state.Equals(auth2Client.CSRFToken, StringComparison.Ordinal))
             {
                 stateMessage = state + " (valid)";
             }
@@ -69,8 +104,7 @@ namespace Brizbee.Web.Controllers
                 stateMessage = state + " (invalid)";
             }
 
-            //await GetAuthTokensAsync(code, realmId);
-            var tokenResponse = await QuickAuthController.auth2Client.GetBearerTokenAsync(code);
+            var tokenResponse = await auth2Client.GetBearerTokenAsync(code);
 
             if (!string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
             {
@@ -87,8 +121,8 @@ namespace Brizbee.Web.Controllers
             errorMessage = error;
 
             var response = Request.CreateResponse(HttpStatusCode.Found); // or Moved
-            var url = string.Format("https://app.brizbee.com/#!/export-quickbooks-online?stateMessage={0}&errorMessage={1}&realmId={2}&accessToken={3}&accessTokenExpiresAt={4}&refreshToken={5}&refreshTokenExpiresAt={6}&step={7}",
-                stateMessage, errorMessage, realmId, accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, "company");
+            var url = string.Format("https://app.brizbee.com/#!/{8}?stateMessage={0}&errorMessage={1}&realmId={2}&accessToken={3}&accessTokenExpiresAt={4}&refreshToken={5}&refreshTokenExpiresAt={6}&step={7}",
+                stateMessage, errorMessage, realmId, accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, "company", route);
             response.Headers.Location = new Uri(url);
             return response;
         }
@@ -125,7 +159,7 @@ namespace Brizbee.Web.Controllers
                 var export = new QuickBooksOnlineExport()
                 {
                     CreatedAt = DateTime.UtcNow,
-                    UserId = currentUser.Id
+                    CreatedByUserId = currentUser.Id
                 };
 
                 var commit = db.Commits.Find(commitId);
@@ -270,99 +304,6 @@ namespace Brizbee.Web.Controllers
             {
                 throw;
             }
-
-            //try
-            //{
-            //    var currentUser = CurrentUser();
-            //    var export = new QuickBooksOnlineExport()
-            //    {
-            //        CreatedAt = DateTime.UtcNow,
-            //        UserId = currentUser.Id
-            //    };
-
-            //    OAuth2RequestValidator oauthValidator = new OAuth2RequestValidator(accessToken);
-
-            //    // Create a ServiceContext with Auth tokens and realmId
-            //    ServiceContext serviceContext = new ServiceContext(realmId, IntuitServicesType.QBO, oauthValidator);
-            //    serviceContext.IppConfiguration.MinorVersion.Qbo = "23";
-            //    serviceContext.IppConfiguration.BaseUrl.Qbo = "https://sandbox-quickbooks.api.intuit.com/";
-
-            //    // DataService is used to create objects
-            //    DataService dataService = new DataService(serviceContext);
-
-            //    // Create a QuickBooks QueryService using ServiceContext
-            //    QueryService<Employee> employeeSvc = new QueryService<Employee>(serviceContext);
-
-            //    DateTime parsedInAt;
-            //    DateTime parsedOutAt;
-            //    if (commitId.HasValue)
-            //    {
-            //        var commit = db.Commits.Find(commitId.Value);
-            //        parsedInAt = commit.InAt;
-            //        parsedOutAt = commit.OutAt;
-            //        export.InAt = parsedInAt;
-            //        export.OutAt = parsedOutAt;
-            //        export.CommitId = commitId.Value;
-            //    }
-            //    //else if (inAt.HasValue && outAt.HasValue)
-            //    //{
-            //    //    parsedInAt = inAt.Value;
-            //    //    parsedOutAt = outAt.Value;
-            //    //    export.InAt = parsedInAt;
-            //    //    export.OutAt = parsedOutAt;
-            //    //}
-            //    else
-            //    {
-            //        throw new Exception("Must specify a commit id or a range to export time activities.");
-            //    }
-
-            //    var punches = db.Punches
-            //        .Include("User")
-            //        .Where(p => p.CommitId == commitId.Value)
-            //        .Where(p => p.InAt >= parsedInAt && p.OutAt.HasValue && p.OutAt <= parsedOutAt);
-            //    foreach (var punch in punches)
-            //    {
-            //        var displayName = punch.User.QuickBooksEmployee.Replace("'", "\\'"); //Escape special characters
-            //        var query = string.Format("SELECT * FROM Employee WHERE DisplayName = '{0}'", displayName);
-            //        Employee employee = employeeSvc.ExecuteIdsQuery(query).FirstOrDefault();
-
-
-            //        if (employee != null)
-            //        {
-            //            var time = new TimeActivity()
-            //            {
-            //                TxnDate = punch.InAt,
-            //                TxnDateSpecified = true,
-            //                StartTime = punch.InAt,
-            //                EndTime = punch.OutAt.Value,
-            //                NameOf = TimeActivityTypeEnum.Employee,
-            //                NameOfSpecified = true,
-            //                //ItemElementName = ItemChoiceType5.EmployeeRef,
-            //                //ItemRef
-            //                //PayrollItemRef = 
-            //                AnyIntuitObject = new ReferenceType()
-            //                {
-            //                    name = employee.DisplayName,
-            //                    Value = employee.Id
-            //                },
-            //                HoursSpecified = false,
-            //                EndTimeSpecified = true,
-            //                StartTimeSpecified = true
-            //            };
-            //            dataService.Add(time);
-            //        }
-            //    }
-
-            //    var response = Request.CreateResponse(HttpStatusCode.Created);
-            //    response.Content = new StringContent("", System.Text.Encoding.UTF8, "application/xml");
-            //    return response;
-            //}
-            //catch (Exception ex)
-            //{
-            //    var response = Request.CreateResponse(HttpStatusCode.InternalServerError);
-            //    response.Content = new StringContent(ex.ToString(), System.Text.Encoding.UTF8, "application/xml");
-            //    return response;
-            //}
         }
 
         // POST: api/QuickBooksOnline/ReverseCommit
@@ -422,6 +363,11 @@ namespace Brizbee.Web.Controllers
                 System.Threading.Thread.Sleep(500);
             }
 
+            // Save the reverse details
+            export.ReversedAt = DateTime.UtcNow;
+            export.ReversedByUserId = currentUser.Id;
+            db.SaveChanges();
+
             var response = Request.CreateResponse(HttpStatusCode.Created);
             response.Content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
             return response;
@@ -449,46 +395,6 @@ namespace Brizbee.Web.Controllers
             {
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Exchange Auth code with Auth Access and Refresh tokens and add them to Claim list
-        /// </summary>
-        private async System.Threading.Tasks.Task GetAuthTokensAsync(string code, string realmId)
-        {
-            //if (realmId != null)
-            //{
-            //    Session["realmId"] = realmId;
-            //}
-
-            //Request.GetOwinContext().Authentication.SignOut("TempState");
-            var tokenResponse = await QuickAuthController.auth2Client.GetBearerTokenAsync(code);
-
-            //var claims = new List<Claim>();
-
-            //if (Session["realmId"] != null)
-            //{
-            //    claims.Add(new Claim("realmId", Session["realmId"].ToString()));
-            //}
-
-            if (!string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
-            {
-                var accessToken = tokenResponse.AccessToken;
-                var accessTokenExpiresAt = (DateTime.Now.AddSeconds(tokenResponse.AccessTokenExpiresIn)).ToString();
-                //claims.Add(new Claim("access_token", tokenResponse.AccessToken));
-                //claims.Add(new Claim("access_token_expires_at", (DateTime.Now.AddSeconds(tokenResponse.AccessTokenExpiresIn)).ToString()));
-            }
-
-            if (!string.IsNullOrWhiteSpace(tokenResponse.RefreshToken))
-            {
-                var refreshToken = tokenResponse.RefreshToken;
-                var refreshTokenExpiresAt = (DateTime.Now.AddSeconds(tokenResponse.RefreshTokenExpiresIn)).ToString();
-                //claims.Add(new Claim("refresh_token", tokenResponse.RefreshToken));
-                //claims.Add(new Claim("refresh_token_expires_at", (DateTime.Now.AddSeconds(tokenResponse.RefreshTokenExpiresIn)).ToString()));
-            }
-
-            //var id = new ClaimsIdentity(claims, "Cookies");
-            //Request.GetOwinContext().Authentication.SignIn(id);
         }
 
         private List<Serialization.QBO.Employee> VerifyEmployeesExist(List<Punch> punches, string realmId, RestClient client)
