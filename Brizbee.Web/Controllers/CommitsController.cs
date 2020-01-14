@@ -53,15 +53,8 @@ namespace Brizbee.Web.Controllers
                 return BadRequest();
             }
 
-            try
-            {
-                repo.Undo(key, CurrentUser());
-                return Ok();
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            repo.Undo(key, CurrentUser());
+            return Ok();
         }
 
         // PATCH: odata/Commits(5)

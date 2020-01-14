@@ -172,6 +172,16 @@ namespace Brizbee.Web.Repositories
 
                 db.Commits.Remove(commit);
 
+                var qboExports = db.QuickBooksOnlineExports.Where(x => x.CommitId == id).ToList();
+                qboExports.ForEach(x => {
+                    db.QuickBooksOnlineExports.Remove(x);
+                });
+
+                var qbdExports = db.QuickBooksDesktopExports.Where(x => x.CommitId == id).ToList();
+                qbdExports.ForEach(x => {
+                    db.QuickBooksDesktopExports.Remove(x);
+                });
+
                 db.SaveChanges();
             }
             else
