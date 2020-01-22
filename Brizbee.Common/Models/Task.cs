@@ -28,5 +28,15 @@ namespace Brizbee.Common.Models
         public string QuickBooksPayrollItem { get; set; }
 
         public string QuickBooksServiceItem { get; set; }
+
+        public int? BaseServiceRateId { get; set; } // optional, but necessary for populating punches later
+
+        [ForeignKey("BaseServiceRateId")]
+        public virtual Rate BaseServiceRate { get; set; }
+
+        public int? BasePayrollRateId { get; set; } // optional, but necessary for populating punches later
+
+        [ForeignKey("BasePayrollRateId")]
+        public virtual Rate BasePayrollRate { get; set; }
     }
 }

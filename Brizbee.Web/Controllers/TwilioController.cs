@@ -268,7 +268,7 @@ namespace Brizbee.Web.Controllers
 
             if (Digits.Equals("1"))
             {
-                var punch = new PunchRepository().PunchIn(task.Id, user, From, timezone);
+                var punch = new PunchRepository().PunchIn(task.Id, user, From, timezone, sourceHardware: "Phone", sourcePhoneNumber: From);
 
                 //var existing = db.Punches
                 //    .Where(p => p.UserId == user.Id)
@@ -345,7 +345,7 @@ namespace Brizbee.Web.Controllers
             var user = db.Users.Find(int.Parse(UserId));
             var timezone = user.TimeZone;
 
-            new PunchRepository().PunchOut(user, From, timezone);
+            new PunchRepository().PunchOut(user, From, timezone, sourceHardware: "Phone", sourcePhoneNumber: From);
             
             //var now = DateTime.UtcNow;
             //var punch = db.Punches.Where(p => p.UserId == user.Id)

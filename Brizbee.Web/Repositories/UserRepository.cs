@@ -237,6 +237,12 @@ namespace Brizbee.Web.Repositories
                     organization.CreatedAt = DateTime.UtcNow;
                     organization.MinutesFormat = "minutes";
 
+#if DEBUG
+                    organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
+                    organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
+#endif
+
+#if !DEBUG
                     try
                     {
                         // Create a Stripe customer object
@@ -268,14 +274,9 @@ namespace Brizbee.Web.Repositories
                     catch (Exception ex)
                     {
                         Trace.TraceWarning(ex.ToString());
-                        #if DEBUG
-                        organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
-                        organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
-                        #endif
-                        #if !DEBUG
                         throw;
-                        #endif
                     }
+#endif
 
                     // Save the organization and user
                     db.Organizations.Add(organization);

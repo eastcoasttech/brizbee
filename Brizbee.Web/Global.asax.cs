@@ -1,8 +1,5 @@
 ﻿using Stripe;
 using System.Web.Http;
-using System.Web.Mvc;
-using System.Web.Optimization;
-using System.Web.Routing;
 
 namespace Brizbee.Web
 {
@@ -18,11 +15,6 @@ namespace Brizbee.Web
             GlobalConfiguration.Configuration.Formatters.Remove(GlobalConfiguration.Configuration.Formatters.XmlFormatter);
 
             GlobalConfiguration.Configure(WebApiConfig.Register);
-
-            AreaRegistration.RegisterAllAreas();
-            RouteConfig.RegisterRoutes(RouteTable.Routes);
-            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
-            BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
     }
 }

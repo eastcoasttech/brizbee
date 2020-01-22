@@ -149,7 +149,21 @@ namespace Brizbee.Web.Repositories
         /// </summary>
         /// <param name="taskId">The id of the task</param>
         /// <param name="currentUser">The user to punch in</param>
-        public Punch PunchIn(int taskId, User currentUser, string source, string timezone, string latitude = null, string longitude = null)
+        public Punch PunchIn(
+            int taskId,
+            User currentUser,
+            string source,
+            string timezone,
+            string latitude = null,
+            string longitude = null,
+            string sourceHardware = "",
+            string sourceHostname = "",
+            string sourceIpAddress = "",
+            string sourceOperatingSystem = "",
+            string sourceOperatingSystemVersion = "",
+            string sourceBrowser = "",
+            string sourceBrowserVersion = "",
+            string sourcePhoneNumber = "")
         {
             var punch = new Punch();
             var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezone);
@@ -179,6 +193,14 @@ namespace Brizbee.Web.Repositories
             if (existing != null)
             {
                 // Punch out the user
+                punch.OutAtSourceHardware = sourceHardware;
+                punch.OutAtSourceHostname = sourceHostname;
+                punch.OutAtSourceIpAddress = sourceIpAddress;
+                punch.OutAtSourceOperatingSystem = sourceOperatingSystem;
+                punch.OutAtSourceOperatingSystemVersion = sourceOperatingSystemVersion;
+                punch.OutAtSourceBrowser = sourceBrowser;
+                punch.OutAtSourceBrowserVersion = sourceBrowserVersion;
+                punch.OutAtSourcePhoneNumber = sourcePhoneNumber;
                 existing.OutAt = fiftyNine;
                 existing.OutAtTimeZone = timezone;
                 punch.InAt = zero.AddMinutes(1);
@@ -189,6 +211,14 @@ namespace Brizbee.Web.Repositories
             }
 
             // Auto-generated
+            punch.InAtSourceHardware = sourceHardware;
+            punch.InAtSourceHostname = sourceHostname;
+            punch.InAtSourceIpAddress = sourceIpAddress;
+            punch.InAtSourceOperatingSystem = sourceOperatingSystem;
+            punch.InAtSourceOperatingSystemVersion = sourceOperatingSystemVersion;
+            punch.InAtSourceBrowser = sourceBrowser;
+            punch.InAtSourceBrowserVersion = sourceBrowserVersion;
+            punch.InAtSourcePhoneNumber = sourcePhoneNumber;
             punch.CreatedAt = nowInstant.InUtc().ToDateTimeUtc();
             punch.TaskId = taskId;
             punch.UserId = currentUser.Id;
@@ -211,7 +241,20 @@ namespace Brizbee.Web.Repositories
         /// to be the current timestamp.
         /// </summary>
         /// <param name="currentUser">The user to punch out</param>
-        public Punch PunchOut(User currentUser, string source, string timezone, string latitude = null, string longitude = null)
+        public Punch PunchOut(
+            User currentUser,
+            string source,
+            string timezone,
+            string latitude = null,
+            string longitude = null,
+            string sourceHardware = "",
+            string sourceHostname = "",
+            string sourceIpAddress = "",
+            string sourceOperatingSystem = "",
+            string sourceOperatingSystemVersion = "",
+            string sourceBrowser = "",
+            string sourceBrowserVersion = "",
+            string sourcePhoneNumber = "")
         {
             var punch = db.Punches
                 .Where(p => p.UserId == currentUser.Id)
@@ -229,7 +272,15 @@ namespace Brizbee.Web.Repositories
                 nowDateTime.Hour,
                 nowDateTime.Minute,
                 59);
-            
+
+            punch.OutAtSourceHardware = sourceHardware;
+            punch.OutAtSourceHostname = sourceHostname;
+            punch.OutAtSourceIpAddress = sourceIpAddress;
+            punch.OutAtSourceOperatingSystem = sourceOperatingSystem;
+            punch.OutAtSourceOperatingSystemVersion = sourceOperatingSystemVersion;
+            punch.OutAtSourceBrowser = sourceBrowser;
+            punch.OutAtSourceBrowserVersion = sourceBrowserVersion;
+            punch.OutAtSourcePhoneNumber = sourcePhoneNumber;
             punch.OutAt = fiftyNine;
             punch.SourceForOutAt = source;
             punch.OutAtTimeZone = timezone;

@@ -1,8 +1,10 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
+using Brizbee.Web.Serialization;
 using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using System;
+using System.Collections;
 using System.Data.Entity;
 using System.Data.Entity.Validation;
 using System.Diagnostics;
@@ -104,10 +106,30 @@ namespace Brizbee.Web.Controllers
             var latitudeForInAt = (string)parameters["LatitudeForInAt"];
             var longitudeForInAt = (string)parameters["LongitudeForInAt"];
 
+            var sourceHardware = (string)parameters["SourceHardware"];
+            var sourceHostname = (string)parameters["SourceHostname"];
+            var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
+            var sourceOperatingSystem = (string)parameters["SourceOperatingSystem"];
+            var sourceOperatingSystemVersion = (string)parameters["SourceOperatingSystemVersion"];
+            var sourceBrowser = (string)parameters["SourceBrowser"];
+            var sourceBrowserVersion = (string)parameters["SourceBrowserVersion"];
+
             try
             {
-                var punch = repo.PunchIn(taskId, CurrentUser(), source,
-                    timezone, latitudeForInAt, longitudeForInAt);
+                var punch = repo.PunchIn(
+                    taskId,
+                    CurrentUser(),
+                    source,
+                    timezone,
+                    latitudeForInAt,
+                    longitudeForInAt,
+                    sourceHardware,
+                    sourceHostname,
+                    sourceIpAddress,
+                    sourceOperatingSystem,
+                    sourceOperatingSystemVersion,
+                    sourceBrowser,
+                    sourceBrowserVersion);
                 return Created(punch);
             }
             catch (DbEntityValidationException e)
@@ -139,10 +161,29 @@ namespace Brizbee.Web.Controllers
             var latitudeForOutAt = (string)parameters["LatitudeForOutAt"];
             var longitudeForOutAt = (string)parameters["LongitudeForOutAt"];
 
+            var sourceHardware = (string)parameters["SourceHardware"];
+            var sourceHostname = (string)parameters["SourceHostname"];
+            var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
+            var sourceOperatingSystem = (string)parameters["SourceOperatingSystem"];
+            var sourceOperatingSystemVersion = (string)parameters["SourceOperatingSystemVersion"];
+            var sourceBrowser = (string)parameters["SourceBrowser"];
+            var sourceBrowserVersion = (string)parameters["SourceBrowserVersion"];
+
             try
             {
-                var punch = repo.PunchOut(CurrentUser(), source, timezone,
-                    latitudeForOutAt, longitudeForOutAt);
+                var punch = repo.PunchOut(
+                    CurrentUser(),
+                    source,
+                    timezone,
+                    latitudeForOutAt,
+                    longitudeForOutAt,
+                    sourceHardware,
+                    sourceHostname,
+                    sourceIpAddress,
+                    sourceOperatingSystem,
+                    sourceOperatingSystemVersion,
+                    sourceBrowser,
+                    sourceBrowserVersion);
                 return Created(punch);
             }
             catch (DbEntityValidationException e)
@@ -198,6 +239,65 @@ namespace Brizbee.Web.Controllers
             }
 
             return Ok();
+        }
+        
+        // POST: odata/Punches/Default.PopulateRate
+        [HttpPost]
+        public IHttpActionResult PopulateRate(ODataActionParameters parameters)
+        {
+            var populateRateOptions = parameters["PopulateRateOptions"] as PopulateRateOptions;
+            var inAt = populateRateOptions.InAt;
+            var outAt = populateRateOptions.OutAt;
+            var currentUser = CurrentUser();
+
+            var punches = db.Punches
+                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt);
+            var userIds = punches
+                .GroupBy(p => p.UserId)
+                .Select(g => g.Key);
+
+            foreach (var option in populateRateOptions.Options)
+            {
+                switch (option.Type)
+                {
+                    case "count":
+
+                        if (option.CountScope == "day")
+                        {
+                        }
+                        else if (option.CountScope == "total")
+                        {
+                            // Loop the punches and populate the alternate rate
+                            var filtered = punches.Where(p => p.UserId == 0).OrderBy(p => p.InAt);
+                            var count = 0;
+                            foreach (var punch in filtered)
+                            {
+                                count += punch.Minutes;
+
+                                if (count > option.CountMinute)
+                                {
+                                    punch.PayrollRateId = option.AlternatePayrollRateId;
+                                }
+                            }
+                        }
+
+                        break;
+                    case "range":
+
+                        if (option.RangeDirection == "before")
+                        {
+                            // loop the punches and populate the alternate at each mark
+                        }
+                        else if (option.RangeDirection == "after")
+                        {
+                            // loop the punches and populate the alternate at each mark
+                        }
+
+                        break;
+                }
+            }
+
+            return Created("");
         }
 
         protected override void Dispose(bool disposing)

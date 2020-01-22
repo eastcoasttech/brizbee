@@ -5,9 +5,7 @@ using Brizbee.Web.Filters;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Web.Http;
 using System.Web.Http.Cors;
 
@@ -47,6 +45,7 @@ namespace Brizbee
             builder.EntitySet<Job>("Jobs");
             builder.EntitySet<Organization>("Organizations");
             builder.EntitySet<Punch>("Punches");
+            builder.EntitySet<Rate>("Rates");
             builder.EntitySet<QuickBooksDesktopExport>("QuickBooksDesktopExports");
             builder.EntitySet<QuickBooksOnlineExport>("QuickBooksOnlineExports");
             builder.EntitySet<Task>("Tasks");
@@ -118,6 +117,12 @@ namespace Brizbee
             punchIn.Parameter<string>("InAtTimeZone");
             punchIn.Parameter<string>("LatitudeForInAt");
             punchIn.Parameter<string>("LongitudeForInAt");
+            punchIn.Parameter<string>("SourceHardware");
+            punchIn.Parameter<string>("SourceHostname");
+            punchIn.Parameter<string>("SourceOperatingSystem");
+            punchIn.Parameter<string>("SourceOperatingSystemVersion");
+            punchIn.Parameter<string>("SourceBrowser");
+            punchIn.Parameter<string>("SourceBrowserVersion");
 
             // Collection Action - Punches/PunchOut
             var punchOut = builder.EntityType<Punch>()
@@ -128,6 +133,12 @@ namespace Brizbee
             punchOut.Parameter<string>("OutAtTimeZone");
             punchOut.Parameter<string>("LatitudeForOutAt");
             punchOut.Parameter<string>("LongitudeForOutAt");
+            punchOut.Parameter<string>("SourceHardware");
+            punchOut.Parameter<string>("SourceHostname");
+            punchOut.Parameter<string>("SourceOperatingSystem");
+            punchOut.Parameter<string>("SourceOperatingSystemVersion");
+            punchOut.Parameter<string>("SourceBrowser");
+            punchOut.Parameter<string>("SourceBrowserVersion");
 
             // Collection Action - Punches/Split
             var split = builder.EntityType<Punch>()

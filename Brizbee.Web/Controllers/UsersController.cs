@@ -3,6 +3,7 @@ using Brizbee.Common.Security;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -134,16 +135,15 @@ namespace Brizbee.Web.Controllers
         }
 
         // POST: odata/Users/Default.Register
-        [AllowAnonymous]
         [HttpPost]
         public IHttpActionResult Register(ODataActionParameters parameters)
         {
             var organization = parameters["Organization"] as Organization;
             var user = parameters["User"] as User;
 
-            var created = repo.Register(user, organization);
+            var registered = repo.Register(user, organization);
 
-            return Ok(created);
+            return Created(registered);
         }
 
         private Credential GetCredentials(User user)

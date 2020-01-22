@@ -40,17 +40,17 @@ namespace Brizbee.Common.Models
         public string LongitudeForOutAt { get; set; }
 
         [NotMapped]
-        public double Minutes
+        public int Minutes
         {
             get
             {
                 if (this.OutAt.HasValue)
                 {
-                    return (this.OutAt.Value - this.InAt).TotalMinutes;
+                    return Convert.ToInt32((this.OutAt.Value - this.InAt).TotalMinutes);
                 }
                 else
                 {
-                    return 0.0;
+                    return 0;
                 }
             }
         }
@@ -63,6 +63,64 @@ namespace Brizbee.Common.Models
         public string SourceForInAt { get; set; }
 
         public string SourceForOutAt { get; set; }
+
+        [MaxLength(12)]
+        public string InAtSourceHardware { get; set; } // Web, Mobile, Phone, Dashboard
+
+        [MaxLength(30)]
+        public string InAtSourceHostname { get; set; }
+
+        [MaxLength(30)]
+        public string InAtSourceIpAddress { get; set; }
+
+        [MaxLength(30)]
+        public string InAtSourceOperatingSystem { get; set; }
+
+        [MaxLength(20)]
+        public string InAtSourceOperatingSystemVersion { get; set; }
+
+        [MaxLength(30)]
+        public string InAtSourceBrowser { get; set; }
+
+        [MaxLength(20)]
+        public string InAtSourceBrowserVersion { get; set; }
+
+        [MaxLength(30)]
+        public string InAtSourcePhoneNumber { get; set; }
+
+        [MaxLength(12)]
+        public string OutAtSourceHardware { get; set; } // Web, Mobile, Phone, Dashboard
+
+        [MaxLength(30)]
+        public string OutAtSourceHostname { get; set; }
+
+        [MaxLength(30)]
+        public string OutAtSourceIpAddress { get; set; }
+
+        [MaxLength(30)]
+        public string OutAtSourceOperatingSystem { get; set; }
+
+        [MaxLength(20)]
+        public string OutAtSourceOperatingSystemVersion { get; set; }
+
+        [MaxLength(30)]
+        public string OutAtSourceBrowser { get; set; }
+
+        [MaxLength(20)]
+        public string OutAtSourceBrowserVersion { get; set; }
+
+        [MaxLength(30)]
+        public string OutAtSourcePhoneNumber { get; set; }
+
+        public int? ServiceRateId { get; set; } // Populated later by administrators
+
+        [ForeignKey("ServiceRateId")]
+        public virtual Rate ServiceRate { get; set; }
+
+        public int? PayrollRateId { get; set; } // Populated later by administrators
+
+        [ForeignKey("PayrollRateId")]
+        public virtual Rate PayrollRate { get; set; }
 
         [Required]
         public int TaskId { get; set; }
