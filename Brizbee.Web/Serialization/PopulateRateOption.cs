@@ -25,6 +25,8 @@ namespace Brizbee.Web.Serialization
 
         public int? RangeMinutes { get; set; } // 7am = 420 minutes, 5:30pm = 1,050 minutes
 
+        public int Order { get; set; }
+
         // Option 1 - After Hour (Hour=17)
 
         // Option 2 - Before Hour (Hour=5)

@@ -2,6 +2,7 @@
 using Brizbee.Common.Security;
 using Brizbee.Common.Serialization;
 using Brizbee.Web.Filters;
+using Brizbee.Web.Serialization;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using System;
@@ -149,6 +150,12 @@ namespace Brizbee
             split.Parameter<string>("OutAt");
             split.Parameter<string>("Time");
             split.Parameter<string>("Type");
+
+            // Collection Action - Punches/PopulateRates
+            var populate = builder.EntityType<Punch>()
+                .Collection
+                .Action("PopulateRates");
+            populate.Parameter<PopulateRateOptions>("Options");
 
             // Collection Function - Punches/Download
             var download = builder.EntityType<Punch>()

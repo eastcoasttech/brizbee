@@ -240,62 +240,15 @@ namespace Brizbee.Web.Controllers
 
             return Ok();
         }
-        
-        // POST: odata/Punches/Default.PopulateRate
+
+        // POST: odata/Punches/Default.PopulateRates
         [HttpPost]
-        public IHttpActionResult PopulateRate(ODataActionParameters parameters)
+        public IHttpActionResult PopulateRates(ODataActionParameters parameters)
         {
-            var populateRateOptions = parameters["PopulateRateOptions"] as PopulateRateOptions;
-            var inAt = populateRateOptions.InAt;
-            var outAt = populateRateOptions.OutAt;
+            var options = parameters["Options"] as PopulateRateOptions;
             var currentUser = CurrentUser();
 
-            var punches = db.Punches
-                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt);
-            var userIds = punches
-                .GroupBy(p => p.UserId)
-                .Select(g => g.Key);
-
-            foreach (var option in populateRateOptions.Options)
-            {
-                switch (option.Type)
-                {
-                    case "count":
-
-                        if (option.CountScope == "day")
-                        {
-                        }
-                        else if (option.CountScope == "total")
-                        {
-                            // Loop the punches and populate the alternate rate
-                            var filtered = punches.Where(p => p.UserId == 0).OrderBy(p => p.InAt);
-                            var count = 0;
-                            foreach (var punch in filtered)
-                            {
-                                count += punch.Minutes;
-
-                                if (count > option.CountMinute)
-                                {
-                                    punch.PayrollRateId = option.AlternatePayrollRateId;
-                                }
-                            }
-                        }
-
-                        break;
-                    case "range":
-
-                        if (option.RangeDirection == "before")
-                        {
-                            // loop the punches and populate the alternate at each mark
-                        }
-                        else if (option.RangeDirection == "after")
-                        {
-                            // loop the punches and populate the alternate at each mark
-                        }
-
-                        break;
-                }
-            }
+            new PunchService().Populate(options, currentUser);
 
             return Created("");
         }
