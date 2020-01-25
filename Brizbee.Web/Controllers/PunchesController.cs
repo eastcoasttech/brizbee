@@ -250,7 +250,7 @@ namespace Brizbee.Web.Controllers
 
             new PunchService().Populate(options, currentUser);
 
-            return Created("");
+            return Ok("");
         }
 
         protected override void Dispose(bool disposing)

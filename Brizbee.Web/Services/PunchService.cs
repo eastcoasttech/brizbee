@@ -36,12 +36,36 @@ namespace Brizbee.Web.Services
 
             foreach (var punch in punches)
             {
-                // Set all the payroll rates to the default for the task
+                // Set all the rates to the default for the task
                 punch.PayrollRateId = punch.Task.BasePayrollRateId;
+                punch.ServiceRateId = punch.Task.BaseServiceRateId;
             }
 
             foreach (var option in options)
             {
+                string rate;
+                int baseRateId;
+                int alternateRateId;
+
+                if (option.AlternatePayrollRateId.HasValue)
+                {
+                    // populate payroll rates
+                    rate = "payroll";
+                    baseRateId = option.BasePayrollRateId.Value;
+                    alternateRateId = option.AlternatePayrollRateId.Value;
+                }
+                else if (option.AlternateServiceRateId.HasValue)
+                {
+                    // populate service rates
+                    rate = "service";
+                    baseRateId = option.BaseServiceRateId.Value;
+                    alternateRateId = option.AlternateServiceRateId.Value;
+                }
+                else
+                {
+                    throw new Exception("Must provide an alternate payroll or service id.");
+                }
+
                 switch (option.Type)
                 {
                     case "count":
@@ -49,12 +73,24 @@ namespace Brizbee.Web.Services
                         if (option.CountScope == "day")
                         {
                             // Populates beyond the number of minutes per day
-                            PopulateForCountOfMinutesPerDay(punches, userIds, option.CountMinute.Value, option.AlternatePayrollRateId.Value);
+                            PopulateForCountOfMinutesPerDay(
+                                punches,
+                                userIds,
+                                option.CountMinute.Value,
+                                baseRateId,
+                                alternateRateId,
+                                rate);
                         }
                         else if (option.CountScope == "total")
                         {
                             // Populates beyond the number of total minutes in the range
-                            PopulateForCountOfTotalMinutes(punches, userIds, option.CountMinute.Value, option.AlternatePayrollRateId.Value);
+                            PopulateForCountOfTotalMinutes(
+                                punches,
+                                userIds,
+                                option.CountMinute.Value,
+                                baseRateId,
+                                alternateRateId,
+                                rate);
                         }
 
                         break;
@@ -63,29 +99,44 @@ namespace Brizbee.Web.Services
                         if (option.RangeDirection == "before")
                         {
                             // Populates before the number of minutes in the day
-                            PopulateBasedOnRangeBeforeOrAfter(punches, userIds, option.RangeMinutes.Value, option.AlternatePayrollRateId.Value, "before");
+                            PopulateBasedOnRangeBeforeOrAfter(
+                                punches,
+                                userIds,
+                                option.RangeMinutes.Value,
+                                baseRateId,
+                                alternateRateId,
+                                "before",
+                                rate);
                         }
                         else if (option.RangeDirection == "after")
                         {
                             // Populates after the number of minutes in the day
-                            PopulateBasedOnRangeBeforeOrAfter(punches, userIds, option.RangeMinutes.Value, option.AlternatePayrollRateId.Value, "after");
+                            PopulateBasedOnRangeBeforeOrAfter(
+                                punches,
+                                userIds,
+                                option.RangeMinutes.Value,
+                                baseRateId,
+                                alternateRateId,
+                                "after",
+                                rate);
                         }
 
                         break;
                 }
             }
 
-            foreach (var punch in punches)
+            foreach (var punch in punches.OrderBy(p => p.InAt))
             {
-                var rate = db.Rates.Find(punch.PayrollRateId);
-                Trace.TraceInformation(string.Format("{0} {1} {2}", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.Minutes, rate.Name));
+                var payrollRate = db.Rates.Find(punch.PayrollRateId);
+                var serviceRate = db.Rates.Find(punch.ServiceRateId);
+                Trace.TraceInformation(string.Format("{0} for {1} minutes    Payroll: {2}    Service: {3}", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.Minutes, payrollRate.Name, serviceRate.Name));
             }
 
             // Save in a single transaction, so either all will fail or succeed
             //db.SaveChanges();
         }
 
-        private void PopulateForCountOfMinutesPerDay(List<Punch> punches, int[] userIds, int minutesOfDay, int alternatePayrollRateId)
+        private void PopulateForCountOfMinutesPerDay(List<Punch> punches, int[] userIds, int minutesOfDay, int baseRateId, int alternateRateId, string rate = "payroll")
         {
             foreach (var userId in userIds)
             {
@@ -112,15 +163,31 @@ namespace Brizbee.Web.Services
 
                         if (count > minutesOfDay)
                         {
-                            punch.PayrollRateId = alternatePayrollRateId;
-                            db.Punches.Attach(punch);
+                            if (rate == "payroll")
+                            {
+                                // Can only set alternate rates for the matching base rate
+                                if (punch.Task.BasePayrollRateId == baseRateId)
+                                {
+                                    punch.PayrollRateId = alternateRateId;
+                                    db.Punches.Attach(punch);
+                                }
+                            }
+                            else if (rate == "service")
+                            {
+                                // Can only set alternate rates for the matching base rate
+                                if (punch.Task.BaseServiceRateId == baseRateId)
+                                {
+                                    punch.ServiceRateId = alternateRateId;
+                                    db.Punches.Attach(punch);
+                                }
+                            }
                         }
                     }
                 }
             }
         }
 
-        private void PopulateForCountOfTotalMinutes(List<Punch> punches, int[] userIds, int totalMinutes, int alternatePayrollRateId)
+        private void PopulateForCountOfTotalMinutes(List<Punch> punches, int[] userIds, int totalMinutes, int baseRateId, int alternateRateId, string rate = "payroll")
         {
             foreach (var userId in userIds)
             {
@@ -135,14 +202,30 @@ namespace Brizbee.Web.Services
 
                     if (count > totalMinutes)
                     {
-                        punch.PayrollRateId = alternatePayrollRateId;
-                        db.Punches.Attach(punch);
+                        if (rate == "payroll")
+                        {
+                            // Can only set alternate rates for the matching base rate
+                            if (punch.Task.BasePayrollRateId == baseRateId)
+                            {
+                                punch.PayrollRateId = alternateRateId;
+                                db.Punches.Attach(punch);
+                            }
+                        }
+                        else if (rate == "service")
+                        {
+                            // Can only set alternate rates for the matching base rate
+                            if (punch.Task.BaseServiceRateId == baseRateId)
+                            {
+                                punch.ServiceRateId = alternateRateId;
+                                db.Punches.Attach(punch);
+                            }
+                        }
                     }
                 }
             }
         }
 
-        private void PopulateBasedOnRangeBeforeOrAfter(List<Punch> punches, int[] userIds, int minuteOfDay, int alternatePayrollRateId, string beforeOrafter = "before")
+        private void PopulateBasedOnRangeBeforeOrAfter(List<Punch> punches, int[] userIds, int minuteOfDay, int baseRateId, int alternateRateId, string beforeOrafter = "before", string rate = "payroll")
         {
             foreach (var userId in userIds)
             {
@@ -157,15 +240,47 @@ namespace Brizbee.Web.Services
                         case "before":
                             if (minuteOfPunch <= minuteOfDay)
                             {
-                                punch.PayrollRateId = alternatePayrollRateId;
-                                db.Punches.Attach(punch);
+                                if (rate == "payroll")
+                                {
+                                    // Can only set alternate rates for the matching base rate
+                                    if (punch.Task.BasePayrollRateId == baseRateId)
+                                    {
+                                        punch.PayrollRateId = alternateRateId;
+                                        db.Punches.Attach(punch);
+                                    }
+                                }
+                                else if (rate == "service")
+                                {
+                                    // Can only set alternate rates for the matching base rate
+                                    if (punch.Task.BaseServiceRateId == baseRateId)
+                                    {
+                                        punch.ServiceRateId = alternateRateId;
+                                        db.Punches.Attach(punch);
+                                    }
+                                }
                             }
                             break;
                         case "after":
                             if (minuteOfPunch >= minuteOfDay)
                             {
-                                punch.PayrollRateId = alternatePayrollRateId;
-                                db.Punches.Attach(punch);
+                                if (rate == "payroll")
+                                {
+                                    // Can only set alternate rates for the matching base rate
+                                    if (punch.Task.BasePayrollRateId == baseRateId)
+                                    {
+                                        punch.PayrollRateId = alternateRateId;
+                                        db.Punches.Attach(punch);
+                                    }
+                                }
+                                else if (rate == "service")
+                                {
+                                    // Can only set alternate rates for the matching base rate
+                                    if (punch.Task.BaseServiceRateId == baseRateId)
+                                    {
+                                        punch.ServiceRateId = alternateRateId;
+                                        db.Punches.Attach(punch);
+                                    }
+                                }
                             }
                             break;
                     }

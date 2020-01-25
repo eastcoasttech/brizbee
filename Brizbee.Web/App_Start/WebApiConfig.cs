@@ -156,6 +156,7 @@ namespace Brizbee
                 .Collection
                 .Action("PopulateRates");
             populate.Parameter<PopulateRateOptions>("Options");
+            populate.Returns<string>();
 
             // Collection Function - Punches/Download
             var download = builder.EntityType<Punch>()
