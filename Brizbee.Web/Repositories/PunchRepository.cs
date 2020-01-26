@@ -178,14 +178,6 @@ namespace Brizbee.Web.Repositories
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
-            var fiftyNine = new DateTime(
-                nowDateTime.Year,
-                nowDateTime.Month,
-                nowDateTime.Day,
-                nowDateTime.Hour,
-                nowDateTime.Minute,
-                59,
-                999);
             var zero = new DateTime(
                 nowDateTime.Year,
                 nowDateTime.Month,
@@ -211,9 +203,9 @@ namespace Brizbee.Web.Repositories
                 punch.OutAtSourceBrowser = sourceBrowser;
                 punch.OutAtSourceBrowserVersion = sourceBrowserVersion;
                 punch.OutAtSourcePhoneNumber = sourcePhoneNumber;
-                existing.OutAt = fiftyNine;
+                existing.OutAt = zero;
                 existing.OutAtTimeZone = timezone;
-                punch.InAt = zero.AddMinutes(1);
+                punch.InAt = zero;
             }
             else
             {
@@ -275,14 +267,14 @@ namespace Brizbee.Web.Repositories
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
-            var fiftyNine = new DateTime(
+            var zero = new DateTime(
                 nowDateTime.Year,
                 nowDateTime.Month,
                 nowDateTime.Day,
                 nowDateTime.Hour,
                 nowDateTime.Minute,
-                59,
-                999);
+                0,
+                0);
 
             punch.OutAtSourceHardware = sourceHardware;
             punch.OutAtSourceHostname = sourceHostname;
@@ -292,7 +284,7 @@ namespace Brizbee.Web.Repositories
             punch.OutAtSourceBrowser = sourceBrowser;
             punch.OutAtSourceBrowserVersion = sourceBrowserVersion;
             punch.OutAtSourcePhoneNumber = sourcePhoneNumber;
-            punch.OutAt = fiftyNine;
+            punch.OutAt = zero;
             punch.SourceForOutAt = source;
             punch.OutAtTimeZone = timezone;
             punch.LatitudeForOutAt = latitude;

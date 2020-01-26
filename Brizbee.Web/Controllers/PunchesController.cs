@@ -212,15 +212,15 @@ namespace Brizbee.Web.Controllers
         {
             //var splitter = new PunchSplitter();
             //string type = parameters["Type"] as string;
-            //DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
+            DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
             //Trace.TraceInformation(inAt.ToString("yyyy-MM-dd HH:mm:ss"));
-            //DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
+            DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
             //Trace.TraceInformation(outAt.ToString("yyyy-MM-dd HH:mm:ss"));
-            //var currentUser = CurrentUser();
-            //int[] userIds = db.Users
-            //    .Where(u => u.OrganizationId == currentUser.OrganizationId)
-            //    .Select(u => u.Id)
-            //    .ToArray();
+            var currentUser = CurrentUser();
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
 
             //switch (type)
             //{
@@ -238,7 +238,19 @@ namespace Brizbee.Web.Controllers
             //        break;
             //}
 
-            new PunchService().NewSplitAtMidnight();
+            var service = new PunchService();
+
+            var split = service.SplitAtMidnight(inAt, outAt, userIds);
+            var processed = service.SplitAtMinute(split, userIds, minuteOfDay: 480);
+
+            var punches = db.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt);
+            db.Punches.RemoveRange(punches);
+
+            db.Punches.AddRange(processed);
+
+            db.SaveChanges();
 
             return Ok();
         }
