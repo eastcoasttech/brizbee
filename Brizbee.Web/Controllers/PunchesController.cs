@@ -210,33 +210,35 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult Split(ODataActionParameters parameters)
         {
-            var splitter = new PunchSplitter();
-            string type = parameters["Type"] as string;
-            DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
-            Trace.TraceInformation(inAt.ToString("yyyy-MM-dd HH:mm:ss"));
-            DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
-            Trace.TraceInformation(outAt.ToString("yyyy-MM-dd HH:mm:ss"));
-            var currentUser = CurrentUser();
-            int[] userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
+            //var splitter = new PunchSplitter();
+            //string type = parameters["Type"] as string;
+            //DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
+            //Trace.TraceInformation(inAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            //DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
+            //Trace.TraceInformation(outAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            //var currentUser = CurrentUser();
+            //int[] userIds = db.Users
+            //    .Where(u => u.OrganizationId == currentUser.OrganizationId)
+            //    .Select(u => u.Id)
+            //    .ToArray();
 
-            switch (type)
-            {
-                case "minutes":
-                    int minutes = int.Parse(parameters["Minutes"] as string);
-                    splitter.SplitAtMinutes(userIds, inAt, outAt, minutes, currentUser);
-                    Trace.TraceInformation("Splitting at minutes " + parameters["Minutes"] as string);
-                    break;
-                case "time":
-                    string time = parameters["Time"] as string;
-                    var separated = time.Split(':');
-                    int hour = int.Parse(separated[0]);
-                    Trace.TraceInformation("Splitting at time " + parameters["Time"] as string);
-                    splitter.SplitAtHour(userIds, inAt, outAt, hour, currentUser);
-                    break;
-            }
+            //switch (type)
+            //{
+            //    case "minutes":
+            //        int minutes = int.Parse(parameters["Minutes"] as string);
+            //        splitter.SplitAtMinutes(userIds, inAt, outAt, minutes, currentUser);
+            //        Trace.TraceInformation("Splitting at minutes " + parameters["Minutes"] as string);
+            //        break;
+            //    case "time":
+            //        string time = parameters["Time"] as string;
+            //        var separated = time.Split(':');
+            //        int hour = int.Parse(separated[0]);
+            //        Trace.TraceInformation("Splitting at time " + parameters["Time"] as string);
+            //        splitter.SplitAtHour(userIds, inAt, outAt, hour, currentUser);
+            //        break;
+            //}
+
+            new PunchService().NewSplitAtMidnight();
 
             return Ok();
         }
@@ -250,7 +252,7 @@ namespace Brizbee.Web.Controllers
 
             new PunchService().Populate(options, currentUser);
 
-            return Ok("");
+            return Ok();
         }
 
         protected override void Dispose(bool disposing)

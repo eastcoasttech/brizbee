@@ -26,11 +26,12 @@ namespace Brizbee.Web.Repositories
             // Auto-generated
             punch.CreatedAt = now;
             punch.Guid = Guid.NewGuid();
-            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0);
-            
+
+            // Ensure InAt is at bottom of hour and OutAt is at top of the hour
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
             if (punch.OutAt.HasValue)
             {
-                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 59);
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 59, 999);
             }
 
             db.Punches.Add(punch);
@@ -137,7 +138,14 @@ namespace Brizbee.Web.Repositories
 
             // Peform the update
             patch.Patch(punch);
-            
+
+            // Ensure InAt is at bottom of hour and OutAt is at top of the hour
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 59, 999);
+            }
+
             db.SaveChanges();
 
             return punch;
@@ -176,13 +184,15 @@ namespace Brizbee.Web.Repositories
                 nowDateTime.Day,
                 nowDateTime.Hour,
                 nowDateTime.Minute,
-                59);
+                59,
+                999);
             var zero = new DateTime(
                 nowDateTime.Year,
                 nowDateTime.Month,
                 nowDateTime.Day,
                 nowDateTime.Hour,
                 nowDateTime.Minute,
+                0,
                 0);
 
             var existing = db.Punches.Where(p => p.UserId == currentUser.Id)
@@ -271,7 +281,8 @@ namespace Brizbee.Web.Repositories
                 nowDateTime.Day,
                 nowDateTime.Hour,
                 nowDateTime.Minute,
-                59);
+                59,
+                999);
 
             punch.OutAtSourceHardware = sourceHardware;
             punch.OutAtSourceHostname = sourceHostname;

@@ -9,7 +9,7 @@ namespace Brizbee.Web.Services
     public class PunchSplitter
     {
         // 40 hours as minutes = 2400
-        public void SplitAtMinutes(int[] userIds, DateTime startUtc, DateTime finishUtc, int minuteToSplit, User currentUser)
+        public void SplitAtMinutes(int[] userIds, DateTime inAt, DateTime outAt, int minuteToSplit, User currentUser)
         {
             using (var db = new BrizbeeWebContext())
             {
@@ -29,8 +29,8 @@ namespace Brizbee.Web.Services
                             var minutes = zero;
 
                             var punches = db.Punches.Where(p => p.OutAt != null) // where punch is complete
-                                .Where(p => p.InAt >= startUtc) // where InAt is after or at start
-                                .Where(p => p.OutAt <= finishUtc) // where OutAt is before or at finish
+                                .Where(p => p.InAt >= inAt) // where InAt is after or at start
+                                .Where(p => p.OutAt <= outAt) // where OutAt is before or at finish
                                 .Where(p => p.UserId == user.Id)
                                 .OrderBy(p => p.InAt);
 
@@ -77,7 +77,7 @@ namespace Brizbee.Web.Services
         }
         
         // 7:00 AM = 7, 5:00 PM = 17
-        public void SplitAtHour(int[] userIds, DateTime startUtc, DateTime finishUtc, int hour, User currentUser)
+        public void SplitAtHour(int[] userIds, DateTime inAt, DateTime outAt, int hour, User currentUser)
         {
             using (var db = new BrizbeeWebContext())
             {
@@ -90,8 +90,8 @@ namespace Brizbee.Web.Services
                         var punches = db.Punches
                             .Where(p => p.OutAt != null) // where punch is complete
                             .Where(p => !p.CommitId.HasValue) // only punches that have not been committed
-                            .Where(p => p.InAt >= startUtc) // where InAt is after or at start
-                            .Where(p => p.OutAt <= finishUtc) // where OutAt is before or at finish
+                            .Where(p => p.InAt >= inAt) // where InAt is after or at start
+                            .Where(p => p.OutAt <= outAt) // where OutAt is before or at finish
                             .Where(p => userIds.Contains(p.UserId))
                             .OrderBy(p => p.InAt);
                         
@@ -109,7 +109,7 @@ namespace Brizbee.Web.Services
                             // that was created by splitting the original one
                             db.Punches.Remove(punch);
 
-                            foreach (Tuple<DateTime, DateTime> tuple in splitter.Results)
+                            foreach (Tuple<DateTime, DateTime> tuple in splitter.Punches)
                             {
                                 db.Punches.Add(new Punch()
                                 {
