@@ -21,7 +21,7 @@ namespace Brizbee.Web.Services
                 var originalOutAt = originalPunch.OutAt.Value;
 
                 var adjustedInAt = originalInAt; // Beginning of range
-                var adjustedOutAt = new DateTime(originalInAt.Year, originalInAt.Month, originalInAt.Day, 0, 0, 0, 0).AddDays(1); // Last second of same day
+                var adjustedOutAt = new DateTime(originalInAt.Year, originalInAt.Month, originalInAt.Day, 0, 0, 0, 0).AddDays(1); // Midnight on next day
 
                 var newInAt = new DateTime(originalInAt.Year, originalInAt.Month, originalInAt.Day, 0, 0, 0, 0).AddDays(1); // Midnight on next day
                 var newOutAt = originalOutAt; // End of range, not safe, could extend past midnight

@@ -213,9 +213,7 @@ namespace Brizbee.Web.Controllers
             //var splitter = new PunchSplitter();
             //string type = parameters["Type"] as string;
             DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
-            //Trace.TraceInformation(inAt.ToString("yyyy-MM-dd HH:mm:ss"));
             DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
-            //Trace.TraceInformation(outAt.ToString("yyyy-MM-dd HH:mm:ss"));
             var currentUser = CurrentUser();
             int[] userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
@@ -240,12 +238,16 @@ namespace Brizbee.Web.Controllers
 
             var service = new PunchService();
 
-            var split = service.SplitAtMidnight(inAt, outAt, userIds);
-            var processed = service.SplitAtMinute(split, userIds, minuteOfDay: 480);
-
             var punches = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt);
+                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                .OrderBy(p => p.UserId)
+                .ThenBy(p => p.InAt)
+                .ToList();
+
+            var split = service.SplitAtMidnight(punches, currentUser);
+            var processed = service.SplitAtMinute(split, currentUser, minuteOfDay: 990);
+
             db.Punches.RemoveRange(punches);
 
             db.Punches.AddRange(processed);
