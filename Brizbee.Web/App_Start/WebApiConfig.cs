@@ -151,6 +151,13 @@ namespace Brizbee
             split.Parameter<string>("Time");
             split.Parameter<string>("Type");
 
+            // Collection Action - Punches/SplitAtMidnight
+            var splitMidnight = builder.EntityType<Punch>()
+                .Collection
+                .Action("SplitAtMidnight");
+            splitMidnight.Parameter<string>("InAt");
+            splitMidnight.Parameter<string>("OutAt");
+
             // Collection Action - Punches/PopulateRates
             var populate = builder.EntityType<Punch>()
                 .Collection

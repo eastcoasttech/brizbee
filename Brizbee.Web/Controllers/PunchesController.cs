@@ -257,6 +257,36 @@ namespace Brizbee.Web.Controllers
             return Ok();
         }
 
+        // POST: odata/Punches/Default.SplitAtMidnight
+        [HttpPost]
+        public IHttpActionResult SplitAtMidnight(ODataActionParameters parameters)
+        {
+            DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
+            DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
+            User currentUser = CurrentUser();
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+
+            var service = new PunchService();
+            var punches = db.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                .OrderBy(p => p.UserId)
+                .ThenBy(p => p.InAt)
+                .ToList();
+            var split = service.SplitAtMidnight(punches, currentUser);
+
+            // Delete the old punches and save the new ones
+            db.Punches.RemoveRange(punches);
+            db.SaveChanges();
+            db.Punches.AddRange(split);
+            db.SaveChanges();
+
+            return Ok();
+        }
+
         // POST: odata/Punches/Default.PopulateRates
         [HttpPost]
         public IHttpActionResult PopulateRates(ODataActionParameters parameters)

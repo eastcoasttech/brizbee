@@ -33,7 +33,6 @@ namespace Brizbee.Web.Services
             var outAt = rateOptions.OutAt;
             var options = rateOptions.Options.ToList().OrderBy(o => o.Order);
             var originalPunches = db.Punches
-                .Include("Task")
                 .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
                 .ToList();
             var userIds = originalPunches
@@ -48,6 +47,21 @@ namespace Brizbee.Web.Services
             var splitPunches = service.SplitAtMidnight(originalPunches, currentUser);
             Trace.TraceInformation(string.Format("Count is now {0}", splitPunches.Count));
 
+
+
+
+            //var beforeSplit = JsonConvert.SerializeObject(punches, settings);
+
+            //var afterSplit = JsonConvert.SerializeObject(processed, settings);
+
+            //var split = new Split()
+            //{
+            //    BeforeSplit = beforeSplit,
+            //    CreatedAt = DateTime.UtcNow,
+            //    CreatedByUserId = currentUser.Id,
+            //    AfterSplit = afterSplit,
+            //    OrganizationId = currentUser.OrganizationId
+            //};
 
 
 
@@ -377,10 +391,9 @@ namespace Brizbee.Web.Services
     
         public List<Punch> SplitAtMidnight(List<Punch> punches, User currentUser)
         {
-            var beforeSplit = JsonConvert.SerializeObject(punches, settings);
-
             var processed = new List<Punch>();
             var splitter = new MidnightSplitter();
+
             foreach (var punch in punches)
             {
                 processed.AddRange(splitter.Split(punch));
@@ -391,16 +404,6 @@ namespace Brizbee.Web.Services
                 .OrderBy(p => p.UserId)
                 .ThenBy(p => p.InAt)
                 .ToList();
-
-            var afterSplit = JsonConvert.SerializeObject(processed, settings);
-
-            var split = new Split()
-            {
-                BeforeSplit = beforeSplit,
-                CreatedAt = DateTime.UtcNow,
-                AfterSplit = afterSplit,
-                OrganizationId = currentUser.OrganizationId
-            };
 
             return processed;
         }
