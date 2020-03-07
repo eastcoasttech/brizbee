@@ -1,6 +1,6 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
-using QBXMLRP2Lib;
+using Interop.QBXMLRP2;
 using RestSharp;
 using System;
 using System.Collections.Generic;

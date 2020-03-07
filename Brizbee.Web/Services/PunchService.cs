@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Serialization;
 using Newtonsoft.Json;
 using System;
@@ -11,13 +12,20 @@ namespace Brizbee.Web.Services
 {
     public class PunchService : IDisposable
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private ISqlContext db = new SqlContext();
         private JsonSerializerSettings settings = new JsonSerializerSettings()
         {
             NullValueHandling = NullValueHandling.Ignore,
             StringEscapeHandling = StringEscapeHandling.EscapeHtml,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
+
+        public PunchService() { }
+
+        public PunchService(ISqlContext context)
+        {
+            db = context;
+        }
 
         /// <summary>
         /// Disposes of the database connection.

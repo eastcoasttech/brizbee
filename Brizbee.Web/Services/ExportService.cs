@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Exceptions;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using CsvHelper;
 using System;
@@ -28,7 +29,7 @@ namespace Brizbee.Web.Services
 
         public string BuildCsv(string delimiter = ",")
         {
-            using (var db = new BrizbeeWebContext())
+            using (var db = new SqlContext())
             {
                 IQueryable<Punch> punches = db.Punches
                     .Include("Task")

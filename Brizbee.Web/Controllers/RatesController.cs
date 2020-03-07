@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Exceptions;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
@@ -13,7 +14,7 @@ namespace Brizbee.Web.Controllers
 {
     public class RatesController : BaseODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         private RateRepository repo = new RateRepository();
 
         // GET: odata/Rates

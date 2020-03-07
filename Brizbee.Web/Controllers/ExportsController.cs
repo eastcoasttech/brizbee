@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Exceptions;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using Brizbee.Web.Services;
 using System;
@@ -13,7 +14,7 @@ namespace Brizbee.Web.Controllers
 {
     public class ExportsController : ApiController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         // GET: api/Exports/Csv
         [Route("api/Exports/Csv")]

@@ -1,27 +1,19 @@
 ﻿using Brizbee.Common.Models;
-using System;
-using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Infrastructure.Interception;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Web;
 
-namespace Brizbee.Web
+namespace Brizbee.Common.Database
 {
-    public class BrizbeeWebContext : DbContext
+    public class SqlContext : DbContext, ISqlContext
     {
-        static BrizbeeWebContext()
+        static SqlContext()
         {
         }
 
-        public BrizbeeWebContext() : base("name=BrizbeeWebContext")
+        public SqlContext() : base("name=SqlContext")
         {
-            this.Configuration.LazyLoadingEnabled = false;
+            // Here is where to specify connection configuration
         }
 
-        // Add a DbSet for each entity type that you want to include in your model. For more information 
-        // on configuring and using a Code First model, see http://go.microsoft.com/fwlink/?LinkId=390109.
         public DbSet<Commit> Commits { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Job> Jobs { get; set; }
@@ -34,15 +26,21 @@ namespace Brizbee.Web
         public DbSet<TaskTemplate> TaskTemplates { get; set; }
         public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
         public DbSet<User> Users { get; set; }
-        
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            //base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().Ignore(u => u.Password);
-            modelBuilder.Entity<Organization>()
+        protected override void OnModelCreating(DbModelBuilder mb)
+        {
+            // Password is not a column, so should be ignored
+            mb.Entity<User>().Ignore(u => u.Password);
+
+            // Organization codes should be universally unique
+            mb.Entity<Organization>()
                 .HasIndex(o => o.Code)
                 .IsUnique();
+        }
+
+        public void MarkAsModified(object obj)
+        {
+            Entry(obj).State = EntityState.Modified;
         }
     }
 }

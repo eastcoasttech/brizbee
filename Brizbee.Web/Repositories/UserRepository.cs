@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Exceptions;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
@@ -13,7 +14,7 @@ namespace Brizbee.Web.Repositories
 {
     public class UserRepository : IDisposable
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         
         /// <summary>
         /// Changes the password to the given password.

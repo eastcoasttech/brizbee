@@ -1,4 +1,5 @@
-﻿using Brizbee.Web.Repositories;
+﻿using Brizbee.Common.Database;
+using Brizbee.Web.Repositories;
 using System;
 using System.Linq;
 using System.Net;
@@ -9,7 +10,7 @@ namespace Brizbee.Web.Controllers
 {
     public class TwilioController : ApiController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         private string brizbeeAuth = "78BcpK23z";
 
         // GET: api/Twilio/Code

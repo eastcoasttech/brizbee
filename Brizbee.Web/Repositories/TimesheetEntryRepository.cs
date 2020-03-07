@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using System;
@@ -10,7 +11,7 @@ namespace Brizbee.Web.Repositories
 {
     public class TimesheetEntryRepository : IDisposable
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         /// <summary>
         /// Creates the given timesheet entry in the database.

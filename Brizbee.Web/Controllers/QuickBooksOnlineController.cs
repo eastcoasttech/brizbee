@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Intuit.Ipp.Core;
 using Intuit.Ipp.Data;
 using Intuit.Ipp.DataService;
@@ -27,7 +28,7 @@ namespace Brizbee.Web.Controllers
         public static string environment = ConfigurationManager.AppSettings["appEnvironment"];
         private string baseUrl = "https://sandbox-quickbooks.api.intuit.com";
 
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         // POST: api/QuickBooksOnline/Authenticate
         [HttpPost]

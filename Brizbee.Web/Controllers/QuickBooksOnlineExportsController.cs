@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace Brizbee.Web.Controllers
 {
     public class QuickBooksOnlineExportsController : BaseODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         // GET: odata/QuickBooksOnlineExports
         [EnableQuery(PageSize = 20)]

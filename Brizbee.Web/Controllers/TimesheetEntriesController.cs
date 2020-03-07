@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
@@ -12,7 +13,7 @@ namespace Brizbee.Web.Controllers
 {
     public class TimesheetEntriesController : BaseODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         private TimesheetEntryRepository repo = new TimesheetEntryRepository();
 
         // GET: odata/TimesheetEntries

@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Brizbee.Web.Controllers
 {
     public class CustomersController : BaseODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         private CustomerRepository repo = new CustomerRepository();
 
         // GET: odata/Customers

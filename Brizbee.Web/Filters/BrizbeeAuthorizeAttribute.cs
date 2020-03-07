@@ -114,8 +114,8 @@ namespace Brizbee.Web.Filters
         /// <returns></returns>
         private static bool SkipAuthorization(HttpActionContext actionContext)
         {
-            if (!Enumerable.Any<AllowAnonymousAttribute>((IEnumerable<AllowAnonymousAttribute>)actionContext.ActionDescriptor.GetCustomAttributes<AllowAnonymousAttribute>()))
-                return Enumerable.Any<AllowAnonymousAttribute>((IEnumerable<AllowAnonymousAttribute>)actionContext.ControllerContext.ControllerDescriptor.GetCustomAttributes<AllowAnonymousAttribute>());
+            if (!Enumerable.Any(actionContext.ActionDescriptor.GetCustomAttributes<AllowAnonymousAttribute>()))
+                return Enumerable.Any(actionContext.ControllerContext.ControllerDescriptor.GetCustomAttributes<AllowAnonymousAttribute>());
             else
                 return true;
         }

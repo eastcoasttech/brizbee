@@ -252,7 +252,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="BrizbeeWebContext.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
     <Compile Include="Controllers\QuickBooksDesktopExportsController.cs" />
@@ -364,12 +363,6 @@
     <Folder Include="App_Data\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Brizbee.Common\Brizbee.Common.csproj">
-      <Project>{da3900ae-3d80-4789-bf00-1c26b8aa21b6}</Project>
-      <Name>Brizbee.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Migrations\201908250351304_Initial.resx">
       <DependentUpon>201908250351304_Initial.cs</DependentUpon>
     </EmbeddedResource>
@@ -397,6 +390,12 @@
     <EmbeddedResource Include="Migrations\202001202125013_AddingSourceDetailsAndRates.resx">
       <DependentUpon>202001202125013_AddingSourceDetailsAndRates.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Brizbee.Common\Brizbee.Common.csproj">
+      <Project>{34474249-6916-47bc-8013-3cd5ddc4b114}</Project>
+      <Name>Brizbee.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

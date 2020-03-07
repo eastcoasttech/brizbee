@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
@@ -14,7 +15,7 @@ namespace Brizbee.Web.Controllers
 {
     public class OrganizationsController : BaseODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         private OrganizationRepository repo = new OrganizationRepository();
 
         // GET: odata/Organizations(5)

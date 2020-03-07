@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ namespace Brizbee.Web.Services
         // 40 hours as minutes = 2400
         public void SplitAtMinutes(int[] userIds, DateTime inAt, DateTime outAt, int minuteToSplit, User currentUser)
         {
-            using (var db = new BrizbeeWebContext())
+            using (var db = new SqlContext())
             {
                 var organization = db.Organizations.Find(currentUser.OrganizationId);
 
@@ -79,7 +80,7 @@ namespace Brizbee.Web.Services
         // 7:00 AM = 7, 5:00 PM = 17
         public void SplitAtHour(int[] userIds, DateTime inAt, DateTime outAt, int hour, User currentUser)
         {
-            using (var db = new BrizbeeWebContext())
+            using (var db = new SqlContext())
             {
                 var organization = db.Organizations.Find(currentUser.OrganizationId);
 
@@ -148,7 +149,7 @@ namespace Brizbee.Web.Services
         /// <param name="difference"></param>
         public void SplitTimeAtDifference(Punch originalTime, double difference)
         {
-            using (var db = new BrizbeeWebContext())
+            using (var db = new SqlContext())
             {
                 Trace.TraceInformation(string.Format("{0} through {1} at {2} minutes", originalTime.InAt, originalTime.OutAt, difference));
                 Punch time1 = new Punch()

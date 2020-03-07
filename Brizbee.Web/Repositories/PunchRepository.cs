@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using NodaTime;
@@ -10,7 +11,7 @@ namespace Brizbee.Web.Repositories
 {
     public class PunchRepository : IDisposable
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         /// <summary>
         /// Creates the given punch in the database.

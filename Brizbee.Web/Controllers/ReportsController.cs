@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Services;
 using NodaTime;
 using System;
@@ -49,7 +50,7 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         // GET: api/Reports/PunchesByUser
         [Route("api/Reports/PunchesByUser")]

@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Brizbee.Web.Serialization;
 using Brizbee.Web.Services;
@@ -14,7 +15,7 @@ namespace Brizbee.Web.Controllers
 {
     public class CommitsController : BaseODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
         private CommitRepository repo = new CommitRepository();
 
         // GET: odata/Commits

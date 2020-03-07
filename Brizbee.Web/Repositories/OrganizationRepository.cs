@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Microsoft.AspNet.OData;
 using Stripe;
 using System;
@@ -11,7 +12,7 @@ namespace Brizbee.Web.Repositories
 {
     public class OrganizationRepository : IDisposable
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         /// <summary>
         /// Disposes of the database connection.

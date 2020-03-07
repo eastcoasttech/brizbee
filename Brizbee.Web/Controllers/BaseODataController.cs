@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Database;
+using Brizbee.Common.Models;
 using Microsoft.AspNet.OData;
 using System.Linq;
 
@@ -6,7 +7,7 @@ namespace Brizbee.Web.Controllers
 {
     public class BaseODataController : ODataController
     {
-        private BrizbeeWebContext db = new BrizbeeWebContext();
+        private SqlContext db = new SqlContext();
 
         public User CurrentUser()
         {
