@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Brizbee.Common.Models;
 using Brizbee.Web.Services;
@@ -19,14 +20,27 @@ namespace Brizbee.Web.Tests.Services
 
             var currentUser = GetCurrentUser();
 
-            var punches = GetPunches()
+            var originalPunches = GetPunches()
                 .OrderBy(p => p.UserId)
                 .ThenBy(p => p.InAt)
                 .ToList();
+            
+            Assert.AreEqual(originalPunches.Count, 16);
 
-            var splitMidnight = service.SplitAtMidnight(punches, currentUser);
-            var splitSevenAm = service.SplitAtMinute(splitMidnight, currentUser, minuteOfDay: 420); // Split at 7am = 420 minutes
+            var midnightPunches = service.SplitAtMidnight(originalPunches, currentUser);
+
+            // Should be more because it split at midnight
+            Assert.AreEqual(midnightPunches.Count, 18);
+
+            var splitSevenAm = service.SplitAtMinute(midnightPunches, currentUser, minuteOfDay: 420); // Split at 7am = 420 minutes
+            
+            // Should be more because it split at 7am
+            Assert.AreEqual(splitSevenAm.Count, 19);
+
             var splitFivePm = service.SplitAtMinute(splitSevenAm, currentUser, minuteOfDay: 1020); // Split at 5pm = 1020 minutes
+
+            // Should be more because it split at 5pm
+            Assert.AreEqual(splitFivePm.Count, 31);
         }
 
         User GetCurrentUser()
