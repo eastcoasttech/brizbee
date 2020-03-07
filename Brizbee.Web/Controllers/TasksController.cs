@@ -1,6 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
+using System;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -84,6 +85,26 @@ namespace Brizbee.Web.Controllers
                 var next = service.NxtKeyCode(max);
                 return Ok(next);
             }
+        }
+
+        // GET: odata/Tasks/Default.ForPunches
+        [HttpGet]
+        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        public IQueryable<Task> ForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
+        {
+            var inAt = DateTime.Parse(InAt);
+            var outAt = DateTime.Parse(OutAt);
+            var currentUser = CurrentUser();
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+            var taskIds = db.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Select(p => p.TaskId);
+
+            return db.Tasks.Where(t => taskIds.Contains(t.Id)); ;
         }
 
         protected override void Dispose(bool disposing)

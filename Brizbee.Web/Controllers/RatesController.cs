@@ -1,4 +1,5 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Common.Exceptions;
+using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
@@ -61,6 +62,50 @@ namespace Brizbee.Web.Controllers
         {
             repo.Delete(key, CurrentUser());
             return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        // GET: odata/Rates/Default.BaseServiceRatesForPunches
+        [HttpGet]
+        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        public IQueryable<Rate> BaseServiceRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
+        {
+            var inAt = DateTime.Parse(InAt);
+            var outAt = DateTime.Parse(OutAt);
+            var currentUser = CurrentUser();
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+            var rateIds = db.Punches
+                .Include("Task")
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => p.Task.BaseServiceRateId.HasValue)
+                .Select(p => p.Task.BaseServiceRateId.Value);
+
+            return db.Rates.Where(r => rateIds.Contains(r.Id)); ;
+        }
+
+        // GET: odata/Rates/Default.BasePayrollRatesForPunches
+        [HttpGet]
+        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        public IQueryable<Rate> BasePayrollRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
+        {
+            var inAt = DateTime.Parse(InAt);
+            var outAt = DateTime.Parse(OutAt);
+            var currentUser = CurrentUser();
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+            var rateIds = db.Punches
+                .Include("Task")
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => p.Task.BasePayrollRateId.HasValue)
+                .Select(p => p.Task.BasePayrollRateId.Value);
+
+            return db.Rates.Where(r => rateIds.Contains(r.Id)); ;
         }
 
         /// <summary>

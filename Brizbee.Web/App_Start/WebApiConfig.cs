@@ -172,6 +172,30 @@ namespace Brizbee
                 .Returns<string>();
             download.Parameter<int>("CommitId");
 
+            // Collection Action - Tasks/ForPunches
+            var tasksForPunches = builder.EntityType<Task>()
+                .Collection
+                .Function("ForPunches");
+            tasksForPunches.Parameter<string>("InAt");
+            tasksForPunches.Parameter<string>("OutAt");
+            tasksForPunches.ReturnsCollectionFromEntitySet<Task>("Tasks");
+
+            // Collection Action - Rates/BasePayrollRatesForPunches
+            var basePayrollRates = builder.EntityType<Rate>()
+                .Collection
+                .Function("BasePayrollRatesForPunches");
+            basePayrollRates.Parameter<string>("InAt");
+            basePayrollRates.Parameter<string>("OutAt");
+            basePayrollRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
+
+            // Collection Action - Rates/BaseServiceRatesForPunches
+            var baseServiceRates = builder.EntityType<Rate>()
+                .Collection
+                .Function("BaseServiceRatesForPunches");
+            baseServiceRates.Parameter<string>("InAt");
+            baseServiceRates.Parameter<string>("OutAt");
+            baseServiceRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
+
             // Member Action - User/ChangePassword
             ActionConfiguration changePassword = builder.EntityType<User>()
                 .Action("ChangePassword");

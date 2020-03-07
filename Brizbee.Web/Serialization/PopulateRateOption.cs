@@ -15,7 +15,7 @@ namespace Brizbee.Web.Serialization
 
         public int? AlternateServiceRateId { get; set; }
 
-        public string Type { get; set; } // count or range
+        public string Type { get; set; } // count, range, or date
 
         public string CountScope { get; set; } // day or total
 
@@ -24,6 +24,8 @@ namespace Brizbee.Web.Serialization
         public string RangeDirection { get; set; } // before or after
 
         public int? RangeMinutes { get; set; } // 7am = 420 minutes, 5:30pm = 1,050 minutes
+
+        public DateTime Date { get; set; } // on specific date
 
         public int Order { get; set; }
 
