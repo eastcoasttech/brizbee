@@ -292,10 +292,15 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult PopulateRates(ODataActionParameters parameters)
         {
-            var options = parameters["Options"] as PopulateRateOptions;
+            var populateOptions = parameters["Options"] as PopulateRateOptions;
             var currentUser = CurrentUser();
+            var inAt = populateOptions.InAt;
+            var outAt = populateOptions.OutAt;
+            var originalPunches = db.Punches
+                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                .ToList();
 
-            new PunchService().Populate(options, currentUser);
+            new PunchService().Populate(populateOptions, originalPunches, currentUser);
 
             return Ok();
         }

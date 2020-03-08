@@ -12,7 +12,11 @@ namespace Brizbee.Web.Tests
     {
         public TestSqlContext()
         {
+            this.Customers = new TestCustomerDbSet();
+            this.Jobs = new TestJobDbSet();
             this.Punches = new TestPunchDbSet();
+            this.Rates = new TestRateDbSet();
+            this.Tasks = new TestTaskDbSet();
         }
 
         public DbSet<Commit> Commits { get; set; }

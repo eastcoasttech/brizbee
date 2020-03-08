@@ -13,12 +13,6 @@ namespace Brizbee.Web.Services
     public class PunchService : IDisposable
     {
         private ISqlContext db = new SqlContext();
-        private JsonSerializerSettings settings = new JsonSerializerSettings()
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            StringEscapeHandling = StringEscapeHandling.EscapeHtml,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-        };
 
         public PunchService() { }
 
@@ -35,14 +29,11 @@ namespace Brizbee.Web.Services
             db.Dispose();
         }
 
-        public void Populate(PopulateRateOptions rateOptions, User currentUser)
+        public List<Punch> Populate(PopulateRateOptions populateOptions, List<Punch> originalPunches, User currentUser)
         {
-            var inAt = rateOptions.InAt;
-            var outAt = rateOptions.OutAt;
-            var options = rateOptions.Options.ToList().OrderBy(o => o.Order);
-            var originalPunches = db.Punches
-                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                .ToList();
+            var inAt = populateOptions.InAt;
+            var outAt = populateOptions.OutAt;
+            var options = populateOptions.Options.ToList().OrderBy(o => o.Order);
             var userIds = originalPunches
                 .GroupBy(p => p.UserId)
                 .Select(g => g.Key)
@@ -237,6 +228,8 @@ namespace Brizbee.Web.Services
 
             // Save in a single transaction, so either all will fail or succeed
             //db.SaveChanges();
+
+            return splitPunches.OrderBy(p => p.InAt).ToList();
         }
 
         private void PopulateForCountOfMinutesPerDay(List<Punch> punches, int[] userIds, int minutesOfDay, int baseRateId, int alternateRateId, string rate = "payroll")
@@ -274,7 +267,6 @@ namespace Brizbee.Web.Services
                                 if (task.BasePayrollRateId == baseRateId)
                                 {
                                     punch.PayrollRateId = alternateRateId;
-                                    //db.Punches.Attach(punch);
                                 }
                             }
                             else if (rate == "service")
@@ -283,7 +275,6 @@ namespace Brizbee.Web.Services
                                 if (task.BaseServiceRateId == baseRateId)
                                 {
                                     punch.ServiceRateId = alternateRateId;
-                                    //db.Punches.Attach(punch);
                                 }
                             }
                         }
@@ -315,7 +306,6 @@ namespace Brizbee.Web.Services
                             if (task.BasePayrollRateId == baseRateId)
                             {
                                 punch.PayrollRateId = alternateRateId;
-                                //db.Punches.Attach(punch);
                             }
                         }
                         else if (rate == "service")
@@ -324,7 +314,6 @@ namespace Brizbee.Web.Services
                             if (task.BaseServiceRateId == baseRateId)
                             {
                                 punch.ServiceRateId = alternateRateId;
-                                //db.Punches.Attach(punch);
                             }
                         }
                     }
@@ -355,7 +344,6 @@ namespace Brizbee.Web.Services
                                     if (task.BasePayrollRateId == baseRateId)
                                     {
                                         punch.PayrollRateId = alternateRateId;
-                                        //db.Punches.Attach(punch);
                                     }
                                 }
                                 else if (rate == "service")
@@ -364,7 +352,6 @@ namespace Brizbee.Web.Services
                                     if (task.BaseServiceRateId == baseRateId)
                                     {
                                         punch.ServiceRateId = alternateRateId;
-                                        //db.Punches.Attach(punch);
                                     }
                                 }
                             }
@@ -378,7 +365,6 @@ namespace Brizbee.Web.Services
                                     if (task.BasePayrollRateId == baseRateId)
                                     {
                                         punch.PayrollRateId = alternateRateId;
-                                        //db.Punches.Attach(punch);
                                     }
                                 }
                                 else if (rate == "service")
@@ -387,7 +373,6 @@ namespace Brizbee.Web.Services
                                     if (task.BaseServiceRateId == baseRateId)
                                     {
                                         punch.ServiceRateId = alternateRateId;
-                                        //db.Punches.Attach(punch);
                                     }
                                 }
                             }
@@ -425,8 +410,10 @@ namespace Brizbee.Web.Services
                 .Select(g => g.Key)
                 .ToArray();
 
+            // Must perform split for each user independently
             foreach (var userId in userIds)
             {
+                // Order the user's punches
                 var filtered = punches
                     .Where(p => p.UserId == userId)
                     .OrderBy(p => p.InAt)
