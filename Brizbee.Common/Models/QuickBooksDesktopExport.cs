@@ -10,6 +10,9 @@ namespace Brizbee.Common.Models
     {
         public int? CommitId { get; set; }
 
+        [ForeignKey("CommitId")]
+        public virtual Commit Commit { get; set; }
+
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }

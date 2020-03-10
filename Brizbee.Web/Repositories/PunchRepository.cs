@@ -32,7 +32,7 @@ namespace Brizbee.Web.Repositories
             punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
             if (punch.OutAt.HasValue)
             {
-                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 59, 999);
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
             }
 
             db.Punches.Add(punch);
