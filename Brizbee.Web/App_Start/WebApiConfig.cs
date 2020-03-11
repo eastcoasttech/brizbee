@@ -141,6 +141,53 @@ namespace Brizbee
             punchOut.Parameter<string>("SourceBrowser");
             punchOut.Parameter<string>("SourceBrowserVersion");
 
+            // Collection Function - Punches/Download
+            var download = builder.EntityType<Punch>()
+                .Collection
+                .Function("Download")
+                .Returns<string>();
+            download.Parameter<int>("CommitId");
+
+            // Collection Function - Tasks/ForPunches
+            var tasksForPunches = builder.EntityType<Task>()
+                .Collection
+                .Function("ForPunches");
+            tasksForPunches.Parameter<string>("InAt");
+            tasksForPunches.Parameter<string>("OutAt");
+            tasksForPunches.ReturnsCollectionFromEntitySet<Task>("Tasks");
+
+            // Collection Function - Rates/BasePayrollRatesForPunches
+            var basePayrollRates = builder.EntityType<Rate>()
+                .Collection
+                .Function("BasePayrollRatesForPunches");
+            basePayrollRates.Parameter<string>("InAt");
+            basePayrollRates.Parameter<string>("OutAt");
+            basePayrollRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
+
+            // Collection Function - Rates/BaseServiceRatesForPunches
+            var baseServiceRates = builder.EntityType<Rate>()
+                .Collection
+                .Function("BaseServiceRatesForPunches");
+            baseServiceRates.Parameter<string>("InAt");
+            baseServiceRates.Parameter<string>("OutAt");
+            baseServiceRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
+
+            // Collection Function - Rates/AlternatePayrollRatesForPunches
+            var alternatePayrollRates = builder.EntityType<Rate>()
+                .Collection
+                .Function("AlternatePayrollRatesForPunches");
+            alternatePayrollRates.Parameter<string>("InAt");
+            alternatePayrollRates.Parameter<string>("OutAt");
+            alternatePayrollRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
+
+            // Collection Function - Rates/AlternateServiceRatesForPunches
+            var alternateServiceRates = builder.EntityType<Rate>()
+                .Collection
+                .Function("AlternateServiceRatesForPunches");
+            alternateServiceRates.Parameter<string>("InAt");
+            alternateServiceRates.Parameter<string>("OutAt");
+            alternateServiceRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
+
             // Collection Action - Punches/Split
             var split = builder.EntityType<Punch>()
                 .Collection
@@ -164,37 +211,6 @@ namespace Brizbee
                 .Action("PopulateRates");
             populate.Parameter<PopulateRateOptions>("Options");
             populate.Returns<string>();
-
-            // Collection Function - Punches/Download
-            var download = builder.EntityType<Punch>()
-                .Collection
-                .Function("Download")
-                .Returns<string>();
-            download.Parameter<int>("CommitId");
-
-            // Collection Action - Tasks/ForPunches
-            var tasksForPunches = builder.EntityType<Task>()
-                .Collection
-                .Function("ForPunches");
-            tasksForPunches.Parameter<string>("InAt");
-            tasksForPunches.Parameter<string>("OutAt");
-            tasksForPunches.ReturnsCollectionFromEntitySet<Task>("Tasks");
-
-            // Collection Action - Rates/BasePayrollRatesForPunches
-            var basePayrollRates = builder.EntityType<Rate>()
-                .Collection
-                .Function("BasePayrollRatesForPunches");
-            basePayrollRates.Parameter<string>("InAt");
-            basePayrollRates.Parameter<string>("OutAt");
-            basePayrollRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
-
-            // Collection Action - Rates/BaseServiceRatesForPunches
-            var baseServiceRates = builder.EntityType<Rate>()
-                .Collection
-                .Function("BaseServiceRatesForPunches");
-            baseServiceRates.Parameter<string>("InAt");
-            baseServiceRates.Parameter<string>("OutAt");
-            baseServiceRates.ReturnsCollectionFromEntitySet<Rate>("Rates");
 
             // Member Action - User/ChangePassword
             ActionConfiguration changePassword = builder.EntityType<User>()

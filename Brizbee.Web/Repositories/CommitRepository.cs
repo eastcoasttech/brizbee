@@ -29,58 +29,78 @@ namespace Brizbee.Web.Repositories
             {
                 throw new NotAuthorizedException("You are not authorized to create the commit");
             }
-            
-            var inAt = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
-            var outAt = new DateTime(commit.OutAt.Year, commit.OutAt.Month, commit.OutAt.Day, 23, 59, 59, DateTimeKind.Unspecified);
 
-            // Ensure that no two commits overlap
-            var overlap = db.Commits
-                .Where(c => (inAt < c.OutAt) && (c.InAt < outAt))
-                .FirstOrDefault();
-            if (overlap != null)
+            using (var transaction = db.Database.BeginTransaction())
             {
-                throw new NotAuthorizedException(
-                    string.Format(
-                        "The commit overlaps another commit: {0} thru {1}",
-                        overlap.InAt.ToString("yyyy-MM-dd"),
-                        overlap.OutAt.ToString("yyyy-MM-dd"))
-                    );
+                try
+                {
+                    var inAt = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
+                    var outAt = new DateTime(commit.OutAt.Year, commit.OutAt.Month, commit.OutAt.Day, 23, 59, 59, DateTimeKind.Unspecified);
+
+                    // Ensure that no two commits overlap
+                    var overlap = db.Commits
+                        .Where(c => (inAt < c.OutAt) && (c.InAt < outAt))
+                        .FirstOrDefault();
+                    if (overlap != null)
+                    {
+                        throw new NotAuthorizedException(
+                            string.Format(
+                                "The commit overlaps another commit: {0} thru {1}",
+                                overlap.InAt.ToString("yyyy-MM-dd"),
+                                overlap.OutAt.ToString("yyyy-MM-dd"))
+                            );
+                    }
+
+                    // Auto-generated
+                    commit.CreatedAt = DateTime.UtcNow;
+                    commit.Guid = Guid.NewGuid();
+                    commit.OrganizationId = currentUser.OrganizationId;
+                    commit.UserId = currentUser.Id;
+                    commit.InAt = inAt;
+                    commit.OutAt = outAt;
+
+                    db.Commits.Add(commit);
+
+                    db.SaveChanges();
+
+                    // Split the punches at midnight
+                    var service = new PunchService();
+                    int[] userIds = db.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Select(u => u.Id)
+                        .ToArray();
+                    var originalPunches = db.Punches
+                        .Where(p => userIds.Contains(p.UserId))
+                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                        .OrderBy(p => p.UserId)
+                        .ThenBy(p => p.InAt)
+                        .ToList();
+                    var splitPunches = service.SplitAtMidnight(originalPunches, currentUser);
+
+                    // Delete the old punches and save the new ones
+                    db.Punches.RemoveRange(originalPunches);
+                    db.SaveChanges();
+
+                    // Save the commit id with the new punches
+                    foreach (var punch in splitPunches)
+                    {
+                        punch.CommitId = commit.Id;
+                    }
+                    commit.PunchCount = splitPunches.Count();
+
+                    db.Punches.AddRange(splitPunches);
+                    db.SaveChanges();
+
+                    transaction.Commit();
+
+                    return commit;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
-
-            // Auto-generated
-            commit.CreatedAt = DateTime.UtcNow;
-            commit.Guid = Guid.NewGuid();
-            commit.OrganizationId = currentUser.OrganizationId;
-            commit.UserId = currentUser.Id;
-            commit.InAt = inAt;
-            commit.OutAt = outAt;
-
-            db.Commits.Add(commit);
-
-            db.SaveChanges();
-
-            // Split at midnight every night
-            var splitter = new PunchSplitter();
-            var midnight = new DateTime(2018, 1, 1, 0, 0, 0).Hour;
-            int[] userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
-            splitter.SplitAtHour(userIds, inAt, outAt, midnight, currentUser);
-
-            // Commit all the punches within range and save the PunchCount
-            var punches = db.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => (p.InAt >= inAt) && (p.OutAt <= outAt));
-            foreach (var punch in punches)
-            {
-                punch.CommitId = commit.Id;
-            }
-            commit.PunchCount = punches.Count();
-
-            db.SaveChanges();
-
-            return commit;
         }
 
         /// <summary>

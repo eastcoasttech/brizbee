@@ -84,7 +84,7 @@ namespace Brizbee.Web.Controllers
                 .Where(p => p.Task.BaseServiceRateId.HasValue)
                 .Select(p => p.Task.BaseServiceRateId.Value);
 
-            return db.Rates.Where(r => rateIds.Contains(r.Id)); ;
+            return db.Rates.Where(r => rateIds.Contains(r.Id));
         }
 
         // GET: odata/Rates/Default.BasePayrollRatesForPunches
@@ -99,14 +99,60 @@ namespace Brizbee.Web.Controllers
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id)
                 .ToArray();
-            var rateIds = db.Punches
+            var baseRateIds = db.Punches
                 .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
                 .Where(p => p.Task.BasePayrollRateId.HasValue)
                 .Select(p => p.Task.BasePayrollRateId.Value);
 
-            return db.Rates.Where(r => rateIds.Contains(r.Id)); ;
+            return db.Rates.Where(r => baseRateIds.Contains(r.Id));
+        }
+
+        // GET: odata/Rates/Default.AlternateServiceRatesForPunches
+        [HttpGet]
+        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        public IQueryable<Rate> AlternateServiceRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
+        {
+            var inAt = DateTime.Parse(InAt);
+            var outAt = DateTime.Parse(OutAt);
+            var currentUser = CurrentUser();
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+            var baseRateIds = db.Punches
+                .Include("Task")
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => p.Task.BaseServiceRateId.HasValue)
+                .GroupBy(p => p.Task.BaseServiceRateId)
+                .Select(g => g.Key);
+
+            return db.Rates.Where(r => baseRateIds.Contains(r.ParentRateId));
+        }
+
+        // GET: odata/Rates/Default.AlternatePayrollRatesForPunches
+        [HttpGet]
+        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        public IQueryable<Rate> AlternatePayrollRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
+        {
+            var inAt = DateTime.Parse(InAt);
+            var outAt = DateTime.Parse(OutAt);
+            var currentUser = CurrentUser();
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
+            var baseRateIds = db.Punches
+                .Include("Task")
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => p.Task.BasePayrollRateId.HasValue)
+                .GroupBy(p => p.Task.BasePayrollRateId)
+                .Select(g => g.Key);
+
+            return db.Rates.Where(r => baseRateIds.Contains(r.ParentRateId));
         }
 
         /// <summary>

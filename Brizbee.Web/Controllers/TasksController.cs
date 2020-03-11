@@ -91,7 +91,7 @@ namespace Brizbee.Web.Controllers
         // GET: odata/Tasks/Default.ForPunches
         [HttpGet]
         [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
-        public IQueryable<Task> ForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
+        public IQueryable<Task> ForPunches(string InAt, string OutAt)
         {
             var inAt = DateTime.Parse(InAt);
             var outAt = DateTime.Parse(OutAt);
@@ -103,9 +103,10 @@ namespace Brizbee.Web.Controllers
             var taskIds = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
-                .Select(p => p.TaskId);
+                .GroupBy(p => p.TaskId)
+                .Select(g => g.Key);
 
-            return db.Tasks.Where(t => taskIds.Contains(t.Id)); ;
+            return db.Tasks.Where(t => taskIds.Contains(t.Id));
         }
 
         protected override void Dispose(bool disposing)
