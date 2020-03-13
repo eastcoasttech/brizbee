@@ -39,10 +39,10 @@ namespace Brizbee.Web.Services
                 .Select(g => g.Key)
                 .ToArray();
 
-            var service = new PunchService();
+            //var service = new PunchService();
 
             // Split at midnight
-            var splitPunches = service.SplitAtMidnight(originalPunches, currentUser);
+            var splitPunches = SplitAtMidnight(originalPunches, currentUser);
 
             // Record the split
             //var beforeSplit = JsonConvert.SerializeObject(punches, settings);
@@ -76,7 +76,7 @@ namespace Brizbee.Web.Services
                         if (option.CountScope == "day")
                         {
                             //Trace.TraceInformation(string.Format("Splitting at daily count of {0} minutes", minute));
-                            splitPunches = service.SplitAtMinute(splitPunches, currentUser, minutesPerDay: minute);
+                            splitPunches = SplitAtMinute(splitPunches, currentUser, minutesPerDay: minute);
 
                             //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
                             //{
@@ -86,7 +86,7 @@ namespace Brizbee.Web.Services
                         else if (option.CountScope == "total")
                         {
                             //Trace.TraceInformation(string.Format("Splitting at total count of {0} minutes", minute));
-                            splitPunches = service.SplitAtMinute(splitPunches, currentUser, minutesPerSpan: minute);
+                            splitPunches = SplitAtMinute(splitPunches, currentUser, minutesPerSpan: minute);
 
                             //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
                             //{
@@ -99,7 +99,7 @@ namespace Brizbee.Web.Services
 
                         var minutes = option.RangeMinutes.Value;
                         //Trace.TraceInformation(string.Format("Splitting at {0} minutes each day", minutes));
-                        splitPunches = service.SplitAtMinute(splitPunches, currentUser, minuteOfDay: minutes);
+                        splitPunches = SplitAtMinute(splitPunches, currentUser, minuteOfDay: minutes);
 
                         //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
                         //{

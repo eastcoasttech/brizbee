@@ -271,18 +271,18 @@ namespace Brizbee.Web.Controllers
                 .ToArray();
 
             var service = new PunchService();
-            var punches = db.Punches
+            var originalPunches = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
                 .OrderBy(p => p.UserId)
                 .ThenBy(p => p.InAt)
                 .ToList();
-            var split = service.SplitAtMidnight(punches, currentUser);
+            var splitPunches = service.SplitAtMidnight(originalPunches, currentUser);
 
             // Delete the old punches and save the new ones
-            db.Punches.RemoveRange(punches);
+            db.Punches.RemoveRange(originalPunches);
             db.SaveChanges();
-            db.Punches.AddRange(split);
+            db.Punches.AddRange(splitPunches);
             db.SaveChanges();
 
             return Ok();
@@ -294,13 +294,27 @@ namespace Brizbee.Web.Controllers
         {
             var populateOptions = parameters["Options"] as PopulateRateOptions;
             var currentUser = CurrentUser();
-            var inAt = populateOptions.InAt;
-            var outAt = populateOptions.OutAt;
+            var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0);
+            var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0);
+            populateOptions.InAt = inAt;
+            populateOptions.OutAt = outAt;
+            int[] userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id)
+                .ToArray();
             var originalPunches = db.Punches
+                .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                .Where(p => !p.CommitId.HasValue) // Only uncommited punches
                 .ToList();
 
-            new PunchService().Populate(populateOptions, originalPunches, currentUser);
+            var populatedPunches = new PunchService().Populate(populateOptions, originalPunches, currentUser);
+
+            // Delete the old punches and save the new ones
+            db.Punches.RemoveRange(originalPunches);
+            db.SaveChanges();
+            db.Punches.AddRange(populatedPunches);
+            db.SaveChanges();
 
             return Ok();
         }
