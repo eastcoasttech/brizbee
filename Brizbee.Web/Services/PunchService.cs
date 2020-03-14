@@ -31,6 +31,12 @@ namespace Brizbee.Web.Services
 
         public List<Punch> Populate(PopulateRateOptions populateOptions, List<Punch> originalPunches, User currentUser)
         {
+            // Clear id to zero
+            foreach (var punch in originalPunches)
+            {
+                punch.Id = 0;
+            }
+
             var inAt = populateOptions.InAt;
             var outAt = populateOptions.OutAt;
             var options = populateOptions.Options.ToList().OrderBy(o => o.Order);
@@ -38,8 +44,6 @@ namespace Brizbee.Web.Services
                 .GroupBy(p => p.UserId)
                 .Select(g => g.Key)
                 .ToArray();
-
-            //var service = new PunchService();
 
             // Split at midnight
             var splitPunches = SplitAtMidnight(originalPunches, currentUser);
@@ -59,10 +63,10 @@ namespace Brizbee.Web.Services
 
 
             // Print the details after midnight split
-            //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-            //{
-            //    Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-            //}
+            foreach (var punch in splitPunches.OrderBy(p => p.UserId).ThenBy(p => p.InAt))
+            {
+                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
+            }
 
             // Then split at each additional interval
             foreach (var option in options)
@@ -75,47 +79,47 @@ namespace Brizbee.Web.Services
                         
                         if (option.CountScope == "day")
                         {
-                            //Trace.TraceInformation(string.Format("Splitting at daily count of {0} minutes", minute));
+                            Trace.TraceInformation(string.Format("Splitting at daily count of {0} minutes", minute));
                             splitPunches = SplitAtMinute(splitPunches, currentUser, minutesPerDay: minute);
 
-                            //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-                            //{
-                            //    Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-                            //}
+                            foreach (var punch in splitPunches.OrderBy(p => p.InAt))
+                            {
+                                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
+                            }
                         }
                         else if (option.CountScope == "total")
                         {
-                            //Trace.TraceInformation(string.Format("Splitting at total count of {0} minutes", minute));
+                            Trace.TraceInformation(string.Format("Splitting at total count of {0} minutes", minute));
                             splitPunches = SplitAtMinute(splitPunches, currentUser, minutesPerSpan: minute);
 
-                            //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-                            //{
-                            //    Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-                            //}
+                            foreach (var punch in splitPunches.OrderBy(p => p.InAt))
+                            {
+                                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
+                            }
                         }
 
                         break;
                     case "range":
 
                         var minutes = option.RangeMinutes.Value;
-                        //Trace.TraceInformation(string.Format("Splitting at {0} minutes each day", minutes));
+                        Trace.TraceInformation(string.Format("Splitting at {0} minutes each day", minutes));
                         splitPunches = SplitAtMinute(splitPunches, currentUser, minuteOfDay: minutes);
 
-                        //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-                        //{
-                        //    Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-                        //}
+                        foreach (var punch in splitPunches.OrderBy(p => p.InAt))
+                        {
+                            Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
+                        }
 
                         break;
                 }
             }
 
-            //Trace.TraceInformation(string.Format("Populating base rates for all punches: {0}", splitPunches.Count));
+            Trace.TraceInformation(string.Format("Populating base rates for all punches: {0}", splitPunches.Count));
 
+            // Populate the base rate before any of the alternate rates are populated
             foreach (var punch in splitPunches)
             {
                 var task = db.Tasks.Find(punch.TaskId);
-                // Set all the rates to the default for the task
                 punch.PayrollRateId = task.BasePayrollRateId;
                 punch.ServiceRateId = task.BaseServiceRateId;
             }
@@ -132,6 +136,8 @@ namespace Brizbee.Web.Services
                     rate = "payroll";
                     baseRateId = option.BasePayrollRateId.Value;
                     alternateRateId = option.AlternatePayrollRateId.Value;
+
+                    Trace.TraceInformation("Populating payroll rate");
                 }
                 else if (option.AlternateServiceRateId.HasValue)
                 {
@@ -139,6 +145,8 @@ namespace Brizbee.Web.Services
                     rate = "service";
                     baseRateId = option.BaseServiceRateId.Value;
                     alternateRateId = option.AlternateServiceRateId.Value;
+
+                    Trace.TraceInformation("Populating service rate");
                 }
                 else
                 {
@@ -220,14 +228,16 @@ namespace Brizbee.Web.Services
                 }
             }
 
-            //foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-            //{
-            //    var payrollRate = db.Rates.Find(punch.PayrollRateId);
-            //    var serviceRate = db.Rates.Find(punch.ServiceRateId);
-            //    Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)    Payroll: {3}    Service: {4}", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes, payrollRate.Name, serviceRate.Name));
-            //}
+            var ordered = splitPunches.OrderBy(p => p.UserId).ThenBy(p => p.InAt).ToList();
 
-            return splitPunches.OrderBy(p => p.UserId).ThenBy(p => p.InAt).ToList();
+            foreach (var punch in ordered)
+            {
+                var payrollRate = db.Rates.Find(punch.PayrollRateId);
+                var serviceRate = db.Rates.Find(punch.ServiceRateId);
+                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)    Payroll: {3}    Service: {4} - ID {5}", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes, payrollRate.Name, serviceRate.Name, punch.Id));
+            }
+
+            return ordered;
         }
 
         private void PopulateForCountOfMinutesPerDay(List<Punch> punches, int[] userIds, int minutesOfDay, int baseRateId, int alternateRateId, string rate = "payroll")
@@ -408,12 +418,18 @@ namespace Brizbee.Web.Services
             }
         }
 
-        public List<Punch> SplitAtMidnight(List<Punch> punches, User currentUser)
+        public List<Punch> SplitAtMidnight(List<Punch> originalPunches, User currentUser)
         {
+            // Clear id to zero
+            foreach (var punch in originalPunches)
+            {
+                punch.Id = 0;
+            }
+
             var processed = new List<Punch>();
             var splitter = new MidnightSplitter();
 
-            foreach (var punch in punches)
+            foreach (var punch in originalPunches)
             {
                 processed.AddRange(splitter.Split(punch));
             }
@@ -483,6 +499,14 @@ namespace Brizbee.Web.Services
 
                                 var newInAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, 0, 0, 0, 0).AddMinutes(minuteOfDay.Value);
                                 var newOutAt = originalOutAt;
+
+                                // Do not create a punch with a zero length
+                                if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes == 0 ||
+                                    newOutAt.Subtract(newInAt).TotalMinutes == 0)
+                                {
+                                    Trace.TraceInformation(adjustedOutAt.Subtract(adjustedInAt).TotalMinutes.ToString());
+                                    Trace.TraceInformation(newOutAt.Subtract(newInAt).TotalMinutes.ToString());
+                                }
 
                                 var adjustedPunch = new Punch()
                                 {
@@ -608,6 +632,14 @@ namespace Brizbee.Web.Services
                                 var newInAt = punch.OutAt.Value.AddMinutes(-Convert.ToInt32(minutesExceeded));
                                 var newOutAt = originalOutAt;
 
+                                // Do not create a punch with a zero length
+                                if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes == 0 ||
+                                    newOutAt.Subtract(newInAt).TotalMinutes == 0)
+                                {
+                                    Trace.TraceInformation(adjustedOutAt.Subtract(adjustedInAt).TotalMinutes.ToString());
+                                    Trace.TraceInformation(newOutAt.Subtract(newInAt).TotalMinutes.ToString());
+                                }
+
                                 var adjustedPunch = new Punch()
                                 {
                                     InAt = adjustedInAt,
@@ -698,6 +730,8 @@ namespace Brizbee.Web.Services
                     var split = false;
                     foreach (var punch in filtered) // 10:15am - 4:30pm = 375 minutes
                     {
+                        Trace.TraceInformation($"Working on {punch.InAt.ToShortTimeString()} - {punch.OutAt.Value.ToShortTimeString()}");
+
                         if (split)
                         {
                             // If punches have been split, do not further process
@@ -721,77 +755,94 @@ namespace Brizbee.Web.Services
                             var newInAt = punch.OutAt.Value.AddMinutes(-Convert.ToInt32(minutesExceeded));
                             var newOutAt = originalOutAt;
 
-                            var adjustedPunch = new Punch()
-                            {
-                                InAt = adjustedInAt,
-                                OutAt = adjustedOutAt,
-                                Guid = Guid.NewGuid(),
-                                CreatedAt = DateTime.UtcNow,
-                                LatitudeForInAt = punch.LatitudeForInAt,
-                                LatitudeForOutAt = punch.LatitudeForOutAt,
-                                LongitudeForInAt = punch.LongitudeForInAt,
-                                LongitudeForOutAt = punch.LongitudeForOutAt,
-                                InAtSourceBrowser = punch.InAtSourceBrowser,
-                                InAtSourceBrowserVersion = punch.InAtSourceBrowserVersion,
-                                InAtSourceHardware = punch.InAtSourceHardware,
-                                InAtSourceHostname = punch.InAtSourceHostname,
-                                InAtSourceIpAddress = punch.InAtSourceIpAddress,
-                                InAtSourceOperatingSystem = punch.InAtSourceOperatingSystem,
-                                InAtSourceOperatingSystemVersion = punch.InAtSourceOperatingSystemVersion,
-                                InAtSourcePhoneNumber = punch.InAtSourcePhoneNumber,
-                                InAtTimeZone = punch.InAtTimeZone,
-                                SourceForInAt = punch.SourceForInAt,
-                                OutAtSourceBrowser = punch.OutAtSourceBrowser,
-                                OutAtSourceBrowserVersion = punch.OutAtSourceBrowserVersion,
-                                OutAtSourceHardware = punch.OutAtSourceHardware,
-                                OutAtSourceHostname = punch.OutAtSourceHostname,
-                                OutAtSourceIpAddress = punch.OutAtSourceIpAddress,
-                                OutAtSourceOperatingSystem = punch.OutAtSourceOperatingSystem,
-                                OutAtSourceOperatingSystemVersion = punch.OutAtSourceOperatingSystemVersion,
-                                OutAtSourcePhoneNumber = punch.OutAtSourcePhoneNumber,
-                                OutAtTimeZone = punch.OutAtTimeZone,
-                                SourceForOutAt = punch.SourceForOutAt,
-                                TaskId = punch.TaskId,
-                                UserId = punch.UserId
-                            };
+                            // Do not create a punch with a zero length
+                            //if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes == 0 ||
+                            //    newOutAt.Subtract(newInAt).TotalMinutes == 0)
+                            //{
+                            //    Trace.TraceInformation(adjustedOutAt.Subtract(adjustedInAt).TotalMinutes.ToString());
+                            //    Trace.TraceInformation(newOutAt.Subtract(newInAt).TotalMinutes.ToString());
+                            //}
 
-                            var newPunch = new Punch()
+                            if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes != 0)
                             {
-                                InAt = newInAt,
-                                OutAt = newOutAt,
-                                Guid = Guid.NewGuid(),
-                                CreatedAt = DateTime.UtcNow,
-                                LatitudeForInAt = punch.LatitudeForInAt,
-                                LatitudeForOutAt = punch.LatitudeForOutAt,
-                                LongitudeForInAt = punch.LongitudeForInAt,
-                                LongitudeForOutAt = punch.LongitudeForOutAt,
-                                InAtSourceBrowser = punch.InAtSourceBrowser,
-                                InAtSourceBrowserVersion = punch.InAtSourceBrowserVersion,
-                                InAtSourceHardware = punch.InAtSourceHardware,
-                                InAtSourceHostname = punch.InAtSourceHostname,
-                                InAtSourceIpAddress = punch.InAtSourceIpAddress,
-                                InAtSourceOperatingSystem = punch.InAtSourceOperatingSystem,
-                                InAtSourceOperatingSystemVersion = punch.InAtSourceOperatingSystemVersion,
-                                InAtSourcePhoneNumber = punch.InAtSourcePhoneNumber,
-                                InAtTimeZone = punch.InAtTimeZone,
-                                SourceForInAt = punch.SourceForInAt,
-                                OutAtSourceBrowser = punch.OutAtSourceBrowser,
-                                OutAtSourceBrowserVersion = punch.OutAtSourceBrowserVersion,
-                                OutAtSourceHardware = punch.OutAtSourceHardware,
-                                OutAtSourceHostname = punch.OutAtSourceHostname,
-                                OutAtSourceIpAddress = punch.OutAtSourceIpAddress,
-                                OutAtSourceOperatingSystem = punch.OutAtSourceOperatingSystem,
-                                OutAtSourceOperatingSystemVersion = punch.OutAtSourceOperatingSystemVersion,
-                                OutAtSourcePhoneNumber = punch.OutAtSourcePhoneNumber,
-                                OutAtTimeZone = punch.OutAtTimeZone,
-                                SourceForOutAt = punch.SourceForOutAt,
-                                TaskId = punch.TaskId,
-                                UserId = punch.UserId
-                            };
+                                var adjustedPunch = new Punch()
+                                {
+                                    InAt = adjustedInAt,
+                                    OutAt = adjustedOutAt,
+                                    Guid = Guid.NewGuid(),
+                                    CreatedAt = DateTime.UtcNow,
+                                    LatitudeForInAt = punch.LatitudeForInAt,
+                                    LatitudeForOutAt = punch.LatitudeForOutAt,
+                                    LongitudeForInAt = punch.LongitudeForInAt,
+                                    LongitudeForOutAt = punch.LongitudeForOutAt,
+                                    InAtSourceBrowser = punch.InAtSourceBrowser,
+                                    InAtSourceBrowserVersion = punch.InAtSourceBrowserVersion,
+                                    InAtSourceHardware = punch.InAtSourceHardware,
+                                    InAtSourceHostname = punch.InAtSourceHostname,
+                                    InAtSourceIpAddress = punch.InAtSourceIpAddress,
+                                    InAtSourceOperatingSystem = punch.InAtSourceOperatingSystem,
+                                    InAtSourceOperatingSystemVersion = punch.InAtSourceOperatingSystemVersion,
+                                    InAtSourcePhoneNumber = punch.InAtSourcePhoneNumber,
+                                    InAtTimeZone = punch.InAtTimeZone,
+                                    SourceForInAt = punch.SourceForInAt,
+                                    OutAtSourceBrowser = punch.OutAtSourceBrowser,
+                                    OutAtSourceBrowserVersion = punch.OutAtSourceBrowserVersion,
+                                    OutAtSourceHardware = punch.OutAtSourceHardware,
+                                    OutAtSourceHostname = punch.OutAtSourceHostname,
+                                    OutAtSourceIpAddress = punch.OutAtSourceIpAddress,
+                                    OutAtSourceOperatingSystem = punch.OutAtSourceOperatingSystem,
+                                    OutAtSourceOperatingSystemVersion = punch.OutAtSourceOperatingSystemVersion,
+                                    OutAtSourcePhoneNumber = punch.OutAtSourcePhoneNumber,
+                                    OutAtTimeZone = punch.OutAtTimeZone,
+                                    SourceForOutAt = punch.SourceForOutAt,
+                                    TaskId = punch.TaskId,
+                                    UserId = punch.UserId
+                                };
 
-                            // Add the punches and next loop will be caught by check above
-                            processed.Add(adjustedPunch);
-                            processed.Add(newPunch);
+                                // Add the punch and the next loop will be caught by check above
+                                processed.Add(adjustedPunch);
+                            }
+
+                            if (newOutAt.Subtract(newInAt).TotalMinutes != 0)
+                            {
+                                var newPunch = new Punch()
+                                {
+                                    InAt = newInAt,
+                                    OutAt = newOutAt,
+                                    Guid = Guid.NewGuid(),
+                                    CreatedAt = DateTime.UtcNow,
+                                    LatitudeForInAt = punch.LatitudeForInAt,
+                                    LatitudeForOutAt = punch.LatitudeForOutAt,
+                                    LongitudeForInAt = punch.LongitudeForInAt,
+                                    LongitudeForOutAt = punch.LongitudeForOutAt,
+                                    InAtSourceBrowser = punch.InAtSourceBrowser,
+                                    InAtSourceBrowserVersion = punch.InAtSourceBrowserVersion,
+                                    InAtSourceHardware = punch.InAtSourceHardware,
+                                    InAtSourceHostname = punch.InAtSourceHostname,
+                                    InAtSourceIpAddress = punch.InAtSourceIpAddress,
+                                    InAtSourceOperatingSystem = punch.InAtSourceOperatingSystem,
+                                    InAtSourceOperatingSystemVersion = punch.InAtSourceOperatingSystemVersion,
+                                    InAtSourcePhoneNumber = punch.InAtSourcePhoneNumber,
+                                    InAtTimeZone = punch.InAtTimeZone,
+                                    SourceForInAt = punch.SourceForInAt,
+                                    OutAtSourceBrowser = punch.OutAtSourceBrowser,
+                                    OutAtSourceBrowserVersion = punch.OutAtSourceBrowserVersion,
+                                    OutAtSourceHardware = punch.OutAtSourceHardware,
+                                    OutAtSourceHostname = punch.OutAtSourceHostname,
+                                    OutAtSourceIpAddress = punch.OutAtSourceIpAddress,
+                                    OutAtSourceOperatingSystem = punch.OutAtSourceOperatingSystem,
+                                    OutAtSourceOperatingSystemVersion = punch.OutAtSourceOperatingSystemVersion,
+                                    OutAtSourcePhoneNumber = punch.OutAtSourcePhoneNumber,
+                                    OutAtTimeZone = punch.OutAtTimeZone,
+                                    SourceForOutAt = punch.SourceForOutAt,
+                                    TaskId = punch.TaskId,
+                                    UserId = punch.UserId
+                                };
+
+                                // Add the punch and the next loop will be caught by check above
+                                processed.Add(newPunch);
+                            }
+
                             split = true;
                         }
                         else

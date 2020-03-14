@@ -262,26 +262,29 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult SplitAtMidnight(ODataActionParameters parameters)
         {
-            DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
-            DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
+            DateTime parsedInAt = DateTime.Parse(parameters["InAt"] as string);
+            DateTime parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
             User currentUser = CurrentUser();
+            var inAt = new DateTime(parsedInAt.Year, parsedInAt.Month, parsedInAt.Day, 0, 0, 0, 0);
+            var outAt = new DateTime(parsedOutAt.Year, parsedOutAt.Month, parsedOutAt.Day, 23, 59, 0, 0);
             int[] userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id)
                 .ToArray();
-
-            var service = new PunchService();
-            var originalPunches = db.Punches
+            var originalPunchesTracked = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                .OrderBy(p => p.UserId)
-                .ThenBy(p => p.InAt)
+                .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+            var originalPunchesNotTracked = originalPunchesTracked
+                .AsNoTracking() // Will be manipulated in memory
                 .ToList();
-            var splitPunches = service.SplitAtMidnight(originalPunches, currentUser);
+
+            var splitPunches = new PunchService().SplitAtMidnight(originalPunchesNotTracked, currentUser);
 
             // Delete the old punches and save the new ones
-            db.Punches.RemoveRange(originalPunches);
+            db.Punches.RemoveRange(originalPunchesTracked);
             db.SaveChanges();
+
             db.Punches.AddRange(splitPunches);
             db.SaveChanges();
 
@@ -302,17 +305,20 @@ namespace Brizbee.Web.Controllers
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Select(u => u.Id)
                 .ToArray();
-            var originalPunches = db.Punches
+            var originalPunchesTracked = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                .Where(p => !p.CommitId.HasValue) // Only uncommited punches
+                .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+            var originalPunchesNotTracked = originalPunchesTracked
+                .AsNoTracking() // Will be manipulated in memory
                 .ToList();
 
-            var populatedPunches = new PunchService().Populate(populateOptions, originalPunches, currentUser);
+            var populatedPunches = new PunchService().Populate(populateOptions, originalPunchesNotTracked, currentUser);
 
             // Delete the old punches and save the new ones
-            db.Punches.RemoveRange(originalPunches);
+            db.Punches.RemoveRange(originalPunchesTracked);
             db.SaveChanges();
+
             db.Punches.AddRange(populatedPunches);
             db.SaveChanges();
 

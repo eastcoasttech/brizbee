@@ -49,8 +49,6 @@ namespace Brizbee.Web.Filters
 
                 if (queryString["AuthUserId"] != null)
                 {
-                    Trace.TraceInformation("Using query parameter authentication");
-
                     // Query Authentication
                     var authUserId = queryString["AuthUserId"];
                     var authExpiration = queryString["AuthExpiration"];
@@ -73,8 +71,6 @@ namespace Brizbee.Web.Filters
                 }
                 else
                 {
-                    Trace.TraceInformation("Using header authentication");
-
                     // Header Authentication
                     IEnumerable<string> userIdHeaders = actionContext.Request.Headers.GetValues("AUTH_USER_ID");
                     var authUserId = userIdHeaders.FirstOrDefault();
