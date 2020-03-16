@@ -44,6 +44,19 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
+            // Get the public address and hostname for the punch
+            var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
+            var sourceHostname = HttpContext.Current.Request.UserHostName;
+            punch.InAtSourceHostname = sourceHostname;
+            punch.InAtSourceIpAddress = sourceIpAddress;
+            punch.InAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAtSourceHostname = sourceHostname;
+                punch.OutAtSourceIpAddress = sourceIpAddress;
+                punch.OutAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
+            }
+
             punch = repo.Create(punch, CurrentUser());
 
             return Created(punch);
@@ -102,13 +115,12 @@ namespace Brizbee.Web.Controllers
         public IHttpActionResult PunchIn(ODataActionParameters parameters)
         {
             var taskId = (int)parameters["TaskId"];
-            var source = (string)parameters["SourceForInAt"];
             var timezone = (string)parameters["InAtTimeZone"];
             var latitudeForInAt = (string)parameters["LatitudeForInAt"];
             var longitudeForInAt = (string)parameters["LongitudeForInAt"];
 
             var sourceHardware = (string)parameters["SourceHardware"];
-            var sourceHostname = (string)parameters["SourceHostname"];
+            var sourceHostname = HttpContext.Current.Request.UserHostName;
             var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
             var sourceOperatingSystem = (string)parameters["SourceOperatingSystem"];
             var sourceOperatingSystemVersion = (string)parameters["SourceOperatingSystemVersion"];
@@ -120,7 +132,7 @@ namespace Brizbee.Web.Controllers
                 var punch = repo.PunchIn(
                     taskId,
                     CurrentUser(),
-                    source,
+                    "",
                     timezone,
                     latitudeForInAt,
                     longitudeForInAt,
@@ -157,13 +169,12 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult PunchOut(ODataActionParameters parameters)
         {
-            var source = (string)parameters["SourceForOutAt"];
             var timezone = (string)parameters["OutAtTimeZone"];
             var latitudeForOutAt = (string)parameters["LatitudeForOutAt"];
             var longitudeForOutAt = (string)parameters["LongitudeForOutAt"];
 
             var sourceHardware = (string)parameters["SourceHardware"];
-            var sourceHostname = (string)parameters["SourceHostname"];
+            var sourceHostname = HttpContext.Current.Request.UserHostName;
             var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
             var sourceOperatingSystem = (string)parameters["SourceOperatingSystem"];
             var sourceOperatingSystemVersion = (string)parameters["SourceOperatingSystemVersion"];
@@ -174,7 +185,7 @@ namespace Brizbee.Web.Controllers
             {
                 var punch = repo.PunchOut(
                     CurrentUser(),
-                    source,
+                    "",
                     timezone,
                     latitudeForOutAt,
                     longitudeForOutAt,

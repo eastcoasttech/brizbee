@@ -114,12 +114,10 @@ namespace Brizbee
                 .Action("PunchIn")
                 .ReturnsFromEntitySet<Punch>("Punches");
             punchIn.Parameter<int>("TaskId");
-            punchIn.Parameter<string>("SourceForInAt");
             punchIn.Parameter<string>("InAtTimeZone");
             punchIn.Parameter<string>("LatitudeForInAt");
             punchIn.Parameter<string>("LongitudeForInAt");
             punchIn.Parameter<string>("SourceHardware");
-            punchIn.Parameter<string>("SourceHostname");
             punchIn.Parameter<string>("SourceOperatingSystem");
             punchIn.Parameter<string>("SourceOperatingSystemVersion");
             punchIn.Parameter<string>("SourceBrowser");
@@ -130,12 +128,10 @@ namespace Brizbee
                 .Collection
                 .Action("PunchOut")
                 .ReturnsFromEntitySet<Punch>("Punches");
-            punchOut.Parameter<string>("SourceForOutAt");
             punchOut.Parameter<string>("OutAtTimeZone");
             punchOut.Parameter<string>("LatitudeForOutAt");
             punchOut.Parameter<string>("LongitudeForOutAt");
             punchOut.Parameter<string>("SourceHardware");
-            punchOut.Parameter<string>("SourceHostname");
             punchOut.Parameter<string>("SourceOperatingSystem");
             punchOut.Parameter<string>("SourceOperatingSystemVersion");
             punchOut.Parameter<string>("SourceBrowser");

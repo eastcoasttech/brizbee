@@ -86,7 +86,9 @@ namespace Brizbee.Web.Services
                             CustomerId = p.Task.Job.Customer.Id,
                             CustomerNumber = p.Task.Job.Customer.Number,
                             CustomerName = p.Task.Job.Customer.Name
-                        }
+                        },
+                        PayrollRate = p.PayrollRate.Name,
+                        ServiceRate = p.ServiceRate.Name
                     })
                     .ToList();
 
