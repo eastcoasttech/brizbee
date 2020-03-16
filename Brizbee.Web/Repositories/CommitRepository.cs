@@ -6,6 +6,7 @@ using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
@@ -69,16 +70,17 @@ namespace Brizbee.Web.Repositories
                         .Where(u => u.OrganizationId == currentUser.OrganizationId)
                         .Select(u => u.Id)
                         .ToArray();
-                    var originalPunches = db.Punches
+                    var originalPunchesTracked = db.Punches
                         .Where(p => userIds.Contains(p.UserId))
                         .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                        .OrderBy(p => p.UserId)
-                        .ThenBy(p => p.InAt)
+                        .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+                    var originalPunchesNotTracked = originalPunchesTracked
+                        .AsNoTracking() // Will be manipulated in memory
                         .ToList();
-                    var splitPunches = service.SplitAtMidnight(originalPunches, currentUser);
+                    var splitPunches = service.SplitAtMidnight(originalPunchesNotTracked, currentUser);
 
                     // Delete the old punches and save the new ones
-                    db.Punches.RemoveRange(originalPunches);
+                    db.Punches.RemoveRange(originalPunchesTracked);
                     db.SaveChanges();
 
                     // Save the commit id with the new punches
