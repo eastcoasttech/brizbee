@@ -135,25 +135,32 @@ namespace Brizbee.Web.Controllers
                 Request);
         }
 
-        //// GET: api/Reports/TimeEntriesByJob
-        //[Route("api/Reports/TimeEntriesByJob")]
-        //public IHttpActionResult GetTimeEntriesByJob(
-        //    [FromUri] string UserScope,
-        //    [FromUri] int[] UserIds,
-        //    [FromUri] string JobScope,
-        //    [FromUri] int[] JobIds,
-        //    [FromUri] DateTime Min,
-        //    [FromUri] DateTime Max)
-        //{
-        //    var currentUser = CurrentUser();
-        //    var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
-        //    return new FileActionResult(bytes, "application/pdf",
-        //        string.Format(
-        //            "Time Entries by Job and Task {0} thru {1}.pdf",
-        //            Min.ToShortDateString(),
-        //            Max.ToShortDateString()),
-        //        Request);
-        //}
+        // GET: api/Reports/TimeEntriesByJob
+        [Route("api/Reports/TimeEntriesByJob")]
+        public IHttpActionResult GetTimeEntriesByJob(
+            [FromUri] string UserScope,
+            [FromUri] int[] UserIds,
+            [FromUri] string JobScope,
+            [FromUri] int[] JobIds,
+            [FromUri] DateTime Min,
+            [FromUri] DateTime Max)
+        {
+            try
+            {
+                var currentUser = CurrentUser();
+                var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
+                return new FileActionResult(bytes, "application/pdf",
+                    string.Format(
+                        "Time Entries by Job and Task {0} thru {1}.pdf",
+                        Min.ToShortDateString(),
+                        Max.ToShortDateString()),
+                    Request);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());
+            }
+        }
 
         //// GET: api/Reports/TimeEntriesByDay
         //[Route("api/Reports/TimeEntriesByDay")]
