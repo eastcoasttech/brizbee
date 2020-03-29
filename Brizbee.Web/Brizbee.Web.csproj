@@ -313,6 +313,10 @@
     <Compile Include="Migrations\202001202125013_AddingSourceDetailsAndRates.Designer.cs">
       <DependentUpon>202001202125013_AddingSourceDetailsAndRates.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202003271525077_AddingPlanIdToOrganizations.cs" />
+    <Compile Include="Migrations\202003271525077_AddingPlanIdToOrganizations.designer.cs">
+      <DependentUpon>202003271525077_AddingPlanIdToOrganizations.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
@@ -389,6 +393,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202001202125013_AddingSourceDetailsAndRates.resx">
       <DependentUpon>202001202125013_AddingSourceDetailsAndRates.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202003271525077_AddingPlanIdToOrganizations.resx">
+      <DependentUpon>202003271525077_AddingPlanIdToOrganizations.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

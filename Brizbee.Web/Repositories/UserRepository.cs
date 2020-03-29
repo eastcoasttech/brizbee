@@ -238,12 +238,29 @@ namespace Brizbee.Web.Repositories
                     organization.CreatedAt = DateTime.UtcNow;
                     organization.MinutesFormat = "minutes";
 
-#if DEBUG
+                    #if DEBUG
                     organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
                     organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
-#endif
+                    #endif
 
-#if !DEBUG
+                    // Determine the actual Stripe Plan Id based on the PlanId
+                    var stripePlanId = "";
+                    switch (organization.PlanId) {
+                        case 1:
+                            stripePlanId = "";
+                            break;
+                        case 2:
+                            stripePlanId = "";
+                            break;
+                        case 3:
+                            stripePlanId = "";
+                            break;
+                        case 4:
+                            stripePlanId = "";
+                            break;
+                    }
+
+                    #if !DEBUG
                     try
                     {
                         // Create a Stripe customer object
@@ -258,7 +275,7 @@ namespace Brizbee.Web.Repositories
                         // Subscribe the customer to the default plan
                         var items = new List<SubscriptionItemOption> {
                             new SubscriptionItemOption {
-                                PlanId = "plan_EOcuCOKkFCDiFZ", // plan_EOd1WamGWDH0tS
+                                PlanId = stripePlanId,
                                 Quantity = 1,
                             }
                         };
@@ -277,7 +294,7 @@ namespace Brizbee.Web.Repositories
                         Trace.TraceWarning(ex.ToString());
                         throw;
                     }
-#endif
+                    #endif
 
                     // Save the organization and user
                     db.Organizations.Add(organization);

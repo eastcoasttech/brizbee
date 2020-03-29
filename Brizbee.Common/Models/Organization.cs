@@ -22,6 +22,8 @@ namespace Brizbee.Common.Models
         [MaxLength(8)]
         public string Code { get; set; }
 
+        public int PlanId { get; set; } // 1, 2, 3, or 4
+
         [Required]
         public string StripeCustomerId { get; set; }
 
