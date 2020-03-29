@@ -85,7 +85,7 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
-            var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, CurrentUser());
+            var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
                     "Punches by Job and Task {0} thru {1}.pdf",
@@ -106,7 +106,7 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
-            var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, CurrentUser());
+            var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
                     "Punches by Day {0} thru {1}.pdf",
@@ -114,6 +114,66 @@ namespace Brizbee.Web.Controllers
                     Max.ToShortDateString()),
                 Request);
         }
+
+        // GET: api/Reports/TimeEntriesByUser
+        [Route("api/Reports/TimeEntriesByUser")]
+        public IHttpActionResult GetTimeEntriesByUser(
+            [FromUri] string UserScope,
+            [FromUri] int[] UserIds,
+            [FromUri] string JobScope,
+            [FromUri] int[] JobIds,
+            [FromUri] DateTime Min,
+            [FromUri] DateTime Max)
+        {
+            var currentUser = CurrentUser();
+            var bytes = new ReportBuilder().TimeEntriesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
+            return new FileActionResult(bytes, "application/pdf",
+                string.Format(
+                    "Time Entries by User {0} thru {1}.pdf",
+                    Min.ToShortDateString(),
+                    Max.ToShortDateString()),
+                Request);
+        }
+
+        //// GET: api/Reports/TimeEntriesByJob
+        //[Route("api/Reports/TimeEntriesByJob")]
+        //public IHttpActionResult GetTimeEntriesByJob(
+        //    [FromUri] string UserScope,
+        //    [FromUri] int[] UserIds,
+        //    [FromUri] string JobScope,
+        //    [FromUri] int[] JobIds,
+        //    [FromUri] DateTime Min,
+        //    [FromUri] DateTime Max)
+        //{
+        //    var currentUser = CurrentUser();
+        //    var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
+        //    return new FileActionResult(bytes, "application/pdf",
+        //        string.Format(
+        //            "Time Entries by Job and Task {0} thru {1}.pdf",
+        //            Min.ToShortDateString(),
+        //            Max.ToShortDateString()),
+        //        Request);
+        //}
+
+        //// GET: api/Reports/TimeEntriesByDay
+        //[Route("api/Reports/TimeEntriesByDay")]
+        //public IHttpActionResult GetTimeEntriesByDay(
+        //    [FromUri] string UserScope,
+        //    [FromUri] int[] UserIds,
+        //    [FromUri] string JobScope,
+        //    [FromUri] int[] JobIds,
+        //    [FromUri] DateTime Min,
+        //    [FromUri] DateTime Max)
+        //{
+        //    var currentUser = CurrentUser();
+        //    var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
+        //    return new FileActionResult(bytes, "application/pdf",
+        //        string.Format(
+        //            "Time Entries by Day {0} thru {1}.pdf",
+        //            Min.ToShortDateString(),
+        //            Max.ToShortDateString()),
+        //        Request);
+        //}
 
         // GET: api/Reports/TasksByJob
         [Route("api/Reports/TasksByJob")]
