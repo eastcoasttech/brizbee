@@ -1281,13 +1281,13 @@ namespace Brizbee.Web.Services
                         table.AddCell(totalHeaderCell);
 
                         // Time Entries for this Day
-                        var entriesForDay = timeEntries
+                        var timeEntriesForDay = timeEntries
                             .Where(e => e.EnteredAt.Date == date.Date)
                             .ToList();
-                        foreach (var entry in entriesForDay)
+                        foreach (var timeEntry in timeEntriesForDay)
                         {
                             // Task
-                            var taskCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", entry.Task.Number, entry.Task.Name), fontP))
+                            var taskCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", timeEntry.Task.Number, timeEntry.Task.Name), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -1296,7 +1296,7 @@ namespace Brizbee.Web.Services
                             table.AddCell(taskCell);
 
                             // Job
-                            var jobCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", entry.Task.Job.Number, entry.Task.Job.Name), fontP))
+                            var jobCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", timeEntry.Task.Job.Number, timeEntry.Task.Job.Name), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -1305,7 +1305,7 @@ namespace Brizbee.Web.Services
                             table.AddCell(jobCell);
 
                             // Customer
-                            var customerCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", entry.Task.Job.Customer.Number, entry.Task.Job.Customer.Name), fontP))
+                            var customerCell = new PdfPCell(new Phrase(string.Format("{0} - {1}", timeEntry.Task.Job.Customer.Number, timeEntry.Task.Job.Customer.Name), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
                                 Padding = 5,
@@ -1314,7 +1314,7 @@ namespace Brizbee.Web.Services
                             table.AddCell(customerCell);
 
                             // Total
-                            var total = Math.Round((double)entry.Minutes / 60, 2).ToString("0.00");
+                            var total = Math.Round((double)timeEntry.Minutes / 60, 2).ToString("0.00");
                             var totalCell = new PdfPCell(new Phrase(total.ToString(), fontP))
                             {
                                 VerticalAlignment = Element.ALIGN_MIDDLE,
@@ -1327,7 +1327,7 @@ namespace Brizbee.Web.Services
 
                         // Daily Total and Spacer
                         double dailyTotalMinutes = 0;
-                        foreach (var timeEntry in entriesForDay)
+                        foreach (var timeEntry in timeEntriesForDay)
                         {
                             dailyTotalMinutes += timeEntry.Minutes;
                         }
@@ -1634,6 +1634,243 @@ namespace Brizbee.Web.Services
                         };
                         table.AddCell(dailyTotalValueCell);
                     }
+                }
+
+                // Add a message for no time entries
+                if (timeEntries.Count() == 0)
+                {
+                    document.Add(new Phrase(
+                        string.Format("There are no time entries between {0} and {1}",
+                            min.ToShortDateString(),
+                            max.ToShortDateString()),
+                        fontP));
+                }
+
+                document.Add(table);
+
+                // Make sure data has been written
+                writer.Flush();
+
+                // Close the document
+                document.Close();
+            }
+
+            buffer = output.ToArray();
+
+            // Page count must be added later due to nuances in iText
+            AddPageNumbers(buffer);
+
+            return buffer;
+        }
+
+        public byte[] TimeEntriesByDayAsPdf(string userScope, int[] userIds, string jobScope, int[] jobIds, DateTime min, DateTime max, User currentUser)
+        {
+            var buffer = new byte[0];
+            var output = new MemoryStream();
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(currentUser.TimeZone);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+
+            // Create an instance of document which represents the PDF document itself
+            using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
+            {
+                var writer = PdfWriter.GetInstance(document, output);
+                pageWidth = document.PageSize.Width;
+
+                // Add meta information to the document
+                document.AddAuthor(currentUser.Name);
+                document.AddCreator("BRIZBEE");
+                document.AddTitle(string.Format(
+                    "Time Entries by Day {0} thru {1}.pdf",
+                    min.ToShortDateString(),
+                    max.ToShortDateString()));
+
+                // Header
+                writer.PageEvent = new Header(
+                    string.Format("REPORT: TIME ENTRIES BY DAY {0} thru {1}",
+                        min.ToShortDateString(),
+                        max.ToShortDateString()),
+                    nowDateTime);
+
+                // Open the document to enable you to write to the document
+                document.Open();
+
+                // Build table of punches
+                PdfPTable table = new PdfPTable(5);
+                table.WidthPercentage = 100;
+                table.SetWidths(new float[] { 20, 20, 20, 20, 20 });
+
+                // Get all the job ids for this organization
+                // if the job scope is not for specific job ids
+                if (jobScope != "specific")
+                {
+                    var customerIds = db.Customers
+                        .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                        .Select(c => c.Id);
+                    jobIds = db.Jobs
+                        .Where(j => customerIds.Contains(j.CustomerId))
+                        .Select(j => j.Id)
+                        .ToArray();
+                }
+
+                // Get all the time entries for either specific users
+                // or all the users in this organization
+                IQueryable<TimesheetEntry> timeEntriesQueryable = db.TimesheetEntries
+                    .Include("Task")
+                    .Include("Task.Job")
+                    .Where(t => t.EnteredAt >= min && t.EnteredAt <= max)
+                    .Where(t => jobIds.Contains(t.Task.JobId));
+
+                // Filter by user
+                if (userScope == "specific")
+                {
+                    timeEntriesQueryable = timeEntriesQueryable
+                        .Where(t => userIds.Contains(t.UserId));
+                }
+
+                var timeEntries = timeEntriesQueryable
+                    .OrderBy(t => t.EnteredAt)
+                    .ToList();
+
+                // Loop each date and print each punch
+                var dates = timeEntries
+                    .GroupBy(t => t.EnteredAt.Date)
+                    .Select(g => new {
+                        Date = g.Key
+                    })
+                    .ToList();
+                foreach (var date in dates)
+                {
+                    // Day
+                    var dayCell = new PdfPCell(new Paragraph(date.Date.ToString("D"), fontH1));
+                    dayCell.Colspan = 5;
+                    dayCell.VerticalAlignment = Element.ALIGN_MIDDLE;
+                    dayCell.Padding = 5;
+                    dayCell.PaddingBottom = 15;
+                    dayCell.BackgroundColor = BaseColor.BLACK;
+                    table.AddCell(dayCell);
+
+                    // Column Headers
+                    var userHeaderCell = new PdfPCell(new Paragraph("User", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(userHeaderCell);
+
+                    var customerHeaderCell = new PdfPCell(new Paragraph("Customer", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(customerHeaderCell);
+
+                    var jobHeaderCell = new PdfPCell(new Paragraph("Job", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(jobHeaderCell);
+
+                    var taskHeaderCell = new PdfPCell(new Paragraph("Task", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(taskHeaderCell);
+
+                    var totalHeaderCell = new PdfPCell(new Paragraph("Total", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(totalHeaderCell);
+
+                    // Time Entries for this Day
+                    var timeEntriesForDay = timeEntries
+                        .Where(t => t.EnteredAt.Date == date.Date)
+                        .ToList();
+                    foreach (var timeEntry in timeEntriesForDay)
+                    {
+                        // User
+                        var userCell = new PdfPCell(new Paragraph(timeEntry.User.Name, fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(userCell);
+
+                        // Customer
+                        var customerCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", timeEntry.Task.Job.Customer.Number, timeEntry.Task.Job.Customer.Name), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(customerCell);
+
+                        // Job
+                        var jobCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", timeEntry.Task.Job.Number, timeEntry.Task.Job.Name), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(jobCell);
+
+                        // Task
+                        var taskCell = new PdfPCell(new Paragraph(string.Format("{0} - {1}", timeEntry.Task.Number, timeEntry.Task.Name), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(taskCell);
+
+                        // Total
+                        double minutes = timeEntry.Minutes;
+                        var total = Math.Round(minutes / 60, 2).ToString("0.00");
+                        var totalCell = new PdfPCell(new Paragraph(total.ToString(), fontP))
+                        {
+                            VerticalAlignment = Element.ALIGN_MIDDLE,
+                            HorizontalAlignment = Element.ALIGN_RIGHT,
+                            Padding = 5,
+                            UseAscender = true
+                        };
+                        table.AddCell(totalCell);
+                    }
+
+                    // Daily Total
+                    double dailyTotalMinutes = 0;
+                    foreach (var timeEntry in timeEntriesForDay)
+                    {
+                        dailyTotalMinutes += timeEntry.Minutes;
+                    }
+                    var dailyTotal = Math.Round(dailyTotalMinutes / 60, 2).ToString("0.00");
+                    var dailyTotalHeaderCell = new PdfPCell(new Paragraph("Daily Total", fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 5,
+                        Colspan = 4,
+                        UseAscender = true
+                    };
+                    table.AddCell(dailyTotalHeaderCell);
+                    var dailyTotalValueCell = new PdfPCell(new Paragraph(dailyTotal.ToString(), fontH3))
+                    {
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        HorizontalAlignment = Element.ALIGN_RIGHT,
+                        Padding = 5,
+                        UseAscender = true
+                    };
+                    table.AddCell(dailyTotalValueCell);
                 }
 
                 // Add a message for no time entries

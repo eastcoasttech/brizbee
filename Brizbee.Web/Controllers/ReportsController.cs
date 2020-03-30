@@ -162,25 +162,25 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        //// GET: api/Reports/TimeEntriesByDay
-        //[Route("api/Reports/TimeEntriesByDay")]
-        //public IHttpActionResult GetTimeEntriesByDay(
-        //    [FromUri] string UserScope,
-        //    [FromUri] int[] UserIds,
-        //    [FromUri] string JobScope,
-        //    [FromUri] int[] JobIds,
-        //    [FromUri] DateTime Min,
-        //    [FromUri] DateTime Max)
-        //{
-        //    var currentUser = CurrentUser();
-        //    var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
-        //    return new FileActionResult(bytes, "application/pdf",
-        //        string.Format(
-        //            "Time Entries by Day {0} thru {1}.pdf",
-        //            Min.ToShortDateString(),
-        //            Max.ToShortDateString()),
-        //        Request);
-        //}
+        // GET: api/Reports/TimeEntriesByDay
+        [Route("api/Reports/TimeEntriesByDay")]
+        public IHttpActionResult GetTimeEntriesByDay(
+            [FromUri] string UserScope,
+            [FromUri] int[] UserIds,
+            [FromUri] string JobScope,
+            [FromUri] int[] JobIds,
+            [FromUri] DateTime Min,
+            [FromUri] DateTime Max)
+        {
+            var currentUser = CurrentUser();
+            var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
+            return new FileActionResult(bytes, "application/pdf",
+                string.Format(
+                    "Time Entries by Day {0} thru {1}.pdf",
+                    Min.ToShortDateString(),
+                    Max.ToShortDateString()),
+                Request);
+        }
 
         // GET: api/Reports/TasksByJob
         [Route("api/Reports/TasksByJob")]
