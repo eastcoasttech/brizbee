@@ -308,8 +308,8 @@ namespace Brizbee.Web.Controllers
         {
             var populateOptions = parameters["Options"] as PopulateRateOptions;
             var currentUser = CurrentUser();
-            var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0);
-            var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0);
+            var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0, DateTimeKind.Unspecified);
+            var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0, DateTimeKind.Unspecified);
             populateOptions.InAt = inAt;
             populateOptions.OutAt = outAt;
             int[] userIds = db.Users
