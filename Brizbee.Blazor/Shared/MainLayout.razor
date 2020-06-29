@@ -1,0 +1,51 @@
+﻿@inherits LayoutComponentBase
+
+<BlazoredModal />
+
+<nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">
+        <img src="/icon-32x32.png" width="30" height="30" class="d-inline-block align-top" alt="" loading="lazy">
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">
+                    <i class="far fa-id-badge fa-padded"></i>
+                    Status <span class="sr-only">(current)</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="punches">
+                    <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-truck fa-padded"></i>
+                    Jobs and Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-chart-line fa-padded"></i>
+                    Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-users fa-padded"></i>
+                    Users
+                </a>
+            </li>
+        </ul>
+
+        <span class="navbar-text ml-auto">
+            <a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a>
+        </span>
+    </div>
+</nav>
+
+@Body

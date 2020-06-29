@@ -5,6 +5,7 @@ using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -80,7 +81,7 @@ namespace Brizbee.Web.Controllers
             var rateIds = db.Punches
                 .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
                 .Where(p => p.Task.BaseServiceRateId.HasValue)
                 .Select(p => p.Task.BaseServiceRateId.Value);
 
@@ -102,7 +103,7 @@ namespace Brizbee.Web.Controllers
             var baseRateIds = db.Punches
                 .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
                 .Where(p => p.Task.BasePayrollRateId.HasValue)
                 .Select(p => p.Task.BasePayrollRateId.Value);
 
@@ -124,7 +125,7 @@ namespace Brizbee.Web.Controllers
             var baseRateIds = db.Punches
                 .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
                 .Where(p => p.Task.BaseServiceRateId.HasValue)
                 .GroupBy(p => p.Task.BaseServiceRateId)
                 .Select(g => g.Key);
@@ -147,7 +148,7 @@ namespace Brizbee.Web.Controllers
             var baseRateIds = db.Punches
                 .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
                 .Where(p => p.Task.BasePayrollRateId.HasValue)
                 .GroupBy(p => p.Task.BasePayrollRateId)
                 .Select(g => g.Key);

@@ -1,0 +1,86 @@
+﻿@page "/login"
+
+@using Brizbee.Blazor.Serialization 
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4 offset-md-4">
+            <p class="text-center" style="margin-top: 4rem; margin-bottom: 4rem;">
+                <img src="/logo.png" alt="BRIZBEE Logo" style="width: 20rem;" />
+            </p>
+
+            @if (method == "pin")
+            {
+                <div class="card">
+                    <div class="card-header">Login with Your PIN</div>
+                    <div class="card-body">
+                        <EditForm Model="@PinSession" OnValidSubmit="LoginWithPin" autocomplete="off">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="form-group">
+                                <InputText @bind-Value="PinSession.UserPin" class="form-control" placeholder="Organization Code" />
+                            </div>
+                            <div class="form-group">
+                                <InputText @bind-Value="PinSession.OrganizationCode" class="form-control" placeholder="PIN Number" type="password" />
+                            </div>
+                            <button type="submit" class="btn btn-primary">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw d-inline" : "d-none")"></i></button>
+                        </EditForm>
+                    </div>
+                </div>
+                <p class="text-right"><button class="btn btn-link" @onclick="@(e => method = "email")">Login with Email Address Instead</button></p>
+            }
+
+            @if (method == "email")
+            {
+                <div class="card">
+                    <div class="card-header">Login with Email Address</div>
+                    <div class="card-body">
+                        <EditForm Model="@EmailSession" OnValidSubmit="LoginWithEmail" autocomplete="off">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="form-group">
+                                <InputText @bind-Value="EmailSession.EmailAddress" class="form-control" placeholder="Email Address" />
+                            </div>
+                            <div class="form-group">
+                                <InputText @bind-Value="EmailSession.EmailPassword" class="form-control" placeholder="Password" type="password" />
+                            </div>
+                            <button type="submit" class="btn btn-primary">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw d-inline" : "d-none")"></i></button>
+                        </EditForm>
+                    </div>
+                </div>
+                <p class="text-right"><button class="btn btn-link" @onclick="@(e => method = "pin")">Login with PIN Number Instead</button></p>
+            }
+
+            <p class="text-center" style="margin-top: 4rem;">
+                Don't have an account?
+            </p>
+            <p class="text-center">
+                <a href="/register" class="btn btn-block btn-primary">Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i></a>
+            </p>
+            <p class="text-center text-muted" style="line-height: 2rem;">
+                No Credit Card Required. Cancel Anytime.
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool working = false;
+    private string method = "pin";
+    private PinSession PinSession = new PinSession();
+    private EmailSession EmailSession = new EmailSession();
+
+    private void LoginWithPin()
+    {
+        working = true;
+        StateHasChanged();
+    }
+
+    private void LoginWithEmail()
+    {
+        working = true;
+        StateHasChanged();
+    }
+}

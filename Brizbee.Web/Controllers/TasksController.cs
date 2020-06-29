@@ -3,6 +3,7 @@ using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -102,7 +103,7 @@ namespace Brizbee.Web.Controllers
                 .ToArray();
             var taskIds = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
                 .GroupBy(p => p.TaskId)
                 .Select(g => g.Key);
 

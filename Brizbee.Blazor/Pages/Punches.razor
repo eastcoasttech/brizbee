@@ -1,0 +1,77 @@
+﻿@page "/punches"
+@inject IModalService Modal
+
+<div class="container-fluid">
+    <nav class="nav">
+        <a class="nav-link active" href="/punches">Punches</a>
+        <a class="nav-link" href="/times">Times</a>
+        <a class="nav-link" href="/commits">Commits</a>
+        <a class="nav-link" href="/exports">Export History</a>
+        <a class="nav-link" href="/rates">Rates</a>
+    </nav>
+
+    <hr />
+
+    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="btn-group mr-2" role="group" aria-label="First group">
+            <button type="button" class="btn btn-secondary" @onclick="ShowModal">
+                <i class="fas fa-plus fa-padded"></i>
+                New Punch
+            </button>
+        </div>
+        <div class="btn-group mr-2" role="group" aria-label="Second group">
+            <button type="button" class="btn btn-secondary">Split</button>
+            <button type="button" class="btn btn-secondary">Populate Rates</button>
+        </div>
+        <div class="btn-group mr-2" role="group" aria-label="Second group">
+            <button type="button" class="btn btn-secondary">
+                <i class="fas fa-lock fa-padded"></i>
+                Lock
+            </button>
+        </div>
+        <div class="btn-group mr-2" role="group" aria-label="Second group">
+            <button type="button" class="btn btn-secondary">
+                <i class="fas fa-file-csv fa-padded"></i>
+                Download
+            </button>
+        </div>
+        <div class="btn-group" role="group" aria-label="Third group">
+            <button type="button" class="btn btn-secondary">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-sm" style="margin-top: 1rem;">
+        <thead>
+            <tr>
+                <th scope="col">User</th>
+                <th scope="col">In</th>
+                <th scope="col">Out</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Job</th>
+                <th scope="col">Task</th>
+                <th scope="col">Employee Rate</th>
+                <th scope="col">Customer Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Joshua Shane Martin</td>
+                <td>2020-01-01 12:00pm</td>
+                <td>2020-01-01 12:05pm</td>
+                <td>Quadlogic Controls Corporation</td>
+                <td>Consulting</td>
+                <td>Meetings</td>
+                <td>Consulting</td>
+                <td>Consulting</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+    void ShowModal() => Modal.Show<PunchModal>("New Punch");
+
+}

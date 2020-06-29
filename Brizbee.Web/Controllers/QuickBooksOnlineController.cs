@@ -175,6 +175,8 @@ namespace Brizbee.Web.Controllers
                     .Include("Task")
                     .Include("Task.Job")
                     .Include("Task.Job.Customer")
+                    .Include("ServiceRate")
+                    .Include("PayrollRate")
                     .Where(p => p.CommitId == commitId)
                     .Where(p => p.InAt >= parsedInAt && p.OutAt.HasValue && p.OutAt <= parsedOutAt)
                     .ToList();
@@ -558,7 +560,7 @@ namespace Brizbee.Web.Controllers
         {
             // Get all the service item names to query QBO
             var brzServiceItems = punches
-                .GroupBy(p => p.Task.QuickBooksServiceItem)
+                .GroupBy(p => p.ServiceRate.QBOServiceItem)
                 .Select(g => new Serialization.QBO.ServiceItem()
                 {
                     Name = g.Key,
@@ -584,13 +586,13 @@ namespace Brizbee.Web.Controllers
                 var parsedQueryResponse = parsed["QueryResponse"];
                 if (parsedQueryResponse != null)
                 {
-                    var parsedCustomers = parsedQueryResponse["Item"];
-                    if (parsedCustomers != null)
+                    var parsedServiceItems = parsedQueryResponse["Item"];
+                    if (parsedServiceItems != null)
                     {
-                        foreach (var customer in parsedCustomers.Children())
+                        foreach (var serviceItem in parsedServiceItems.Children())
                         {
-                            var name = customer["Name"].ToString();
-                            var id = customer["Id"].ToString();
+                            var name = serviceItem["Name"].ToString();
+                            var id = serviceItem["Id"].ToString();
 
                             // Update id of customer in brizbee list
                             var ix = brzServiceItems.FindIndex(x => x.Name == name);
