@@ -33,7 +33,7 @@ namespace Brizbee.Web.Controllers
                 var bytes = Encoding.UTF8.GetBytes(csv);
                 return new FileActionResult(bytes, "text/plain",
                     string.Format(
-                        "Committed Punches {0} thru {1}.csv",
+                        "Locked Punches {0} thru {1}.csv",
                         commit.InAt.ToShortDateString(),
                         commit.OutAt.ToShortDateString()
                         ),
@@ -47,7 +47,7 @@ namespace Brizbee.Web.Controllers
                 var bytes = Encoding.UTF8.GetBytes(csv);
                 return new FileActionResult(bytes, "text/plain",
                     string.Format(
-                        "Uncommitted Punches {0} thru {1}.csv",
+                        "All Punches {0} thru {1}.csv",
                         InAt.Value.ToShortDateString(),
                         OutAt.Value.ToShortDateString()
                         ),

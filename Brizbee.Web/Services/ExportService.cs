@@ -63,7 +63,7 @@ namespace Brizbee.Web.Services
                         PunchOutAt = p.OutAt,
                         PunchOutAtTimeZone = p.OutAtTimeZone,
                         PunchSourceForOutAt = p.SourceForOutAt,
-                        PunchCreatedAt = p.CreatedAt,
+                        PunchCreatedAtUtc = p.CreatedAt,
                         User = new
                         {
                             UserId = p.User.Id,
@@ -88,7 +88,9 @@ namespace Brizbee.Web.Services
                             CustomerName = p.Task.Job.Customer.Name
                         },
                         PayrollRate = p.PayrollRate.Name,
-                        ServiceRate = p.ServiceRate.Name
+                        ServiceRate = p.ServiceRate.Name,
+                        Locked = p.CommitId.HasValue ? "X" : "",
+                        LockId = p.CommitId.HasValue ? p.CommitId.ToString() : ""
                     })
                     .ToList();
 
