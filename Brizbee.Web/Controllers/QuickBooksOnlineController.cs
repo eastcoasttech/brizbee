@@ -26,7 +26,12 @@ namespace Brizbee.Web.Controllers
         public static string clientid = ConfigurationManager.AppSettings["clientid"];
         public static string clientsecret = ConfigurationManager.AppSettings["clientsecret"];
         public static string environment = ConfigurationManager.AppSettings["appEnvironment"];
-        private string baseUrl = "https://sandbox-quickbooks.api.intuit.com";
+
+        // Sandbox API
+        //private string baseUrl = "https://sandbox-quickbooks.api.intuit.com";
+
+        // Production API
+        private string baseUrl = "https://quickbooks.api.intuit.com";
 
         private SqlContext db = new SqlContext();
 
@@ -138,7 +143,7 @@ namespace Brizbee.Web.Controllers
             // Create a ServiceContext with Auth tokens and realmId
             ServiceContext serviceContext = new ServiceContext(realmId, IntuitServicesType.QBO, oauthValidator);
             serviceContext.IppConfiguration.MinorVersion.Qbo = "23";
-            serviceContext.IppConfiguration.BaseUrl.Qbo = "https://sandbox-quickbooks.api.intuit.com/";
+            serviceContext.IppConfiguration.BaseUrl.Qbo = baseUrl;
 
             // Create a QuickBooks QueryService using ServiceContext
             QueryService<CompanyInfo> querySvc = new QueryService<CompanyInfo>(serviceContext);
@@ -188,7 +193,7 @@ namespace Brizbee.Web.Controllers
                 // ------------------------------------------------------------
                 // Verify that the employees exist in QuickBooks Online
                 // ------------------------------------------------------------
-                var qboEmployees = VerifyEmployeesExist(punches, realmId, client);
+                var qboEmployees = VerifyEmployeesExistWithBatch(punches, realmId, client);
 
                 // ------------------------------------------------------------
                 // Verify that the customers exist in QuickBooks Online
@@ -196,9 +201,14 @@ namespace Brizbee.Web.Controllers
                 var qboCustomers = VerifyCustomersExist(punches, realmId, client);
 
                 // ------------------------------------------------------------
+                // Verify that the payroll items exist in QuickBooks Online
+                // ------------------------------------------------------------
+                //var qboPayrollItems = VerifyPayrollItemsExist(punches, realmId, client);
+
+                // ------------------------------------------------------------
                 // Verify that the service items exist in QuickBooks Online
                 // ------------------------------------------------------------
-                var qboServiceItems = VerifyServiceItemsExist(punches, realmId, client);
+                //var qboServiceItems = VerifyServiceItemsExist(punches, realmId, client);
 
                 // ------------------------------------------------------------
                 // Export the punches to QuickBooks Online
@@ -213,17 +223,18 @@ namespace Brizbee.Web.Controllers
                     foreach (var punch in subset)
                     {
                         var employee = qboEmployees
-                            .Where(x => x.DisplayName == punch.User.QuickBooksEmployee)
+                            .Where(x => $"{x.GivenName} {x.MiddleName} {x.FamilyName}" == $"{punch.User.QBOGivenName} {punch.User.QBOMiddleName} {punch.User.QBOFamilyName}")
                             .FirstOrDefault();
                         var customer = qboCustomers
                             .Where(x => x.DisplayName == punch.Task.Job.QuickBooksCustomerJob)
                             .FirstOrDefault();
+                        // QBO does not currently offer selecting from the EmployeeCompensation API
                         //var payrollItem = qboPayrollItems
-                        //    .Where(i => i.DisplayName == punch.Task.QuickBooksPayrollItem)
+                        //    .Where(x => x.Name == punch.PayrollRate.QBOPayrollItem)
                         //    .FirstOrDefault();
-                        var serviceItem = qboServiceItems
-                            .Where(x => x.Name == punch.Task.QuickBooksServiceItem)
-                            .FirstOrDefault();
+                        //var serviceItem = qboServiceItems
+                        //    .Where(x => x.Name == punch.ServiceRate.QBOServiceItem)
+                        //    .FirstOrDefault();
 
                         batch.Add(new
                         {
@@ -238,18 +249,18 @@ namespace Brizbee.Web.Controllers
                                 },
                                 EmployeeRef = new
                                 {
-                                    name = employee.DisplayName,
+                                    // name is optional and will not be included because QBO API does not show DisplayName in UI
                                     value = employee.Id
                                 },
-                                ItemRef = new
-                                {
-                                    name = serviceItem.Name,
-                                    value = serviceItem.Id
-                                },
+                                //ItemRef = new
+                                //{
+                                //    name = serviceItem.Name,
+                                //    value = serviceItem.Id
+                                //},
                                 //PayrollItemRef = new
                                 //{
-                                //    name = "",
-                                //    value = ""
+                                //    name = payrollItem.Name,
+                                //    value = payrollItem.Id
                                 //},
                                 EndTime = punch.OutAt.Value.ToString("yyyy-MM-ddTHH:mm:ss"), // 2013-07-05T17:00:00-08:00
                                 NameOf = "Employee",
@@ -260,8 +271,8 @@ namespace Brizbee.Web.Controllers
                     }
 
                     // Build request to create time activities in batches of 30
-                    var timeActivityRequestUrl = string.Format("/v3/company/{0}/batch", realmId);
-                    var batchRequest = new RestRequest(timeActivityRequestUrl, Method.POST);
+                    var batchRequestUrl = string.Format("/v3/company/{0}/batch", realmId);
+                    var batchRequest = new RestRequest(batchRequestUrl, Method.POST);
                     batchRequest.AddJsonBody(new
                     {
                         BatchItemRequest = batch.ToArray()
@@ -400,7 +411,87 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        private List<Serialization.QBO.Employee> VerifyEmployeesExist(List<Punch> punches, string realmId, RestClient client)
+        //private List<Serialization.QBO.Employee> VerifyEmployeesExist(List<Punch> punches, string realmId, RestClient client)
+        //{
+        //    // Get all the employee names to query QBO
+        //    var employeeIds = punches
+        //        .GroupBy(p => p.UserId)
+        //        .Select(g => g.Key)
+        //        .ToArray();
+        //    var brzEmployees = db.Users
+        //        .Where(u => employeeIds.Contains(u.Id))
+        //        .Select(u => new Serialization.QBO.Employee()
+        //        {
+        //            DisplayName = u.QuickBooksEmployee,
+        //            Id = "" // Unknown at the moment
+        //        })
+        //        .ToList();
+        //    var qboEmployees = new List<Serialization.QBO.Employee>();
+
+        //    // Build request to query employees
+        //    var criteria = string.Join(",", brzEmployees.Select(x => string.Format("'{0}'", x.DisplayName)).ToArray());
+        //    var query = string.Format("SELECT * FROM Employee WHERE CONCAT(GivenName, MiddleName, FamilyName) IN ({0})", criteria);
+        //    var requestUrl = string.Format("/v3/company/{0}/query", realmId);
+        //    var request = new RestRequest(requestUrl, Method.GET);
+        //    request.AddParameter("query", query, ParameterType.QueryString);
+        //    request.AddHeader("Content-Type", "text/plain");
+
+        //    // Execute the request
+        //    var queryResponse = client.Execute(request);
+        //    if ((queryResponse.ResponseStatus == ResponseStatus.Completed) &&
+        //            (queryResponse.StatusCode == HttpStatusCode.OK))
+        //    {
+        //        JObject parsed = JObject.Parse(queryResponse.Content);
+        //        var parsedQueryResponse = parsed["QueryResponse"];
+        //        if (parsedQueryResponse != null)
+        //        {
+        //            var parsedEmployees = parsedQueryResponse["Employee"];
+        //            if (parsedEmployees != null)
+        //            {
+        //                foreach (var employee in parsedEmployees.Children())
+        //                {
+        //                    var displayName = employee["DisplayName"].ToString();
+        //                    var id = employee["Id"].ToString();
+
+        //                    // Update id of employee in brizbee list
+        //                    var ix = brzEmployees.FindIndex(x => x.DisplayName == displayName);
+        //                    if (ix >= 0)
+        //                    {
+        //                        brzEmployees[ix] = new Serialization.QBO.Employee()
+        //                        {
+        //                            DisplayName = displayName,
+        //                            Id = id
+        //                        };
+        //                    }
+
+        //                    // Add employee to quickbooks online list
+        //                    qboEmployees.Add(new Serialization.QBO.Employee()
+        //                    {
+        //                        DisplayName = displayName,
+        //                        Id = id
+        //                    });
+        //                }
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // Do something with the error
+        //        throw new Exception(string.Format("Could not query QuickBooks Online for employees: {0}", queryResponse.Content));
+        //    }
+
+        //    // Compare the result with the employees from our database
+        //    var missing = brzEmployees.Select(x => x.DisplayName).ToList().Except(qboEmployees.Select(x => x.DisplayName).ToList());
+        //    if (missing.Any())
+        //    {
+        //        var joined = string.Join(", ", missing);
+        //        throw new Exception(string.Format("Missing employees in QuickBooks Online: {0}", joined));
+        //    }
+
+        //    return qboEmployees;
+        //}
+
+        private List<Serialization.QBO.Employee> VerifyEmployeesExistWithBatch(List<Punch> punches, string realmId, RestClient client)
         {
             // Get all the employee names to query QBO
             var employeeIds = punches
@@ -411,66 +502,99 @@ namespace Brizbee.Web.Controllers
                 .Where(u => employeeIds.Contains(u.Id))
                 .Select(u => new Serialization.QBO.Employee()
                 {
-                    DisplayName = u.QuickBooksEmployee,
+                    GivenName = u.QBOGivenName,
+                    MiddleName = u.QBOMiddleName,
+                    FamilyName = u.QBOFamilyName,
                     Id = "" // Unknown at the moment
                 })
                 .ToList();
             var qboEmployees = new List<Serialization.QBO.Employee>();
 
-            // Build request to query employees
-            var criteria = string.Join(",", brzEmployees.Select(x => string.Format("'{0}'", x.DisplayName)).ToArray());
-            var query = string.Format("SELECT * FROM Employee WHERE DisplayName IN ({0})", criteria);
-            var requestUrl = string.Format("/v3/company/{0}/query", realmId);
-            var request = new RestRequest(requestUrl, Method.GET);
-            request.AddParameter("query", query, ParameterType.QueryString);
-            request.AddHeader("Content-Type", "text/plain");
-
-            // Execute the request
-            var queryResponse = client.Execute(request);
-            if ((queryResponse.ResponseStatus == ResponseStatus.Completed) &&
-                    (queryResponse.StatusCode == HttpStatusCode.OK))
+            // Loop the punches in groups of 30 and send the request
+            for (int i = 0; i < punches.Count; i = i + 30)
             {
-                JObject parsed = JObject.Parse(queryResponse.Content);
-                var parsedQueryResponse = parsed["QueryResponse"];
-                if (parsedQueryResponse != null)
+                var subset = punches.OrderBy(p => p.Id).Skip(i).Take(30).ToArray();
+                var batch = new List<object>();
+                foreach (var employee in brzEmployees)
                 {
-                    var parsedEmployees = parsedQueryResponse["Employee"];
-                    if (parsedEmployees != null)
+                    batch.Add(new
                     {
-                        foreach (var employee in parsedEmployees.Children())
+                        bId = Guid.NewGuid().ToString(),
+                        Query = $"SELECT * FROM Employee WHERE GivenName = '{employee.GivenName}' AND MiddleName = '{employee.MiddleName}' AND FamilyName = '{employee.FamilyName}'"
+                    });
+                }
+
+                // Build request to query employees in batches of 30
+                var batchRequestUrl = string.Format("/v3/company/{0}/batch", realmId);
+                var batchRequest = new RestRequest(batchRequestUrl, Method.POST);
+                batchRequest.AddJsonBody(new
+                {
+                    BatchItemRequest = batch.ToArray()
+                });
+
+                // Execute the request
+                var batchResponse = client.Execute(batchRequest);
+                if ((batchResponse.ResponseStatus == ResponseStatus.Completed) &&
+                        (batchResponse.StatusCode == HttpStatusCode.OK))
+                {
+                    // Do something with success
+                    JObject parsed = JObject.Parse(batchResponse.Content);
+                    var parsedBatchItemResponse = parsed["BatchItemResponse"];
+                    if (parsedBatchItemResponse != null)
+                    {
+                        foreach (var child in parsedBatchItemResponse.Children())
                         {
-                            var displayName = employee["DisplayName"].ToString();
-                            var id = employee["Id"].ToString();
-
-                            // Update id of employee in brizbee list
-                            var ix = brzEmployees.FindIndex(x => x.DisplayName == displayName);
-                            if (ix >= 0)
+                            var parsedQueryResponse = child["QueryResponse"];
+                            if (parsedQueryResponse != null)
                             {
-                                brzEmployees[ix] = new Serialization.QBO.Employee()
+                                var parsedEmployees = parsedQueryResponse["Employee"];
+                                if (parsedEmployees != null)
                                 {
-                                    DisplayName = displayName,
-                                    Id = id
-                                };
-                            }
+                                    foreach (var employee in parsedEmployees.Children())
+                                    {
+                                        var givenName = employee["GivenName"].ToString();
+                                        var middleName = employee["MiddleName"].ToString();
+                                        var familyName = employee["FamilyName"].ToString();
+                                        var id = employee["Id"].ToString();
 
-                            // Add employee to quickbooks online list
-                            qboEmployees.Add(new Serialization.QBO.Employee()
-                            {
-                                DisplayName = displayName,
-                                Id = id
-                            });
+                                        // Update id of employee in brizbee list
+                                        var ix = brzEmployees.FindIndex(x => $"{x.GivenName} {x.MiddleName} {x.FamilyName}" == $"{givenName} {middleName} {familyName}");
+                                        if (ix >= 0)
+                                        {
+                                            brzEmployees[ix] = new Serialization.QBO.Employee()
+                                            {
+                                                GivenName = givenName,
+                                                MiddleName = middleName,
+                                                FamilyName = familyName,
+                                                Id = id
+                                            };
+                                        }
+
+                                        // Add employee to quickbooks online list
+                                        qboEmployees.Add(new Serialization.QBO.Employee()
+                                        {
+                                            GivenName = givenName,
+                                            MiddleName = middleName,
+                                            FamilyName = familyName,
+                                            Id = id
+                                        });
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-            else
-            {
-                // Do something with the error
-                throw new Exception(string.Format("Could not query QuickBooks Online for employees: {0}", queryResponse.Content));
+                else
+                {
+                    // Do something with the error
+                    throw new Exception(string.Format("Could not batch query employees in QuickBooks Online: {0}", batchResponse.Content));
+                }
+
+                System.Threading.Thread.Sleep(500);
             }
 
             // Compare the result with the employees from our database
-            var missing = brzEmployees.Select(x => x.DisplayName).ToList().Except(qboEmployees.Select(x => x.DisplayName).ToList());
+            var missing = brzEmployees.Select(x => $"{x.GivenName} {x.MiddleName} {x.FamilyName}").ToList().Except(qboEmployees.Select(x => $"{x.GivenName} {x.MiddleName} {x.FamilyName}").ToList());
             if (missing.Any())
             {
                 var joined = string.Join(", ", missing);
@@ -556,10 +680,86 @@ namespace Brizbee.Web.Controllers
             return qboCustomers;
         }
 
+        private List<Serialization.QBO.PayrollItem> VerifyPayrollItemsExist(List<Punch> punches, string realmId, RestClient client)
+        {
+            // Get all the payroll item names to query QBO
+            var brzItems = punches
+                .GroupBy(p => p.PayrollRate.QBOPayrollItem)
+                .Select(g => new Serialization.QBO.PayrollItem()
+                {
+                    Name = g.Key,
+                    Id = "" // Unknown at the moment
+                })
+                .ToList();
+            var qboItems = new List<Serialization.QBO.PayrollItem>();
+
+            // Build request to query payroll items
+            var criteria = string.Join(",", brzItems.Select(x => string.Format("'{0}'", x.Name)).ToArray());
+            var query = string.Format("SELECT * FROM EmployeeCompensation WHERE Name IN ({0})", criteria);
+            var requestUrl = string.Format("/v3/company/{0}/query", realmId);
+            var request = new RestRequest(requestUrl, Method.GET);
+            request.AddParameter("query", query, ParameterType.QueryString);
+            request.AddHeader("Content-Type", "text/plain");
+
+            // Execute the request
+            var queryResponse = client.Execute(request);
+            if ((queryResponse.ResponseStatus == ResponseStatus.Completed) &&
+                    (queryResponse.StatusCode == HttpStatusCode.OK))
+            {
+                JObject parsed = JObject.Parse(queryResponse.Content);
+                var parsedQueryResponse = parsed["QueryResponse"];
+                if (parsedQueryResponse != null)
+                {
+                    var parsedItems = parsedQueryResponse["Item"];
+                    if (parsedItems != null)
+                    {
+                        foreach (var payrollItems in parsedItems.Children())
+                        {
+                            var name = payrollItems["Name"].ToString();
+                            var id = payrollItems["Id"].ToString();
+
+                            // Update id of item in brizbee list
+                            var ix = brzItems.FindIndex(x => x.Name == name);
+                            if (ix >= 0)
+                            {
+                                brzItems[ix] = new Serialization.QBO.PayrollItem()
+                                {
+                                    Name = name,
+                                    Id = id
+                                };
+                            }
+
+                            // Add item to quickbooks online list
+                            qboItems.Add(new Serialization.QBO.PayrollItem()
+                            {
+                                Name = name,
+                                Id = id
+                            });
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Do something with the error
+                throw new Exception(string.Format("Could not query QuickBooks Online for payroll items: {0}", queryResponse.Content));
+            }
+
+            // Compare the result with the items from our database
+            var missing = brzItems.Select(x => x.Name).ToList().Except(qboItems.Select(x => x.Name).ToList());
+            if (missing.Any())
+            {
+                var joined = string.Join(", ", missing);
+                throw new Exception(string.Format("Missing payroll items in QuickBooks Online: {0}", joined));
+            }
+
+            return qboItems;
+        }
+
         private List<Serialization.QBO.ServiceItem> VerifyServiceItemsExist(List<Punch> punches, string realmId, RestClient client)
         {
             // Get all the service item names to query QBO
-            var brzServiceItems = punches
+            var brzItems = punches
                 .GroupBy(p => p.ServiceRate.QBOServiceItem)
                 .Select(g => new Serialization.QBO.ServiceItem()
                 {
@@ -567,10 +767,10 @@ namespace Brizbee.Web.Controllers
                     Id = "" // Unknown at the moment
                 })
                 .ToList();
-            var qboServiceItems = new List<Serialization.QBO.ServiceItem>();
+            var qboItems = new List<Serialization.QBO.ServiceItem>();
 
             // Build request to query service items
-            var criteria = string.Join(",", brzServiceItems.Select(x => string.Format("'{0}'", x.Name)).ToArray());
+            var criteria = string.Join(",", brzItems.Select(x => string.Format("'{0}'", x.Name)).ToArray());
             var query = string.Format("SELECT * FROM Item WHERE Type = 'Service' AND Name IN ({0})", criteria);
             var requestUrl = string.Format("/v3/company/{0}/query", realmId);
             var request = new RestRequest(requestUrl, Method.GET);
@@ -586,27 +786,27 @@ namespace Brizbee.Web.Controllers
                 var parsedQueryResponse = parsed["QueryResponse"];
                 if (parsedQueryResponse != null)
                 {
-                    var parsedServiceItems = parsedQueryResponse["Item"];
-                    if (parsedServiceItems != null)
+                    var parsedItems = parsedQueryResponse["Item"];
+                    if (parsedItems != null)
                     {
-                        foreach (var serviceItem in parsedServiceItems.Children())
+                        foreach (var serviceItem in parsedItems.Children())
                         {
                             var name = serviceItem["Name"].ToString();
                             var id = serviceItem["Id"].ToString();
 
-                            // Update id of customer in brizbee list
-                            var ix = brzServiceItems.FindIndex(x => x.Name == name);
+                            // Update id of item in brizbee list
+                            var ix = brzItems.FindIndex(x => x.Name == name);
                             if (ix >= 0)
                             {
-                                brzServiceItems[ix] = new Serialization.QBO.ServiceItem()
+                                brzItems[ix] = new Serialization.QBO.ServiceItem()
                                 {
                                     Name = name,
                                     Id = id
                                 };
                             }
 
-                            // Add customer to quickbooks online list
-                            qboServiceItems.Add(new Serialization.QBO.ServiceItem()
+                            // Add item to quickbooks online list
+                            qboItems.Add(new Serialization.QBO.ServiceItem()
                             {
                                 Name = name,
                                 Id = id
@@ -622,14 +822,14 @@ namespace Brizbee.Web.Controllers
             }
 
             // Compare the result with the service items from our database
-            var missing = brzServiceItems.Select(x => x.Name).ToList().Except(qboServiceItems.Select(x => x.Name).ToList());
+            var missing = brzItems.Select(x => x.Name).ToList().Except(qboItems.Select(x => x.Name).ToList());
             if (missing.Any())
             {
                 var joined = string.Join(", ", missing);
                 throw new Exception(string.Format("Missing service items in QuickBooks Online: {0}", joined));
             }
 
-            return qboServiceItems;
+            return qboItems;
         }
     }
 }

@@ -41,7 +41,7 @@
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
-                    <Label Content="Commit ID:" Margin="0" />
+                    <Label Content="Lock ID:" Margin="0" />
                     <Label Content="{Binding CommitId}" Margin="0" FontWeight="Bold" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">

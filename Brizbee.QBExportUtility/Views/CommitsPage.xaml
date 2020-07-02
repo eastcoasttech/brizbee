@@ -37,13 +37,13 @@
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="1*" MinWidth="300"/>
+                <ColumnDefinition Width="1*" MinWidth="350"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
                 <TextBlock TextWrapping="WrapWithOverflow" Padding="0 0 0 10" Margin="0">
-                Please select the commit that you want to export.
+                Please select the locked punches that you want to export:
                 </TextBlock>
 
                 <ComboBox Height="26" IsEnabled="{Binding IsRefreshEnabled}"

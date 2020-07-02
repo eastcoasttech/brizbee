@@ -297,8 +297,10 @@ namespace Brizbee.QBExportUtility.ViewModels
             var span = punch.OutAt.Value.Subtract(punch.InAt);
             var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
             var guid = string.Format("{{{0}}}", punch.Guid.ToString());
-            var payrollItem = punch.Task.QuickBooksPayrollItem;
-            var serviceItem = punch.Task.QuickBooksServiceItem;
+            //var payrollItem = punch.Task.QuickBooksPayrollItem;
+            //var serviceItem = punch.Task.QuickBooksServiceItem;
+            var payrollItem = punch.PayrollRate.QBDPayrollItem;
+            var serviceItem = punch.ServiceRate.QBDServiceItem;
 
             // Create TimeTrackingAddRq aggregate and fill in field values for it
             XmlElement TimeTrackingAddRq = doc.CreateElement("TimeTrackingAddRq");

@@ -122,6 +122,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Exceptions\InvalidLoginException.cs" />
     <Compile Include="Messages\RefreshCommitsMessage.cs" />
     <Compile Include="Messages\SignedInMessage.cs" />
     <Compile Include="ODataResponse.cs" />

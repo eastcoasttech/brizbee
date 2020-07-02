@@ -29,7 +29,7 @@ namespace Brizbee.QBExportUtility.ViewModels
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
             InAt = commit.InAt.ToString("MMM dd, yyyy");
             OutAt = commit.OutAt.ToString("MMM dd, yyyy");
-            CommitId = commit.Guid.ToString().Split('-')[4];
+            CommitId = commit.Id.ToString();
             PunchCount = commit.PunchCount.ToString();
             OnPropertyChanged("InAt");
             OnPropertyChanged("OutAt");

@@ -1,5 +1,6 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Brizbee.QBExportUtility.Exceptions;
 using Hellang.MessageBus;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -92,7 +93,15 @@ namespace Brizbee.QBExportUtility.ViewModels
             {
                 IsEnabled = true;
                 OnPropertyChanged("IsEnabled");
-                throw new Exception(response.Content);
+
+                if (response.Content.Contains("password"))
+                {
+                    throw new InvalidLoginException();
+                }
+                else
+                {
+                    throw new Exception(response.Content);
+                }
             }
         }
 

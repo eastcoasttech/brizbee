@@ -32,7 +32,7 @@ namespace Brizbee.QBExportUtility.ViewModels
 
         public async System.Threading.Tasks.Task RefreshCommits()
         {
-            CommitComboStatus = "Downloading your commits";
+            CommitComboStatus = "Downloading your locked punches";
             IsRefreshEnabled = false;
             IsContinueEnabled = false;
             OnPropertyChanged("CommitComboStatus");
@@ -52,7 +52,7 @@ namespace Brizbee.QBExportUtility.ViewModels
 
                 if (Commits.Count == 0)
                 {
-                    CommitComboStatus = "Uh oh, you do not have any commits";
+                    CommitComboStatus = "Uh oh, you do not have any locked punches";
                     SelectedCommit = null;
                     IsContinueEnabled = false;
                     OnPropertyChanged("CommitComboStatus");

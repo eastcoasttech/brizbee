@@ -25,8 +25,8 @@ namespace Brizbee.Common.Models
         [NotMapped]
         public string Name {
             get {
-                return string.Format("{0} - {1} - {2}",
-                    Guid.ToString().Split('-')[4],
+                return string.Format("Lock ID # {0} - {1} - {2}",
+                    Id.ToString(),
                     InAt.ToString("d"),
                     OutAt.ToString("d"));
             }

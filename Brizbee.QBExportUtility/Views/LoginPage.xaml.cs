@@ -1,4 +1,5 @@
-﻿using Brizbee.QBExportUtility.ViewModels;
+﻿using Brizbee.QBExportUtility.Exceptions;
+using Brizbee.QBExportUtility.ViewModels;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,10 @@ namespace Brizbee.QBExportUtility.Views
             {
                 await (DataContext as LoginPageViewModel).Login();
                 NavigationService.Navigate(new Uri("Views/CommitsPage.xaml", UriKind.Relative));
+            }
+            catch (InvalidLoginException)
+            {
+                MessageBox.Show("Your Email address and password do not match an account. Please verify that your password is correct.", "Could Not Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {

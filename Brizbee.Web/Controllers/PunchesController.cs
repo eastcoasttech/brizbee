@@ -103,6 +103,8 @@ namespace Brizbee.Web.Controllers
             var punches = db.Punches
                 .Include(p => p.User)
                 .Include(p => p.Task.Job.Customer)
+                .Include(p => p.PayrollRate)
+                .Include(p => p.ServiceRate)
                 .Where(p => p.CommitId == CommitId)
                 .OrderBy(p => p.InAt)
                 .ToList();
