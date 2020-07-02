@@ -129,7 +129,7 @@ namespace Brizbee.Web.Controllers
             var bytes = new ReportBuilder().TimeEntriesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
-                    "Time Entries by User {0} thru {1}.pdf",
+                    "Time Cards by User {0} thru {1}.pdf",
                     Min.ToShortDateString(),
                     Max.ToShortDateString()),
                 Request);
@@ -151,7 +151,7 @@ namespace Brizbee.Web.Controllers
                 var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
                 return new FileActionResult(bytes, "application/pdf",
                     string.Format(
-                        "Time Entries by Job and Task {0} thru {1}.pdf",
+                        "Time Cards by Job and Task {0} thru {1}.pdf",
                         Min.ToShortDateString(),
                         Max.ToShortDateString()),
                     Request);
@@ -176,7 +176,7 @@ namespace Brizbee.Web.Controllers
             var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
-                    "Time Entries by Day {0} thru {1}.pdf",
+                    "Time Cards by Day {0} thru {1}.pdf",
                     Min.ToShortDateString(),
                     Max.ToShortDateString()),
                 Request);
