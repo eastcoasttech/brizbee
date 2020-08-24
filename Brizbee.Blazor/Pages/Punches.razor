@@ -1,5 +1,11 @@
 ﻿@page "/punches"
-@inject IModalService Modal
+
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Popups
+@using NodaTime
+@using NodaTime.TimeZones
+@using Brizbee.Common.Models
+@using Brizbee.Common.Serialization
 
 <div class="container-fluid">
     <nav class="nav">
@@ -14,7 +20,7 @@
 
     <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
         <div class="btn-group mr-2" role="group" aria-label="First group">
-            <button type="button" class="btn btn-secondary" @onclick="ShowModal">
+            <button type="button" class="btn btn-secondary" @onclick="OnClicked">
                 <i class="fas fa-plus fa-padded"></i>
                 New Punch
             </button>
@@ -68,10 +74,332 @@
             </tr>
         </tbody>
     </table>
+
+    <SfDialog @bind-Visible="@IsVisible" Width="30%" Target="app" ShowCloseIcon="true" IsModal="true">
+        <DialogEvents OnOverlayClick="OnOverlayclick">
+        </DialogEvents>
+        <DialogTemplates>
+            <Header>New Punch</Header>
+            <Content>
+                <EditForm Model="@punch" OnValidSubmit="SavePunch">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label>User</label>
+                        <InputSelect class="form-control"
+                                     ValueChanged="@( (string x) => SelectedUserValueChangeHandler(x) )"
+                                     ValueExpression="@( () => selectedUserName )"
+                                     Value="@selectedUserName">
+                            @foreach (var user in users)
+                            {
+                                <option value="@user.Name">@user.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <InputSelect class="form-control"
+                                     ValueChanged="@( (string c) => SelectedCustomerValueChangeHandler(c) )"
+                                     ValueExpression="@( () => selectedCustomerName )"
+                                     Value="@selectedCustomerName">
+                            @foreach (var customer in customers)
+                            {
+                                <option value="@customer.Name">@customer.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="form-group">
+                        <label>Job</label>
+                        @*Should disable during user, customer, job, task load or save or when punch has been locked*@
+                        @*Should change list of jobs when customer is changed*@
+                        <InputSelect class="form-control"
+                                     ValueChanged="@( (string c) => SelectedJobValueChangeHandler(c) )"
+                                     ValueExpression="@( () => selectedJobName )"
+                                     Value="@selectedJobName">
+                            @foreach (var job in jobs)
+                            {
+                                <option value="@job.Name">@job.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="form-group">
+                        <label>Task</label>
+                        @*Should disable during user, customer, job, task load or save or when punch has been locked*@
+                        @*Should change list of jobs when customer is changed*@
+                        <InputSelect class="form-control"
+                                     ValueChanged="@( (string c) => SelectedTaskValueChangeHandler(c) )"
+                                     ValueExpression="@( () => selectedTaskName )"
+                                     Value="@selectedTaskName">
+                            @foreach (var task in tasks)
+                            {
+                                <option value="@task.Name">@task.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <hr />
+                    <label>Punch In</label>
+                    <div class="row">
+                        <div class="col-md-5 col-sm-12 col-xs-12">
+                            <div class="form-group">
+                                <InputDate @bind-Value="InAtDate" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-12 col-xs-12">
+                            <div class="form-group">
+                                <InputSelect @bind-Value="InAtHour" class="form-control">
+                                    @for (int m = 1; m <= 12; m++)
+                                    {
+                                        <option value="@m">@m</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-sm-12 col-xs-12">
+                            <div class="form-group">
+                                <InputSelect @bind-Value="InAtMinute" class="form-control">
+                                    @foreach (var minute in minutes)
+                                    {
+                                        <option value="@minute">@minute</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-12 col-xs-12">
+                            <div class="form-group">
+                                <InputSelect @bind-Value="InAtMeridian" class="form-control">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </InputSelect>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Zone</label>
+                        <InputSelect @bind-Value="selectedInAtTimeZone" class="form-control">
+                            @foreach (var timeZone in zones)
+                            {
+                                <option value="@timeZone.Id">@timeZone.Id</option>
+                            }
+                        </InputSelect>
+                        @*<select class="form-control" ng-model="punch.InAtTimeZone" ng-options="timezone.Id as timezone.Id for timezone in timezones" ng-disabled="working.save || punch.CommitId || loading.customers || loading.jobs || loadings.tasks || loading.users"></select>*@
+                    </div>
+                    @*<p class="text-muted" ng-show="punch.SourceForInAt != null"><small><i>Source is {{punch.SourceForInAt}}</i></small></p>*@
+                    <hr />
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" ng-model="punch.has_out_at" ng-disabled="working.save || punch.CommitId || loading.customers || loading.jobs || loadings.tasks || loading.users"> Has punch out?
+                        </label>
+                    </div>
+                    <label>Punch Out</label>
+                    <div class="row">
+                        <div class="col-md-5 col-sm-12 col-xs-12">
+                            <p class="input-group">
+                                <input type="text" class="form-control" uib-datepicker-popup ng-model="punch.OutAt" is-open="datepicker.OutAt.opened" datepicker-options="datepicker.options" close-text="Close" ng-disabled="working.save || !punch.has_out_at || punch.CommitId || loading.customers || loading.jobs || loadings.tasks || loading.users" />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="showOutAtDatepicker()" ng-disabled="working.save || !punch.has_out_at || punch.CommitId || loading.customers || loading.jobs || loadings.tasks || loading.users"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-3 col-sm-12 col-xs-12">
+                            <div class="form-group">
+                                <div uib-timepicker ng-model="punch.OutAt" show-meridian="true" show-spinners="false" show-seconds="false" ng-disabled="working.save || !punch.has_out_at || punch.CommitId || loading.customers || loading.jobs || loadings.tasks || loading.users"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Zone</label>
+                        <InputSelect @bind-Value="selectedOutAtTimeZone" class="form-control">
+                            @foreach (var timeZone in zones)
+                            {
+                                <option value="@timeZone.Id">@timeZone.Id</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    @*<p class="text-muted" ng-show="punch.SourceForOutAt != null"><small><i>Source is {{punch.SourceForOutAt}}</i></small></p>*@
+
+                    @if (punch.CommitId != null)
+                    {
+                        <p class="text-danger">
+                            This punch is not editable because it's included in a commit. You may undo the commit, but first ensure that the commit has not been exported to payroll software.
+                        </p>
+                    }
+                </EditForm>
+            </Content>
+        </DialogTemplates>
+        <DialogAnimationSettings Effect="@Effects" Duration=400></DialogAnimationSettings>
+        <DialogButtons>
+            <DialogButton OnClick="@OkClick">
+                <DialogButtonModel CssClass="btn btn-primary" Content="OK" IsPrimary="true"></DialogButtonModel>
+            </DialogButton>
+            <DialogButton OnClick="@OkClick">
+                <DialogButtonModel CssClass="btn btn-secondary" Content="Cancel"></DialogButtonModel>
+            </DialogButton>
+        </DialogButtons>
+    </SfDialog>
 </div>
 
 @code {
 
-    void ShowModal() => Modal.Show<PunchModal>("New Punch");
+    //void ShowModal() => Modal.Show<PunchModal>("New Punch");
 
+    private bool IsVisible { get; set; } = false;
+
+    private void OnClicked()
+    {
+        this.IsVisible = true;
+    }
+
+    private void OkClick()
+    {
+        this.IsVisible = false;
+    }
+
+    private void OnOverlayclick(object arg)
+    {
+        this.IsVisible = false;
+    }
+
+    //bool visible = false;
+    //void focussed(FocusEventArgs e)
+    //{
+    //    visible = true;
+    //}
+
+    //void selected(LocalDate localDate)
+    //{
+    //    visible = false;
+    //    StateHasChanged();
+    //}
+
+    public DialogEffect Effects = DialogEffect.SlideTop;
+
+    private List<Customer> customers = new List<Customer>()
+{
+        new Customer() { Id = 1, Name = "QLC" },
+        new Customer() { Id = 2, Name = "TIF" },
+        new Customer() { Id = 3, Name = "LG" }
+    };
+
+    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>()
+{
+        new Brizbee.Common.Models.Task() { Id = 1, Name = "Mop Floors" },
+        new Brizbee.Common.Models.Task() { Id = 2, Name = "Wash Windows" },
+        new Brizbee.Common.Models.Task() { Id = 3, Name = "Vacuum" }
+    };
+
+    private List<Job> jobs = new List<Job>()
+{
+        new Job() { Id = 1, Name = "Appointment 02/11" },
+        new Job() { Id = 2, Name = "Appointment 2/17" }
+    };
+
+    private List<User> users = new List<User>()
+{
+        new User() { Id = 1, Name = "Joshua" },
+        new User() { Id = 2, Name = "Michael" },
+        new User() { Id = 3, Name = "John" }
+    };
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    private List<IanaTimeZone> zones = new List<IanaTimeZone>();
+    private User selectedUser = new User();
+    private Customer selectedCustomer = new Customer();
+
+    private string selectedCustomerName = "QLC";
+    private string selectedUserName = "Joshua";
+    private string selectedJobName = "Appointment 02/11";
+    private string selectedTaskName = "Mop Floors";
+
+    private Job selectedJob = new Job();
+    private Common.Models.Task selectedTask = new Common.Models.Task();
+    private string selectedInAtTimeZone;
+    private string selectedOutAtTimeZone;
+    private Punch punch = new Punch();
+    private bool formInvalid = true;
+    private EditContext editContext;
+    private DateTime InAtDate = DateTime.Today;
+    private string InAtHour = "5";
+    private string InAtMinute = "00";
+    private string InAtMeridian = "PM";
+    private List<string> minutes = new List<string>();
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(punch);
+        editContext.OnFieldChanged += HandleFieldChanged;
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var tzdb = DateTimeZoneProviders.Tzdb;
+        var countryCode = "US";
+
+        var list =
+            from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+            where string.IsNullOrEmpty(countryCode) ||
+                  location.CountryCode.Equals(countryCode,
+                    StringComparison.OrdinalIgnoreCase)
+            let zoneId = location.ZoneId
+            let tz = tzdb[zoneId]
+            let offset = tz.GetZoneInterval(now).StandardOffset
+            orderby offset, zoneId
+            select new
+            {
+                Id = zoneId,
+                CountryCode = location.CountryCode
+            };
+
+        foreach (var z in list)
+        {
+            zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+        }
+        selectedInAtTimeZone = "America/New_York";
+        selectedOutAtTimeZone = "America/New_York";
+
+        // Generate the list of minutes
+        for (int m = 0; m <= 59; m++)
+        {
+            minutes.Add(m.ToString().PadLeft(2, '0'));
+        }
+    }
+
+    private void HandleFieldChanged(object sender, FieldChangedEventArgs e)
+    {
+        formInvalid = !editContext.Validate();
+        StateHasChanged();
+    }
+
+    private void SelectedCustomerValueChangeHandler(string customer)
+    {
+        selectedCustomerName = customer;
+        Console.WriteLine(customer);
+    }
+
+    private void SelectedJobValueChangeHandler(string job)
+    {
+        selectedJobName = job;
+        Console.WriteLine(job);
+    }
+
+    private void SelectedTaskValueChangeHandler(string task)
+    {
+        selectedTaskName = task;
+        Console.WriteLine(task);
+    }
+
+    private void SelectedUserValueChangeHandler(string user)
+    {
+        selectedUserName = user;
+        Console.WriteLine(user);
+    }
+
+    public void Dispose()
+    {
+        editContext.OnFieldChanged -= HandleFieldChanged;
+    }
+
+    private async System.Threading.Tasks.Task SavePunch()
+    {
+
+    }
 }

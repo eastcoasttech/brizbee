@@ -152,6 +152,16 @@ namespace Brizbee
             tasksForPunches.Parameter<string>("OutAt");
             tasksForPunches.ReturnsCollectionFromEntitySet<Task>("Tasks");
 
+            // Collection Action - TimesheetEntries/Add
+            var add = builder.EntityType<TimesheetEntry>()
+                .Collection
+                .Action("Add")
+                .ReturnsFromEntitySet<TimesheetEntry>("TimesheetEntries");
+            add.Parameter<int>("TaskId");
+            add.Parameter<int>("Minutes");
+            add.Parameter<string>("EnteredAt");
+            add.Parameter<string>("Notes");
+
             // Collection Function - Rates/BasePayrollRatesForPunches
             var basePayrollRates = builder.EntityType<Rate>()
                 .Collection
