@@ -94,7 +94,7 @@ namespace Brizbee.Web.Services
                     .ToList();
 
                 using (var writer = new StringWriter())
-                using (var csv = new CsvWriter(writer))
+                using (var csv = new CsvWriter(writer, System.Globalization.CultureInfo.CurrentCulture))
                 {
                     csv.Configuration.Delimiter = delimiter;
                     csv.WriteRecords(list);

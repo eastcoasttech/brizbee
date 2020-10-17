@@ -2,13 +2,14 @@
 using Brizbee.Common.Models;
 using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
-using System.Web;
 
 namespace Brizbee.Web.Repositories
 {
@@ -213,7 +214,7 @@ namespace Brizbee.Web.Repositories
             return user;
         }
 
-        public User Register(User user, Organization organization)
+        public async System.Threading.Tasks.Task<User> Register(User user, Organization organization)
         {
             using (var transaction = db.Database.BeginTransaction())
             {
@@ -260,10 +261,9 @@ namespace Brizbee.Web.Repositories
                             break;
                     }
 
-                    #if !DEBUG
                     try
                     {
-                        // Create a Stripe customer object
+                        // Create a Stripe customer object and save the customer id
                         var customerOptions = new CustomerCreateOptions
                         {
                             Email = user.EmailAddress
@@ -272,21 +272,21 @@ namespace Brizbee.Web.Repositories
                         Stripe.Customer customer = customers.Create(customerOptions);
                         organization.StripeCustomerId = customer.Id;
 
-                        // Subscribe the customer to the default plan
-                        var items = new List<SubscriptionItemOption> {
-                            new SubscriptionItemOption {
-                                PlanId = stripePlanId,
-                                Quantity = 1,
-                            }
-                        };
+                        // Subscribe the customer to the price and save the subscription id
                         var subscriptionOptions = new SubscriptionCreateOptions
                         {
-                            Items = items,
-                            TrialPeriodDays = 30,
-                            CustomerId = customer.Id
+                            Customer = customer.Id, // ex. cus_IDjvN9UsoFp2mk
+                            Items = new List<SubscriptionItemOptions>
+                            {
+                                new SubscriptionItemOptions
+                                {
+                                    Price = stripePlanId, // ex. 
+                                }
+                            }
                         };
                         var subscriptions = new SubscriptionService();
                         Subscription subscription = subscriptions.Create(subscriptionOptions);
+
                         organization.StripeSubscriptionId = subscription.Id;
                     }
                     catch (Exception ex)
@@ -294,7 +294,14 @@ namespace Brizbee.Web.Repositories
                         Trace.TraceWarning(ex.ToString());
                         throw;
                     }
-                    #endif
+
+                    // Send Welcome Email
+                    var apiKey = ConfigurationManager.AppSettings["SendGridApiKey"].ToString();
+                    var client = new SendGridClient(apiKey);
+                    var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
+                    var to = new EmailAddress(user.EmailAddress);
+                    var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", new { });
+                    var response = await client.SendEmailAsync(msg);
 
                     // Save the organization and user
                     db.Organizations.Add(organization);
