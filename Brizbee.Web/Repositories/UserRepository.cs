@@ -5,6 +5,7 @@ using Microsoft.AspNet.OData;
 using Stripe;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Web;
@@ -243,19 +244,19 @@ namespace Brizbee.Web.Repositories
                     #endif
 
                     // Determine the actual Stripe Plan Id based on the PlanId
-                    var stripePlanId = "";
+                    var stripePlanId = ConfigurationManager.AppSettings["StripePlanId1"].ToString(); // Default plan is the contractor plan
                     switch (organization.PlanId) {
                         case 1:
-                            stripePlanId = "";
+                            stripePlanId = ConfigurationManager.AppSettings["StripePlanId1"].ToString();
                             break;
                         case 2:
-                            stripePlanId = "";
+                            stripePlanId = ConfigurationManager.AppSettings["StripePlanId2"].ToString();
                             break;
                         case 3:
-                            stripePlanId = "";
+                            stripePlanId = ConfigurationManager.AppSettings["StripePlanId3"].ToString();
                             break;
                         case 4:
-                            stripePlanId = "";
+                            stripePlanId = ConfigurationManager.AppSettings["StripePlanId4"].ToString();
                             break;
                     }
 

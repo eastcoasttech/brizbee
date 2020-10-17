@@ -354,8 +354,6 @@
     <Compile Include="Serialization\QBO\ServiceItem.cs" />
     <Compile Include="Services\ExportService.cs" />
     <Compile Include="Services\MidnightSplitter.cs" />
-    <Compile Include="Services\PunchSplitter.cs" />
-    <Compile Include="Services\HourSplitter.cs" />
     <Compile Include="Services\PunchService.cs" />
     <Compile Include="Services\ReportBuilder.cs" />
     <Compile Include="SqlContext.cs" />
