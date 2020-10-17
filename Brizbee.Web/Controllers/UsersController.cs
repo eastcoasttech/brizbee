@@ -141,7 +141,7 @@ namespace Brizbee.Web.Controllers
             var organization = parameters["Organization"] as Organization;
             var user = parameters["User"] as User;
 
-            var registered = repo.Register(user, organization);
+            var registered = repo.Register(user, organization).Result;
 
             return Created(registered);
         }
