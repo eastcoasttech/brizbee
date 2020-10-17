@@ -1,22 +1,17 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Common.Models;
-using System;
-using System.Collections.Generic;
+﻿using Brizbee.Common.Models;
 using System.Data.Entity;
-using System.Linq;
-using System.Text;
 
 namespace Brizbee.Web.Tests
 {
-    public class TestSqlContext : ISqlContext
+    public class SqlContext : DbContext
     {
-        public TestSqlContext()
+        static SqlContext()
         {
-            this.Customers = new TestCustomerDbSet();
-            this.Jobs = new TestJobDbSet();
-            this.Punches = new TestPunchDbSet();
-            this.Rates = new TestRateDbSet();
-            this.Tasks = new TestTaskDbSet();
+        }
+
+        public SqlContext() : base("name=SqlContext")
+        {
+            // Here is where to specify connection configuration
         }
 
         public DbSet<Commit> Commits { get; set; }
@@ -32,12 +27,20 @@ namespace Brizbee.Web.Tests
         public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
         public DbSet<User> Users { get; set; }
 
-        public int SaveChanges()
+        protected override void OnModelCreating(DbModelBuilder mb)
         {
-            return 0;
+            // Password is not a column, so should be ignored
+            mb.Entity<User>().Ignore(u => u.Password);
+
+            // Organization codes should be universally unique
+            mb.Entity<Organization>()
+                .HasIndex(o => o.Code)
+                .IsUnique();
         }
 
-        public void MarkAsModified(object item) { }
-        public void Dispose() { }
+        public void MarkAsModified(object obj)
+        {
+            Entry(obj).State = EntityState.Modified;
+        }
     }
 }

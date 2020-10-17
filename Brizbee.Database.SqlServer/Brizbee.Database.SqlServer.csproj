@@ -68,7 +68,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="Migrations\0001 Initial Create Tables.sql" />
+    <EmbeddedResource Include="Migrations\0001 Initial Create Tables.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

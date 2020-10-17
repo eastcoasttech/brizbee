@@ -1,5 +1,4 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Common.Models;
+﻿using Brizbee.Common.Models;
 using Intuit.Ipp.Core;
 using Intuit.Ipp.Data;
 using Intuit.Ipp.DataService;

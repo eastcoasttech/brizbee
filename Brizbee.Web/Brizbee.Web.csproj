@@ -358,6 +358,7 @@
     <Compile Include="Services\HourSplitter.cs" />
     <Compile Include="Services\PunchService.cs" />
     <Compile Include="Services\ReportBuilder.cs" />
+    <Compile Include="SqlContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,5 +1,4 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Web.Repositories;
+﻿using Brizbee.Web.Repositories;
 using System;
 using System.Linq;
 using System.Net;

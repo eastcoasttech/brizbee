@@ -1,26 +1,294 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Linq;
 using Brizbee.Common.Models;
 using Brizbee.Web.Serialization;
 using Brizbee.Web.Services;
+using Dapper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Brizbee.Web.Tests.Services
 {
     [TestClass]
-    public class TestPunchService
+    public class PunchServiceTest
     {
+        private readonly SqlContext db = new SqlContext();
+
+        [TestInitialize]
+        public void PrepareForTest()
+        {
+            using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
+            {
+                connection.Open();
+
+                var organizations = new List<Organization>()
+                {
+                    new Organization()
+                    {
+                        Id = 1,
+                        Name = "Western Widgets Corporation",
+                        Code = "1234",
+                        CreatedAt = DateTime.UtcNow,
+                        MinutesFormat = "minutes",
+                        StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString()),
+                        StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString())
+                    }
+                };
+                var users = new List<User>()
+                {
+                    new User()
+                    {
+                        Id = 1,
+                        Name = "Christopher Hitchens",
+                        CreatedAt = DateTime.UtcNow,
+                        IsDeleted = false,
+                        OrganizationId = 1,
+                        EmailAddress = "christopher.hitchens@western.com",
+                        TimeZone = "America/New_York",
+                        Pin = "1111",
+                        Role = ""
+                    },
+                    new User()
+                    {
+                        Id = 2,
+                        Name = "George Will",
+                        CreatedAt = DateTime.UtcNow,
+                        IsDeleted = false,
+                        OrganizationId = 1,
+                        EmailAddress = "george.will@western.com",
+                        TimeZone = "America/New_York",
+                        Pin = "2222",
+                        Role = ""
+                    },
+                    new User()
+                    {
+                        Id = 3,
+                        Name = "Ada Lovelace",
+                        CreatedAt = DateTime.UtcNow,
+                        IsDeleted = false,
+                        OrganizationId = 1,
+                        EmailAddress = "ada.lovelace@western.com",
+                        TimeZone = "America/New_York",
+                        Pin = "3333",
+                        Role = ""
+                    },
+                    new User()
+                    {
+                        Id = 4,
+                        Name = "Jack Welch",
+                        CreatedAt = DateTime.UtcNow,
+                        IsDeleted = false,
+                        OrganizationId = 1,
+                        EmailAddress = "jack.welch@western.com",
+                        TimeZone = "America/New_York",
+                        Pin = "4444",
+                        Role = ""
+                    }
+                };
+
+                // Insert the organizations
+                var organizationsSql = @"
+                    SET IDENTITY_INSERT dbo.Organizations ON;
+
+                    INSERT INTO Organizations (
+                        Id,
+                        CreatedAt,
+                        Code,
+                        Name,
+                        MinutesFormat,
+                        StripeCustomerId,
+                        StripeSubscriptionId
+                    ) VALUES (
+                        @Id,
+                        @CreatedAt,
+                        @Code,
+                        @Name,
+                        @MinutesFormat,
+                        @StripeCustomerId,
+                        @StripeSubscriptionId
+                    );
+
+                    SET IDENTITY_INSERT dbo.Organizations OFF;";
+                connection.Execute(organizationsSql, organizations);
+
+                // Insert the users
+                var usersSql = @"
+                    SET IDENTITY_INSERT dbo.Users ON;
+
+                    INSERT INTO Users (
+                        Id,
+                        CreatedAt,
+                        OrganizationId,
+                        EmailAddress,
+                        Name,
+                        TimeZone,
+                        IsDeleted,
+                        Pin,
+                        [Role],
+                        UsesMobileClock,
+                        UsesTouchToneClock,
+                        UsesWebClock,
+                        UsesTimesheets
+                    ) VALUES (
+                        @Id,
+                        @CreatedAt,
+                        @OrganizationId,
+                        @EmailAddress,
+                        @Name,
+                        @TimeZone,
+                        @IsDeleted,
+                        @Pin,
+                        @Role,
+                        1,
+                        1,
+                        1,
+                        1
+                    );
+
+                    SET IDENTITY_INSERT dbo.Users OFF;";
+                connection.Execute(usersSql, users);
+
+                var rates = new List<Rate>();
+                var customers = new List<Customer>();
+                var jobs = new List<Job>();
+                var tasks = new List<Task>();
+
+                // Add some payroll rates
+                rates.Add(new Rate() { Id = 1, CreatedAt = DateTime.UtcNow, OrganizationId = 1, Type = "payroll", Name = "Hourly Regular", IsDeleted = false });
+                rates.Add(new Rate() { Id = 2, CreatedAt = DateTime.UtcNow, OrganizationId = 1, Type = "payroll", Name = "Hourly OT", IsDeleted = false, ParentRateId = 1 });
+                rates.Add(new Rate() { Id = 3, CreatedAt = DateTime.UtcNow, OrganizationId = 1, Type = "payroll", Name = "Hourly DT", IsDeleted = false, ParentRateId = 1 });
+
+                // Add some service rates
+                rates.Add(new Rate() { Id = 4, CreatedAt = DateTime.UtcNow, OrganizationId = 1, Type = "service", Name = "Manufacturing Regular", IsDeleted = false });
+                rates.Add(new Rate() { Id = 5, CreatedAt = DateTime.UtcNow, OrganizationId = 1, Type = "service", Name = "Manufacturing OT", IsDeleted = false, ParentRateId = 4 });
+                rates.Add(new Rate() { Id = 6, CreatedAt = DateTime.UtcNow, OrganizationId = 1, Type = "service", Name = "Manufacturing DT", IsDeleted = false, ParentRateId = 4 });
+
+                // Insert the rates
+                var ratesSql = @"
+                    SET IDENTITY_INSERT dbo.Rates ON;
+
+                    INSERT INTO Rates (
+                        Id,
+                        CreatedAt,
+                        OrganizationId,
+                        [Type],
+                        Name,
+                        IsDeleted,
+                        ParentRateId
+                    ) VALUES (
+                        @Id,
+                        @CreatedAt,
+                        @OrganizationId,
+                        @Type,
+                        @Name,
+                        0,
+                        @ParentRateId
+                    );
+
+                    SET IDENTITY_INSERT dbo.Rates OFF;";
+                connection.Execute(ratesSql, rates);
+
+                // Add some customers
+                customers.Add(new Customer() { Id = 1, CreatedAt = DateTime.UtcNow, Name = "General Mills", OrganizationId = 1, Number = "1000" });
+
+                // Insert the customers
+                var customerSql = @"
+                    SET IDENTITY_INSERT dbo.Customers ON;
+
+                    INSERT INTO Customers (
+                        Id,
+                        CreatedAt,
+                        Name,
+                        OrganizationId,
+                        Number
+                    ) VALUES (
+                        @Id,
+                        @CreatedAt,
+                        @Name,
+                        @OrganizationId,
+                        @Number
+                    );
+
+                    SET IDENTITY_INSERT dbo.Customers OFF;";
+                connection.Execute(customerSql, customers);
+
+                // Add some jobs
+                jobs.Add(new Job() { Id = 1, CreatedAt = DateTime.UtcNow, CustomerId = 1, Number = "1000", Name = "Manufacture Widgets" });
+
+                // Insert the jobs
+                var jobSql = @"
+                    SET IDENTITY_INSERT dbo.Jobs ON;
+
+                    INSERT INTO Jobs (
+                        Id,
+                        CreatedAt,
+                        Name,
+                        CustomerId,
+                        Number
+                    ) VALUES (
+                        @Id,
+                        @CreatedAt,
+                        @Name,
+                        @CustomerId,
+                        @Number
+                    );
+
+                    SET IDENTITY_INSERT dbo.Jobs OFF;";
+                connection.Execute(jobSql, jobs);
+
+                // Add some tasks
+                tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4 });
+                tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4 });
+                tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4 });
+
+                // Insert the tasks
+                var taskSql = @"
+                    SET IDENTITY_INSERT dbo.Tasks ON;
+
+                    INSERT INTO Tasks (
+                        Id,
+                        CreatedAt,
+                        Name,
+                        JobId,
+                        Number,
+                        BasePayrollRateId,
+                        BaseServiceRateId
+                    ) VALUES (
+                        @Id,
+                        @CreatedAt,
+                        @Name,
+                        @JobId,
+                        @Number,
+                        @BasePayrollRateId,
+                        @BaseServiceRateId
+                    );
+
+                    SET IDENTITY_INSERT dbo.Tasks OFF;";
+                connection.Execute(taskSql, tasks);
+
+                connection.Close();
+            }
+        }
+
+        [TestCleanup]
+        public void CleanupAfterTest()
+        {
+            db.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Tasks]");
+            db.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Jobs]");
+            db.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Customers]");
+            db.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Users]");
+            db.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Organizations]");
+        }
+
         [TestMethod]
         public void Split_Midnight_Successful()
         {
-            var db = new TestSqlContext();
-            var currentUser = GetCurrentUser();
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
 
-            var service = new PunchService(db);
-            var inAt = new DateTime(2020, 1, 1);
-            var outAt = new DateTime(2020, 1, 31);
+            var service = new PunchService();
 
             var originalPunches = GetPunches()
                 .OrderBy(p => p.UserId)
@@ -40,10 +308,10 @@ namespace Brizbee.Web.Tests.Services
         [TestMethod]
         public void Split_SevenAmAndFivePm_Successful()
         {
-            var db = new TestSqlContext();
-            var currentUser = GetCurrentUser();
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
 
-            var service = new PunchService(db);
+            var service = new PunchService();
             var inAt = new DateTime(2020, 1, 1);
             var outAt = new DateTime(2020, 1, 31);
 
@@ -77,27 +345,10 @@ namespace Brizbee.Web.Tests.Services
         [TestMethod]
         public void Populate_PayrollBeforeSevenAmAfterFivePmAsOvertime_Successful()
         {
-            var db = new TestSqlContext();
-            var currentUser = GetCurrentUser();
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
 
-            // Add some payroll rates
-            db.Rates.Add(new Rate() { Id = 1, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 2, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly OT", IsDeleted = false, ParentRateId = 1 });
-            db.Rates.Add(new Rate() { Id = 3, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly DT", IsDeleted = false, ParentRateId = 1 });
-
-            // Add some service rates
-            db.Rates.Add(new Rate() { Id = 4, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 5, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing OT", IsDeleted = false, ParentRateId = 4 });
-            db.Rates.Add(new Rate() { Id = 6, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing DT", IsDeleted = false, ParentRateId = 4 });
-
-            // Add a customer, job, and task
-            db.Customers.Add(new Customer() { Id = 1, CreatedAt = DateTime.UtcNow, Name = "General Mills", OrganizationId = currentUser.OrganizationId, Number = "1000" });
-            db.Jobs.Add(new Job() { Id = 1, CreatedAt = DateTime.UtcNow, CustomerId = 1, Number = "1000", Name = "Manufacture Widgets" });
-            db.Tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-
-            var service = new PunchService(db);
+            var service = new PunchService();
             var inAt = new DateTime(2020, 1, 1);
             var outAt = new DateTime(2020, 1, 31);
 
@@ -166,27 +417,10 @@ namespace Brizbee.Web.Tests.Services
         [TestMethod]
         public void Populate_PayrollFortyHoursTotalOvertime_Successful()
         {
-            var db = new TestSqlContext();
-            var currentUser = GetCurrentUser();
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
 
-            // Add some payroll rates
-            db.Rates.Add(new Rate() { Id = 1, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 2, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly OT", IsDeleted = false, ParentRateId = 1 });
-            db.Rates.Add(new Rate() { Id = 3, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly DT", IsDeleted = false, ParentRateId = 1 });
-
-            // Add some service rates
-            db.Rates.Add(new Rate() { Id = 4, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 5, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing OT", IsDeleted = false, ParentRateId = 4 });
-            db.Rates.Add(new Rate() { Id = 6, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing DT", IsDeleted = false, ParentRateId = 4 });
-
-            // Add a customer, job, and task
-            db.Customers.Add(new Customer() { Id = 1, CreatedAt = DateTime.UtcNow, Name = "General Mills", OrganizationId = currentUser.OrganizationId, Number = "1000" });
-            db.Jobs.Add(new Job() { Id = 1, CreatedAt = DateTime.UtcNow, CustomerId = 1, Number = "1000", Name = "Manufacture Widgets" });
-            db.Tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-
-            var service = new PunchService(db);
+            var service = new PunchService();
             var inAt = new DateTime(2020, 1, 1);
             var outAt = new DateTime(2020, 1, 31);
 
@@ -244,27 +478,10 @@ namespace Brizbee.Web.Tests.Services
         [TestMethod]
         public void Populate_PayrollFourHoursPerDayOvertime_Successful()
         {
-            var db = new TestSqlContext();
-            var currentUser = GetCurrentUser();
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
 
-            // Add some payroll rates
-            db.Rates.Add(new Rate() { Id = 1, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 2, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly OT", IsDeleted = false, ParentRateId = 1 });
-            db.Rates.Add(new Rate() { Id = 3, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly DT", IsDeleted = false, ParentRateId = 1 });
-
-            // Add some service rates
-            db.Rates.Add(new Rate() { Id = 4, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 5, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing OT", IsDeleted = false, ParentRateId = 4 });
-            db.Rates.Add(new Rate() { Id = 6, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing DT", IsDeleted = false, ParentRateId = 4 });
-
-            // Add a customer, job, and task
-            db.Customers.Add(new Customer() { Id = 1, CreatedAt = DateTime.UtcNow, Name = "General Mills", OrganizationId = currentUser.OrganizationId, Number = "1000" });
-            db.Jobs.Add(new Job() { Id = 1, CreatedAt = DateTime.UtcNow, CustomerId = 1, Number = "1000", Name = "Manufacture Widgets" });
-            db.Tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-
-            var service = new PunchService(db);
+            var service = new PunchService();
             var inAt = new DateTime(2020, 1, 1);
             var outAt = new DateTime(2020, 1, 31);
 
@@ -335,27 +552,10 @@ namespace Brizbee.Web.Tests.Services
         [TestMethod]
         public void Populate_PayrollSpecificDayOvertime_Successful()
         {
-            var db = new TestSqlContext();
-            var currentUser = GetCurrentUser();
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
 
-            // Add some payroll rates
-            db.Rates.Add(new Rate() { Id = 1, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 2, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly OT", IsDeleted = false, ParentRateId = 1 });
-            db.Rates.Add(new Rate() { Id = 3, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "payroll", Name = "Hourly DT", IsDeleted = false, ParentRateId = 1 });
-
-            // Add some service rates
-            db.Rates.Add(new Rate() { Id = 4, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing Regular", IsDeleted = false });
-            db.Rates.Add(new Rate() { Id = 5, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing OT", IsDeleted = false, ParentRateId = 4 });
-            db.Rates.Add(new Rate() { Id = 6, CreatedAt = DateTime.UtcNow, OrganizationId = currentUser.OrganizationId, Type = "service", Name = "Manufacturing DT", IsDeleted = false, ParentRateId = 4 });
-
-            // Add a customer, job, and task
-            db.Customers.Add(new Customer() { Id = 1, CreatedAt = DateTime.UtcNow, Name = "General Mills", OrganizationId = currentUser.OrganizationId, Number = "1000" });
-            db.Jobs.Add(new Job() { Id = 1, CreatedAt = DateTime.UtcNow, CustomerId = 1, Number = "1000", Name = "Manufacture Widgets" });
-            db.Tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-            db.Tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-
-            var service = new PunchService(db);
+            var service = new PunchService();
             var inAt = new DateTime(2020, 1, 1);
             var outAt = new DateTime(2020, 1, 31);
 
@@ -399,11 +599,6 @@ namespace Brizbee.Web.Tests.Services
                     Assert.IsTrue(punch.PayrollRateId == 1);
                 }
             }
-        }
-
-        User GetCurrentUser()
-        {
-            return GetUsers().First();
         }
 
         List<Punch> GetPunches()
@@ -607,68 +802,6 @@ namespace Brizbee.Web.Tests.Services
                     OutAt = new DateTime(2020, 1, 6, 17, 0, 0, 0),
                     TaskId = 1
                 },
-            };
-        }
-
-        List<User> GetUsers()
-        {
-            return new List<User>()
-            {
-                new User()
-                {
-                    Id = 1,
-                    Name = "Christopher Hitchens",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false,
-                    OrganizationId = 1,
-                    EmailAddress = "christopher.hitchens@western.com",
-                    TimeZone = "America/New_York"
-                },
-                new User()
-                {
-                    Id = 2,
-                    Name = "George Will",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false,
-                    OrganizationId = 1,
-                    EmailAddress = "george.will@western.com",
-                    TimeZone = "America/New_York"
-                },
-                new User()
-                {
-                    Id = 3,
-                    Name = "Ada Lovelace",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false,
-                    OrganizationId = 1,
-                    EmailAddress = "ada.lovelace@western.com",
-                    TimeZone = "America/New_York"
-                },
-                new User()
-                {
-                    Id = 4,
-                    Name = "Jack Welch",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false,
-                    OrganizationId = 1,
-                    EmailAddress = "jack.welch@western.com",
-                    TimeZone = "America/New_York"
-                }
-            };
-        }
-
-        List<Organization> GetOrganizations()
-        {
-            return new List<Organization>()
-            {
-                new Organization()
-                {
-                    Id = 1,
-                    Name = "Western Widgets Corporation",
-                    Code = "1234",
-                    CreatedAt = DateTime.UtcNow,
-                    MinutesFormat = "minutes"
-                }
             };
         }
     }

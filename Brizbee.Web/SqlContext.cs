@@ -1,9 +1,9 @@
 ﻿using Brizbee.Common.Models;
 using System.Data.Entity;
 
-namespace Brizbee.Common.Database
+namespace Brizbee.Web
 {
-    public class SqlContext : DbContext, ISqlContext
+    public class SqlContext : DbContext
     {
         static SqlContext()
         {

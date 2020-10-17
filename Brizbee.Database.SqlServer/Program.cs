@@ -12,7 +12,7 @@ namespace Brizbee.Database.SqlServer
         {
             var connectionString =
                 args.FirstOrDefault()
-                ?? ConfigurationManager.ConnectionStrings["SiloSqlContext"].ToString();
+                ?? ConfigurationManager.ConnectionStrings["SqlContext"].ToString();
 
             EnsureDatabase.For.SqlDatabase(connectionString);
 
@@ -31,15 +31,14 @@ namespace Brizbee.Database.SqlServer
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(result.Error);
                 Console.ResetColor();
-#if DEBUG
-                Console.ReadLine();
-#endif
+
                 return -1;
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Success!");
             Console.ResetColor();
+
             return 0;
         }
     }

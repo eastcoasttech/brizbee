@@ -1,5 +1,4 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Common.Exceptions;
+﻿using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;

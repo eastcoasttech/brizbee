@@ -1,5 +1,4 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Common.Models;
+﻿using Brizbee.Common.Models;
 using Brizbee.Web.Serialization;
 using Newtonsoft.Json;
 using System;
@@ -12,14 +11,7 @@ namespace Brizbee.Web.Services
 {
     public class PunchService : IDisposable
     {
-        private ISqlContext db = new SqlContext();
-
-        public PunchService() { }
-
-        public PunchService(ISqlContext context)
-        {
-            db = context;
-        }
+        private SqlContext db = new SqlContext();
 
         /// <summary>
         /// Disposes of the database connection.

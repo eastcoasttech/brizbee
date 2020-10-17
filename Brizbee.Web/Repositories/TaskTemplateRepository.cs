@@ -1,5 +1,4 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Common.Models;
+﻿using Brizbee.Common.Models;
 using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using System;

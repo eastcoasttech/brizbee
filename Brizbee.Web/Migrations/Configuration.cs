@@ -1,4 +1,3 @@
-using Brizbee.Common.Database;
 namespace Brizbee.Web.Migrations
 {
     using System;

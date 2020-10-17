@@ -1,5 +1,4 @@
-﻿using Brizbee.Common.Database;
-using Brizbee.Common.Models;
+﻿using Brizbee.Common.Models;
 using Microsoft.AspNet.OData;
 using Stripe;
 using System;
