@@ -239,10 +239,10 @@ namespace Brizbee.Web.Repositories
                     organization.CreatedAt = DateTime.UtcNow;
                     organization.MinutesFormat = "minutes";
 
-                    #if DEBUG
+#if DEBUG
                     organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
                     organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
-                    #endif
+#endif
 
                     // Determine the actual Stripe Plan Id based on the PlanId
                     var stripePlanId = ConfigurationManager.AppSettings["StripePlanId1"].ToString(); // Default plan is the contractor plan
@@ -261,6 +261,7 @@ namespace Brizbee.Web.Repositories
                             break;
                     }
 
+#if !DEBUG
                     try
                     {
                         // Create a Stripe customer object and save the customer id
@@ -288,20 +289,21 @@ namespace Brizbee.Web.Repositories
                         Subscription subscription = subscriptions.Create(subscriptionOptions);
 
                         organization.StripeSubscriptionId = subscription.Id;
+
+                        // Send Welcome Email
+                        var apiKey = ConfigurationManager.AppSettings["SendGridApiKey"].ToString();
+                        var client = new SendGridClient(apiKey);
+                        var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
+                        var to = new EmailAddress(user.EmailAddress);
+                        var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", null);
+                        var response = await client.SendEmailAsync(msg);
                     }
                     catch (Exception ex)
                     {
                         Trace.TraceWarning(ex.ToString());
                         throw;
                     }
-
-                    // Send Welcome Email
-                    var apiKey = ConfigurationManager.AppSettings["SendGridApiKey"].ToString();
-                    var client = new SendGridClient(apiKey);
-                    var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
-                    var to = new EmailAddress(user.EmailAddress);
-                    var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", new { });
-                    var response = await client.SendEmailAsync(msg);
+#endif
 
                     // Save the organization and user
                     db.Organizations.Add(organization);
