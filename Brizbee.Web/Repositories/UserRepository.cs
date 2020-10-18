@@ -214,7 +214,7 @@ namespace Brizbee.Web.Repositories
             return user;
         }
 
-        public async System.Threading.Tasks.Task<User> Register(User user, Organization organization)
+        public User Register(User user, Organization organization)
         {
             using (var transaction = db.Database.BeginTransaction())
             {
@@ -261,7 +261,6 @@ namespace Brizbee.Web.Repositories
                             break;
                     }
 
-#if !DEBUG
                     try
                     {
                         // Create a Stripe customer object and save the customer id
@@ -296,14 +295,13 @@ namespace Brizbee.Web.Repositories
                         var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
                         var to = new EmailAddress(user.EmailAddress);
                         var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", null);
-                        var response = await client.SendEmailAsync(msg);
+                        var response = client.SendEmailAsync(msg);
                     }
                     catch (Exception ex)
                     {
                         Trace.TraceWarning(ex.ToString());
                         throw;
                     }
-#endif
 
                     // Save the organization and user
                     db.Organizations.Add(organization);
