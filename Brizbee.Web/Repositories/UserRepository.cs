@@ -280,9 +280,10 @@ namespace Brizbee.Web.Repositories
                             {
                                 new SubscriptionItemOptions
                                 {
-                                    Price = stripePlanId, // ex. 
+                                    Price = stripePlanId // ex. 
                                 }
-                            }
+                            },
+                            TrialFromPlan = true
                         };
                         var subscriptions = new SubscriptionService();
                         Subscription subscription = subscriptions.Create(subscriptionOptions);
