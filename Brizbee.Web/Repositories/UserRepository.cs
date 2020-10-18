@@ -261,6 +261,7 @@ namespace Brizbee.Web.Repositories
                             break;
                     }
 
+#if !DEBUG
                     try
                     {
                         // Create a Stripe customer object and save the customer id
@@ -303,6 +304,7 @@ namespace Brizbee.Web.Repositories
                         Trace.TraceWarning(ex.ToString());
                         throw;
                     }
+#endif
 
                     // Save the organization and user
                     db.Organizations.Add(organization);
