@@ -100,6 +100,29 @@ namespace Brizbee.Web.Controllers
                 .Include("Job.Customer")
                 .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
                 .Where(t => t.Number == Number)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Name,
+                    t.Number,
+                    t.CreatedAt,
+                    t.JobId,
+                    Job = new
+                    {
+                        t.Job.Id,
+                        t.Job.Name,
+                        t.Job.Number,
+                        t.Job.CreatedAt,
+                        t.Job.CustomerId,
+                        Customer = new
+                        {
+                            t.Job.Customer.Id,
+                            t.Job.Customer.Name,
+                            t.Job.Customer.Number,
+                            t.Job.Customer.CreatedAt
+                        }
+                    }
+                })
                 .FirstOrDefault();
 
             if (task == null)
