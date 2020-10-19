@@ -90,7 +90,7 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Tasks/Default.Search
         [HttpGet]
-        public IHttpActionResult Search(string number)
+        public IHttpActionResult Search([FromODataUri] string Number)
         {
             var currentUser = CurrentUser();
 
@@ -99,7 +99,7 @@ namespace Brizbee.Web.Controllers
                 .Include("Job")
                 .Include("Customer")
                 .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
-                .Where(t => t.Number == number)
+                .Where(t => t.Number == Number)
                 .FirstOrDefault();
 
             if (task == null)
