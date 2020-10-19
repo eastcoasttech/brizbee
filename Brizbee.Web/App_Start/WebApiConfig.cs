@@ -147,9 +147,9 @@ namespace Brizbee
             // Collection Function - Tasks/Search
             var tasksSearch = builder.EntityType<Task>()
                 .Collection
-                .Function("Search");
+                .Function("Search")
+                .Returns<string>();
             tasksSearch.Parameter<string>("Number");
-            tasksSearch.ReturnsFromEntitySet<Task>("Tasks");
 
             // Collection Function - Tasks/ForPunches
             var tasksForPunches = builder.EntityType<Task>()

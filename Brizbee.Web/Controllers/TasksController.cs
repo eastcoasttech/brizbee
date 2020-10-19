@@ -107,7 +107,7 @@ namespace Brizbee.Web.Controllers
                 return NotFound();
             }
 
-            return Ok(task);
+            return Json(task);
         }
 
         // GET: odata/Tasks/Default.ForPunches
