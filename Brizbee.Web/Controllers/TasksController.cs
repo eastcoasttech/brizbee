@@ -97,7 +97,7 @@ namespace Brizbee.Web.Controllers
             // Search only tasks that belong to customers in the organization
             var task = db.Tasks
                 .Include("Job")
-                .Include("Customer")
+                .Include("Job.Customer")
                 .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
                 .Where(t => t.Number == Number)
                 .FirstOrDefault();
