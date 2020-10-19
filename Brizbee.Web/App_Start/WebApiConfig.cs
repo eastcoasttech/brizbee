@@ -144,6 +144,13 @@ namespace Brizbee
                 .Returns<string>();
             download.Parameter<int>("CommitId");
 
+            // Collection Function - Tasks/Search
+            var tasksSearch = builder.EntityType<Task>()
+                .Collection
+                .Function("Search");
+            tasksSearch.Parameter<string>("Number");
+            tasksSearch.ReturnsFromEntitySet<Task>("Tasks");
+
             // Collection Function - Tasks/ForPunches
             var tasksForPunches = builder.EntityType<Task>()
                 .Collection

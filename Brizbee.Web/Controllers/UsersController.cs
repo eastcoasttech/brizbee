@@ -19,14 +19,35 @@ namespace Brizbee.Web.Controllers
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<User> GetUsers()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Only permit administrators to see all users
+            if (currentUser.Role != "Administrator")
+            {
+                return Enumerable.Empty<User>().AsQueryable();
+            }
+
+            return db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.OrganizationId == currentUser.OrganizationId);
         }
 
         // GET: odata/Users(5)
         [EnableQuery]
         public SingleResult<User> GetUser([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            // Only Administrators can see other users in the organization
+            if (currentUser.Role != "Administrator" && currentUser.Id != key)
+            {
+                return SingleResult.Create(Enumerable.Empty<User>().AsQueryable());
+            }
+
+            return SingleResult.Create(db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.Id == key));
         }
 
         // POST: odata/Users
@@ -59,7 +80,29 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/Users(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Only permit administrators
+            if (currentUser.Role != "Administrator")
+            {
+                return StatusCode(HttpStatusCode.Forbidden);
+            }
+
+            var user = db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.Id == key)
+                .FirstOrDefault();
+
+            if (user == null)
+            {
+                return StatusCode(HttpStatusCode.NotFound);
+            }
+
+            user.IsDeleted = true;
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 

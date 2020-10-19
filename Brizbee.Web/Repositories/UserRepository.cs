@@ -92,72 +92,11 @@ namespace Brizbee.Web.Repositories
         }
 
         /// <summary>
-        /// Deletes the user with the given id.
-        /// </summary>
-        /// <param name="id">The id of the user</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        public void Delete(int id, User currentUser)
-        {
-            var user = db.Users
-                .Where(u => !u.IsDeleted)
-                .Where(u => u.Id == id)
-                .FirstOrDefault();
-
-            // Ensure that user is authorized
-            if (!UserPolicy.CanDelete(user, currentUser))
-            {
-                throw new Exception("Not authorized to delete the object");
-            }
-
-            user.IsDeleted = true;
-
-            db.SaveChanges();
-        }
-
-        /// <summary>
         /// Disposes of the database connection.
         /// </summary>
         public void Dispose()
         {
             db.Dispose();
-        }
-
-        /// <summary>
-        /// Returns the user with the given id.
-        /// </summary>
-        /// <param name="id">The id of the user</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The user with the given id</returns>
-        public IQueryable<User> Get(int id, User currentUser)
-        {
-            // Only Administrators can see other users in the organization
-            if (currentUser.Role != "Administrator" && currentUser.Id != id)
-            {
-                return Enumerable.Empty<User>().AsQueryable();
-            }
-
-            return db.Users
-                .Where(u => !u.IsDeleted)
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Where(u => u.Id == id);
-        }
-
-        /// <summary>
-        /// Returns a queryable collection of users.
-        /// </summary>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The queryable collection of users</returns>
-        public IQueryable<User> GetAll(User currentUser)
-        {
-            // Only Administrators can see other users in the organization
-            if (currentUser.Role != "Administrator")
-            {
-                return Enumerable.Empty<User>().AsQueryable();
-            }
-
-            return db.Users
-                .Where(u => !u.IsDeleted)
-                .Where(u => u.OrganizationId == currentUser.OrganizationId);
         }
 
         /// <summary>

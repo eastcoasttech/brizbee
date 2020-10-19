@@ -56,7 +56,28 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/Jobs(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Only permit administrators
+            if (currentUser.Role != "Administrator")
+            {
+                return StatusCode(HttpStatusCode.Forbidden);
+            }
+
+            // Only look within the organization's customer's jobs
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            var job = db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Where(j => j.Id == key)
+                .FirstOrDefault();
+
+            // Delete the object itself
+            db.Jobs.Remove(job);
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 

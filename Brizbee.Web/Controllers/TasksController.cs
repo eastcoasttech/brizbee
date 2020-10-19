@@ -88,6 +88,28 @@ namespace Brizbee.Web.Controllers
             }
         }
 
+        // GET: odata/Tasks/Default.Search
+        [HttpGet]
+        public IHttpActionResult Search(string number)
+        {
+            var currentUser = CurrentUser();
+
+            // Search only tasks that belong to customers in the organization
+            var task = db.Tasks
+                .Include("Job")
+                .Include("Customer")
+                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Number == number)
+                .FirstOrDefault();
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(task);
+        }
+
         // GET: odata/Tasks/Default.ForPunches
         [HttpGet]
         [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
