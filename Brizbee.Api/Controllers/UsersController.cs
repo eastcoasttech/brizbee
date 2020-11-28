@@ -366,7 +366,7 @@ namespace Brizbee.Api.Controllers
                             {
                                 new SubscriptionItemOptions
                                 {
-                                    Price = stripePlanId // ex. 
+                                    Price = stripePlanId // ex. price_1Hd5PvLI44a19MHX9w5EGD4r
                                 }
                             },
                                 TrialFromPlan = true
