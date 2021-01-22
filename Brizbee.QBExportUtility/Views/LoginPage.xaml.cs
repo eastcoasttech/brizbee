@@ -31,8 +31,8 @@ namespace Brizbee.QBExportUtility.Views
             DataContext = new LoginPageViewModel()
             {
                 IsEnabled = true,
-                EmailAddress = "***REMOVED***",
-                Password = "***REMOVED***"
+                EmailAddress = "",
+                Password = ""
             };
         }
 
