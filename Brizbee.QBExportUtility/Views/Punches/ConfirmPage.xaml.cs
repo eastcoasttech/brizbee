@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Brizbee.QBExportUtility.Views
+namespace Brizbee.QBExportUtility.Views.Punches
 {
     /// <summary>
     /// Interaction logic for ConfirmPage.xaml
@@ -31,7 +31,7 @@ namespace Brizbee.QBExportUtility.Views
 
         private void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/StatusPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/Punches/SyncPage.xaml", UriKind.Relative));
         }
 
         private void ViewPunchesButton_Click(object sender, RoutedEventArgs e)
@@ -53,7 +53,7 @@ namespace Brizbee.QBExportUtility.Views
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/CommitsPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/Punches/SelectLockPage.xaml", UriKind.Relative));
         }
     }
 }

@@ -14,14 +14,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Brizbee.QBExportUtility.Views
+namespace Brizbee.QBExportUtility.Views.Punches
 {
     /// <summary>
-    /// Interaction logic for CommitsPage.xaml
+    /// Interaction logic for SelectLockPage.xaml
     /// </summary>
-    public partial class CommitsPage : Page
+    public partial class SelectLockPage : Page
     {
-        public CommitsPage()
+        public SelectLockPage()
         {
             InitializeComponent();
 
@@ -37,7 +37,7 @@ namespace Brizbee.QBExportUtility.Views
             Application.Current.Properties["SelectedCommit"] =
                 (DataContext as CommitsPageViewModel).SelectedCommit;
 
-            NavigationService.Navigate(new Uri("Views/ConfirmPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/Punches/ConfirmPage.xaml", UriKind.Relative));
         }
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
@@ -66,7 +66,7 @@ namespace Brizbee.QBExportUtility.Views
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
         }
     }
 }

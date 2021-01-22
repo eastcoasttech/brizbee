@@ -214,7 +214,7 @@ namespace Brizbee.QBExportUtility.ViewModels
             var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.GET);
 
             // Execute request to retrieve punches
-            var response = await client.ExecuteTaskAsync<List<Punch>>(request);
+            var response = await client.ExecuteAsync<List<Punch>>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
@@ -247,7 +247,7 @@ namespace Brizbee.QBExportUtility.ViewModels
             });
 
             // Execute request
-            var response = await client.ExecuteTaskAsync<Commit>(request);
+            var response = await client.ExecuteAsync<Commit>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.NoContent))
             {
@@ -371,27 +371,27 @@ namespace Brizbee.QBExportUtility.ViewModels
             EmployeeQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
-        private void BuildItemServiceQueryRq(XmlDocument doc, XmlElement parent, string serviceItemName)
+        private void BuildItemServiceQueryRq(XmlDocument doc, XmlElement parent, string itemName)
         {
             // Create ItemServiceQueryRq aggregate and fill in field values for it
             XmlElement ItemServiceQuery = doc.CreateElement("ItemServiceQueryRq");
             parent.AppendChild(ItemServiceQuery);
 
             // Populate the FullName field
-            ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
+            ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "FullName", itemName));
 
             // Only include certain fields
             ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
-        private void BuildPayrollItemWageQueryRq(XmlDocument doc, XmlElement parent, string serviceItemName)
+        private void BuildPayrollItemWageQueryRq(XmlDocument doc, XmlElement parent, string itemName)
         {
             // Create PayrollItemWageQueryRq aggregate and fill in field values for it
             XmlElement PayrollItemWageQuery = doc.CreateElement("PayrollItemWageQueryRq");
             parent.AppendChild(PayrollItemWageQuery);
 
             // Populate the FullName field
-            PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
+            PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "FullName", itemName));
 
             // Only include certain fields
             PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
@@ -464,7 +464,7 @@ namespace Brizbee.QBExportUtility.ViewModels
                 {
                     // Do nothing, it's just telling us that the request wasn't processed
                 }
-                else if (iStatusCode > 0)
+                else if (iStatusCode > 0) // Other failure
                 {
                     SaveErrorCount += 1;
                     StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
@@ -493,8 +493,8 @@ namespace Brizbee.QBExportUtility.ViewModels
 
                 int iStatusCode = Convert.ToInt32(statusCode);
 
-                //status code = 0 all OK, > 0 is warning
-                if (iStatusCode == 500)
+                // One or more objects cannot be found || No Match || Parent reference not found || Reference not found
+                if (iStatusCode == 500 || iStatusCode == 1 || iStatusCode == 3130 || iStatusCode == 3140)
                 {
                     Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
                     Match match = regex.Match(statusMessage);
@@ -508,7 +508,7 @@ namespace Brizbee.QBExportUtility.ViewModels
                         OnPropertyChanged("StatusText");
                     }
                 }
-                else if (iStatusCode > 0)
+                else if (iStatusCode > 0) // Other failure
                 {
                     ValidationErrorCount += 1;
                     StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
@@ -537,8 +537,8 @@ namespace Brizbee.QBExportUtility.ViewModels
 
                 int iStatusCode = Convert.ToInt32(statusCode);
 
-                //status code = 0 all OK, > 0 is warning
-                if (iStatusCode == 500)
+                // One or more objects cannot be found || No Match || Parent reference not found || Reference not found
+                if (iStatusCode == 500 || iStatusCode == 1 || iStatusCode == 3130 || iStatusCode == 3140)
                 {
                     Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
                     Match match = regex.Match(statusMessage);
@@ -552,7 +552,7 @@ namespace Brizbee.QBExportUtility.ViewModels
                         OnPropertyChanged("StatusText");
                     }
                 }
-                else if (iStatusCode > 0)
+                else if (iStatusCode > 0) // Other failure
                 {
                     ValidationErrorCount += 1;
                     StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
@@ -581,8 +581,8 @@ namespace Brizbee.QBExportUtility.ViewModels
 
                 int iStatusCode = Convert.ToInt32(statusCode);
 
-                //status code = 0 all OK, > 0 is warning
-                if (iStatusCode == 500)
+                // One or more objects cannot be found || No Match || Parent reference not found || Reference not found
+                if (iStatusCode == 500 || iStatusCode == 1 || iStatusCode == 3130 || iStatusCode == 3140)
                 {
                     Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
                     Match match = regex.Match(statusMessage);
@@ -596,7 +596,7 @@ namespace Brizbee.QBExportUtility.ViewModels
                         OnPropertyChanged("StatusText");
                     }
                 }
-                else if (iStatusCode > 0)
+                else if (iStatusCode > 0) // Other failure
                 {
                     ValidationErrorCount += 1;
                     StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
@@ -625,8 +625,8 @@ namespace Brizbee.QBExportUtility.ViewModels
 
                 int iStatusCode = Convert.ToInt32(statusCode);
 
-                //status code = 0 all OK, > 0 is warning
-                if (iStatusCode == 500)
+                // One or more objects cannot be found || No Match || Parent reference not found || Reference not found
+                if (iStatusCode == 500 || iStatusCode == 1 || iStatusCode == 3130 || iStatusCode == 3140)
                 {
                     Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
                     Match match = regex.Match(statusMessage);
@@ -640,7 +640,7 @@ namespace Brizbee.QBExportUtility.ViewModels
                         OnPropertyChanged("StatusText");
                     }
                 }
-                else if (iStatusCode > 0)
+                else if (iStatusCode > 0) // Other failure
                 {
                     ValidationErrorCount += 1;
                     StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
@@ -891,7 +891,7 @@ namespace Brizbee.QBExportUtility.ViewModels
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var serviceItems = punches.GroupBy(p => p.Task.QuickBooksServiceItem).Select(g => g.Key);
+            var serviceItems = punches.GroupBy(p => p.ServiceRate.QBDServiceItem).Select(g => g.Key);
             foreach (var name in serviceItems)
             {
                 BuildItemServiceQueryRq(doc, inner, name);
@@ -924,7 +924,7 @@ namespace Brizbee.QBExportUtility.ViewModels
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var payrollItems = punches.GroupBy(p => p.Task.QuickBooksPayrollItem).Select(g => g.Key);
+            var payrollItems = punches.GroupBy(p => p.PayrollRate.QBDPayrollItem).Select(g => g.Key);
             foreach (var name in payrollItems)
             {
                 BuildPayrollItemWageQueryRq(doc, inner, name);

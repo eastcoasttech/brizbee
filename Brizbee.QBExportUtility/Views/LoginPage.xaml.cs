@@ -31,8 +31,8 @@ namespace Brizbee.QBExportUtility.Views
             DataContext = new LoginPageViewModel()
             {
                 IsEnabled = true,
-                EmailAddress = "",
-                Password = ""
+                EmailAddress = "***REMOVED***",
+                Password = "***REMOVED***"
             };
         }
 
@@ -41,7 +41,7 @@ namespace Brizbee.QBExportUtility.Views
             try
             {
                 await (DataContext as LoginPageViewModel).Login();
-                NavigationService.Navigate(new Uri("Views/CommitsPage.xaml", UriKind.Relative));
+                NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
             }
             catch (InvalidLoginException)
             {

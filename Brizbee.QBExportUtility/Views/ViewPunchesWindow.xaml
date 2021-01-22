@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Brizbee.QBExportUtility.Views"
         mc:Ignorable="d"
-        Title="Punches to be Committed" MinHeight="480" Height="540" Width="740" MinWidth="640"
+        Title="Punches to Sync" MinHeight="480" Height="540" Width="740" MinWidth="640"
         Loaded="Window_Loaded">
     <Window.Resources>
         <!--DataGrid Cell Vertical Centering-->

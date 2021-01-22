@@ -13,16 +13,25 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Brizbee.QBExportUtility.Views.Inventory
+namespace Brizbee.QBExportUtility.Views.InventoryItems
 {
     /// <summary>
-    /// Interaction logic for SyncInventoryItemsPage.xaml
+    /// Interaction logic for ConfirmPage.xaml
     /// </summary>
-    public partial class SyncInventoryItemsPage : Page
+    public partial class ConfirmPage : Page
     {
-        public SyncInventoryItemsPage()
+        public ConfirmPage()
         {
             InitializeComponent();
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
+        }
+
+        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
         }
     }
 }

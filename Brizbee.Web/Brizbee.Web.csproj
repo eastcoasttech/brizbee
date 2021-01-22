@@ -424,6 +424,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
+    <Compile Include="Controllers\InventoryAdjustmentsController.cs" />
     <Compile Include="Controllers\QuickBooksDesktopExportsController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineExportsController.cs" />

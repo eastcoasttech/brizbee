@@ -128,25 +128,37 @@
     <Compile Include="ODataResponse.cs" />
     <Compile Include="PasswordHelper.cs" />
     <Compile Include="RelayCommand.cs" />
+    <Compile Include="Services\InventoryService.cs" />
     <Compile Include="ViewModels\ConfirmPageViewModel.cs" />
     <Compile Include="ViewModels\CommitsPageViewModel.cs" />
+    <Compile Include="ViewModels\InventoryAdjustments\SyncViewModel.cs" />
+    <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
     <Compile Include="ViewModels\LoginPageViewModel.cs" />
     <Compile Include="ViewModels\StatusPageViewModel.cs" />
     <Compile Include="ViewModels\ViewPunchesViewModel.cs" />
-    <Compile Include="Views\CommitsPage.xaml.cs">
-      <DependentUpon>CommitsPage.xaml</DependentUpon>
+    <Compile Include="Views\Punches\SelectLockPage.xaml.cs">
+      <DependentUpon>SelectLockPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ConfirmPage.xaml.cs">
+    <Compile Include="Views\Punches\ConfirmPage.xaml.cs">
       <DependentUpon>ConfirmPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DashboardPage.xaml.cs">
       <DependentUpon>DashboardPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Inventory\SyncInventoryItemsPage.xaml.cs">
-      <DependentUpon>SyncInventoryItemsPage.xaml</DependentUpon>
+    <Compile Include="Views\InventoryAdjustments\ConfirmPage.xaml.cs">
+      <DependentUpon>ConfirmPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\StatusPage.xaml.cs">
-      <DependentUpon>StatusPage.xaml</DependentUpon>
+    <Compile Include="Views\InventoryItems\ConfirmPage.xaml.cs">
+      <DependentUpon>ConfirmPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\InventoryAdjustments\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\InventoryItems\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Punches\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ViewPunchesWindow.xaml.cs">
       <DependentUpon>ViewPunchesWindow.xaml</DependentUpon>
@@ -157,11 +169,11 @@
     <Compile Include="Views\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
-    <Page Include="Views\CommitsPage.xaml">
+    <Page Include="Views\Punches\SelectLockPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ConfirmPage.xaml">
+    <Page Include="Views\Punches\ConfirmPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -173,11 +185,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Inventory\SyncInventoryItemsPage.xaml">
+    <Page Include="Views\InventoryAdjustments\ConfirmPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\StatusPage.xaml">
+    <Page Include="Views\InventoryItems\ConfirmPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryAdjustments\SyncPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryItems\SyncPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Punches\SyncPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -265,6 +289,7 @@
       <Name>Brizbee.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.5.0.5\build\Fody.targets" Condition="Exists('..\packages\Fody.5.0.5\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -24,5 +24,25 @@ namespace Brizbee.QBExportUtility.Views
         {
             InitializeComponent();
         }
+
+        private void SyncItemsButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/InventoryItems/ConfirmPage.xaml", UriKind.Relative));
+        }
+
+        private void SyncAdjustmentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/InventoryAdjustments/ConfirmPage.xaml", UriKind.Relative));
+        }
+
+        private void SyncPunchesButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/Punches/SelectLockPage.xaml", UriKind.Relative));
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
 }

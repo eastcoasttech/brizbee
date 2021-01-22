@@ -66,10 +66,15 @@
     <Compile Include="Exceptions\StripeException.cs" />
     <Compile Include="Models\Commit.cs" />
     <Compile Include="Models\Customer.cs" />
+    <Compile Include="Models\QBDInventoryItemSync.cs" />
+    <Compile Include="Models\QBDInventoryAdjustmentSync.cs" />
+    <Compile Include="Models\QBDInventoryItem.cs" />
     <Compile Include="Models\Job.cs" />
     <Compile Include="Models\Organization.cs" />
     <Compile Include="Models\Punch.cs" />
     <Compile Include="Models\QuickBooksDesktopExport.cs" />
+    <Compile Include="Models\InventoryAdjustment.cs" />
+    <Compile Include="Models\QBDInventorySite.cs" />
     <Compile Include="Models\QuickBooksOnlineExport.cs" />
     <Compile Include="Models\Rate.cs" />
     <Compile Include="Models\Split.cs" />

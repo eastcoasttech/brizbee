@@ -15,14 +15,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Brizbee.QBExportUtility.Views
+namespace Brizbee.QBExportUtility.Views.Punches
 {
     /// <summary>
-    /// Interaction logic for StatusPage.xaml
+    /// Interaction logic for SyncPage.xaml
     /// </summary>
-    public partial class StatusPage : Page
+    public partial class SyncPage : Page
     {
-        public StatusPage()
+        public SyncPage()
         {
             InitializeComponent();
 
@@ -55,7 +55,7 @@ namespace Brizbee.QBExportUtility.Views
 
         private void StartOverButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
         }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)

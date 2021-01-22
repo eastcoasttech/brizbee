@@ -39,11 +39,11 @@ namespace Brizbee.QBExportUtility.ViewModels
             OnPropertyChanged("IsRefreshEnabled");
             OnPropertyChanged("IsContinueEnabled");
 
-            // Build request to retrieve commits
+            // Build the request to get commits
             var request = new RestRequest("odata/Commits?$orderby=InAt", Method.GET);
 
-            // Execute request to retrieve authenticated user
-            var response = await client.ExecuteTaskAsync<ODataResponse<Commit>>(request);
+            // Execute request
+            var response = await client.ExecuteAsync<ODataResponse<Commit>>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {

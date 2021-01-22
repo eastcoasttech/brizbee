@@ -34,14 +34,14 @@ namespace Brizbee.QBExportUtility.ViewModels
             await LoadCredentials();
         }
 
-        public async System.Threading.Tasks.Task<string> CheckLatestVersion()
+        public async Task<string> CheckLatestVersion()
         {
             // Build request to check latest version of software
             var versionClient = new RestClient("https://ects1.blob.core.windows.net/");
             var versionRequest = new RestRequest("brizbee-public/latest.json", Method.GET);
 
             // Execute request to check the latest version
-            var versionResponse = await versionClient.ExecuteTaskAsync(versionRequest);
+            var versionResponse = await versionClient.ExecuteAsync(versionRequest);
             if ((versionResponse.ResponseStatus == ResponseStatus.Completed) &&
                     (versionResponse.StatusCode == System.Net.HttpStatusCode.OK))
             {
@@ -73,7 +73,7 @@ namespace Brizbee.QBExportUtility.ViewModels
             });
 
             // Execute request to authenticate user
-            var response = await client.ExecuteTaskAsync<Credential>(request);
+            var response = await client.ExecuteAsync<Credential>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.Created))
             {
@@ -112,7 +112,7 @@ namespace Brizbee.QBExportUtility.ViewModels
                 Application.Current.Properties["AuthUserId"]), Method.GET);
 
             // Execute request to retrieve authenticated user
-            var response = await client.ExecuteTaskAsync<User>(request);
+            var response = await client.ExecuteAsync<User>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
