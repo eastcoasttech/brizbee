@@ -4,9 +4,7 @@ using Interop.QBXMLRP2;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Xml;
@@ -30,7 +28,7 @@ namespace Brizbee.QBExportUtility.ViewModels.InventoryAdjustments
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         #endregion
 
-        public async void Sync()
+        public void Sync()
         {
             // Disable the buttons
             IsExitEnabled = false;
@@ -79,7 +77,7 @@ namespace Brizbee.QBExportUtility.ViewModels.InventoryAdjustments
                 var httpRequest = new RestRequest("api/InventoryAdjustments/Unsynced", Method.GET);
 
                 // Execute request
-                var httpResponse = await client.ExecuteAsync<List<InventoryAdjustment>>(httpRequest);
+                var httpResponse = client.Execute<List<InventoryAdjustment>>(httpRequest);
                 if ((httpResponse.ResponseStatus == ResponseStatus.Completed) &&
                         (httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                 {

@@ -68,6 +68,7 @@ namespace Brizbee.Api
                 });
             services.AddSwaggerGen(c =>
             {
+                c.OperationFilter<AuthorizationHeaderOperation>();
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Brizbee.Api", Version = "v1" });
             });
         }

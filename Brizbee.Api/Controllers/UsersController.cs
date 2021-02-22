@@ -42,7 +42,6 @@ using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class UsersController : ControllerBase
@@ -59,7 +58,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/Users
-        [HttpGet]
+        [HttpGet("api/Users")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             var currentUser = CurrentUser();
@@ -77,7 +76,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/Users/5
-        [HttpGet("{id}")]
+        [HttpGet("api/Users/{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var currentUser = CurrentUser();
@@ -104,7 +103,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: api/Users
-        [HttpPost]
+        [HttpPost("api/Users")]
         public async Task<ActionResult<User>> PostUser(User user)
         {
             var currentUser = CurrentUser();
@@ -125,7 +124,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // PUT: api/Users/5
-        [HttpPut("{id}")]
+        [HttpPut("api/Users/{id}")]
         public IActionResult PutUser(int id, User patch)
         {
             var currentUser = CurrentUser();
@@ -178,7 +177,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // DELETE: api/Users/5
-        [HttpDelete("{id}")]
+        [HttpDelete("api/Users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var currentUser = CurrentUser();
@@ -212,7 +211,7 @@ namespace Brizbee.Api.Controllers
         // POST: api/Users/ChangePassword
         [HttpPost]
         [AllowAnonymous]
-        [Route("ChangePassword")]
+        [Route("api/Users/ChangePassword")]
         public IActionResult ChangePassword([FromQuery] string emailAddress, [FromQuery] string password)
         {
             var user = _context.Users
@@ -234,7 +233,7 @@ namespace Brizbee.Api.Controllers
         // POST: api/Users/Authenticate
         [HttpPost]
         [AllowAnonymous]
-        [Route("Authenticate")]
+        [Route("api/Users/Authenticate")]
         public IActionResult Authenticate([FromBody] Session session)
         {
             User user = null;
@@ -292,7 +291,7 @@ namespace Brizbee.Api.Controllers
         // POST: api/Users/Register
         [HttpPost]
         [AllowAnonymous]
-        [Route("Register")]
+        [Route("api/Users/Register")]
         public IActionResult Register([FromBody] Registration registration)
         {
             var user = registration.User;
@@ -435,7 +434,9 @@ namespace Brizbee.Api.Controllers
         {
             var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
             var sub = HttpContext.User.Claims.FirstOrDefault(c => c.Type == type).Value;
+            Console.WriteLine(sub);
             var currentUserId = int.Parse(sub);
+            Console.WriteLine(currentUserId);
             return _context.Users
                 .Where(u => u.Id == currentUserId)
                 .FirstOrDefault();

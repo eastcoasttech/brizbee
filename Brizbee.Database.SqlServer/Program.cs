@@ -33,9 +33,9 @@ namespace Brizbee.Database.SqlServer
     {
         public static int Main(string[] args)
         {
-            var connectionString =
+            var connectionString = (args != null && args.FirstOrDefault() != null) ?
                 args.FirstOrDefault()
-                ?? ConfigurationManager.ConnectionStrings["SqlContext"].ToString();
+                : ConfigurationManager.ConnectionStrings["SqlContext"].ToString();
 
             EnsureDatabase.For.SqlDatabase(connectionString);
 

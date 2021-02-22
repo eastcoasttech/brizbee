@@ -20,6 +20,7 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Unit of measure of the inventory item being adjusted.
         /// </summary>
+        [MaxLength(31)]
         public string UnitOfMeasure { get; set; }
 
         /// <summary>

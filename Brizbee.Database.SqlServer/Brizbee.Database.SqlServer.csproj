@@ -102,7 +102,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Migrations\0002 Adding Inventory Tables.sql" />
+    <EmbeddedResource Include="Migrations\0002 Adding Inventory Tables.sql" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0001 Initial Create Tables.sql" />

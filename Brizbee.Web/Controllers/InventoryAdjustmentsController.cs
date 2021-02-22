@@ -111,7 +111,7 @@ namespace Brizbee.Web.Controllers
             }
             catch (DbUpdateException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(ex.ToString());
             }
         }
 

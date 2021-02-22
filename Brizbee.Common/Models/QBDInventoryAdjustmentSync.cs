@@ -7,6 +7,12 @@ namespace Brizbee.Common.Models
     public class QBDInventoryAdjustmentSync
     {
         /// <summary>
+        /// Id of the sync.
+        /// </summary>
+        [Key]
+        public int Id { get; set; }
+
+        /// <summary>
         /// Moment when the sync was performed.
         /// </summary>
         [Required]

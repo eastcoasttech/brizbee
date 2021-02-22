@@ -35,7 +35,6 @@ using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class CustomersController : ControllerBase
@@ -50,7 +49,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/Customers
-        [HttpGet]
+        [HttpGet("api/Customers")]
         public ActionResult<IEnumerable<Customer>> GetCustomers(string order = "CreatedAt", string direction = "ASC", int pageNumber = 1, int pageSize = 1000)
         {
             // Determine the number of records to skip
@@ -119,7 +118,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/Customers/5
-        [HttpGet("{id}")]
+        [HttpGet("api/Customers/{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(int id)
         {
             var currentUser = CurrentUser();
@@ -139,7 +138,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: api/Customers
-        [HttpPost]
+        [HttpPost("api/Customers")]
         public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
             var currentUser = CurrentUser();
@@ -153,8 +152,8 @@ namespace Brizbee.Api.Controllers
             return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
         }
 
-        // PUT: api/Users/5
-        [HttpPut("{id}")]
+        // PUT: api/Customers/5
+        [HttpPut("api/Customers/{id}")]
         public IActionResult PutCustomer(int id, Customer patch)
         {
             var currentUser = CurrentUser();
@@ -187,7 +186,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // DELETE: api/Customers/5
-        [HttpDelete("{id}")]
+        [HttpDelete("api/Customers/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
             var currentUser = CurrentUser();

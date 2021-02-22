@@ -1,14 +1,6 @@
 ﻿using Brizbee.Common.Models;
-using Interop.QBXMLRP2;
-using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Xml;
 
 namespace Brizbee.QBExportUtility.Services
@@ -32,6 +24,7 @@ namespace Brizbee.QBExportUtility.Services
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ManufacturerPartNumber"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "SalesDesc"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "PurchaseDesc"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "UnitOfMeasureSetRef"));
         }
 
         public void BuildSalesReceiptAddRq(XmlDocument doc, XmlElement parent, List<InventoryAdjustment> adjustments)
@@ -75,6 +68,38 @@ namespace Brizbee.QBExportUtility.Services
 
                 inventorySiteLocationRef.AppendChild(MakeSimpleElement(doc, "ListID", ""));
             }
+        }
+
+        public void BuildUnitOfMeasureSetQueryRq(XmlDocument doc, XmlElement parent)
+        {
+            // Create UnitOfMeasureSetQueryRq.
+            XmlElement request = doc.CreateElement("UnitOfMeasureSetQueryRq");
+            parent.AppendChild(request);
+
+            // Return 500 items at a time.
+            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
+
+            // Only include certain fields.
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "BaseUnit"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "UnitOfMeasureType"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
+        }
+
+        public void BuildInventorySiteQueryRq(XmlDocument doc, XmlElement parent)
+        {
+            // Create UnitOfMeasureSetQueryRq.
+            XmlElement request = doc.CreateElement("InventorySiteQueryRq");
+            parent.AppendChild(request);
+
+            // Return 500 items at a time.
+            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
+
+            // Only include certain fields.
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
         }
 
         public (bool, string, List<QBDInventoryItem>) WalkInventoryItemQueryRs(string response)
@@ -127,10 +152,24 @@ namespace Brizbee.QBExportUtility.Services
                                 inventoryItem.ManufacturerPartNumber = xmlNode.InnerText;
                                 break;
                             case "SalesDesc":
-                                inventoryItem.SalesDescription = xmlNode.InnerText;
+                                if (xmlNode.InnerText.Length > 255)
+                                {
+                                    inventoryItem.SalesDescription = xmlNode.InnerText.Substring(0, 255);
+                                }
+                                else
+                                {
+                                    inventoryItem.SalesDescription = xmlNode.InnerText;
+                                }
                                 break;
                             case "PurchaseDesc":
-                                inventoryItem.PurchaseDescription = xmlNode.InnerText;
+                                if (xmlNode.InnerText.Length > 255)
+                                {
+                                    inventoryItem.PurchaseDescription = xmlNode.InnerText.Substring(0, 255);
+                                }
+                                else
+                                {
+                                    inventoryItem.PurchaseDescription = xmlNode.InnerText;
+                                }
                                 break;
                         }
                     }
@@ -169,6 +208,143 @@ namespace Brizbee.QBExportUtility.Services
             if (iStatusCode == 0)
             {
                 return (true, "", null);
+            }
+            else
+            {
+                return (false, statusMessage, null);
+            }
+        }
+
+        public (bool, string, List<QBDUnitOfMeasureSet>) WalkUnitOfMeasureSetQueryRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("UnitOfMeasureSetQueryRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                var items = new List<QBDUnitOfMeasureSet>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var unit = new QBDUnitOfMeasureSet();
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "Name":
+                                unit.Name = xmlNode.InnerText;
+                                break;
+                            case "ListID":
+                                unit.ListId = xmlNode.InnerText;
+                                break;
+                            case "UnitOfMeasureType":
+                                unit.UnitOfMeasureType = xmlNode.InnerText;
+                                break;
+                            case "IsActive":
+                                unit.IsActive = bool.Parse(xmlNode.InnerText);
+                                break;
+                            case "BaseUnitName":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "Name")
+                                    {
+                                        unit.BaseUnitName = xmlNode.ChildNodes[0].InnerText;
+                                    }
+                                }
+                                break;
+                            case "BaseUnitAbbreviation":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "Abbreviation")
+                                    {
+                                        unit.BaseUnitAbbreviation = xmlNode.ChildNodes[1].InnerText;
+                                    }
+                                }
+                                break;
+                        }
+                    }
+
+                    items.Add(unit);
+                }
+
+                return (true, "", items);
+            }
+            else
+            {
+                return (false, statusMessage, null);
+            }
+        }
+
+        public (bool, string, List<QBDInventorySite>) WalkInventorySiteQueryRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("InventorySiteQueryRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                var items = new List<QBDInventorySite>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var inventorySite = new QBDInventorySite();
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "Name":
+                                inventorySite.Name = xmlNode.InnerText;
+                                break;
+                            case "ListID":
+                                inventorySite.ListId = xmlNode.InnerText;
+                                break;
+                            case "IsActive":
+                                inventorySite.IsActive = bool.Parse(xmlNode.InnerText);
+                                break;
+                        }
+                    }
+
+                    items.Add(inventorySite);
+                }
+
+                return (true, "", items);
             }
             else
             {

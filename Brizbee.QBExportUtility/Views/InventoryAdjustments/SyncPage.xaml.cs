@@ -1,5 +1,6 @@
 ﻿using Brizbee.QBExportUtility.ViewModels.InventoryAdjustments;
 using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -21,7 +22,8 @@ namespace Brizbee.QBExportUtility.Views.InventoryAdjustments
         {
             try
             {
-                (DataContext as SyncViewModel).Sync();
+                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                thread.Start();
             }
             catch (Exception ex)
             {
@@ -33,7 +35,8 @@ namespace Brizbee.QBExportUtility.Views.InventoryAdjustments
         {
             try
             {
-                (DataContext as SyncViewModel).Sync();
+                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                thread.Start();
             }
             catch (Exception ex)
             {
@@ -43,7 +46,7 @@ namespace Brizbee.QBExportUtility.Views.InventoryAdjustments
 
         private void StartOverButton_Click(object sender, RoutedEventArgs e)
         {
-
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
         }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)

@@ -28,7 +28,8 @@ namespace Brizbee.QBExportUtility.ViewModels
         public async System.Threading.Tasks.Task Login()
         {
             // Reintialize the HTTP client
-            client = new RestClient("https://brizbee.gowitheast.com/");
+            //client = new RestClient("https://brizbee.gowitheast.com/");
+            client = new RestClient("http://localhost:54313/");
             Application.Current.Properties["Client"] = client;
 
             await LoadCredentials();
