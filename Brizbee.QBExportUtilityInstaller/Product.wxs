@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="BRIZBEE QuickBooks Export Utility" Language="1033" Version="2.1.0.0" Manufacturer="BRIZBEE" UpgradeCode="247144C2-ED15-4C58-9675-1DDF3716CE0F">
+  <Product Id="*" Name="QuickBooks Desktop Utility for BRIZBEE" Language="1033" Version="2.1.1.0" Manufacturer="BRIZBEE" UpgradeCode="247144C2-ED15-4C58-9675-1DDF3716CE0F">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
-
-    <!-- Require .NET Framework 4.7.1 -->
-    <!--<PropertyRef Id="NETFRAMEWORK471"/>-->
 
     <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.QBExportUtility.TargetDir)Images/favicon.ico" />
 
     <!-- Standard variable for the Add/Remove Programs icon -->
     <Property Id="ARPPRODUCTICON" Value="ICON.ICO" />
-
-    <!--<Condition Message="This application requires at least the .NET Framework 4.7.1. Please install the .NET Framework then run this installer again.">
-      <![CDATA[Installed OR NETFRAMEWORK471]]>
-    </Condition>-->
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate EmbedCab="yes" />
@@ -21,7 +14,7 @@
     <!-- Start Menu shortcut -->
     <DirectoryRef Id="APPLICATIONPROGRAMSFOLDER">
       <Component Id="ApplicationShortcut" Guid="33D13F90-521F-44F6-9B5F-84E388EF6900">
-        <Shortcut Id="ApplicationStartMenuShortcut" Name="BRIZBEE QuickBooks Export Utility"
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="QuickBooks Desktop Utility for BRIZBEE"
               Target="[INSTALLFOLDER]Brizbee.QBExportUtility.exe" WorkingDirectory="INSTALLFOLDER"
               Icon="ICON.ICO" />
         <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="APPLICATIONPROGRAMSFOLDER" On="uninstall"/>
@@ -29,7 +22,7 @@
       </Component>
     </DirectoryRef>
 
-    <Feature Id="ProductFeature" Title="BRIZBEE QuickBooks Export Utility" Level="1">
+    <Feature Id="ProductFeature" Title="QuickBooks Desktop Utility for BRIZBEE" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
 
@@ -41,14 +34,14 @@
 
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <!-- Create a folder in the Program Files folder called BRIZBEE QuickBooks Export Utility. -->
+      <!-- Create a folder in the Program Files folder called QuickBooks Desktop Utility for BRIZBEE. -->
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="BRIZBEE QuickBooks Export Utility" />
+        <Directory Id="INSTALLFOLDER" Name="QuickBooks Desktop Utility for BRIZBEE" />
       </Directory>
 
       <!-- Step 1: Define the directory structure -->
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="APPLICATIONPROGRAMSFOLDER" Name="BRIZBEE QuickBooks Export Utility"/>
+        <Directory Id="APPLICATIONPROGRAMSFOLDER" Name="QuickBooks Desktop Utility for BRIZBEE"/>
       </Directory>
     </Directory>
   </Fragment>
@@ -64,7 +57,6 @@
       <!-- QBExportUtility EXE -->
       <Component Id="QBExportUtilityExe" Guid="D061B4DE-3637-4167-9741-7C2C8566A4FD">
         <File Id="QBExportUtilityExeFile" Source="$(var.Brizbee.QBExportUtility.TargetPath)" KeyPath="yes" />
-        <!--<File Id="QBExportUtilityIconFile" Source="$(var.Brizbee.QBExportUtility.TargetDir)icon.ico" />-->
       </Component>
 
       <!-- Start Menu shortcut is a part of this component. -->
@@ -76,7 +68,7 @@
         <!-- Create an Event Source -->
         <Util:EventSource
               xmlns:Util="http://schemas.microsoft.com/wix/UtilExtension"
-              Name="BRIZBEE QuickBooks Export Utility"
+              Name="QuickBooks Desktop Utility for BRIZBEE"
               Log="Application"
               EventMessageFile="[QBExportUtilityExeFile]"/>
       </Component>

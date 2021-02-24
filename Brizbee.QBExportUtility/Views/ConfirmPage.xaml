@@ -6,12 +6,12 @@
     xmlns:local="clr-namespace:Brizbee.QBExportUtility.Views"
     mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="640"
-    WindowTitle="QuickBooks Export Utility for BRIZBEE"
+    WindowTitle="QuickBooks Desktop Utility for BRIZBEE"
     ShowsNavigationUI="False">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Background="White">
             <DockPanel>
-                <Label Content="Please Confirm Export Details" VerticalAlignment="Center" Margin="10" />
+                <Label Content="Please Confirm" VerticalAlignment="Center" Margin="10" />
                 <Image Source="/Images/logo.png" HorizontalAlignment="Right" Margin="15" Width="75" />
             </DockPanel>
             <Separator />
@@ -64,7 +64,7 @@
                 <TextBlock
                        Margin="0 20 0 0"
                        FontSize="14"
-                       Text="Are you sure you want to export?" />
+                       Text="Are you sure you want to sync these punches?" />
                 <Button Name="ViewPunchesButton"
                     Click="ViewPunchesButton_Click"
                     Margin="5"

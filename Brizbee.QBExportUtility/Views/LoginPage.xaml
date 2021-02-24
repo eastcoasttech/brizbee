@@ -6,7 +6,7 @@
     xmlns:local="clr-namespace:Brizbee.QBExportUtility"
     mc:Ignorable="d" 
     d:DesignHeight="480" d:DesignWidth="640"
-    WindowTitle="QuickBooks Export Utility for BRIZBEE"
+    WindowTitle="QuickBooks Desktop Utility for BRIZBEE"
     ShowsNavigationUI="False"
     FocusManager.FocusedElement="{Binding ElementName=EmailAddress}"
     Loaded="Page_Loaded">
@@ -34,7 +34,7 @@
                 <Image Source="/Images/icons8-right-arrow-52.png" VerticalAlignment="Center" Margin="5 0 0 0" Width="20" />
                 <Image Source="/Images/QuickBooks Logo_Horz.png" VerticalAlignment="Center" Margin="0" Width="200" />
             </StackPanel>
-            <Label Content="QuickBooks Export Utility for BRIZBEE" HorizontalAlignment="Center" Margin="0 0 0 20" FontWeight="Bold" Foreground="#555555" FontSize="17"/>
+            <Label Content="QuickBooks Desktop Utility for BRIZBEE" HorizontalAlignment="Center" Margin="0 0 0 20" FontWeight="Bold" Foreground="#555555" FontSize="17"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
@@ -43,7 +43,6 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-                    <!--<Label Content="Please sign in to your BRIZBEE acount:" Padding="0 0 0 3" Margin="0 10 0 10"/>-->
                     <Label Content="Email Address" Padding="0 0 0 3" Margin="0"/>
                     <TextBox Text="{Binding EmailAddress, UpdateSourceTrigger=PropertyChanged}"
                         Height="24" Padding="2" Name="EmailAddress"

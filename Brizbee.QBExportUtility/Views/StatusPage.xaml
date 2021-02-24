@@ -6,13 +6,13 @@
     xmlns:local="clr-namespace:Brizbee.QBExportUtility.Views"
     mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="640"
-    WindowTitle="QuickBooks Export Utility for BRIZBEE"
+    WindowTitle="QuickBooks Desktop Utility for BRIZBEE"
     ShowsNavigationUI="False"
     Loaded="Page_Loaded">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Background="White">
             <DockPanel>
-                <Label Content="Exporting..." VerticalAlignment="Center" Margin="10" />
+                <Label Content="Syncing Punches..." VerticalAlignment="Center" Margin="10" />
                 <Image Source="/Images/logo.png" HorizontalAlignment="Right" Margin="15" Width="75" />
             </DockPanel>
             <Separator />
@@ -53,7 +53,7 @@
                 Grid.Column="0" Grid.Row="0"
                 LineStackingStrategy="BlockLineHeight"
                 FontSize="16"
-                Text="Exporting to QuickBooks" />
+                Text="Syncing Punches to QuickBooks" />
 
             <ScrollViewer Grid.Column="0" Grid.Row="1">
                 <TextBlock TextWrapping="WrapWithOverflow"

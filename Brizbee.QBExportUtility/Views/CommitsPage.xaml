@@ -6,13 +6,13 @@
     xmlns:local="clr-namespace:Brizbee.QBExportUtility.Views"
     mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="640"
-    WindowTitle="QuickBooks Export Utility for BRIZBEE"
+    WindowTitle="QuickBooks Desktop Utility for BRIZBEE"
     ShowsNavigationUI="False"
     Loaded="Page_Loaded">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Background="White">
             <DockPanel>
-                <Label Content="Select Your Committed Punches" VerticalAlignment="Center" Margin="10" />
+                <Label Content="Select Your Locked Punches" VerticalAlignment="Center" Margin="10" />
                 <Image Source="/Images/logo.png" HorizontalAlignment="Right" Margin="15" Width="75" />
             </DockPanel>
             <Separator />
@@ -43,7 +43,7 @@
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
                 <TextBlock TextWrapping="WrapWithOverflow" Padding="0 0 0 10" Margin="0">
-                Please select the locked punches that you want to export:
+                Please select the locked punches that you want to sync:
                 </TextBlock>
 
                 <ComboBox Height="26" IsEnabled="{Binding IsRefreshEnabled}"
