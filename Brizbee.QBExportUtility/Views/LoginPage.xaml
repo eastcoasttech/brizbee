@@ -43,7 +43,6 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-                    <!--<Label Content="Please sign in to your BRIZBEE acount:" Padding="0 0 0 3" Margin="0 10 0 10"/>-->
                     <Label Content="Email Address" Padding="0 0 0 3" Margin="0"/>
                     <TextBox Text="{Binding EmailAddress, UpdateSourceTrigger=PropertyChanged}"
                         Height="24" Padding="2" Name="EmailAddress"
