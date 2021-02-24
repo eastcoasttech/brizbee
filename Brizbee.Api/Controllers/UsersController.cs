@@ -176,6 +176,21 @@ namespace Brizbee.Api.Controllers
             return NoContent();
         }
 
+        // GET: api/Users/Me
+        [HttpGet("api/Users/Me")]
+        public IActionResult GetMe()
+        {
+            var currentUser = CurrentUser();
+
+            if (currentUser == null) return BadRequest();
+
+            var user = _context.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.Id == currentUser.Id)
+                .FirstOrDefault();
+            return Ok(user);
+        }
+
         // DELETE: api/Users/5
         [HttpDelete("api/Users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)

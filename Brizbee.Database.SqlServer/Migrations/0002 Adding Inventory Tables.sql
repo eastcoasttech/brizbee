@@ -94,6 +94,7 @@ CREATE TABLE [dbo].[InventoryAdjustments] (
     [OrganizationId] INT NOT NULL,
     [QBDInventoryAdjustmentSyncId] INT NULL,
     [QBDUnitOfMeasureSetId] INT NOT NULL,
+    [Hostname] VARCHAR(30) NOT NULL,
     CONSTRAINT [PK_dbo.InventoryAdjustments] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO

@@ -43,6 +43,12 @@ namespace Brizbee.Common.Models
         public virtual User CreatedByUser { get; set; }
 
         /// <summary>
+        /// Hostname of the machine where the adjustment was created.
+        /// </summary>
+        [StringLength(30)]
+        public string Hostname { get; set; }
+
+        /// <summary>
         /// Id of the inventory item in QuickBooks Desktop that was adjusted.
         /// </summary>
         [Required]
