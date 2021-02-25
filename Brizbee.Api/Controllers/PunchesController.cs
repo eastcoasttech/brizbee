@@ -30,6 +30,7 @@ using System;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
@@ -59,6 +60,10 @@ namespace Brizbee.Api.Controllers
             if (pageSize > 1000) { return BadRequest(); }
 
             var currentUser = CurrentUser();
+
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
 
             // Determine the number of records to skip.
             int skip = (pageNumber - 1) * pageSize;
@@ -349,6 +354,127 @@ namespace Brizbee.Api.Controllers
             Response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
 
             return Ok(punches);
+        }
+
+        // GET: api/Punches/5
+        [HttpGet("api/Punches/{id}")]
+        public async Task<ActionResult<Punch>> GetPunch(int id)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            // Find within the organization.
+            var userIds = _context.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+            var punch = await _context.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (punch == null)
+            {
+                return NotFound();
+            }
+
+            return punch;
+        }
+
+        // POST: api/Punches
+        [HttpPost("api/Punches")]
+        public async Task<ActionResult<Punch>> PostPunch(Punch punch)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            // Ensure the same organization.
+            var userIds = _context.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+
+            if (!userIds.Contains(punch.UserId))
+                return BadRequest();
+
+            _context.Punches.Add(punch);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetPunch", new { id = punch.Id }, punch);
+        }
+
+        // PUT: api/Punches/5
+        [HttpPut("api/Punches/{id}")]
+        public async Task<ActionResult> PutPunch(int id, Punch patch)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            // Find within the organization.
+            var userIds = _context.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+            var punch = await _context.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (punch == null)
+            {
+                return NotFound();
+            }
+
+            // Apply the changes.
+            punch.InAt = patch.InAt;
+            punch.OutAt = patch.OutAt;
+
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw;
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/Punches/5
+        [HttpDelete("api/Punches/{id}")]
+        public async Task<ActionResult> DeletePunch(int id)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            // Find within the organization.
+            var userIds = _context.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+            var punch = await _context.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (punch == null)
+            {
+                return NotFound();
+            }
+
+            _context.Punches.Remove(punch);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         private User CurrentUser()

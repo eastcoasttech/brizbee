@@ -154,9 +154,13 @@ namespace Brizbee.Api.Controllers
 
         // PUT: api/Customers/5
         [HttpPut("api/Customers/{id}")]
-        public IActionResult PutCustomer(int id, Customer patch)
+        public ActionResult PutCustomer(int id, Customer patch)
         {
             var currentUser = CurrentUser();
+
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
 
             // Find within the organization.
             var customer = _context.Customers
@@ -187,15 +191,13 @@ namespace Brizbee.Api.Controllers
 
         // DELETE: api/Customers/5
         [HttpDelete("api/Customers/{id}")]
-        public async Task<IActionResult> DeleteCustomer(int id)
+        public async Task<ActionResult> DeleteCustomer(int id)
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to delete users.
+            // Ensure Administrator.
             if (currentUser.Role != "Administrator")
-            {
                 return BadRequest();
-            }
 
             // Find within the organization.
             var customer = await _context.Customers
