@@ -216,6 +216,7 @@ namespace Brizbee.Api.Controllers
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Where(u => u.Id == currentUser.Id)
                 .FirstOrDefault();
+
             return Ok(user);
         }
 
@@ -474,9 +475,7 @@ namespace Brizbee.Api.Controllers
         {
             var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
             var sub = HttpContext.User.Claims.FirstOrDefault(c => c.Type == type).Value;
-            Console.WriteLine(sub);
             var currentUserId = int.Parse(sub);
-            Console.WriteLine(currentUserId);
             return _context.Users
                 .Where(u => u.Id == currentUserId)
                 .FirstOrDefault();

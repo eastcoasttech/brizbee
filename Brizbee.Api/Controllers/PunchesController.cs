@@ -351,21 +351,6 @@ namespace Brizbee.Api.Controllers
             return Ok(punches);
         }
 
-        //private User CurrentUser()
-        //{
-        //    if (!string.IsNullOrEmpty(ControllerContext.HttpContext.User.Identity.Name))
-        //    {
-        //        var currentUserId = long.Parse(ControllerContext.HttpContext.User.Identity.Name);
-        //        return _context.Users
-        //            .Where(u => u.Id == currentUserId)
-        //            .FirstOrDefault();
-        //    }
-        //    else
-        //    {
-        //        return null;
-        //    }
-        //}
-
         private User CurrentUser()
         {
             var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
