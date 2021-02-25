@@ -152,8 +152,8 @@ namespace Brizbee.Api.Controllers
             return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
         }
 
-        // PUT: api/Users/5
-        [HttpPut("api/Users/{id}")]
+        // PUT: api/Customers/5
+        [HttpPut("api/Customers/{id}")]
         public IActionResult PutCustomer(int id, Customer patch)
         {
             var currentUser = CurrentUser();
