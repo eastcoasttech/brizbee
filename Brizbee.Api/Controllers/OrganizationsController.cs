@@ -24,7 +24,6 @@ using Brizbee.Api.Serialization.DTO;
 using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,7 +37,6 @@ using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class OrganizationsController : ControllerBase
@@ -53,7 +51,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET api/Organizations/5
-        [HttpGet("{id}")]
+        [HttpGet("api/Organizations/{id}")]
         public async Task<ActionResult<OrganizationDTO>> GetOrganization(int id)
         {
             var currentUser = CurrentUser();
@@ -79,7 +77,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // PUT api/Organizations/5
-        [HttpPut("{id}")]
+        [HttpPut("api/Organizations/{id}")]
         public IActionResult PutOrganization(int id, [FromBody] Organization patch)
         {
             var currentUser = CurrentUser();
@@ -115,8 +113,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET api/Organizations/Countries
-        [HttpGet]
-        [Route("Countries")]
+        [HttpGet("api/Organizations/Countries")]
         public IActionResult Countries()
         {
             List<Country> countries = new List<Country>();
@@ -136,8 +133,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET api/Organizations/TimeZones
-        [HttpGet]
-        [Route("TimeZones")]
+        [HttpGet("api/Organizations/TimeZones")]
         public IActionResult TimeZones()
         {
             List<IanaTimeZone> zones = new List<IanaTimeZone>();

@@ -33,8 +33,13 @@ namespace Brizbee.Api
         }
 
         public DbSet<Organization> Organizations { get; set; }
-        public DbSet<User> Users { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Punch> Punches { get; set; }
+        public DbSet<Task> Tasks { get; set; }
+        public DbSet<Rate> Rates { get; set; }
+        public DbSet<Job> Jobs { get; set; }
+        public DbSet<Commit> Commits { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

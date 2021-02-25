@@ -35,7 +35,6 @@ using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class CustomersController : ControllerBase
@@ -50,22 +49,22 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/Customers
-        [HttpGet]
+        [HttpGet("api/Customers")]
         public ActionResult<IEnumerable<Customer>> GetCustomers(string order = "CreatedAt", string direction = "ASC", int pageNumber = 1, int pageSize = 1000)
         {
-            // Determine the number of records to skip
+            // Determine the number of records to skip.
             int skip = (pageNumber - 1) * pageSize;
 
             var currentUser = CurrentUser();
 
-            // Validate order
+            // Validate order.
             var allowed = new string[] { "CREATEDAT", "NAME", "NUMBER", "DESCRIPTION" };
             if (!allowed.Contains(order.ToUpperInvariant()))
             {
                 return BadRequest();
             }
 
-            // Validate direction
+            // Validate direction.
             direction = direction.ToUpperInvariant();
             if (direction != "ASC" || direction != "DESC")
             {
@@ -99,17 +98,17 @@ namespace Brizbee.Api.Controllers
                 connection.Close();
             }
 
-            // Get total number of records
+            // Get total number of records.
             var total = _context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Count();
 
-            // Determine page count
+            // Determine page count.
             int pageCount = total > 0
                 ? (int)Math.Ceiling(total / (double)pageSize)
                 : 0;
 
-            // Set headers for paging
+            // Set headers for paging.
             Response.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
             Response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
             Response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
@@ -119,12 +118,12 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/Customers/5
-        [HttpGet("{id}")]
+        [HttpGet("api/Customers/{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(int id)
         {
             var currentUser = CurrentUser();
 
-            // Search within the organization
+            // Find within the organization.
             var customer = await _context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Where(c => c.Id == id)
@@ -139,12 +138,12 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: api/Customers
-        [HttpPost]
+        [HttpPost("api/Customers")]
         public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
             var currentUser = CurrentUser();
 
-            // Ensure the same organization
+            // Ensure the same organization.
             customer.OrganizationId = currentUser.OrganizationId;
 
             _context.Customers.Add(customer);
@@ -154,12 +153,12 @@ namespace Brizbee.Api.Controllers
         }
 
         // PUT: api/Users/5
-        [HttpPut("{id}")]
+        [HttpPut("api/Users/{id}")]
         public IActionResult PutCustomer(int id, Customer patch)
         {
             var currentUser = CurrentUser();
 
-            // Search within the organization
+            // Find within the organization.
             var customer = _context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .FirstOrDefault();
@@ -169,7 +168,7 @@ namespace Brizbee.Api.Controllers
                 return NotFound();
             }
 
-            // Apply the changes
+            // Apply the changes.
             customer.Name = patch.Name;
             customer.Number = patch.Number;
             customer.Description = patch.Description;
@@ -187,18 +186,18 @@ namespace Brizbee.Api.Controllers
         }
 
         // DELETE: api/Customers/5
-        [HttpDelete("{id}")]
+        [HttpDelete("api/Customers/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to delete users
+            // Only permit administrators to delete users.
             if (currentUser.Role != "Administrator")
             {
                 return BadRequest();
             }
 
-            // Search within the organization
+            // Find within the organization.
             var customer = await _context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Where(c => c.Id == id)
