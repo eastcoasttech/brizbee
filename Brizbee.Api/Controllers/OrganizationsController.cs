@@ -24,7 +24,6 @@ using Brizbee.Api.Serialization.DTO;
 using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

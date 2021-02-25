@@ -63,7 +63,7 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to see all users
+            // Only permit administrators to see all users.
             if (currentUser.Role != "Administrator")
             {
                 return BadRequest();
@@ -72,6 +72,16 @@ namespace Brizbee.Api.Controllers
             return await _context.Users
                 .Where(u => !u.IsDeleted)
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => new User()
+                {
+                    CreatedAt = u.CreatedAt,
+                    EmailAddress = u.EmailAddress,
+                    Name = u.Name,
+                    IsDeleted = u.IsDeleted,
+                    OrganizationId = u.OrganizationId,
+                    Role = u.Role,
+                    TimeZone = u.TimeZone
+                })
                 .ToListAsync();
         }
 
@@ -81,17 +91,35 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only Administrators can see other users in the organization
+            // Only Administrators can see other users in the organization.
             if (currentUser.Role != "Administrator" && currentUser.Id != id)
             {
                 return BadRequest();
             }
 
-            // Search within the organization
+            // Find within the organization.
             var user = await _context.Users
                 .Where(u => !u.IsDeleted)
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
                 .Where(u => u.Id == id)
+                .Select(u => new User()
+                {
+                    CreatedAt = u.CreatedAt,
+                    EmailAddress = u.EmailAddress,
+                    Name = u.Name,
+                    IsDeleted = u.IsDeleted,
+                    OrganizationId = u.OrganizationId,
+                    Role = u.Role,
+                    TimeZone = u.TimeZone,
+                    Pin = u.Pin,
+                    QuickBooksEmployee = u.QuickBooksEmployee,
+                    RequiresLocation = u.RequiresLocation,
+                    RequiresPhoto = u.RequiresPhoto,
+                    UsesMobileClock = u.UsesMobileClock,
+                    UsesTouchToneClock = u.UsesTouchToneClock,
+                    UsesTimesheets = u.UsesTimesheets,
+                    UsesWebClock = u.UsesWebClock
+                })
                 .FirstOrDefaultAsync();
 
             if (user == null)
@@ -108,10 +136,10 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Ensure the same organization
+            // Ensure the same organization.
             user.OrganizationId = currentUser.OrganizationId;
 
-            // Only permit administrators
+            // Only permit administrators.
             if (currentUser.Role != "Administrator")
             {
                 return BadRequest();
@@ -129,7 +157,7 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Search within the organization
+            // Find within the organization.
             var user = _context.Users
                 .Where(u => !u.IsDeleted)
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
@@ -141,7 +169,7 @@ namespace Brizbee.Api.Controllers
                 return NotFound();
             }
 
-            // Only permit administrators and the same user to update
+            // Only permit administrators and the same user to update.
             if (currentUser.Role != "Administrator" && currentUser.Id != id)
             {
                 return BadRequest();
@@ -197,13 +225,13 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to delete users
+            // Only permit administrators to delete users.
             if (currentUser.Role != "Administrator")
             {
                 return BadRequest();
             }
 
-            // Search within the organization
+            // Find within the organization.
             var user = await _context.Users
                 .Where(u => !u.IsDeleted)
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
@@ -215,7 +243,7 @@ namespace Brizbee.Api.Controllers
                 return NotFound();
             }
 
-            // Apply the changes
+            // Apply the changes.
             user.IsDeleted = true;
 
             await _context.SaveChangesAsync();
@@ -224,9 +252,8 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: api/Users/ChangePassword
-        [HttpPost]
+        [HttpPost("api/Users/ChangePassword")]
         [AllowAnonymous]
-        [Route("api/Users/ChangePassword")]
         public IActionResult ChangePassword([FromQuery] string emailAddress, [FromQuery] string password)
         {
             var user = _context.Users
@@ -234,7 +261,7 @@ namespace Brizbee.Api.Controllers
                 .Where(u => u.EmailAddress == emailAddress)
                 .FirstOrDefault();
 
-            // Generates a password hash and salt
+            // Generates a password hash and salt.
             var service = new SecurityService();
             user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
             user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", password, user.PasswordSalt));
@@ -246,9 +273,8 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: api/Users/Authenticate
-        [HttpPost]
+        [HttpPost("api/Users/Authenticate")]
         [AllowAnonymous]
-        [Route("api/Users/Authenticate")]
         public IActionResult Authenticate([FromBody] Session session)
         {
             User user = null;
@@ -258,7 +284,7 @@ namespace Brizbee.Api.Controllers
                 case "email":
                     var service = new SecurityService();
 
-                    // Validate both an Email and Password
+                    // Validate both an Email and Password.
                     if (session.EmailAddress == null || session.EmailPassword == null)
                     {
                         return BadRequest("Must provide both an Email Address and password");
@@ -268,7 +294,7 @@ namespace Brizbee.Api.Controllers
                         .Where(u => u.EmailAddress == session.EmailAddress)
                         .FirstOrDefault();
 
-                    // Attempt to authenticate
+                    // Attempt to authenticate.
                     if ((user == null) ||
                         !service.AuthenticateWithPassword(user,
                             session.EmailPassword))
@@ -278,7 +304,7 @@ namespace Brizbee.Api.Controllers
 
                     return Created("Authenticate", GenerateJSONWebToken(user));
                 case "pin":
-                    // Validate both an organization code and user pin
+                    // Validate both an organization code and user pin.
                     if (session.PinUserPin == null || session.PinOrganizationCode == null)
                     {
                         return BadRequest("Must provide both an organization code and user PIN");
@@ -291,7 +317,7 @@ namespace Brizbee.Api.Controllers
                             session.PinOrganizationCode.ToUpper())
                         .FirstOrDefault();
 
-                    // Attempt to authenticate
+                    // Attempt to authenticate.
                     if (user == null)
                     {
                         return BadRequest("Invalid organization code and user pin combination");
@@ -304,9 +330,8 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: api/Users/Register
-        [HttpPost]
+        [HttpPost("api/Users/Register")]
         [AllowAnonymous]
-        [Route("api/Users/Register")]
         public IActionResult Register([FromBody] Registration registration)
         {
             var user = registration.User;
@@ -316,20 +341,20 @@ namespace Brizbee.Api.Controllers
             {
                 try
                 {
-                    // Ensure Email address is unique
+                    // Ensure Email address is unique.
                     var duplicate = _context.Users.Where(u => u.EmailAddress.ToLower().Equals(user.EmailAddress));
                     if (duplicate.Any())
                     {
                         return BadRequest("Email Address is already taken");
                     }
 
-                    // Generates a password hash and salt
+                    // Generates a password hash and salt.
                     var service = new SecurityService();
                     user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
                     user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
                     user.Password = null;
 
-                    // Auto-generated
+                    // Auto-generated.
                     user.Role = "Administrator";
                     user.CreatedAt = DateTime.UtcNow;
                     organization.CreatedAt = DateTime.UtcNow;
@@ -341,7 +366,7 @@ namespace Brizbee.Api.Controllers
                         organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
                     }
 
-                    // Determine the actual Stripe Plan Id based on the PlanId
+                    // Determine the actual Stripe Plan Id based on the PlanId.
                     var stripePlanId = _config["Stripe:StripePlanId1"]; // Default plan is the contractor plan
                     switch (organization.PlanId)
                     {
@@ -363,7 +388,7 @@ namespace Brizbee.Api.Controllers
                     {
                         try
                         {
-                            // Create a Stripe customer object and save the customer id
+                            // Create a Stripe customer object and save the customer id.
                             var customerOptions = new CustomerCreateOptions
                             {
                                 Email = user.EmailAddress
@@ -372,7 +397,7 @@ namespace Brizbee.Api.Controllers
                             Stripe.Customer customer = customers.Create(customerOptions);
                             organization.StripeCustomerId = customer.Id;
 
-                            // Subscribe the customer to the price and save the subscription id
+                            // Subscribe the customer to the price and save the subscription id.
                             var subscriptionOptions = new SubscriptionCreateOptions
                             {
                                 Customer = customer.Id, // ex. cus_IDjvN9UsoFp2mk
@@ -390,7 +415,7 @@ namespace Brizbee.Api.Controllers
 
                             organization.StripeSubscriptionId = subscription.Id;
 
-                            // Send Welcome Email
+                            // Send Welcome Email.
                             var apiKey = _config["SendGrid:ApiKey"];
                             var client = new SendGridClient(apiKey);
                             var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
@@ -404,7 +429,7 @@ namespace Brizbee.Api.Controllers
                         }
                     }
 
-                    // Save the organization and user
+                    // Save the organization and user.
                     _context.Organizations.Add(organization);
                     user.OrganizationId = organization.Id;
 
