@@ -1,0 +1,377 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    padding-top: 80px;
+    overflow-y: scroll;
+}
+
+    body.modal-open {
+        overflow-y: scroll;
+    }
+
+ol.breadcrumb {
+    margin-bottom: 30px;
+}
+
+.navbar {
+    margin-bottom: 5em;
+}
+
+.navbar-nav i.fa {
+    margin-right: 3px;
+}
+
+table.table-supercondensed {
+    font-size: 95%;
+}
+
+table.table-supercondensed tr td {
+    padding: 3px;
+}
+
+table.table-noborder {
+    border: none;
+}
+
+    table.table-noborder tr {
+        border: none;
+    }
+
+        table.table-noborder tr td {
+            border: none;
+        }
+
+table {
+    background-color: #ffffff;
+}
+
+table.table-jobs tr td {
+    border-left: none;
+    border-right: none;
+}
+
+table tr.selectable:hover {
+    background-color: #e7e7e7;
+    cursor: pointer;
+}
+
+table tr.selectable:hover a {
+    text-decoration: underline;
+}
+
+table tr.selected {
+    background-color: #e7e7e7;
+    cursor: pointer;
+}
+
+table tr.selected a {
+    text-decoration: underline;
+}
+
+.panel-condensed {
+    padding: 3px;
+    background-color: #f5f5f5;
+}
+
+.table-report {
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+    .table-report tbody tr td {
+        padding: 3px;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .table-report tbody tr td a {
+        text-decoration: none;
+    }
+
+    .table-report tbody tr td i {
+        font-size: 40px;
+        color: #ffc600;
+    }
+
+    .table-report tbody tr td h4 {
+        margin: 3px;
+        padding: 0;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .table-report tbody tr td p {
+        margin: 3px;
+        padding: 0;
+        color: #000;
+    }
+
+/* .panel-condensed {
+    padding: 3px;
+    background-color: #ffc600;
+}
+    .panel-condensed h4 {
+        margin: 0;
+        padding: 3px;
+        font-weight: bold;
+    }
+
+    .panel-condensed h4 i {
+        margin-right: 5px;
+    }
+
+    .panel-condensed h4 a {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .panel-condensed p {
+        margin: 0;
+        padding: 0;
+        color: #000;
+    }
+
+    .panel-condensed .panel-body {
+        padding: 10px;
+    } */
+
+input:focus {
+    outline: none;
+    border: 2px #ffc600 solid !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.row-toolbar {
+    margin-bottom: 10px;
+}
+
+.btn {
+    text-transform: uppercase;
+    padding: 6px 16px;
+}
+
+.modal-body hr {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.navbar-phone {
+    font-weight: bold;
+    color: #444;
+}
+
+    .navbar-phone a {
+        font-weight: bold;
+        color: #444;
+    }
+
+.panel-default h2 {
+    font-weight: bold;
+    padding: 0;
+    margin: 0;
+    font-size: 20px;
+}
+
+input.form-control {
+    border: 2px solid #ccc;
+    box-shadow: 0 1px 3px 0 #e6ebf1;
+    -webkit-transition: box-shadow 150ms ease;
+    transition: box-shadow 150ms ease;
+}
+
+ol.getting-started {
+    margin-top: 25px;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+ol.getting-started li {
+    margin-bottom: 12px;
+}
+
+.panel-status {
+    border-top: none;
+    padding-top: 1em;
+}
+
+.panel-status h3 {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.panel-status p {
+    margin-bottom: 15px;
+}
+
+.panel-kiosk p {
+    font-size: 16px;
+    line-height: 22px;
+}
+
+.panel-kiosk p small {
+    font-size: 12px;
+}
+
+.panel-login {
+    margin-bottom: 10px;
+}
+
+.header-status {
+    padding-bottom: 1em;
+    text-transform: uppercase;
+}
+
+/**
+ * The CSS shown here will not be introduced in the Quickstart guide, but shows
+ * how you can use CSS to style your Element's container.
+ */
+ .StripeElement {
+    background-color: white;
+    height: 34px;
+    padding: 7px 12px;
+    font-size: 14px;
+    border: 2px solid #ccc;
+    box-shadow: 0 1px 3px 0 #e6ebf1;
+    -webkit-transition: box-shadow 150ms ease;
+    transition: box-shadow 150ms ease;
+}
+
+.StripeElement--focus {
+    outline: none;
+    border: 2px #ffc600 solid !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.StripeElement--invalid {
+    border-color: #fa755a;
+}
+
+.StripeElement--webkit-autofill {
+    background-color: #fefde5 !important;
+}
+
+
+footer {
+    border-top: solid 1px #ddd;
+    padding: 26px 0 20px 0;
+    background-color: #f5f5f5;
+    position: relative;
+    margin-top: -150px; /* negative value of footer height */
+    height: 150px;
+    clear: both;
+}
+
+a:link {
+    text-decoration: underline;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+a.btn:link, .navbar a:link {
+    text-decoration: none;
+}
+
+a.btn:hover {
+    text-decoration: underline;
+}
+
+#wrap {
+    min-height: 100%;
+}
+
+#main {
+    overflow: auto;
+    padding-bottom: 175px; /* this needs to be bigger than footer height*/
+}
+
+
+li.text-highlight a:link,
+li.text-highlight a:active,
+li.text-highlight a:visited,
+li.text-highlight a:hover {
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #444;
+    padding-left: 30px;
+    padding-right: 30px;
+    font-size: 16px;
+}
+
+li.text-highlight:hover a:link,
+li.text-highlight:hover a:active,
+li.text-highlight:hover a:visited,
+li.text-highlight:hover a:hover {
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #373737;
+}
+
+.fadeIn.ng-hide-remove {
+    animation: fadeIn 1s;
+}
+
+.fadeIn.ng-enter {
+    animation: fadeIn 1s;
+}
+
+.fadeIn.ng-hide-add {
+    opacity: 0;
+    display: block !important;
+}
+
+li.uib-tab a.nav-link {
+    text-decoration: none;
+}
+
+li.uib-tab a.nav-link i {
+    padding-right: 5px;
+}
+
+table.uib-timepicker tr td {
+    padding: 0 3px 0 0;
+}
+
+table.uib-timepicker tr td input {
+    /* copied from input-sm */
+    height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 0;
+}
+
+table.uib-timepicker tr td button {
+    /* copied from btn-sm */
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 0;
+    margin-left: 4px;
+}
+
+table.table-exceptions tr td p.input-group-sm {
+    margin: 0;
+}
+
+.alert-sm {
+    font-size: 12px;
+    padding: 7px;
+    margin-bottom: 10px;
+}
+
+.tabset-rates .tab-content .tab-pane {
+    -webkit-animation: fadeIn 0.25s; /* Safari, Chrome and Opera > 12.1 */
+    -moz-animation: fadeIn 0.25s; /* Firefox < 16 */
+    -ms-animation: fadeIn 0.25s; /* Internet Explorer */
+    -o-animation: fadeIn 0.25s; /* Opera < 12.1 */
+    animation: fadeIn 0.25s;
+}

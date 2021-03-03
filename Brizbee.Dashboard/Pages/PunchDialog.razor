@@ -1,0 +1,372 @@
+﻿@page "/dialogs/punch"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+@using Brizbee.Common.Serialization
+@using NodaTime;
+@using NodaTime.TimeZones;
+
+@inject DialogService dialogService
+@inject UserService userService
+@inject CustomerService customerService
+@inject JobService jobService
+@inject TaskService taskService
+@inject PunchService punchService
+
+<EditForm Model="@punch" OnValidSubmit="SavePunch" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="selected_user_name" class="col-sm-3 control-label">User</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_user_name" disabled="@(loading || working)" autofocus
+                         ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedUserId )"
+                         Value="@selectedUserId">
+                @foreach (var user in users)
+                {
+                    <option value="@user.Id">@user.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_customer_name" class="col-sm-3 control-label">Customer</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_customer_name" disabled="@(loading || working)"
+                         ValueChanged="@( (int c) => SelectedCustomerValueChangeHandler(c) )"
+                         ValueExpression="@( () => selectedCustomerId )"
+                         Value="@selectedCustomerId">
+                @foreach (var customer in customers)
+                {
+                    <option value="@customer.Id">@customer.Number &ndash; @customer.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_job_name" class="col-sm-3 control-label">Job</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_job_name" disabled="@(loading || working)"
+                         ValueChanged="@( (int c) => SelectedJobValueChangeHandler(c) )"
+                         ValueExpression="@( () => selectedJobId )"
+                         Value="@selectedJobId">
+                @foreach (var job in jobs)
+                {
+                    <option value="@job.Id">@job.Number &ndash; @job.Name </option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_task_name" class="col-sm-3 control-label">Task</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_task_name" disabled="@(loading || working)"
+                         ValueChanged="@( (int c) => SelectedTaskValueChangeHandler(c) )"
+                         ValueExpression="@( () => selectedTaskId )"
+                         Value="@selectedTaskId">
+                @foreach (var task in tasks)
+                {
+                    <option value="@task.Id">@task.Number &ndash; @task.Name </option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="in_at" class="col-sm-3 control-label">In</label>
+        <div class="col-sm-9">
+            <div class="row" style="margin-right: 0;">
+                <div class="col-md-6" style="padding-right: 0;">
+                    <InputDate @bind-Value="punch.InAt" class="form-control" disabled="@(loading || working)" />
+                </div>
+                <div class="col-md-2" style="padding-right: 0;">
+                    <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(loading || working)">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2" style="padding-right: 0;">
+                    <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(loading || working)">
+                        @for (int i = 0; i <= 59; i++)
+                        {
+                            <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(loading || working)">@inAtMeridian</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <div class="col-sm-9">
+            <InputSelect @bind-Value="punch.InAtTimeZone" class="form-control" id="in_at_time_zone" disabled="@(loading || working)">
+                @foreach (var timeZone in zones)
+                {
+                    <option value="@timeZone.Id">@timeZone.Id</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="hasPunchOut" disabled="@(loading || working)" /> Has Punch Out?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="out_at" class="col-sm-3 control-label">Out</label>
+        <div class="col-sm-9">
+            <div class="row" style="margin-right: 0;">
+                <div class="col-md-6" style="padding-right: 0;">
+                    <InputDate @bind-Value="punch.OutAt" class="form-control" disabled="@(!hasPunchOut || loading || working)" />
+                </div>
+                <div class="col-md-2" style="padding-right: 0;">
+                    <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || loading || working)">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2" style="padding-right: 0;">
+                    <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || loading || working)">
+                        @for (int i = 0; i <= 59; i++)
+                        {
+                            <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || loading || working)">@outAtMeridian</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <div class="col-sm-9">
+            <InputSelect @bind-Value="punch.OutAtTimeZone" class="form-control" id="out_at_time_zone" disabled="@(!hasPunchOut || loading || working)">
+                @foreach (var timeZone in zones)
+                {
+                    <option value="@timeZone.Id">@timeZone.Id</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    @if (punch.CommitId.HasValue)
+    {
+        <p class="text-danger">
+        </p>
+    }
+
+    <hr />
+
+    <button class="btn btn-primary" type="submit" disabled="@(loading || working)">OK</button>
+    <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
+    @if (punch.Id != 0)
+    {
+        <button class="btn btn-danger pull-right" type="button" ng-click="delete()" disabled="@(loading || working)">Delete</button>
+    }
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private List<IanaTimeZone> zones = new List<IanaTimeZone>();
+    private Punch punch = new Punch()
+    {
+        InAt = DateTime.Now
+    };
+    private int selectedUserId;
+    private int selectedCustomerId;
+    private int selectedJobId;
+    private int selectedTaskId;
+    private string inAtHour = "5";
+    private string inAtMinute = "00";
+    private string inAtMeridian = "PM";
+    private string outAtHour = "5";
+    private string outAtMinute = "00";
+    private string outAtMeridian = "PM";
+    private List<string> minutes = new List<string>();
+    private bool hasPunchOut = false;
+    private List<Customer> customers = new List<Customer>();
+    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<Job> jobs = new List<Job>();
+    private List<User> users = new List<User>();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Build list of time zones.
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var tzdb = DateTimeZoneProviders.Tzdb;
+        var countryCode = "";
+
+        var list =
+            from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+            where string.IsNullOrEmpty(countryCode) ||
+                  location.CountryCode.Equals(countryCode,
+                    StringComparison.OrdinalIgnoreCase)
+            let zoneId = location.ZoneId
+            let tz = tzdb[zoneId]
+            let offset = tz.GetZoneInterval(now).StandardOffset
+            orderby offset, zoneId
+            select new
+            {
+                Id = zoneId,
+                CountryCode = location.CountryCode
+            };
+
+        foreach (var z in list)
+        {
+            zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+        }
+
+        // Load the drop downs.
+        await RefreshUsers();
+        await RefreshCustomers();
+
+        // Load the punch if necessary.
+        if (Id.HasValue)
+        {
+            punch = await punchService.GetPunchByIdAsync(Id.Value);
+
+            if (punch.InAt.ToString("hh").Contains("0") && punch.InAt.ToString("hh").IndexOf("0") == 0)
+                inAtHour = punch.InAt.ToString("hh").Replace("0", "");
+            else
+                inAtHour = punch.InAt.ToString("hh");
+            inAtMinute = punch.InAt.ToString("mm");
+            inAtMeridian = punch.InAt.ToString("tt").ToUpper();
+
+            if (punch.OutAt.HasValue)
+            {
+                if (punch.OutAt.Value.ToString("hh").Contains("0") && punch.OutAt.Value.ToString("hh").IndexOf("0") == 0)
+                    outAtHour = punch.OutAt.Value.ToString("hh").Replace("0", "");
+                else
+                    outAtHour = punch.OutAt.Value.ToString("hh");
+                outAtMinute = punch.OutAt.Value.ToString("mm");
+                outAtMeridian = punch.OutAt.Value.ToString("tt").ToUpper();
+            }
+        }
+
+        loading = false;
+    }
+
+    private async void SelectedCustomerValueChangeHandler(int customerId)
+    {
+        selectedCustomerId = customerId;
+        await RefreshJobs();
+    }
+
+    private async void SelectedJobValueChangeHandler(int jobId)
+    {
+        selectedJobId = jobId;
+        await RefreshTasks();
+    }
+
+    private void SelectedTaskValueChangeHandler(int taskId)
+    {
+        selectedTaskId = taskId;
+    }
+
+    private void SelectedUserValueChangeHandler(int userId)
+    {
+        selectedUserId = userId;
+    }
+
+    private async System.Threading.Tasks.Task RefreshUsers()
+    {
+        users = await userService.GetUsersAsync();
+        selectedUserId = users.FirstOrDefault().Id;
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshCustomers()
+    {
+        customers = await customerService.GetCustomersAsync();
+        selectedCustomerId = customers.FirstOrDefault().Id;
+        StateHasChanged();
+
+        // Trigger refresh for jobs.
+        await RefreshJobs();
+    }
+
+    private async System.Threading.Tasks.Task RefreshJobs()
+    {
+        jobs = await jobService.GetJobsAsync(selectedCustomerId);
+        selectedJobId = jobs.FirstOrDefault().Id;
+        StateHasChanged();
+
+        // Trigger refresh for tasks.
+        await RefreshTasks();
+    }
+
+    private async System.Threading.Tasks.Task RefreshTasks()
+    {
+        tasks = await taskService.GetTasksAsync(selectedJobId);
+        selectedTaskId = tasks.FirstOrDefault().Id;
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task SavePunch()
+    {
+
+    }
+
+    private void ToggleInAtMerdian()
+    {
+        if (inAtMeridian == "AM")
+        {
+            inAtMeridian = "PM";
+        }
+        else
+        {
+            inAtMeridian = "AM";
+        }
+    }
+
+    private void ToggleOutAtMerdian()
+    {
+        if (outAtMeridian == "AM")
+        {
+            outAtMeridian = "PM";
+        }
+        else
+        {
+            outAtMeridian = "AM";
+        }
+    }
+
+    private void OnChange(DateTime? value, string name, string format)
+    {
+        Console.WriteLine($"{name} value changed to {value?.ToString(format)}");
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}
