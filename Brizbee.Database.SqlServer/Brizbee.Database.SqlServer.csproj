@@ -101,7 +101,9 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\0002 Adding Allowed Phone Numbers.sql" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0001 Initial Create Tables.sql" />
   </ItemGroup>

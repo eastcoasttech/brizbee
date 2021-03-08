@@ -91,5 +91,12 @@ namespace Brizbee.Common.Models
         public bool UsesWebClock { get; set; }
 
         public bool UsesTimesheets { get; set; }
+
+        /// <summary>
+        /// Comma-separated list of phone numbers that are
+        /// allowed to use the touch-tone telephone clock.
+        /// </summary>
+        [StringLength(260)]
+        public string AllowedPhoneNumbers { get; set; }
     }
 }

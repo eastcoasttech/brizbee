@@ -80,7 +80,7 @@ namespace Brizbee.Web.Controllers
         [HttpGet]
         [AllowAnonymous]
         [Route("api/Twilio/Status")]
-        public HttpResponseMessage GetStatus(string BrizbeeAuth = "", string OrganizationCode = "", string Digits = "")
+        public HttpResponseMessage GetStatus(string BrizbeeAuth = "", string OrganizationCode = "", string Digits = "", string From = "")
         {
             if (BrizbeeAuth != brizbeeAuth) { new Exception("Not Authorized"); }
 
@@ -92,6 +92,24 @@ namespace Brizbee.Web.Controllers
 
             if (user != null)
             {
+                // Ensure that the user is allowed to use touch-tone clock.
+                var allowedPhoneNumbers = user.AllowedPhoneNumbers.Split(',');
+                if (allowedPhoneNumbers.Contains("*") || !allowedPhoneNumbers.Contains(From))
+                {
+                    // Inform the user that they are denied.
+                    string deniedTemplate = "<?xml version = '1.0'?>";
+                    deniedTemplate += "<Response>";
+                    deniedTemplate += "<Say voice='Polly.Matthew'>";
+                    deniedTemplate += "I'm sorry, but you do not have permission to use the touch-tone clock.";
+                    deniedTemplate += "</Say>";
+                    deniedTemplate += "<Hangup/>";
+                    deniedTemplate += "</Response>";
+                    var deniedResponse = Request.CreateResponse(HttpStatusCode.OK);
+                    deniedResponse.Content = new StringContent(deniedTemplate, System.Text.Encoding.UTF8, "application/xml");
+                    return deniedResponse;
+                }
+
+                // Continue punching in.
                 var punch = db.Punches
                     .Include("Task")
                     .Where(p => p.UserId == user.Id)
@@ -111,8 +129,6 @@ namespace Brizbee.Web.Controllers
                         punch.Task.Job.Name,
                         punch.Task.Job.Customer.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
                         punch.Task.Job.Customer.Name);
-
-                    //message = "Hello, " + user.Name + "! You are currently punched <emphasis>in</emphasis> to task, " + punch.Task.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' ') + " - " + punch.Task.Name + " for the job " + punch.Task.Job.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' ') + " - " + punch.Task.Job.Name + " and customer " + punch.Task.Job.Customer.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' ') + " - " + punch.Task.Job.Customer.Name + ". Please press 1 to punch in on another task or job. Or, press 2 to punch out.";
                 }
                 else
                 {
@@ -290,34 +306,9 @@ namespace Brizbee.Web.Controllers
 
             if (Digits.Equals("1"))
             {
-                var punch = new PunchRepository().PunchIn(task.Id, user, From, timezone, sourceHardware: "Phone", sourcePhoneNumber: From);
+                // Punch in to the requested task.
+                new PunchRepository().PunchIn(task.Id, user, From, timezone, sourceHardware: "Phone", sourcePhoneNumber: From);
 
-                //var existing = db.Punches
-                //    .Where(p => p.UserId == user.Id)
-                //    .Where(p => !p.OutAt.HasValue)
-                //    .OrderByDescending(p => p.InAt)
-                //    .FirstOrDefault();
-
-                //// Punch out the user on any existing tasks
-                //if (existing != null)
-                //{
-                //    existing.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
-                //    existing.SourceForOutAt = From;
-                //}
-
-                //// Save the punch and hang up
-                //var punch = new Punch()
-                //{
-                //    CreatedAt = now,
-                //    Guid = Guid.NewGuid(),
-                //    InAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0),
-                //    SourceForInAt = From,
-                //    TaskId = task.Id,
-                //    UserId = user.Id
-                //};
-                //db.Punches.Add(punch);
-                //db.SaveChanges();
-                
                 string template = "<?xml version = '1.0'?>";
                 template += "<Response>";
                 template += "<Say voice='Polly.Matthew'>";
@@ -367,17 +358,9 @@ namespace Brizbee.Web.Controllers
             var user = db.Users.Find(int.Parse(UserId));
             var timezone = user.TimeZone;
 
+            // Punch out of the current task.
             new PunchRepository().PunchOut(user, From, timezone, sourceHardware: "Phone", sourcePhoneNumber: From);
             
-            //var now = DateTime.UtcNow;
-            //var punch = db.Punches.Where(p => p.UserId == user.Id)
-            //    .Where(p => !p.OutAt.HasValue)
-            //    .OrderByDescending(p => p.InAt)
-            //    .FirstOrDefault();
-            //punch.OutAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 59);
-            //punch.SourceForOutAt = From;
-            //db.SaveChanges();
-
             string template = "<?xml version = '1.0'?>";
             template += "<Response>";
             template += "<Say voice='Polly.Matthew'>";

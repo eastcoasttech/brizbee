@@ -84,6 +84,7 @@ namespace Brizbee.Web.Repositories
             // Auto-generated
             user.CreatedAt = DateTime.UtcNow;
             user.OrganizationId = currentUser.OrganizationId;
+            user.AllowedPhoneNumbers = "*";
             
             // Ensure that Pin is unique in the organization
             if (db.Users
@@ -197,6 +198,7 @@ namespace Brizbee.Web.Repositories
                     // Auto-generated
                     user.Role = "Administrator";
                     user.CreatedAt = DateTime.UtcNow;
+                    user.AllowedPhoneNumbers = "*";
                     organization.CreatedAt = DateTime.UtcNow;
                     organization.MinutesFormat = "minutes";
 
