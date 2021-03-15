@@ -61,6 +61,7 @@ namespace Brizbee.Web.Repositories
 
                     // Ensure that no two commits overlap
                     var overlap = db.Commits
+                        .Where(c => c.OrganizationId == commit.OrganizationId)
                         .Where(c => (inAt < c.OutAt) && (c.InAt < outAt))
                         .FirstOrDefault();
                     if (overlap != null)
