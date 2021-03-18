@@ -94,7 +94,7 @@ namespace Brizbee.Web.Controllers
             {
                 // Ensure that the user is allowed to use touch-tone clock.
                 var allowedPhoneNumbers = user.AllowedPhoneNumbers.Split(',');
-                if (allowedPhoneNumbers.Contains("*") || !allowedPhoneNumbers.Contains(From))
+                if (!allowedPhoneNumbers.Contains("*") && !allowedPhoneNumbers.Contains(From))
                 {
                     // Inform the user that they are denied.
                     string deniedTemplate = "<?xml version = '1.0'?>";
