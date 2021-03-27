@@ -9,6 +9,8 @@ namespace Brizbee.Dashboard.Services
         private int _authUserId;
         private string _authExpiration;
         private string _authToken;
+        private DateTime _rangeMin;
+        private DateTime _rangeMax;
 
         public User CurrentUser
         {
@@ -62,6 +64,32 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
+        public DateTime RangeMin
+        {
+            get
+            {
+                return _rangeMin == DateTime.MinValue ? DateTime.Now : _rangeMin;
+            }
+            set
+            {
+                _rangeMin = value;
+                NotifyDataChanged();
+            }
+        }
+
+        public DateTime RangeMax
+        {
+            get
+            {
+                return _rangeMax == DateTime.MinValue ? DateTime.Now : _rangeMax;
+            }
+            set
+            {
+                _rangeMax = value;
+                NotifyDataChanged();
+            }
+        }
+
         public event Action OnChange;
 
         private void NotifyDataChanged() => OnChange?.Invoke();
@@ -72,6 +100,8 @@ namespace Brizbee.Dashboard.Services
             _authExpiration = "";
             _authToken = "";
             _authUserId = 0;
+            _rangeMin = DateTime.Now;
+            _rangeMax = DateTime.Now;
             _currentUser = null;
         }
     }

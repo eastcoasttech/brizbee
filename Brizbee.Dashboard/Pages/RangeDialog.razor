@@ -1,0 +1,65 @@
+﻿@page "/dialogs/range"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+
+@implements IDisposable
+
+<EditForm Model="@range" OnValidSubmit="SaveRange" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="range_min" class="col-sm-3 control-label">From</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="range.Min" id="range_min" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="range_max" class="col-sm-3 control-label">To</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="range.Max" id="range_max" class="form-control" />
+        </div>
+    </div>
+
+    <hr />
+
+    <button class="btn btn-primary" type="submit">OK</button>
+    <button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
+</EditForm>
+
+@code {
+    DateRange range = new DateRange();
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        range.Min = sharedService.RangeMin;
+        range.Max = sharedService.RangeMax;
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    private void SaveRange()
+    {
+        sharedService.RangeMin = range.Min;
+        sharedService.RangeMax = range.Max;
+
+        dialogService.Close(false);
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}
