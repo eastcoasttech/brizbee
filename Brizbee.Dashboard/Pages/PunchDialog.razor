@@ -263,6 +263,9 @@
 
             if (punch.OutAt.HasValue)
             {
+                // Allow editing the punch out.
+                hasPunchOut = true;
+
                 if (punch.OutAt.Value.ToString("hh").Contains("0") && punch.OutAt.Value.ToString("hh").IndexOf("0") == 0)
                     outAtHour = punch.OutAt.Value.ToString("hh").Replace("0", "");
                 else
