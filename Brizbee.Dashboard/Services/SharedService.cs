@@ -68,7 +68,7 @@ namespace Brizbee.Dashboard.Services
         {
             get
             {
-                return _rangeMin == DateTime.MinValue ? DateTime.Now : _rangeMin;
+                return _rangeMin == DateTime.MinValue ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0) : _rangeMin;
             }
             set
             {
@@ -81,7 +81,7 @@ namespace Brizbee.Dashboard.Services
         {
             get
             {
-                return _rangeMax == DateTime.MinValue ? DateTime.Now : _rangeMax;
+                return _rangeMax == DateTime.MinValue ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59) : _rangeMax;
             }
             set
             {
