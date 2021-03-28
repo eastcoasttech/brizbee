@@ -20,7 +20,7 @@
     <div class="form-group">
         <label for="selected_user_name" class="col-sm-3 control-label">User</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_user_name" disabled="@(loading || working)" autofocus
+            <InputSelect class="form-control" id="selected_user_name" disabled="@(loading || loadingUsers || working)" autofocus
                          ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedUserId )"
                          Value="@selectedUserId">
@@ -35,7 +35,7 @@
     <div class="form-group">
         <label for="selected_customer_name" class="col-sm-3 control-label">Customer</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_customer_name" disabled="@(loading || working)"
+            <InputSelect class="form-control" id="selected_customer_name" disabled="@(loading || loadingCustomers || working)"
                          ValueChanged="@( (int c) => SelectedCustomerValueChangeHandler(c) )"
                          ValueExpression="@( () => selectedCustomerId )"
                          Value="@selectedCustomerId">
@@ -50,7 +50,7 @@
     <div class="form-group">
         <label for="selected_job_name" class="col-sm-3 control-label">Job</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_job_name" disabled="@(loading || working)"
+            <InputSelect class="form-control" id="selected_job_name" disabled="@(loading || loadingCustomers || loadingJobs || working)"
                          ValueChanged="@( (int c) => SelectedJobValueChangeHandler(c) )"
                          ValueExpression="@( () => selectedJobId )"
                          Value="@selectedJobId">
@@ -65,7 +65,7 @@
     <div class="form-group">
         <label for="selected_task_name" class="col-sm-3 control-label">Task</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_task_name" disabled="@(loading || working)"
+            <InputSelect class="form-control" id="selected_task_name" disabled="@(loading || loadingCustomers || loadingJobs || loadingTasks || working)"
                          ValueChanged="@( (int c) => SelectedTaskValueChangeHandler(c) )"
                          ValueExpression="@( () => selectedTaskId )"
                          Value="@selectedTaskId">
@@ -187,7 +187,7 @@
     <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
     @if (punch.Id != 0)
     {
-        <button class="btn btn-danger pull-right" type="button" ng-click="delete()" disabled="@(loading || working)">Delete</button>
+        <button class="btn btn-danger pull-right" type="button" @onclick="DeletePunch" disabled="@(loading || working)">Delete</button>
     }
 </EditForm>
 
@@ -196,18 +196,19 @@
 
     private bool working = false;
     private bool loading = true;
+    private bool loadingUsers = true;
+    private bool loadingCustomers = true;
+    private bool loadingJobs = true;
+    private bool loadingTasks = true;
     private List<IanaTimeZone> zones = new List<IanaTimeZone>();
-    private Punch punch = new Punch()
-    {
-        InAt = DateTime.Now
-    };
+    private Punch punch = new Punch();
     private int selectedUserId;
     private int selectedCustomerId;
     private int selectedJobId;
     private int selectedTaskId;
-    private string inAtHour = "5";
+    private string inAtHour = "9";
     private string inAtMinute = "00";
-    private string inAtMeridian = "PM";
+    private string inAtMeridian = "AM";
     private string outAtHour = "5";
     private string outAtMinute = "00";
     private string outAtMeridian = "PM";
@@ -220,7 +221,10 @@
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
+        // --------------------------------------------------------------------
         // Build list of time zones.
+        // --------------------------------------------------------------------
+
         var now = SystemClock.Instance.GetCurrentInstant();
         var tzdb = DateTimeZoneProviders.Tzdb;
         var countryCode = "";
@@ -245,11 +249,31 @@
             zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
         }
 
-        // Load the drop downs.
-        await RefreshUsers();
-        await RefreshCustomers();
 
-        // Load the punch if necessary.
+        // --------------------------------------------------------------------
+        // Set defaults.
+        // --------------------------------------------------------------------
+
+        punch = new Punch()
+        {
+            InAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 9, 0, 0),
+            OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0),
+            InAtTimeZone = zones.First().Id,
+            OutAtTimeZone = zones.First().Id
+        };
+
+
+        // --------------------------------------------------------------------
+        // Load the drop downs.
+        // --------------------------------------------------------------------
+
+        await RefreshUsers();
+
+
+        // --------------------------------------------------------------------
+        // Attempt to load the punch, if necessary.
+        // --------------------------------------------------------------------
+
         if (Id.HasValue)
         {
             punch = await punchService.GetPunchByIdAsync(Id.Value);
@@ -273,6 +297,22 @@
                 outAtMinute = punch.OutAt.Value.ToString("mm");
                 outAtMeridian = punch.OutAt.Value.ToString("tt").ToUpper();
             }
+            else
+            {
+                // Set a default value.
+                punch.OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0);
+                punch.OutAtTimeZone = zones.First().Id;
+            }
+
+            // Set the customer, job, and task based on the TaskId for this punch.
+            await RefreshCustomers(punch.Task.Job.CustomerId);
+            await RefreshJobs(punch.Task.JobId);
+            await RefreshTasks(punch.TaskId);
+        }
+        else
+        {
+            // Set the customer, job, and task by selecting defaults.
+            await RefreshCustomers();
         }
 
         loading = false;
@@ -293,79 +333,159 @@
     private void SelectedTaskValueChangeHandler(int taskId)
     {
         selectedTaskId = taskId;
+
+        // Update the punch.
+        punch.TaskId = selectedTaskId;
     }
 
     private void SelectedUserValueChangeHandler(int userId)
     {
         selectedUserId = userId;
+
+        // Update the punch.
+        punch.UserId = selectedUserId;
     }
 
     private async System.Threading.Tasks.Task RefreshUsers()
     {
+        loadingUsers = true;
+
         users = await userService.GetUsersAsync();
         selectedUserId = users.FirstOrDefault().Id;
+
+        // Update the punch.
+        punch.UserId = selectedUserId;
+
+        loadingUsers = false;
+
         StateHasChanged();
     }
 
-    private async System.Threading.Tasks.Task RefreshCustomers()
+    private async System.Threading.Tasks.Task RefreshCustomers(int? customerId = null)
     {
+        loadingCustomers = true;
+
         customers = await customerService.GetCustomersAsync();
-        selectedCustomerId = customers.FirstOrDefault().Id;
-        StateHasChanged();
 
-        // Trigger refresh for jobs.
-        await RefreshJobs();
+        if (customerId.HasValue)
+        {
+            // Attempt to find the requested customer in the list.
+            var exists = customers.Where(c => c.Id == customerId).Any();
+            if (exists)
+                selectedCustomerId = customerId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedCustomerId = customers.FirstOrDefault().Id;
+
+            // Trigger refresh for jobs.
+            await RefreshJobs();
+        }
+
+        loadingCustomers = false;
+
+        StateHasChanged();
     }
 
-    private async System.Threading.Tasks.Task RefreshJobs()
+    private async System.Threading.Tasks.Task RefreshJobs(int? jobId = null)
     {
+        loadingJobs = true;
+
         jobs = await jobService.GetJobsAsync(selectedCustomerId);
-        selectedJobId = jobs.FirstOrDefault().Id;
-        StateHasChanged();
 
-        // Trigger refresh for tasks.
-        await RefreshTasks();
+        if (jobId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = jobs.Where(j => j.Id == jobId).Any();
+            if (exists)
+                selectedJobId = jobId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedJobId = jobs.FirstOrDefault().Id;
+
+            // Trigger refresh for tasks.
+            await RefreshTasks();
+        }
+
+        loadingJobs = false;
+
+        StateHasChanged();
     }
 
-    private async System.Threading.Tasks.Task RefreshTasks()
+    private async System.Threading.Tasks.Task RefreshTasks(int? taskId = null)
     {
+        loadingTasks = true;
+
         tasks = await taskService.GetTasksAsync(selectedJobId);
-        selectedTaskId = tasks.FirstOrDefault().Id;
+
+        if (taskId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = tasks.Where(t => t.Id == taskId).Any();
+            if (exists)
+                selectedTaskId = taskId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedTaskId = tasks.FirstOrDefault().Id;
+
+            // Update the punch.
+            punch.TaskId = selectedTaskId;
+        }
+
+        loadingTasks = false;
+
         StateHasChanged();
     }
 
     private async System.Threading.Tasks.Task SavePunch()
     {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm("Are you sure you want to save this punch?");
+        if (confirm != true)
+            return;
 
+        // Parse the new hour and minute.
+        punch.InAt = DateTime.Parse($"{punch.InAt.Year}-{punch.InAt.Month}-{punch.InAt.Day} {inAtHour}:{inAtMinute} {inAtMeridian}");
+
+        // Optionally parse the new hour and minute.
+        if (hasPunchOut)
+            punch.OutAt = DateTime.Parse($"{punch.OutAt.Value.Year}-{punch.OutAt.Value.Month}-{punch.OutAt.Value.Day} {outAtHour}:{outAtMinute} {outAtMeridian}");
+        else
+        {
+            punch.OutAt = null;
+            punch.OutAtTimeZone = null;
+        }
+
+        // Save the punch on the server and close the dialog.
+        await punchService.SavePunch(punch);
+        dialogService.Close(false);
     }
 
     private void ToggleInAtMerdian()
     {
-        if (inAtMeridian == "AM")
-        {
-            inAtMeridian = "PM";
-        }
-        else
-        {
-            inAtMeridian = "AM";
-        }
+        inAtMeridian = inAtMeridian == "AM" ? "PM" : "AM";
     }
 
     private void ToggleOutAtMerdian()
     {
-        if (outAtMeridian == "AM")
-        {
-            outAtMeridian = "PM";
-        }
-        else
-        {
-            outAtMeridian = "AM";
-        }
+        outAtMeridian = outAtMeridian == "AM" ? "PM" : "AM";
     }
 
-    private void OnChange(DateTime? value, string name, string format)
+    private async System.Threading.Tasks.Task DeletePunch()
     {
-        Console.WriteLine($"{name} value changed to {value?.ToString(format)}");
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm("Are you sure you want to delete this punch?");
+        if (confirm != true)
+            return;
+
+        // Delete the punch on the server and close the dialog.
+        await punchService.DeletePunch(punch.Id);
+        dialogService.Close(false);
     }
 
     private void CloseDialog(MouseEventArgs e)

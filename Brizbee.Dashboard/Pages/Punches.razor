@@ -303,7 +303,7 @@
     private List<Punch> punches = new List<Punch>();
     private string sortBy = "InAt";
     private string sortDirection = "ASC";
-    private int pageSize = 2;
+    private int pageSize = 100;
     private int skip = 0;
     private long punchesCount = 0;
     private int punchesPageStart = 0;
@@ -332,8 +332,6 @@
     {
         punchesPageStart = punchesPageStart + pageSize;
         skip = punchesPageStart;//pageSize * punchesPageStart;
-        Console.WriteLine(punchesPageStart);
-        Console.WriteLine(skip);
         await RefreshPunches();
     }
 
@@ -341,8 +339,6 @@
     {
         punchesPageStart = punchesPageStart - pageSize;
         skip = punchesPageStart;//pageSize * punchesPageStart;
-        Console.WriteLine(punchesPageStart);
-        Console.WriteLine(skip);
         await RefreshPunches();
     }
 
@@ -372,9 +368,6 @@
 
     private async System.Threading.Tasks.Task RefreshPunches()
     {
-        Console.WriteLine(sharedService.RangeMin.ToString("yyyy-MM-dd"));
-        Console.WriteLine(sharedService.RangeMax.ToString("yyyy-MM-dd"));
-
         working = true;
         punches.Clear();
         var result = await punchService.GetPunchesAsync(sharedService.RangeMin, sharedService.RangeMax, pageSize, skip, sortBy, sortDirection);

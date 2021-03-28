@@ -16,7 +16,7 @@ namespace Brizbee.Dashboard.Services
         public ApiService _apiService;
         private JsonSerializerOptions options = new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true,
+            PropertyNameCaseInsensitive = true
         };
 
         public UserService(ApiService apiService)
