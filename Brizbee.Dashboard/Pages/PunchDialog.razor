@@ -3,6 +3,7 @@
 @using Brizbee.Dashboard.Services
 @using Brizbee.Common.Models
 @using Brizbee.Common.Serialization
+@using System.Globalization 
 @using NodaTime
 @using NodaTime.TimeZones
 
@@ -18,9 +19,9 @@
     <ValidationSummary />
 
     <div class="form-group">
-        <label for="selected_user_name" class="col-sm-3 control-label">User</label>
+        <label for="selected_user_id" class="col-sm-3 control-label">User</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_user_name" disabled="@(loading || loadingUsers || working)" autofocus
+            <InputSelect class="form-control" id="selected_user_id" disabled="@(loading || loadingUsers || working)" autofocus
                          ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedUserId )"
                          Value="@selectedUserId">
@@ -33,10 +34,10 @@
     </div>
 
     <div class="form-group">
-        <label for="selected_customer_name" class="col-sm-3 control-label">Customer</label>
+        <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_customer_name" disabled="@(loading || loadingCustomers || working)"
-                         ValueChanged="@( (int c) => SelectedCustomerValueChangeHandler(c) )"
+            <InputSelect class="form-control" id="selected_customer_id" disabled="@(loading || loadingCustomers || working)"
+                         ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedCustomerId )"
                          Value="@selectedCustomerId">
                 @foreach (var customer in customers)
@@ -48,10 +49,10 @@
     </div>
 
     <div class="form-group">
-        <label for="selected_job_name" class="col-sm-3 control-label">Job</label>
+        <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_job_name" disabled="@(loading || loadingCustomers || loadingJobs || working)"
-                         ValueChanged="@( (int c) => SelectedJobValueChangeHandler(c) )"
+            <InputSelect class="form-control" id="selected_job_id" disabled="@(loading || loadingCustomers || loadingJobs || working)"
+                         ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedJobId )"
                          Value="@selectedJobId">
                 @foreach (var job in jobs)
@@ -63,10 +64,10 @@
     </div>
 
     <div class="form-group">
-        <label for="selected_task_name" class="col-sm-3 control-label">Task</label>
+        <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_task_name" disabled="@(loading || loadingCustomers || loadingJobs || loadingTasks || working)"
-                         ValueChanged="@( (int c) => SelectedTaskValueChangeHandler(c) )"
+            <InputSelect class="form-control" id="selected_task_id" disabled="@(loading || loadingCustomers || loadingJobs || loadingTasks || working)"
+                         ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedTaskId )"
                          Value="@selectedTaskId">
                 @foreach (var task in tasks)
@@ -110,10 +111,28 @@
     </div>
 
     <div class="form-group">
-        <label for="in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <label for="selected_in_at_country_code" class="col-sm-3 control-label">Country</label>
         <div class="col-sm-9">
-            <InputSelect @bind-Value="punch.InAtTimeZone" class="form-control" id="in_at_time_zone" disabled="@(loading || working)">
-                @foreach (var timeZone in zones)
+            <InputSelect class="form-control" id="selected_in_at_country_code" disabled="@(loading || working)"
+                         ValueChanged="@( (string x) => selectedInAtCountryCodeValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedInAtCountryCode )"
+                         Value="@selectedInAtCountryCode">
+                @foreach (var country in countries)
+                {
+                    <option value="@country.CountryCode">@country.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_in_at_time_zone" disabled="@(loading || working)"
+                         ValueChanged="@( (string x) => selectedInAtTimeZoneValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedInAtTimeZone )"
+                         Value="@selectedInAtTimeZone">
+                @foreach (var timeZone in inAtZones)
                 {
                     <option value="@timeZone.Id">@timeZone.Id</option>
                 }
@@ -164,10 +183,28 @@
     </div>
 
     <div class="form-group">
-        <label for="out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <label for="selected_out_at_country_code" class="col-sm-3 control-label">Country</label>
         <div class="col-sm-9">
-            <InputSelect @bind-Value="punch.OutAtTimeZone" class="form-control" id="out_at_time_zone" disabled="@(!hasPunchOut || loading || working)">
-                @foreach (var timeZone in zones)
+            <InputSelect class="form-control" id="selected_out_at_country_code" disabled="@(!hasPunchOut || loading || working)"
+                         ValueChanged="@( (string x) => selectedOutAtCountryCodeValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedOutAtCountryCode )"
+                         Value="@selectedOutAtCountryCode">
+                @foreach (var country in countries)
+                {
+                    <option value="@country.CountryCode">@country.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_out_at_time_zone" disabled="@(!hasPunchOut || loading || working)"
+                         ValueChanged="@( (string x) => selectedOutAtTimeZoneValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedOutAtTimeZone )"
+                         Value="@selectedOutAtTimeZone">
+                @foreach (var timeZone in outAtZones)
                 {
                     <option value="@timeZone.Id">@timeZone.Id</option>
                 }
@@ -200,7 +237,10 @@
     private bool loadingCustomers = true;
     private bool loadingJobs = true;
     private bool loadingTasks = true;
+    private List<Country> countries = new List<Country>();
     private List<IanaTimeZone> zones = new List<IanaTimeZone>();
+    private List<IanaTimeZone> inAtZones = new List<IanaTimeZone>();
+    private List<IanaTimeZone> outAtZones = new List<IanaTimeZone>();
     private Punch punch = new Punch();
     private int selectedUserId;
     private int selectedCustomerId;
@@ -209,9 +249,13 @@
     private string inAtHour = "9";
     private string inAtMinute = "00";
     private string inAtMeridian = "AM";
+    private string selectedInAtCountryCode = "";
+    private string selectedInAtTimeZone = "";
     private string outAtHour = "5";
     private string outAtMinute = "00";
     private string outAtMeridian = "PM";
+    private string selectedOutAtCountryCode = "";
+    private string selectedOutAtTimeZone = "";
     private List<string> minutes = new List<string>();
     private bool hasPunchOut = false;
     private List<Customer> customers = new List<Customer>();
@@ -251,15 +295,44 @@
 
 
         // --------------------------------------------------------------------
+        // Build list of countries.
+        // --------------------------------------------------------------------
+
+        CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+        foreach (var culture in cultures)
+        {
+            try
+            {
+                var region = new RegionInfo(culture.LCID);
+                if (!countries.Where(c => c.Name == region.EnglishName).Any())
+                {
+                    countries.Add(new Country() { CountryCode = region.TwoLetterISORegionName, Name = region.EnglishName });
+                }
+            }
+            catch (CultureNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
+        // --------------------------------------------------------------------
         // Set defaults.
         // --------------------------------------------------------------------
+
+        selectedInAtCountryCode = "US";
+        selectedInAtCountryCodeValueChangeHandler("US");
+        selectedOutAtCountryCode = "US";
+        selectedOutAtCountryCodeValueChangeHandler("US");
+
+        selectedInAtTimeZone = "America/New_York";
+        selectedOutAtTimeZone = "America/New_York";
 
         punch = new Punch()
         {
             InAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 9, 0, 0),
-            OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0),
-            InAtTimeZone = zones.First().Id,
-            OutAtTimeZone = zones.First().Id
+            OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0)
         };
 
 
@@ -308,6 +381,18 @@
             await RefreshCustomers(punch.Task.Job.CustomerId);
             await RefreshJobs(punch.Task.JobId);
             await RefreshTasks(punch.TaskId);
+
+            // Set the InAt time zone.
+            var inAtTimeZone = zones.Where(x => x.Id == punch.InAtTimeZone).FirstOrDefault();
+            selectedInAtCountryCode = inAtTimeZone.CountryCode;
+            selectedInAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
+            selectedInAtTimeZone = inAtTimeZone.Id;
+
+            // Set the OutAt time zone.
+            var outAtTimeZone = zones.Where(x => x.Id == punch.OutAtTimeZone).FirstOrDefault();
+            selectedOutAtCountryCode = outAtTimeZone.CountryCode;
+            selectedOutAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
+            selectedOutAtTimeZone = outAtTimeZone.Id;
         }
         else
         {
@@ -344,6 +429,30 @@
 
         // Update the punch.
         punch.UserId = selectedUserId;
+    }
+
+    private void selectedInAtCountryCodeValueChangeHandler(string country)
+    {
+        selectedInAtCountryCode = country;
+        inAtZones = zones.Where(z => z.CountryCode == selectedInAtCountryCode).ToList();
+    }
+
+    private void selectedInAtTimeZoneValueChangeHandler(string timeZone)
+    {
+        selectedInAtTimeZone = timeZone;
+        punch.InAtTimeZone = selectedInAtTimeZone;
+    }
+
+    private void selectedOutAtCountryCodeValueChangeHandler(string country)
+    {
+        selectedOutAtCountryCode = country;
+        outAtZones = zones.Where(z => z.CountryCode == selectedOutAtCountryCode).ToList();
+    }
+
+    private void selectedOutAtTimeZoneValueChangeHandler(string timeZone)
+    {
+        selectedOutAtTimeZone = timeZone;
+        punch.OutAtTimeZone = selectedOutAtTimeZone;
     }
 
     private async System.Threading.Tasks.Task RefreshUsers()
