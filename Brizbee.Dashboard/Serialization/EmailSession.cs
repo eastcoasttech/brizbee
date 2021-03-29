@@ -8,6 +8,7 @@ namespace Brizbee.Dashboard.Serialization
         public string EmailAddress { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
+        [StringLength(128, ErrorMessage = "Password is too long (128 character limit).")]
         public string EmailPassword { get; set; }
     }
 }
