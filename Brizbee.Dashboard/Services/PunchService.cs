@@ -165,5 +165,38 @@ namespace Brizbee.Dashboard.Services
                 }
             }
         }
+
+        public async Task<bool> SplitPunches(DateTime inAt, DateTime outAt)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.SplitAtMidnight"))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "InAt", new DateTime(inAt.Year, inAt.Month, inAt.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:00Z") },
+                    { "OutAt", new DateTime(outAt.Year, outAt.Month, outAt.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:00Z") }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

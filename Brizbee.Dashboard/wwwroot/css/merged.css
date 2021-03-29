@@ -7,10 +7,6 @@ body {
     overflow-y: scroll;
 }
 
-    body.modal-open {
-        overflow-y: scroll;
-    }
-
 ol.breadcrumb {
     margin-bottom: 30px;
 }
@@ -234,8 +230,6 @@ footer {
     border-top: solid 1px #ddd;
     padding: 2em 0 2em 0;
     background-color: #f5f5f5;
-    position: absolute;
-    bottom: 0;
     width: 100%;
 }
 
@@ -257,11 +251,6 @@ a.btn:hover {
 
 #wrap {
     min-height: 100%;
-}
-
-#main {
-    overflow: auto;
-    padding-bottom: 175px; /* this needs to be bigger than footer height*/
 }
 
 
@@ -355,11 +344,14 @@ table.table-exceptions tr td p.input-group-sm {
     z-index: 1500;
 }
 
+-overlay rz-dialog-mask {
+    overflow-y: scroll;
+}
+
 .rz-dialog {
     border-radius: 0;
     -webkit-box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
     box-shadow: 0 5px 15px rgb(0 0 0 / 50%);
-
     animation: fadeInDown;
     animation-duration: 0.5s;
 }

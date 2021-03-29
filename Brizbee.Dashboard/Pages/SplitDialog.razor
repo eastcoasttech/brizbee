@@ -1,0 +1,34 @@
+﻿@page "/dialogs/split"
+
+@using Brizbee.Dashboard.Services
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject PunchService punchService
+
+<p>Your punches between @sharedService.RangeMin.ToString("yyyy-MM-dd") and @sharedService.RangeMax.ToString("yyyy-MM-dd") will be split at midnight.</p>
+
+<hr />
+
+<button class="btn btn-primary" type="button" @onclick="Split">OK</button>
+<button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
+
+@code {
+    private async Task Split(MouseEventArgs e)
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm($"Are you sure you want to split the punches between {sharedService.RangeMin.ToString("yyyy-MM-dd")} and {sharedService.RangeMax.ToString("yyyy-MM-dd")} at midnight?");
+        if (confirm != true)
+            return;
+
+        var result = await punchService.SplitPunches(sharedService.RangeMin, sharedService.RangeMax);
+
+        if (result)
+            dialogService.Close(false);
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

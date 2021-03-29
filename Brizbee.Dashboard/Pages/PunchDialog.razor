@@ -321,19 +321,21 @@
         // Set defaults.
         // --------------------------------------------------------------------
 
-        selectedInAtCountryCode = "US";
-        selectedInAtCountryCodeValueChangeHandler("US");
-        selectedOutAtCountryCode = "US";
-        selectedOutAtCountryCodeValueChangeHandler("US");
-
-        selectedInAtTimeZone = "America/New_York";
-        selectedOutAtTimeZone = "America/New_York";
-
         punch = new Punch()
         {
             InAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 9, 0, 0),
             OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0)
         };
+
+        selectedInAtCountryCode = "US";
+        selectedInAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
+        selectedOutAtCountryCode = "US";
+        selectedOutAtCountryCodeValueChangeHandler(selectedOutAtCountryCode);
+
+        selectedInAtTimeZone = "America/New_York";
+        selectedInAtTimeZoneValueChangeHandler(selectedInAtTimeZone);
+        selectedOutAtTimeZone = "America/New_York";
+        selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
 
 
         // --------------------------------------------------------------------
@@ -592,9 +594,14 @@
         if (confirm != true)
             return;
 
+        working = true;
+
         // Delete the punch on the server and close the dialog.
-        await punchService.DeletePunch(punch.Id);
-        dialogService.Close(false);
+        var result = await punchService.DeletePunch(punch.Id);
+        if (result)
+            dialogService.Close(false);
+        else
+            working = false;
     }
 
     private void CloseDialog(MouseEventArgs e)

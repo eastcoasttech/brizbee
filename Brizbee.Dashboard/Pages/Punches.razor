@@ -49,7 +49,7 @@
             <ul class="nav navbar-nav navbar-right">
                 <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
                 <li class="dropdown">
-                    <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#!/my/user">Account Details</a></li>
                         @if (currentUser.Role == "Administrator")
@@ -84,14 +84,14 @@
                     <button type="button" class="btn btn-default" @onclick="@(e => OpenNewPunchDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Punch</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" ng-click="showSplitMidnight()" ng-disabled="loading.punches || punchesCount == 0">Split</button>
-                    <button type="button" class="btn btn-default" ng-click="showPopulateRates()" ng-disabled="loading.punches || punchesCount == 0">Populate Rates</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenSplitDialog())" disabled="@(working || punches.Count == 0)">Split</button>
+                    <button type="button" class="btn btn-default" ng-click="showPopulateRates()" disabled="@(working || punches.Count == 0)">Populate Rates</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" ng-click="showNewCommit()" ng-disabled="loading.punches || punchesCount == 0"><i class="fa fa-lock" aria-hidden="true" style="margin-right: 5px;"></i> Lock</button>
+                    <button type="button" class="btn btn-default" ng-click="showNewCommit()" disabled="@(working || punches.Count == 0)"><i class="fa fa-lock" aria-hidden="true" style="margin-right: 5px;"></i> Lock</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadDialog())" ng-disabled="loading.punches || punchesCount == 0"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadDialog())" disabled="@(working || punches.Count == 0)"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
                 </div>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => RefreshPunches())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
@@ -222,7 +222,7 @@
         <tbody>
             @foreach (var punch in punches)
             {
-                <tr class="selectable @(punch.OutAt.HasValue ? "" : "warning")" @onclick="@(e => OpenModifyPunchDialog(punch))">
+                <tr class="selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value > sharedService.RangeMax ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
                     <td><a href="javascript:void(0)">@punch.User.Name</a></td>
                     <td><a href="javascript:void(0)">@punch.InAt.ToString("yyyy-MM-dd h:mm tt")</a></td>
                     <td>
@@ -370,7 +370,7 @@
     {
         working = true;
         punches.Clear();
-        var result = await punchService.GetPunchesAsync(sharedService.RangeMin, sharedService.RangeMax, pageSize, skip, sortBy, sortDirection);
+        var result = await punchService.GetPunchesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
         punches = result.Item1;
         punchesCount = result.Item2.GetValueOrDefault();
         RefreshHoursAndMinutes();
@@ -408,6 +408,13 @@
     private void OpenDownloadDialog()
     {
         dialogService.Open<DownloadDialog>("Download Punches",
+                                new Dictionary<string, object>() { },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenSplitDialog()
+    {
+        dialogService.Open<SplitDialog>("Split Punches at Midnight",
                                 new Dictionary<string, object>() { },
                                 new DialogOptions() { Width = "600px" });
     }
