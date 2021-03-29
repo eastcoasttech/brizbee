@@ -376,7 +376,7 @@
             {
                 // Set a default value.
                 punch.OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0);
-                punch.OutAtTimeZone = zones.First().Id;
+                punch.OutAtTimeZone = outAtZones.First().Id;
             }
 
             // Set the customer, job, and task based on the TaskId for this punch.
@@ -389,12 +389,14 @@
             selectedInAtCountryCode = inAtTimeZone.CountryCode;
             selectedInAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
             selectedInAtTimeZone = inAtTimeZone.Id;
+            selectedInAtTimeZoneValueChangeHandler(selectedInAtTimeZone);
 
             // Set the OutAt time zone.
             var outAtTimeZone = zones.Where(x => x.Id == punch.OutAtTimeZone).FirstOrDefault();
             selectedOutAtCountryCode = outAtTimeZone.CountryCode;
             selectedOutAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
             selectedOutAtTimeZone = outAtTimeZone.Id;
+            selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
         }
         else
         {

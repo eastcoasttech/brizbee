@@ -1,0 +1,36 @@
+﻿@page "/dialogs/lock"
+
+@using Brizbee.Dashboard.Services
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject PunchService punchService
+
+<p>Locks are used to prevent your punches from being edited or deleted, whether accidentally or maliciously. Locks can be reversed later on if necessary.</p>
+
+<p>Your punches between <strong>@sharedService.RangeMin.ToString("yyyy-MM-dd")</strong> and <strong>@sharedService.RangeMax.ToString("yyyy-MM-dd")</strong> will be locked.</p>
+
+<hr />
+
+<button class="btn btn-primary" type="button" @onclick="Lock">OK</button>
+<button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
+
+@code {
+    private async Task Lock(MouseEventArgs e)
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm($"Are you sure you want to lock the punches between {sharedService.RangeMin.ToString("yyyy-MM-dd")} and {sharedService.RangeMax.ToString("yyyy-MM-dd")}?");
+        if (confirm != true)
+            return;
+
+        var result = await punchService.LockPunches(sharedService.RangeMin, sharedService.RangeMax);
+
+        if (result)
+            dialogService.Close(false);
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

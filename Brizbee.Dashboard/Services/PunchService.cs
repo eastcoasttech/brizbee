@@ -198,5 +198,38 @@ namespace Brizbee.Dashboard.Services
                 }
             }
         }
+
+        public async Task<bool> LockPunches(DateTime inAt, DateTime outAt)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Commits"))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "InAt", inAt.ToString("yyyy-MM-dd") },
+                    { "OutAt", outAt.ToString("yyyy-MM-dd") }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

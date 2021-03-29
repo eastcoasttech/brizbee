@@ -88,7 +88,7 @@
                     <button type="button" class="btn btn-default" ng-click="showPopulateRates()" disabled="@(working || punches.Count == 0)">Populate Rates</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" ng-click="showNewCommit()" disabled="@(working || punches.Count == 0)"><i class="fa fa-lock" aria-hidden="true" style="margin-right: 5px;"></i> Lock</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenLockDialog())" disabled="@(working || punches.Count == 0)"><i class="fa fa-lock" aria-hidden="true" style="margin-right: 5px;"></i> Lock</button>
                 </div>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadDialog())" disabled="@(working || punches.Count == 0)"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
@@ -415,6 +415,13 @@
     private void OpenSplitDialog()
     {
         dialogService.Open<SplitDialog>("Split Punches at Midnight",
+                                new Dictionary<string, object>() { },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenLockDialog()
+    {
+        dialogService.Open<LockDialog>("Lock Punches",
                                 new Dictionary<string, object>() { },
                                 new DialogOptions() { Width = "600px" });
     }
