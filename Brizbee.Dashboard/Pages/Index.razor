@@ -13,35 +13,6 @@
 @inject TaskService taskService
 @inject JobService jobService
 
-<nav class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">
-                <img alt="BRIZBEE Logo" src="/logo.png" style="height: 20px;">
-            </a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li><a href="https://www.brizbee.com/why.html">Why BRIZBEE?</a></li>
-                <li><a href="https://www.brizbee.com/clocks.html">Time Clock Options</a></li>
-                <li><a href="https://www.brizbee.com/quickbooks.html">QuickBooks Integration</a></li>
-                <li><a href="https://www.brizbee.com/pricing.html">Pricing</a></li>
-                <li><a href="https://www.brizbee.com/open.html">Open Source</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://app.brizbee.com/">Sign In</a></li>
-                <li class="text-highlight"><a href="https://app.brizbee.com/#!/register">TRY IT FREE <i class="far fa-arrow-alt-circle-right" style="color: #edb500;" aria-hidden="true"></i></a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
 @if (loading == true)
 {
     <div class="spinner-background">
