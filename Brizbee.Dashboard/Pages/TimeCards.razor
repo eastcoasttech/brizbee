@@ -1,0 +1,390 @@
+﻿@page "/timecards"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject PunchService punchService
+@inject TimesheetEntryService timesheetEntryService 
+@inject DialogService dialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#!/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png" style="height: 22px;">
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Status
+                    </NavLink>
+                </li>
+                @if (sharedService.CurrentUser.Role == "Administrator")
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                    <li><a href="#!/jobs"><i class="fas fa-truck fa-padded" aria-hidden="true"></i> Jobs and Customers</a></li>
+                    <li><a href="#!/reports"><i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports</a></li>
+                    <li><a href="#!/users"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Users</a></li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@sharedService.CurrentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#!/my/user">Account Details</a></li>
+                        @if (sharedService.CurrentUser.Role == "Administrator")
+                        {
+                            <li><a href="#!/my/organization">Organization Details</a></li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="" @onclick="SignOutAsync">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="punches">Punches</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="timecards">Time Cards</NavLink></li>
+        <li role="presentation"><NavLink href="locks">Locks</NavLink></li>
+        <li role="presentation"><a href="#!/qbd-exports">Export History</a></li>
+        <li role="presentation"><a href="#!/rates">Rates</a></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" ng-click="showNewTimesheetEntry()"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Time Card</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshTimeCards())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="btn-toolbar pull-right" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" ng-click="showFilters()"><i class="fa fa-filter" aria-hidden="true" style="margin-right: 5px;"></i> Showing {{filters.user.Name}}</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenRangeDialog())"><i class="far fa-calendar-alt" aria-hidden="true" style="margin-right: 5px;"></i> @sharedService.RangeMin.ToShortDateString() <small>thru</small> @sharedService.RangeMax.ToShortDateString()</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Timesheet Entries-->
+    <table class="table table-bordered table-condensed table-supercondensed table-selectable">
+        <thead>
+            <tr>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("EnteredAt"))">
+                        Date
+                        @if (sortBy == "EnteredAt" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "EnteredAt" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Minutes"))">
+                        Hours : Minutes
+                        @if (sortBy == "Minutes" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Minutes" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Notes"))">
+                        Notes
+                        @if (sortBy == "Notes" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Notes" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("User/Name"))">
+                        User
+                        @if (sortBy == "User/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "User/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Customer/Name"))">
+                        Customer
+                        @if (sortBy == "Task/Job/Customer/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Task/Job/Customer/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Name"))">
+                        Job
+                        @if (sortBy == "Task/Job/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Task/Job/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Name"))">
+                        Task
+                        @if (sortBy == "Task/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Task/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var timeCard in timeCards)
+            {
+                <tr class="fadeIn selectable">
+                    <td><a href="javascript:void(0)">@timeCard.EnteredAt.ToShortDateString()</a></td>
+                    <td><a href="javascript:void(0)">@formatMinutes(timeCard.Minutes)</a></td>
+                    <td><a href="javascript:void(0)">@formatNotes(timeCard.Notes)</a></td>
+                    <td><a href="javascript:void(0)">@timeCard.User.Name</a></td>
+                    <td><a href="javascript:void(0)">@timeCard.Task.Job.Customer.Number &ndash; @timeCard.Task.Job.Customer.Name</a></td>
+                    <td><a href="javascript:void(0)">@timeCard.Task.Job.Number &ndash; @timeCard.Task.Job.Name</a></td>
+                    <td><a href="javascript:void(0)">@timeCard.Task.Number &ndash; @timeCard.Task.Name</a></td>
+                </tr>
+            }
+
+            @if (working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!working && timeCards.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="7">No Time Cards for the Selected Date Range</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (timeCardsCount > pageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (timeCardsCount > 0 && !working)
+            {
+                <p class="form-control-static pull-left">@(timeCardsPageStart + 1) to @(timeCardsPageStart + pageSize < timeCardsCount ? timeCardsPageStart + pageSize : timeCardsCount) of @timeCardsCount</p>
+            }
+        </div>
+        <div class="col-md-6 text-right">
+            <p class="form-control-static">
+                @hoursAndMinutes
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool working = false;
+    private User currentUser;
+    private List<TimesheetEntry> timeCards = new List<TimesheetEntry>();
+    private string sortBy = "EnteredAt";
+    private string sortDirection = "ASC";
+    private int pageSize = 20;
+    private int skip = 0;
+    private long timeCardsCount = 0;
+    private int timeCardsPageStart = 0;
+    private string hoursAndMinutes = "0 hours and 0 minutes";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+
+        await RefreshTimeCards();
+
+        dialogService.OnOpen += Open;
+        dialogService.OnClose += Close;
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        timeCardsPageStart = timeCardsPageStart + pageSize;
+        skip = timeCardsPageStart;
+        await RefreshTimeCards();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        timeCardsPageStart = timeCardsPageStart - pageSize;
+        skip = timeCardsPageStart;
+        await RefreshTimeCards();
+    }
+
+    private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+    {
+        Console.WriteLine("Dialog opened");
+    }
+
+    private async void Close(dynamic result)
+    {
+        Console.WriteLine($"Dialog closed with result: {result}");
+        await RefreshTimeCards();
+    }
+
+    private async System.Threading.Tasks.Task RefreshTimeCards()
+    {
+        working = true;
+        timeCards.Clear();
+        var result = await timesheetEntryService.GetPunchesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
+        timeCards = result.Item1;
+        timeCardsCount = result.Item2.GetValueOrDefault();
+        RefreshHoursAndMinutes();
+        working = false;
+        StateHasChanged();
+    }
+
+    private void RefreshHoursAndMinutes()
+    {
+        double minutes = 0;
+        foreach (var timeCard in timeCards)
+        {
+            minutes += timeCard.Minutes;
+        }
+        string quotient = Math.Floor(minutes / 60).ToString("N0");
+        double remainder = minutes % 60;
+        hoursAndMinutes = $"{quotient} hours and {remainder} minutes";
+    }
+
+    private void OpenRangeDialog()
+    {
+        dialogService.Open<RangeDialog>("Change Date Range",
+                                new Dictionary<string, object>() { },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        sortBy = column;
+
+        if (sortDirection == "ASC")
+        {
+            sortDirection = "DESC";
+        }
+        else
+        {
+            sortDirection = "ASC";
+        }
+
+        await RefreshTimeCards();
+    }
+
+    private string formatMinutes(decimal time)
+    {
+        if (currentUser.Organization.MinutesFormat == "decimal")
+        {
+            return Math.Round(time / 60, 2).ToString();
+        }
+        else
+        {
+            var hours = (time / 60);
+            var rhours = Math.Floor(hours);
+            var minutes = (hours - rhours) * 60;
+            var rminutes = Math.Round(minutes);
+            return rhours + ":" + rminutes;
+        }
+    }
+
+    private string formatNotes(string notes)
+    {
+        if (string.IsNullOrEmpty(notes)) return "";
+
+        if (notes.Length > 27)
+            return $"{notes.Substring(0, 26)}...";
+        else
+            return notes;
+    }
+
+    private async void SignOutAsync(MouseEventArgs e)
+    {
+        // Clear the local storage
+        await localStorageService.RemoveFromLocalStorage("AuthUserId");
+        await localStorageService.RemoveFromLocalStorage("AuthToken");
+        await localStorageService.RemoveFromLocalStorage("AuthExpiration");
+
+        userService.ResetHeaders();
+        punchService.ResetHeaders();
+        sharedService.Reset();
+        NavigationManager.NavigateTo("/");
+    }
+}

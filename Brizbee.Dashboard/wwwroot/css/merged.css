@@ -379,6 +379,13 @@ table.table-exceptions tr td p.input-group-sm {
 
 /* RADZEN MODIFICATIONS */
 
+.rz-tooltip-content {
+    background-color: #444;
+    color: #fff;
+    border-radius: 0;
+    padding: 1em;
+}
+
 .rz-button.btn-primary {
     display: inline-block;
     margin-bottom: 0;
@@ -399,9 +406,7 @@ table.table-exceptions tr td p.input-group-sm {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-
     height: auto;
-
     text-transform: uppercase;
     padding: 6px 16px;
     color: #fff;
@@ -454,7 +459,7 @@ table.table-exceptions tr td p.input-group-sm {
     }
 
 .rz-dialog-wrapper {
-    z-index: 1500;
+    z-index: 1000;
 }
 
 -overlay rz-dialog-mask {

@@ -233,7 +233,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<bool> PopulatePunches(DateTime inAt, DateTime outAt, List<Dictionary<string, object>> populateRateOptions)
+        public async Task<bool> PostPopulateRatesAsync(DateTime inAt, DateTime outAt, List<Dictionary<string, object>> populateRateOptions)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PopulateRates"))
             {

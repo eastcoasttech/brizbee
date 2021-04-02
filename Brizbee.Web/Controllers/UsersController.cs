@@ -80,7 +80,47 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            user = repo.Create(user, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Ensure user is authorized
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            // Formatting
+            if (!string.IsNullOrEmpty(user.EmailAddress))
+                user.EmailAddress = user.EmailAddress.ToLower();
+
+            // Auto-generated
+            user.CreatedAt = DateTime.UtcNow;
+            user.OrganizationId = currentUser.OrganizationId;
+            user.AllowedPhoneNumbers = "*";
+
+            // Ensure that Pin is unique in the organization
+            if (db.Users
+                .Where(u => u.OrganizationId == user.OrganizationId)
+                .Where(u => u.Pin == user.Pin)
+                .Where(u => u.IsDeleted == false)
+                .Any())
+            {
+                throw new Exception("Another user in the organization already has that Pin");
+            }
+
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                // Generates a password hash and salt
+                var service = new SecurityService();
+                user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                user.Password = null;
+            }
+            else
+            {
+                user.Password = null;
+            }
+
+            db.Users.Add(user);
+
+            db.SaveChanges();
 
             return Created(user);
         }
@@ -94,7 +134,52 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var user = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var user = db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.Id == key)
+                .FirstOrDefault();
+
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
+                patch.GetChangedPropertyNames().Contains("EmailAddress"))
+            {
+                throw new Exception("Cannot modify OrganizationId or EmailAddress");
+            }
+
+            // Ensure that Pin is unique in the organization
+            if (patch.GetChangedPropertyNames().Contains("Pin"))
+            {
+                patch.TryGetPropertyValue("Pin", out object pin);
+                var castedPin = pin as string;
+                if (db.Users
+                    .Where(u => u.OrganizationId == user.OrganizationId)
+                    .Where(u => u.Pin == castedPin)
+                    .Where(u => u.IsDeleted == false)
+                    .Any())
+                {
+                    throw new Exception("Another user in the organization already has that Pin");
+                }
+            }
+
+            // Peform the update
+            patch.Patch(user);
+
+            if (user.Password != null)
+            {
+                // Generates a password hash and salt
+                var service = new SecurityService();
+                user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                user.Password = null;
+            }
+            else
+            {
+                user.Password = null;
+            }
+
+            db.SaveChanges();
 
             return Updated(user);
         }
@@ -104,11 +189,9 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators
+            // Ensure user is authorized
             if (currentUser.Role != "Administrator")
-            {
-                return StatusCode(HttpStatusCode.Forbidden);
-            }
+                return BadRequest();
 
             var user = db.Users
                 .Where(u => !u.IsDeleted)
@@ -146,8 +229,10 @@ namespace Brizbee.Web.Controllers
                         return BadRequest("Must provide both an Email Address and password");
                     }
 
-                    user = db.Users.Where(u => u.EmailAddress ==
-                        session.EmailAddress).FirstOrDefault();
+                    user = db.Users
+                        .Where(u => u.EmailAddress == session.EmailAddress)
+                        .Where(u => u.IsDeleted == false)
+                        .FirstOrDefault();
 
                     // Attempt to authenticate
                     if ((user == null) ||
@@ -168,8 +253,8 @@ namespace Brizbee.Web.Controllers
                     
                     user = db.Users.Include("Organization")
                         .Where(u => u.Pin == session.PinUserPin.ToUpper())
-                        .Where(u => u.Organization.Code ==
-                            session.PinOrganizationCode.ToUpper())
+                        .Where(u => u.Organization.Code == session.PinOrganizationCode.ToUpper())
+                        .Where(u => u.IsDeleted == false)
                         .FirstOrDefault();
 
                     // Attempt to authenticate
@@ -194,8 +279,27 @@ namespace Brizbee.Web.Controllers
                 return BadRequest();
             }
 
+            var currentUser = CurrentUser();
+
             string password = (string)parameters["Password"];
-            repo.ChangePassword(key, password, CurrentUser());
+
+            var user = db.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.Id == key)
+                .FirstOrDefault();
+
+            // Ensure user is authorized
+            if (currentUser.Role != "Administrator" || currentUser.Id != user.Id)
+                return BadRequest();
+
+            // Generates a password hash and salt
+            var service = new SecurityService();
+            user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+            user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", password, user.PasswordSalt));
+            user.Password = null;
+
+            db.SaveChanges();
+
             return Ok();
         }
 

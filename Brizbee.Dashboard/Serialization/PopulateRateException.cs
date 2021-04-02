@@ -74,9 +74,13 @@ namespace Brizbee.Dashboard.Serialization
             {
                 if (Option == "Punches Before" || Option == "Punches After")
                 {
+                    // 12 PM, 2PM, 3AM, 12AM
                     var rangeHour = int.Parse(RangeHour);
 
-                    if (RangeMerdian == "PM")
+                    if (rangeHour == 12 && RangeMerdian == "AM")
+                        rangeHour = 0;
+                        
+                    if (RangeMerdian == "PM" && rangeHour != 12)
                         rangeHour += 12;
 
                     var rangeMinute = int.Parse(RangeMinute);

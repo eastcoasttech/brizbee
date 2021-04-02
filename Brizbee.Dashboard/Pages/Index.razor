@@ -8,11 +8,13 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject UserService userService
+@inject CommitService commitService
 @inject PunchService punchService
 @inject CustomerService customerService
 @inject TaskService taskService
 @inject JobService jobService
 @inject RateService rateService
+@inject TimesheetEntryService timesheetEntryService
 
 @if (loading == true)
 {
@@ -117,10 +119,12 @@
             // Update headers on services.
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
+            commitService.ConfigureHeadersWithCredentials(credential);
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
+            timesheetEntryService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service.
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
@@ -162,10 +166,12 @@
             // Update headers on services
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
+            commitService.ConfigureHeadersWithCredentials(credential);
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
+            timesheetEntryService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));

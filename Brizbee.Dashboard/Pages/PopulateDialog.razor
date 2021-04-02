@@ -222,7 +222,9 @@
         }
 
         // Send the request.
-        await punchService.PopulatePunches(sharedService.RangeMin, sharedService.RangeMax, populateRateOptions);
+        await punchService.PostPopulateRatesAsync(sharedService.RangeMin, sharedService.RangeMax, populateRateOptions);
+
+        dialogService.Close(false);
     }
 
     private void AddServiceRateException()
