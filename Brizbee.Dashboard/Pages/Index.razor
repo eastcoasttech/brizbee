@@ -15,6 +15,7 @@
 @inject JobService jobService
 @inject RateService rateService
 @inject TimesheetEntryService timesheetEntryService
+@inject ExportService exportService
 
 @if (loading == true)
 {
@@ -125,6 +126,7 @@
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
             timesheetEntryService.ConfigureHeadersWithCredentials(credential);
+            exportService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service.
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
@@ -172,6 +174,7 @@
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
             timesheetEntryService.ConfigureHeadersWithCredentials(credential);
+            exportService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));

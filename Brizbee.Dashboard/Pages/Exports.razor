@@ -1,4 +1,4 @@
-﻿@page "/locks"
+﻿@page "/exports"
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Common.Models
@@ -9,6 +9,7 @@
 @inject UserService userService
 @inject CommitService commitService
 @inject PunchService punchService
+@inject ExportService exportService
 @inject DialogService dialogService
 
 @implements IDisposable
@@ -68,8 +69,8 @@
     <ul class="nav nav-pills">
         <li role="presentation"><NavLink href="punches">Punches</NavLink></li>
         <li role="presentation"><NavLink href="timecards">Time Cards</NavLink></li>
-        <li role="presentation" class="active"><NavLink href="locks">Locks</NavLink></li>
-        <li role="presentation"><NavLink href="exports">Export History</NavLink></li>
+        <li role="presentation"><NavLink href="locks">Locks</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="exports">Export History</NavLink></li>
         <li role="presentation"><NavLink href="rates">Rates</NavLink></li>
     </ul>
 
@@ -80,10 +81,7 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenLockDialog())" disabled="@(working)"><i class="fa fa-lock" aria-hidden="true" style="margin-right: 5px;"></i> Lock Punches</button>
-                </div>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshLocks())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshExports())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
             </div>
         </div>
@@ -91,55 +89,13 @@
         </div>
     </div>
 
-    <!--List of Commits-->
+    <!--List of Exports-->
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-1">
-                    Id
-                </th>
-                <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("InAt"))">
-                        From
-                        @if (sortBy == "InAt" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "InAt" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("OutAt"))">
-                        To
-                        @if (sortBy == "OutAt" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "OutAt" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th class="col-md-1">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("PunchCount"))">
-                        Punches
-                        @if (sortBy == "PunchCount" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "PunchCount" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th class="col-md-2">
+                <th class="col-md-3">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CreatedAt"))">
-                        Locked
+                        Exported
                         @if (sortBy == "CreatedAt" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
@@ -151,44 +107,56 @@
                     </a>
                 </th>
                 <th class="col-md-3">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("User/Name"))">
-                        User
-                        @if (sortBy == "User/Name" && sortDirection == "ASC")
+                    Lock Id
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Commit/InAt"))">
+                        In
+                        @if (sortBy == "Commit/InAt" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "User/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Commit/InAt" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
-                <th class="col-md-1"></th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Commit/OutAt"))">
+                        Out
+                        @if (sortBy == "Commit/OutAt" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Commit/OutAt" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var lok in locks)
+            @foreach (var export in exports)
             {
                 <tr class="fadeIn">
-                    <td>@lok.Id</td>
-                    <td>@lok.InAt.ToShortDateString()</td>
-                    <td>@lok.OutAt.ToShortDateString()</td>
-                    <td>@lok.PunchCount</td>
-                    <td>@lok.CreatedAt.ToString("M/d/yyyy h:mm tt")</td>
-                    <td>@lok.User.Name</td>
-                    <td class="text-center"><a href="javascript:void(0)" @onclick="@(e => Undo(lok.Id))"><i class="fa fa-undo" aria-hidden="true"></i> Undo</a></td>
+                    <td>@export.CreatedAt.ToString("M/d/yyyy h:mm tt")</td>
+                    <td>@export.CommitId</td>
+                    <td>@export.Commit.InAt.ToShortDateString()</td>
+                    <td>@export.Commit.OutAt.ToShortDateString()</td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
-            @if (!working && locks.Count == 0)
+            @if (!working && exports.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="7">You Have Not Locked Any Punches Yet</td>
+                    <td colspan="4">You Have Not Exported Any Time to QuickBooks Desktop Yet</td>
                 </tr>
             }
         </tbody>
@@ -196,7 +164,7 @@
 
     <div class="row">
         <div class="col-md-6">
-            @if (locksCount > pageSize)
+            @if (exportsCount > pageSize)
             {
                 <div class="pull-left" style="margin-right: 1rem;">
                     <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
@@ -204,9 +172,9 @@
                 </div>
             }
 
-            @if (locksCount > 0 && !working)
+            @if (exportsCount > 0 && !working)
             {
-                <p class="form-control-static pull-left">@(locksPageStart + 1) to @(locksPageStart + pageSize < locksCount ? locksPageStart + pageSize : locksCount) of @locksCount</p>
+                <p class="form-control-static pull-left">@(exportsPageStart + 1) to @(exportsPageStart + pageSize < exportsCount ? exportsPageStart + pageSize : exportsCount) of @exportsCount</p>
             }
         </div>
     </div>
@@ -215,13 +183,13 @@
 @code {
     private bool working = false;
     private User currentUser;
-    private List<Commit> locks = new List<Commit>();
-    private string sortBy = "InAt";
+    private List<QuickBooksDesktopExport> exports = new List<QuickBooksDesktopExport>();
+    private string sortBy = "CreatedAt";
     private string sortDirection = "ASC";
     private int pageSize = 20;
     private int skip = 0;
-    private long locksCount = 0;
-    private int locksPageStart = 0;
+    private long exportsCount = 0;
+    private int exportsPageStart = 0;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -230,7 +198,7 @@
 
         currentUser = sharedService.CurrentUser;
 
-        await RefreshLocks();
+        await RefreshExports();
 
         dialogService.OnOpen += Open;
         dialogService.OnClose += Close;
@@ -244,16 +212,16 @@
 
     private async void NextPage(MouseEventArgs e)
     {
-        locksPageStart = locksPageStart + pageSize;
-        skip = locksPageStart;
-        await RefreshLocks();
+        exportsPageStart = exportsPageStart + pageSize;
+        skip = exportsPageStart;
+        await RefreshExports();
     }
 
     private async void PreviousPage(MouseEventArgs e)
     {
-        locksPageStart = locksPageStart - pageSize;
-        skip = locksPageStart;
-        await RefreshLocks();
+        exportsPageStart = exportsPageStart - pageSize;
+        skip = exportsPageStart;
+        await RefreshExports();
     }
 
     private async void SignOutAsync(MouseEventArgs e)
@@ -278,32 +246,18 @@
     private async void Close(dynamic result)
     {
         Console.WriteLine($"Dialog closed with result: {result}");
-        await RefreshLocks();
+        await RefreshExports();
     }
 
-    private async System.Threading.Tasks.Task RefreshLocks()
+    private async System.Threading.Tasks.Task RefreshExports()
     {
         working = true;
-        locks.Clear();
-        var result = await commitService.GetCommitsAsync(pageSize, skip, sortBy, sortDirection);
-        locks = result.Item1;
-        locksCount = result.Item2.GetValueOrDefault();
+        exports.Clear();
+        var result = await exportService.GetExportsAsync(pageSize, skip, sortBy, sortDirection);
+        exports = result.Item1;
+        exportsCount = result.Item2.GetValueOrDefault();
         working = false;
         StateHasChanged();
-    }
-
-    private void OpenLockDialog()
-    {
-        dialogService.Open<LockDialog>("Lock Punches",
-                                new Dictionary<string, object>() { },
-                                new DialogOptions() { Width = "600px" });
-    }
-
-    private void OpenRangeDialog()
-    {
-        dialogService.Open<RangeDialog>("Change Date Range",
-                                new Dictionary<string, object>() { },
-                                new DialogOptions() { Width = "600px" });
     }
 
     private async void ChangeSortBy(string column)
@@ -319,20 +273,6 @@
             sortDirection = "ASC";
         }
 
-        await RefreshLocks();
-    }
-
-    private async void Undo(int commitId)
-    {
-        // Confirm that the user wants to make the change.
-        var confirm = await dialogService.Confirm(
-            "Are you sure you want to undo this lock? All the punches will be editable again.",
-            "Confirm",
-            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
-        if (confirm != true)
-            return;
-
-        await commitService.PostUndoAsync(commitId);
-        await RefreshLocks();
+        await RefreshExports();
     }
 }

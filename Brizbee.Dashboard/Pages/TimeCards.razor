@@ -69,8 +69,8 @@
         <li role="presentation"><NavLink href="punches">Punches</NavLink></li>
         <li role="presentation" class="active"><NavLink href="timecards">Time Cards</NavLink></li>
         <li role="presentation"><NavLink href="locks">Locks</NavLink></li>
-        <li role="presentation"><a href="#!/qbd-exports">Export History</a></li>
-        <li role="presentation"><a href="#!/rates">Rates</a></li>
+        <li role="presentation"><NavLink href="exports">Export History</NavLink></li>
+        <li role="presentation"><NavLink href="rates">Rates</NavLink></li>
     </ul>
 
     <hr />
@@ -207,7 +207,6 @@
                     <td><a href="javascript:void(0)">@timeCard.Task.Number &ndash; @timeCard.Task.Name</a></td>
                 </tr>
             }
-
             @if (working)
             {
                 <tr class="fadeIn">
