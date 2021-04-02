@@ -528,6 +528,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\app-brizbee-prod - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\app-brizbee-prod - ReadOnly - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\app-brizbee-prod - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -537,7 +540,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201908250351304_Initial.resx">

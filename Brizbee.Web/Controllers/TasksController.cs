@@ -157,7 +157,7 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Tasks/Default.ForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 30, MaxExpansionDepth = 2)]
         public IQueryable<Task> ForPunches(string InAt, string OutAt)
         {
             var inAt = DateTime.Parse(InAt);

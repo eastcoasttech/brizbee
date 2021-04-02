@@ -23,6 +23,14 @@ ol.breadcrumb {
     margin-right: 3px;
 }
 
+table.table-exceptions tr td label {
+    margin: 0;
+    font-weight: normal;
+    font-style: italic;
+    font-size: 0.75em;
+    padding: 0;
+}
+
 table.table-supercondensed {
     font-size: 95%;
 }
@@ -198,6 +206,10 @@ ol.getting-started {
     text-transform: uppercase;
 }
 
+select.input-sm {
+    padding: 0;
+}
+
 /**
  * The CSS shown here will not be introduced in the Quickstart guide, but shows
  * how you can use CSS to style your Element's container.
@@ -256,6 +268,11 @@ a.btn:hover {
     text-decoration: underline;
 }
 
+.btn-xl {
+    padding: 12px 32px;
+    font-size: 1.25em;
+}
+
 #main {
     overflow: auto;
     padding-bottom: 175px; /* this needs to be bigger than footer height*/
@@ -287,18 +304,28 @@ li.text-highlight:hover a:hover {
     background-color: #373737;
 }
 
-.fadeIn.ng-hide-remove {
-    animation: fadeIn 1s;
+
+
+.fadeIn {
+    animation: fadeIn 0.25s;
 }
 
-.fadeIn.ng-enter {
-    animation: fadeIn 1s;
+.fadeOut {
+    animation: fadeOut 0.25s;
 }
 
-.fadeIn.ng-hide-add {
-    opacity: 0;
-    display: block !important;
+.slideInDown {
+    animation: slideInDown 0.25s;
 }
+
+.slideInRight {
+    animation: slideInRight 0.25s;
+}
+
+.slideOutRight {
+    animation: slideOutRight 0.25s;
+}
+
 
 li.uib-tab a.nav-link {
     text-decoration: none;
@@ -351,6 +378,80 @@ table.table-exceptions tr td p.input-group-sm {
 
 
 /* RADZEN MODIFICATIONS */
+
+.rz-button.btn-primary {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: normal;
+    text-align: center;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    border-radius: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    height: auto;
+
+    text-transform: uppercase;
+    padding: 6px 16px;
+    color: #fff;
+    background-color: #444;
+    border-color: #373737;
+    border-radius: 0;
+}
+
+    .rz-button.btn-primary:active:hover {
+        color: #fff;
+        background-color: #191919;
+        border-color: #000;
+    }
+
+.rz-button.btn-secondary {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: normal;
+    text-align: center;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    border-radius: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    height: auto;
+
+    text-transform: uppercase;
+    padding: 6px 16px;
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+    border-radius: 0;
+}
+
+    .rz-button.btn-secondary:active:hover {
+        color: #333;
+        background-color: #d4d4d4;
+        border-color: #8c8c8c;
+    }
 
 .rz-dialog-wrapper {
     z-index: 1500;
@@ -428,10 +529,6 @@ span.rz-calendar {
 
 .rz-datepicker {
     font-size: 14px;
-}
-
-.rz-popup {
-    z-index: 2000;
 }
 
 

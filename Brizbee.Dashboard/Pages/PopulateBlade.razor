@@ -1,0 +1,191 @@
+﻿
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject RateService rateService
+@inject TaskService taskService
+
+<h3 style="font-size: 2.25em; font-weight: bold; margin-top: 0; margin-bottom: 0.25em;">Populate Rates</h3>
+<p style="font-size: 1.25em;">Populate the Payroll and Customer Rates for the unlocked punches between @sharedService.RangeMin.ToShortDateString() and @sharedService.RangeMax.ToShortDateString(). Please note, only <strong>unlocked punches</strong> will be populated.</p>
+
+<hr />
+
+<div class="@(Step == 1 ? "fadeIn" : "slideOutRight hidden")">
+    <div style="min-height: 20em;">
+        <div class="row">
+            <div class="col-md-4">
+                <h3 style="font-weight: bold;">Base Payroll Rates <i class="far fa-question-circle" title="These are the base rates for the punches you selected. All of the punches in the date range will be populated with these rates unless specified otherwise."></i></h3>
+
+                @if (loadingBasePayrollRates)
+                {
+                    <p class="text-muted" style="font-size: 3em;"><i class="fa fa-spinner fa-spin fa-fw"></i></p>
+                }
+
+                @if (tasks.Count == 0 && !loadingBasePayrollRates)
+                {
+                    <p>You do not have any punches to populate.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled" style="margin: 0 0 2em 0;">
+                        @foreach (var task in tasks)
+                        {
+                            <li style="margin-bottom: 1.5em;">
+                                <p style="font-size: 2em; line-height: 0.9em; margin: 0;">
+                                    <span class="text-muted" style="font-weight: bold; font-size: 0.5em;">Task</span>
+                                    <br />
+                                    @task.Number &ndash; @task.Name
+                                </p>
+                                <p style="font-size: 2em; line-height: 0.9em; margin: 0;">
+                                    <span class="text-muted" style="font-weight: bold; font-size: 0.5em;">Base Rate</span>
+                                    <br />
+                                    @task.BasePayrollRate.Name
+                                </p>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+            <div class="col-md-8">
+                <h3 style="font-weight: bold;">Exceptions <i class="far fa-question-circle" title=""></i></h3>
+
+                <ExceptionsFragment Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
+
+                <button type="button" class="btn btn-lg btn-default" @onclick="@(e => AddException(payrollExceptions))">Add Exception</button>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="text-center">
+        <button type="button" class="btn btn-xl btn-default" disabled>Back</button>
+        <button type="button" class="btn btn-xl btn-primary" @onclick="@(e => Step = 2)">Next</button>
+        <p class="text-muted" style="margin-top: 0.75em; font-size: 1.25em; font-style: italic;">Review Customer Rates in the Next Page</p>
+    </div>
+</div>
+
+<div class="@(Step == 2 ? "slideInRight" : "slideOutRight hidden")">
+    <div style="min-height: 20em;">
+        <p style="font-size: 1.5em;">>These are the base rates for the punches you selected. All of the punches in the date range will be populated with these rates unless specified otherwise below.</p>
+
+        @if (loadingBaseServiceRates)
+        {
+            <p class="text-muted" style="font-size: 3em;"><i class="fa fa-spinner fa-spin fa-fw"></i></p>
+        }
+
+        @if (tasks.Count == 0 && !loadingBaseServiceRates)
+        {
+            <p>You do not have any punches to populate.</p>
+        }
+        else
+        {
+            <ul class="list-unstyled" style="margin: 2em 0 2em 0;">
+                @foreach (var task in tasks)
+                {
+                    <li>
+                        <p style="font-size: 2em;">
+                            <label class="text-muted">Task</label>
+                            <br />
+                            @task.Number &ndash; @task.Name
+                            <br />
+                            <label class="text-muted">Rate</label>
+                            <br />
+                            @task.BaseServiceRate.Name
+                        </p>
+                    </li>
+                }
+            </ul>
+        }
+
+        <h4>Exceptions</h4>
+
+        <ExceptionsFragment Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
+    </div>
+
+    <hr />
+
+    <div class="text-center">
+        <button type="button" class="btn btn-xl btn-default" @onclick="@(e => AddException(serviceExceptions))">Add Exception</button>
+        <button type="button" class="btn btn-xl btn-default" @onclick="@(e => Step = 1)">Back</button>
+        <button type="button" class="btn btn-xl btn-primary" @onclick="@(e => Step = 3)">Next</button>
+        <p class="text-muted" style="margin-top: 0.75em; font-size: 1.25em; font-style: italic;">Confirm Populating on Next Page</p>
+    </div>
+</div>
+
+<div class="@(Step == 3 ? "slideInRight" : "slideOutRight hidden")">
+    <div style="min-height: 20em;">
+        finished
+    </div>
+
+    <hr />
+
+    <div class="text-center">
+        <button type="button" class="btn btn-xl btn-default" @onclick="@(e => Step = 2)">Back</button>
+        <button type="button" class="btn btn-xl btn-primary">Populate</button>
+        <p class="text-muted" style="margin-top: 0.75em; font-size: 1.25em; font-style: italic;">Confirm and populate.</p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Step { get; set; }
+
+    private bool loadingBasePayrollRates = true;
+    private bool loadingBaseServiceRates = true;
+    private List<Rate> basePayrollRates = new List<Rate>();
+    private List<Rate> alternatePayrollRates = new List<Rate>();
+    private List<Rate> baseServiceRates = new List<Rate>();
+    private List<Rate> alternateServiceRates = new List<Rate>();
+    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<PopulateRateException> serviceExceptions = new List<PopulateRateException>();
+    private List<PopulateRateException> payrollExceptions = new List<PopulateRateException>();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var basePayrollRatesResult = await rateService.GetBasePayrollRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        basePayrollRates = basePayrollRatesResult.Item1;
+
+        var alternatePayrollRatesResult = await rateService.GetAlternatePayrollRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        alternatePayrollRates = alternatePayrollRatesResult.Item1;
+
+        var baseServiceRatesResult = await rateService.GetBaseServiceRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        baseServiceRates = baseServiceRatesResult.Item1;
+
+        var alternateServiceRatesResult = await rateService.GetAlternateServiceRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        alternateServiceRates = alternateServiceRatesResult.Item1;
+
+        var tasksResults = await taskService.GetTasksForPunchesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        tasks = tasksResults;
+
+        loadingBasePayrollRates = false;
+        loadingBaseServiceRates = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void Populate(MouseEventArgs e)
+    {
+    }
+
+    private void AddException(List<PopulateRateException> exceptions)
+    {
+        exceptions.Add(new PopulateRateException()
+        {
+            Option = "Punches Before",
+            BasePayrollRateId = basePayrollRates.First().Id,
+            AlternatePayrollRateId = alternatePayrollRates.First().Id,
+            RangeHour = "1",
+            RangeMinute = "00",
+            RangeMerdian = "AM",
+            CountHours = "0",
+            CountMinutes = "0",
+            Date = DateTime.Today
+        });
+    }
+}

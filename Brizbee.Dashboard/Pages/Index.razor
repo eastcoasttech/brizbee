@@ -12,6 +12,7 @@
 @inject CustomerService customerService
 @inject TaskService taskService
 @inject JobService jobService
+@inject RateService rateService
 
 @if (loading == true)
 {
@@ -119,6 +120,7 @@
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
+            rateService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service.
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
@@ -163,6 +165,7 @@
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
+            rateService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));

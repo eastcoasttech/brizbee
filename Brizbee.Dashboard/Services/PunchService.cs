@@ -1,6 +1,7 @@
 ﻿using Brizbee.Blazor;
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Brizbee.Dashboard.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -206,6 +207,43 @@ namespace Brizbee.Dashboard.Services
                 var payload = new Dictionary<string, object>() {
                     { "InAt", inAt.ToString("yyyy-MM-dd") },
                     { "OutAt", outAt.ToString("yyyy-MM-dd") }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task<bool> PopulatePunches(DateTime inAt, DateTime outAt, List<Dictionary<string, object>> populateRateOptions)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PopulateRates"))
+            {
+                var payload = new
+                {
+                    Options = new Dictionary<string, object>() {
+                        { "InAt", inAt.ToString("yyyy-MM-dd") },
+                        { "OutAt", outAt.ToString("yyyy-MM-dd") },
+                        { "Options", populateRateOptions }
+                    }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);

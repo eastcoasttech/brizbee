@@ -6,18 +6,21 @@
 @inject SharedService sharedService
 @inject PunchService punchService
 
-<p>Your punches between <strong>@sharedService.RangeMin.ToString("yyyy-MM-dd")</strong> and <strong>@sharedService.RangeMax.ToString("yyyy-MM-dd")</strong> will be split at midnight.</p>
+<p>Punches between <strong>@sharedService.RangeMin.ToShortDateString()</strong> and <strong>@sharedService.RangeMax.ToShortDateString()</strong> will be split at midnight.</p>
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Split">OK</button>
+<button class="btn btn-primary" type="button" @onclick="Split">Perform Split</button>
 <button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
 
 @code {
     private async Task Split(MouseEventArgs e)
     {
         // Confirm that the user wants to make the change.
-        var confirm = await dialogService.Confirm($"Are you sure you want to split the punches between {sharedService.RangeMin.ToString("yyyy-MM-dd")} and {sharedService.RangeMax.ToString("yyyy-MM-dd")} at midnight?");
+        var confirm = await dialogService.Confirm(
+            $"Are you sure you want to split the punches between {sharedService.RangeMin.ToShortDateString()} and {sharedService.RangeMax.ToShortDateString()} at midnight?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
         if (confirm != true)
             return;
 

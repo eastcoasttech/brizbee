@@ -1,6 +1,7 @@
 ﻿using Brizbee.Blazor;
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -54,6 +55,16 @@ namespace Brizbee.Dashboard.Services
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             return await JsonSerializer.DeserializeAsync<Task>(responseContent);
+        }
+
+        public async System.Threading.Tasks.Task<List<Task>> GetTasksForPunchesAsync(DateTime min, DateTime max)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks/Default.ForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true&$expand=BasePayrollRate,BaseServiceRate,Job($expand=Customer)");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataResponse<Task>>(responseContent, options);
+            return odataResponse.Value.ToList();
         }
     }
 }

@@ -1,0 +1,177 @@
+﻿
+@using Brizbee.Dashboard.Serialization
+@using Brizbee.Common.Models 
+
+<table class="table table-bordered table-condensed table-supercondensed table-exceptions">
+    <thead>
+        <tr>
+            <th style="width: 5%;"></th>
+            <th style="width: 25%;">Option</th>
+            <th style="width: 24%;" colspan="3">Parameter</th>
+            <th style="width: 21%;">Match Base Rate</th>
+            <th style="width: 21%;">Set Alternate Rate</th>
+            <th style="width: 4%;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var exception in Exceptions)
+        {
+            <tr class="fadeIn">
+                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                    <a href="javascript:void(0)" @onclick="@(e => MoveException(exception, "UP"))" title="Move Priority Up"><i class="fa fa-caret-up" aria-hidden="true"></i></a>
+                    <a href="javascript:void(0)" @onclick="@(e => MoveException(exception, "DOWN"))" title="Move Priority Down"><i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                </td>
+                <td>
+                    <label class="text-muted">Select Option</label>
+                    <select class="form-control input-sm" @bind="@exception.Option">
+                        <option>Punches Before</option>
+                        <option>Punches After</option>
+                        <option>After Hours/Minutes Per Day</option>
+                        <option>After Hours/Minutes in Range</option>
+                        <option>Punches on Specific Date</option>
+                    </select>
+                </td>
+
+                @if (exception.Option == "After Hours/Minutes Per Day" || exception.Option == "After Hours/Minutes in Range")
+                {
+                    <td colspan="3">
+                        <table class="table" style="margin-bottom: 0; border: 0;">
+                            <tbody style="border: 0;">
+                                <tr style="border: 0;">
+                                    <td style="padding-top: 0; padding-bottom: 0; padding-left: 0; border: 0;">
+                                        <label class="text-muted">Hours</label>
+                                        <input type="number" class="form-control form-control-number input-sm" @bind="exception.CountHours" />
+                                    </td>
+                                    <td style="padding-top: 0; padding-bottom: 0; padding-right: 0; border: 0;">
+                                        <label class="text-muted">Minutes</label>
+                                        <input type="number" class="form-control form-control-number input-sm" @bind="exception.CountMinutes" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                }
+
+                @if (exception.Option == "Punches Before" || exception.Option == "Punches After")
+                {
+                    <td style="width: 8%;">
+                        <label class="text-muted">Hour</label>
+                        <select class="form-control input-sm" @bind="exception.RangeHour">
+                            @for (int i = 1; i <= 12; i++)
+                            {
+                                <option value="@i.ToString("")">@i.ToString("")</option>
+                            }
+                        </select>
+                    </td>
+                    <td style="width: 8%;">
+                        <label class="text-muted">Minute</label>
+                        <select class="form-control input-sm" @bind="exception.RangeMinute">
+                            @for (int i = 0; i <= 59; i++)
+                            {
+                                <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                            }
+                        </select>
+                    </td>
+                    <td style="width: 8%;">
+                        <label class="text-muted">AM/PM</label>
+                        <select class="form-control input-sm" @bind="exception.RangeMerdian">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </td>
+                }
+
+                @if (exception.Option == "Punches on Specific Date")
+                {
+                    <td colspan="3">
+                        <label class="text-muted">Date</label>
+                        <input type="date" class="form-control input-sm" @bind="exception.Date" />
+                    </td>
+                }
+
+                <td>
+                    <label class="text-muted">Select Rate</label>
+                    <select class="form-control input-sm" @bind="@exception.BasePayrollRateId">
+                        @foreach (var rate in BaseRates)
+                        {
+                            <option value="@rate.Id">@rate.Name</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <label class="text-muted">Select Rate</label>
+                    <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
+                        @foreach (var rate in AlternateRates)
+                        {
+                            <option value="@rate.Id">@rate.Name</option>
+                        }
+                    </select>
+                </td>
+                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                    <a href="javascript:void(0)" @onclick="@(e => Exceptions.Remove(exception))" title="Remove Exception"><i class="fas fa-trash-alt" aria-hidden="true"></i></a>
+                </td>
+            </tr>
+        }
+
+        @if (Exceptions.Count == 0)
+        {
+            <tr>
+                <td colspan="8">None</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public List<PopulateRateException> Exceptions { get; set; }
+    [Parameter] public List<Rate> BaseRates { get; set; }
+    [Parameter] public List<Rate> AlternateRates { get; set; }
+
+    public void AddException()
+    {
+        Exceptions.Add(new PopulateRateException()
+        {
+            Option = "Punches Before",
+            BasePayrollRateId = BaseRates.First().Id,
+            AlternatePayrollRateId = AlternateRates.First().Id,
+            BaseServiceRateId = BaseRates.First().Id,
+            AlternateServiceRateId = AlternateRates.First().Id,
+            RangeHour = "1",
+            RangeMinute = "00",
+            RangeMerdian = "AM",
+            CountHours = "0",
+            CountMinutes = "0",
+            Date = DateTime.Today
+        });
+    }
+
+    public void MoveException(PopulateRateException exception, string direction)
+    {
+        var oldIndex = Exceptions.IndexOf(exception);
+
+        var newIndex = oldIndex;
+        switch (direction)
+        {
+            case "UP":
+                // Cannot move outside of list.
+                if (oldIndex == 0)
+                    return;
+
+                Exceptions.RemoveAt(oldIndex);
+                newIndex = newIndex - 1;
+
+                break;
+            case "DOWN":
+                // Cannot move outside of list.
+                if (oldIndex + 1 == Exceptions.Count)
+                    return;
+
+                Exceptions.RemoveAt(oldIndex);
+                newIndex = newIndex + 1;
+
+                break;
+        }
+
+        Exceptions.Insert(newIndex, exception);
+    }
+}

@@ -8,18 +8,21 @@
 
 <p>Locks are used to prevent your punches from being edited or deleted, whether accidentally or maliciously. Locks can be reversed later on if necessary.</p>
 
-<p>Your punches between <strong>@sharedService.RangeMin.ToString("yyyy-MM-dd")</strong> and <strong>@sharedService.RangeMax.ToString("yyyy-MM-dd")</strong> will be locked.</p>
+<p>Your punches between <strong>@sharedService.RangeMin.ToShortDateString()</strong> and <strong>@sharedService.RangeMax.ToShortDateString()</strong> will be locked.</p>
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Lock">OK</button>
+<button class="btn btn-primary" type="button" @onclick="Lock">Perform Lock</button>
 <button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
 
 @code {
     private async Task Lock(MouseEventArgs e)
     {
         // Confirm that the user wants to make the change.
-        var confirm = await dialogService.Confirm($"Are you sure you want to lock the punches between {sharedService.RangeMin.ToString("yyyy-MM-dd")} and {sharedService.RangeMax.ToString("yyyy-MM-dd")}?");
+        var confirm = await dialogService.Confirm(
+            $"Are you sure you want to lock the punches between {sharedService.RangeMin.ToShortDateString()} and {sharedService.RangeMax.ToShortDateString()}?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
         if (confirm != true)
             return;
 

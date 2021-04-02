@@ -558,7 +558,10 @@
     private async System.Threading.Tasks.Task SavePunch()
     {
         // Confirm that the user wants to make the change.
-        var confirm = await dialogService.Confirm("Are you sure you want to save this punch?");
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this punch?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
         if (confirm != true)
             return;
 
@@ -592,7 +595,10 @@
     private async System.Threading.Tasks.Task DeletePunch()
     {
         // Confirm that the user wants to make the change.
-        var confirm = await dialogService.Confirm("Are you sure you want to delete this punch?");
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this punch?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
         if (confirm != true)
             return;
 
