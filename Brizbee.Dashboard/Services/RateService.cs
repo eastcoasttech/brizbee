@@ -134,7 +134,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<Rate> SaveRateAsync(Rate rate, string scope = "base")
+        public async Task<Rate> SaveRateAsync(Rate rate, string scope = "Base")
         {
             var url = rate.Id != 0 ? $"odata/Rates({rate.Id})" : "odata/Rates";
             var method = rate.Id != 0 ? HttpMethod.Patch : HttpMethod.Post;
@@ -148,7 +148,7 @@ namespace Brizbee.Dashboard.Services
                     { "QBDServiceItem", rate.QBDServiceItem }
                 };
 
-                if (scope == "alternate")
+                if (scope == "Alternate")
                 {
                     payload.Add("ParentRateId", rate.ParentRateId);
                 }

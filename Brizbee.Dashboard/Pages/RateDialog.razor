@@ -199,7 +199,8 @@
             return;
 
         // Save the rate on the server and close the dialog.
-        await rateService.SaveRateAsync(rate);
+        rate.ParentRateId = selectedParentRateId;
+        await rateService.SaveRateAsync(rate, scope);
         dialogService.Close(false);
     }
 
