@@ -1,10 +1,66 @@
 ﻿@inherits LayoutComponentBase
 
+@using Brizbee.Dashboard.Services
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+
+@inject SharedService sharedService
+@inject UserService userService
+@inject PunchService punchService
+@inject RateService rateService
+@inject ExportService exportService
+@inject TaskService taskService
+@inject JobService jobService
+@inject CustomerService customerService
+@inject CommitService commitService
+@inject TimesheetEntryService timesheetEntryService
+
 <RadzenDialog />
 <RadzenTooltip />
 
 <div id="wrap">
     <div id="main">
-        @Body
+        <CascadingValue Value=SignOutClicked>
+            @Body
+        </CascadingValue>
     </div>
 </div>
+
+@code {
+    EventCallback _signOutClicked = EventCallback.Empty;
+    EventCallback SignOutClicked
+    {
+        get
+        {
+            if (_signOutClicked.Equals(EventCallback.Empty))
+                _signOutClicked = EventCallback.Factory.Create(this, SignOutAsync);
+            return _signOutClicked;
+        }
+    }
+
+    private async void SignOutAsync()
+    {
+        // Clear the local storage
+        await localStorageService.RemoveFromLocalStorage("AuthUserId");
+        await localStorageService.RemoveFromLocalStorage("AuthToken");
+        await localStorageService.RemoveFromLocalStorage("AuthExpiration");
+
+        // Clear the headers
+        userService.ResetHeaders();
+        punchService.ResetHeaders();
+        rateService.ResetHeaders();
+        exportService.ResetHeaders();
+        taskService.ResetHeaders();
+        jobService.ResetHeaders();
+        customerService.ResetHeaders();
+        commitService.ResetHeaders();
+        timesheetEntryService.ResetHeaders();
+
+        // Reset shared variables
+        sharedService.Reset();
+
+        // Return to login
+        NavigationManager.NavigateTo("/");
+    }
+}

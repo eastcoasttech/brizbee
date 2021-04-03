@@ -1,7 +1,6 @@
 ﻿using Brizbee.Blazor;
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
-using Brizbee.Dashboard.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,7 +72,7 @@ namespace Brizbee.Dashboard.Services
             return punches.FirstOrDefault();
         }
 
-        public async Task<bool> DeletePunch(int id)
+        public async Task<bool> DeletePunchAsync(int id)
         {
             var response = await _apiService.GetHttpClient().DeleteAsync($"odata/Punches({id})");
             if (response.IsSuccessStatusCode)
@@ -86,7 +85,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<Punch> SavePunch(Punch punch)
+        public async Task<Punch> SavePunchAsync(Punch punch)
         {
             var url = punch.Id != 0 ? $"odata/Punches({punch.Id})" : "odata/Punches";
             var method = punch.Id != 0 ? HttpMethod.Patch : HttpMethod.Post;

@@ -578,7 +578,7 @@
         }
 
         // Save the punch on the server and close the dialog.
-        await punchService.SavePunch(punch);
+        await punchService.SavePunchAsync(punch);
         dialogService.Close(false);
     }
 
@@ -605,7 +605,7 @@
         working = true;
 
         // Delete the punch on the server and close the dialog.
-        var result = await punchService.DeletePunch(punch.Id);
+        var result = await punchService.DeletePunchAsync(punch.Id);
         if (result)
             dialogService.Close(false);
         else

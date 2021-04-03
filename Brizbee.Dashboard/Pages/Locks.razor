@@ -48,15 +48,15 @@
             <ul class="nav navbar-nav navbar-right">
                 <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
                 <li class="dropdown">
-                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <a href="javascript:void(0)" @onclick="SignOutClicked" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#!/my/user">Account Details</a></li>
+                        <li><a href="javascript:void(0)">Account Details</a></li>
                         @if (currentUser.Role == "Administrator")
                         {
-                            <li><a href="#!/my/organization">Organization Details</a></li>
+                            <li><a href="javascript:void(0)">Organization Details</a></li>
                         }
                         <li role="separator" class="divider"></li>
-                        <li><a href="" @onclick="SignOutAsync">Sign Out</a></li>
+                        <li><a href="javascript:void(0)">Sign Out</a></li>
                     </ul>
                 </li>
             </ul>
@@ -213,6 +213,9 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
     private bool working = false;
     private User currentUser;
     private List<Commit> locks = new List<Commit>();
@@ -254,20 +257,6 @@
         locksPageStart = locksPageStart - pageSize;
         skip = locksPageStart;
         await RefreshLocks();
-    }
-
-    private async void SignOutAsync(MouseEventArgs e)
-    {
-        // Clear the local storage
-        await localStorageService.RemoveFromLocalStorage("AuthUserId");
-        await localStorageService.RemoveFromLocalStorage("AuthToken");
-        await localStorageService.RemoveFromLocalStorage("AuthExpiration");
-
-        userService.ResetHeaders();
-        commitService.ResetHeaders();
-        punchService.ResetHeaders();
-        sharedService.Reset();
-        NavigationManager.NavigateTo("/");
     }
 
     private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)

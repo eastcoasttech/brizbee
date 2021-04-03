@@ -1,0 +1,240 @@
+﻿@page "/dialogs/rate"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject RateService rateService
+
+<EditForm Model="@rate" OnValidSubmit="SaveRate" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="rate_name" class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <InputText id="rate_name" @bind-Value="rate.Name" class="form-control" disabled="@working" placeholder="Ex. Regular Hourly" autofocus />
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <InputRadioGroup Value="@selectedRateType" ValueExpression="@( () => selectedRateType )" ValueChanged="@( (string x) => SelectedRateTypeValueChangeHandler(x) )">
+                <label>
+                    <InputRadio Value="@("Payroll")" disabled="@working" />
+                    Payroll Rate
+                </label>
+                <p>
+                    <small>Employees will be paid this rate for any punches whose task specifies this rate.</small>
+                </p>
+                <label>
+                    <InputRadio Value="@("Service")" disabled="@working" />
+                    Customer Rate
+                </label>
+                <p>
+                    <small>Customers will be charged this rate for any punches whose task specifies this rate.</small>
+                </p>
+            </InputRadioGroup>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <InputRadioGroup @bind-Value="scope">
+                <label>
+                    <InputRadio Value="@("Base")" />
+                    Base Rate
+                </label>
+                <p>
+                    <small>Ex. Regular Hourly for Payroll Rate, Regular Consulting for Customer Rate</small>
+                </p>
+                <label>
+                    <InputRadio Value="@("Alternate")" />
+                    Alternate Rate
+                </label>
+                <p>
+                    <small>Ex. Overtime Hourly for Payroll Rate, Overtime Consulting for Customer Rate</small>
+                </p>
+            </InputRadioGroup>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="selected_parentrateid" class="col-sm-3 control-label">Base Rate</label>
+        <div class="col-sm-9">
+            <InputSelect id="selected_parentrateid" @bind-Value="selectedParentRateId" class="form-control" disabled="@(working || scope == "Base")">
+                @foreach (var rate in baseRates)
+                {
+                    <option value="@rate.Id">@rate.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <img src="/images/qb-logo-horz.png" alt="QuickBooks Logo" style="width: 50%;" />
+        </div>
+    </div>
+
+    @if (rate.Type == "Payroll")
+    {
+        <div class="form-group">
+            <label for="rate_qbdpayrollitem" class="col-sm-3 control-label">Payroll Item</label>
+            <div class="col-sm-9">
+                <InputText id="rate_qbdpayrollitem" class="form-control" @bind-Value="rate.QBDPayrollItem" disabled="@working" placeholder="Must match the QuickBooks Desktop Payroll Item exactly" />
+                <p class="help-block">This is the name of your item in Lists > Payroll Item List in QuickBooks.<br />The employee should have an <i>Earnings Item</i> in QuickBooks for the Payroll Item in the Employee Details, and the <i>Use time data to create paychecks</i> box should be checked.</p>
+            </div>
+        </div>
+    }
+
+    @if (rate.Type == "Service")
+    {
+        <div class="form-group">
+            <label for="rate_qbdserviceitem" class="col-sm-3 control-label">Service Item</label>
+            <div class="col-sm-9">
+                <InputText id="rate_qbdserviceitem" class="form-control" @bind-Value="rate.QBDServiceItem" disabled="@working" placeholder="Must match the QuickBooks Desktop Service Item exactly" />
+                <p class="help-block">This is the name of your item in Lists > Item List in QuickBooks. The item must be of type <i>Service</i></p>
+            </div>
+        </div>
+    }
+
+    <hr />
+
+    <button class="btn btn-primary" type="submit" disabled="@(loading || working)">OK</button>
+    <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
+    @if (rate.Id != 0)
+    {
+        <button class="btn btn-danger pull-right" type="button" @onclick="DeleteRate" disabled="@(loading || working)">Delete</button>
+    }
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private bool loadingRates = true;
+    private Rate rate = new Rate();
+    private string selectedRateType;
+    private int selectedParentRateId;
+    private List<Rate> baseRates = new List<Rate>();
+    private string scope = "Base";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the rate, if necessary or set defaults.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            rate = await rateService.GetRateByIdAsync(Id.Value);
+            scope = rate.ParentRateId.HasValue ? "Alternate" : "Base";
+        }
+        else
+        {
+            rate = new Rate()
+            {
+                Type = "Payroll"
+            };
+        }
+
+        // --------------------------------------------------------------------
+        // Refresh the rate type.
+        // --------------------------------------------------------------------
+
+        selectedRateType = rate.Type;
+
+        // --------------------------------------------------------------------
+        // Refresh the base rates.
+        // --------------------------------------------------------------------
+
+        await RefreshBaseRates();
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task RefreshBaseRates()
+    {
+        loadingRates = true;
+
+        var result = await rateService.GetBaseRatesAsync(selectedRateType);
+        baseRates = result.Item1;
+
+        if (rate.ParentRateId.HasValue)
+        {
+            // Attempt to find the requested rate in the list.
+            var exists = baseRates.Where(r => r.Id == rate.ParentRateId).Any();
+            if (exists)
+                selectedParentRateId = rate.ParentRateId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedParentRateId = baseRates.FirstOrDefault().Id;
+        }
+
+        loadingRates = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task SaveRate()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this rate?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Save the rate on the server and close the dialog.
+        await rateService.SaveRateAsync(rate);
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task DeleteRate()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this rate?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+
+        // Delete the rate on the server and close the dialog.
+        var result = await rateService.DeleteRateAsync(rate.Id);
+        if (result)
+            dialogService.Close(false);
+        else
+            working = false;
+    }
+
+    private async void SelectedRateTypeValueChangeHandler(string type)
+    {
+        selectedRateType = type;
+
+        // Update the rate.
+        rate.Type = selectedRateType;
+
+        await RefreshBaseRates();
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

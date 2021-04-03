@@ -61,6 +61,7 @@ namespace Brizbee.Common.Models
         [Required]
         public bool IsDeleted { get; set; }
 
+        [Required]
         [MaxLength(40)]
         public string Name { get; set; }
 
