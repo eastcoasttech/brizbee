@@ -143,14 +143,19 @@ namespace Brizbee.Dashboard.Services
             {
                 var payload = new Dictionary<string, object>() {
                     { "Name", rate.Name },
-                    { "Type", rate.Type },
                     { "QBDPayrollItem", rate.QBDPayrollItem },
                     { "QBDServiceItem", rate.QBDServiceItem }
                 };
 
-                if (scope == "Alternate")
+                // Some properties can only be added at creation.
+                if (rate.Id == 0)
                 {
-                    payload.Add("ParentRateId", rate.ParentRateId);
+                    payload.Add("Type", rate.Type);
+
+                    if (scope == "Alternate")
+                    {
+                        payload.Add("ParentRateId", rate.ParentRateId);
+                    }
                 }
 
                 var json = JsonSerializer.Serialize(payload, options);

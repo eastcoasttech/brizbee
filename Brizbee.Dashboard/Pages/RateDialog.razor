@@ -13,7 +13,7 @@
     <div class="form-group">
         <label for="rate_name" class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <InputText id="rate_name" @bind-Value="rate.Name" class="form-control" disabled="@working" placeholder="Ex. Regular Hourly" autofocus />
+            <InputText id="rate_name" @bind-Value="rate.Name" class="form-control" disabled="@(working || loading || loadingRates)" placeholder="Ex. Regular Hourly" autofocus />
         </div>
     </div>
 
@@ -23,14 +23,14 @@
         <div class="col-sm-offset-3 col-sm-9">
             <InputRadioGroup Value="@selectedRateType" ValueExpression="@( () => selectedRateType )" ValueChanged="@( (string x) => SelectedRateTypeValueChangeHandler(x) )">
                 <label>
-                    <InputRadio Value="@("Payroll")" disabled="@working" />
+                    <InputRadio Value="@("Payroll")" disabled="@(working || loading || loadingRates)" />
                     Payroll Rate
                 </label>
                 <p>
                     <small>Employees will be paid this rate for any punches whose task specifies this rate.</small>
                 </p>
                 <label>
-                    <InputRadio Value="@("Service")" disabled="@working" />
+                    <InputRadio Value="@("Service")" disabled="@(working || loading || loadingRates)" />
                     Customer Rate
                 </label>
                 <p>
@@ -46,14 +46,14 @@
         <div class="col-sm-offset-3 col-sm-9">
             <InputRadioGroup @bind-Value="scope">
                 <label>
-                    <InputRadio Value="@("Base")" />
+                    <InputRadio Value="@("Base")" disabled="@(working || loading || loadingRates)" />
                     Base Rate
                 </label>
                 <p>
                     <small>Ex. Regular Hourly for Payroll Rate, Regular Consulting for Customer Rate</small>
                 </p>
                 <label>
-                    <InputRadio Value="@("Alternate")" />
+                    <InputRadio Value="@("Alternate")" disabled="@(working || loading || loadingRates)" />
                     Alternate Rate
                 </label>
                 <p>
@@ -68,7 +68,7 @@
     <div class="form-group">
         <label for="selected_parentrateid" class="col-sm-3 control-label">Base Rate</label>
         <div class="col-sm-9">
-            <InputSelect id="selected_parentrateid" @bind-Value="selectedParentRateId" class="form-control" disabled="@(working || scope == "Base")">
+            <InputSelect id="selected_parentrateid" @bind-Value="selectedParentRateId" class="form-control" disabled="@(working || loading || loadingRates || scope == "Base")">
                 @foreach (var rate in baseRates)
                 {
                     <option value="@rate.Id">@rate.Name</option>
@@ -90,7 +90,7 @@
         <div class="form-group">
             <label for="rate_qbdpayrollitem" class="col-sm-3 control-label">Payroll Item</label>
             <div class="col-sm-9">
-                <InputText id="rate_qbdpayrollitem" class="form-control" @bind-Value="rate.QBDPayrollItem" disabled="@working" placeholder="Must match the QuickBooks Desktop Payroll Item exactly" />
+                <InputText id="rate_qbdpayrollitem" class="form-control" @bind-Value="rate.QBDPayrollItem" disabled="@(working || loading || loadingRates)" placeholder="Must match the QuickBooks Desktop Payroll Item exactly" />
                 <p class="help-block">This is the name of your item in Lists > Payroll Item List in QuickBooks.<br />The employee should have an <i>Earnings Item</i> in QuickBooks for the Payroll Item in the Employee Details, and the <i>Use time data to create paychecks</i> box should be checked.</p>
             </div>
         </div>
@@ -101,7 +101,7 @@
         <div class="form-group">
             <label for="rate_qbdserviceitem" class="col-sm-3 control-label">Service Item</label>
             <div class="col-sm-9">
-                <InputText id="rate_qbdserviceitem" class="form-control" @bind-Value="rate.QBDServiceItem" disabled="@working" placeholder="Must match the QuickBooks Desktop Service Item exactly" />
+                <InputText id="rate_qbdserviceitem" class="form-control" @bind-Value="rate.QBDServiceItem" disabled="@(working || loading || loadingRates)" placeholder="Must match the QuickBooks Desktop Service Item exactly" />
                 <p class="help-block">This is the name of your item in Lists > Item List in QuickBooks. The item must be of type <i>Service</i></p>
             </div>
         </div>
@@ -109,11 +109,11 @@
 
     <hr />
 
-    <button class="btn btn-primary" type="submit" disabled="@(loading || working)">OK</button>
+    <button class="btn btn-primary" type="submit" disabled="@(working || loading || loadingRates)">OK</button>
     <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
     @if (rate.Id != 0)
     {
-        <button class="btn btn-danger pull-right" type="button" @onclick="DeleteRate" disabled="@(loading || working)">Delete</button>
+        <button class="btn btn-danger pull-right" type="button" @onclick="DeleteRate" disabled="@(working || loading || loadingRates)">Delete</button>
     }
 </EditForm>
 
