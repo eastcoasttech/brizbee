@@ -39,7 +39,7 @@
                             <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
                         </NavLink>
                     </li>
-                    <li><a href="#!/jobs"><i class="fas fa-truck fa-padded" aria-hidden="true"></i> Jobs and Customers</a></li>
+                    <li><a href="#!/jobs"><i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers</a></li>
                     <li><a href="#!/reports"><i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports</a></li>
                     <li><a href="#!/users"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Users</a></li>
                 }
@@ -79,16 +79,16 @@
                     {
                         @if (currentPunch != null)
                         {
-                            <p class="text-center" style="text-transform: uppercase;">You are <span class="label label-success"><strong>PUNCHED IN</strong></span></p>
-                            <p class="text-center" style="text-transform: uppercase;"><small>on job</small><br /><strong>@currentPunch.Task.Job.Number &ndash; @currentPunch.Task.Job.Name</strong></p>
-                            <p class="text-center" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@currentPunch.Task.Job.Customer.Number &ndash; @currentPunch.Task.Job.Customer.Name</strong></p>
-                            <p class="text-center" style="text-transform: uppercase;"><small>doing task</small><br /><strong>@currentPunch.Task.Number &ndash; @currentPunch.Task.Name</strong></p>
-                            <p class="text-center" style="text-transform: uppercase;"><small>since @currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@currentPunch.InAtTimeZone</small></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;">You are <span class="label label-success"><strong>PUNCHED IN</strong></span></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>on job</small><br /><strong>@currentPunch.Task.Job.Number &ndash; @currentPunch.Task.Job.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@currentPunch.Task.Job.Customer.Number &ndash; @currentPunch.Task.Job.Customer.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>doing task</small><br /><strong>@currentPunch.Task.Number &ndash; @currentPunch.Task.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>since @currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@currentPunch.InAtTimeZone</small></p>
                         }
 
                         @if (currentPunch == null)
                         {
-                            <p class="text-center" style="text-transform: uppercase;">You are <span class="label label-danger"><strong>PUNCHED OUT</strong></span></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;">You are <span class="label label-danger"><strong>PUNCHED OUT</strong></span></p>
                         }
                         <table class="table table-noborder">
                             <tbody>
