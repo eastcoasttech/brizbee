@@ -10,10 +10,13 @@
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Split">Perform Split</button>
+<button class="btn btn-primary" type="button" @onclick="Split" disabled="@working">Perform Split</button>
 <button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
+<i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
 
 @code {
+    private bool working = false;
+
     private async Task Split(MouseEventArgs e)
     {
         // Confirm that the user wants to make the change.
@@ -24,7 +27,15 @@
         if (confirm != true)
             return;
 
+        working = true;
+
+        StateHasChanged();
+
         var result = await punchService.SplitPunches(sharedService.RangeMin, sharedService.RangeMax);
+
+        working = false;
+
+        StateHasChanged();
 
         if (result)
             dialogService.Close(false);

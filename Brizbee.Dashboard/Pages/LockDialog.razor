@@ -12,10 +12,13 @@
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Lock">Perform Lock</button>
+<button class="btn btn-primary" type="button" @onclick="Lock" disabled="@working">Perform Lock</button>
 <button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
+<i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
 
 @code {
+    private bool working = false;
+
     private async Task Lock(MouseEventArgs e)
     {
         // Confirm that the user wants to make the change.
@@ -26,7 +29,15 @@
         if (confirm != true)
             return;
 
+        working = true;
+
+        StateHasChanged();
+
         var result = await punchService.LockPunches(sharedService.RangeMin, sharedService.RangeMax);
+
+        working = false;
+
+        StateHasChanged();
 
         if (result)
             dialogService.Close(false);

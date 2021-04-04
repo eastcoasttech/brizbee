@@ -3,14 +3,14 @@
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
 @using Brizbee.Common.Models
-@using System.Text.Json 
+@using System.Text.Json
 
 @inject TooltipService tooltipService
 @inject DialogService dialogService
 @inject SharedService sharedService
 @inject RateService rateService
 @inject TaskService taskService
-@inject PunchService punchService  
+@inject PunchService punchService
 
 <p style="margin-bottom: 20px; line-height: 1.75em;">
     This function will populate the Payroll and Customer Rates for the unlocked punches between <strong>@sharedService.RangeMin.ToShortDateString()</strong> and <strong>@sharedService.RangeMax.ToShortDateString()</strong>.
@@ -79,7 +79,7 @@
 
             <ExceptionsFragment @ref="payrollExceptionsFragment" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
 
-            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddPayrollRateException())">Add Exception</a></p>
+            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates)">Add Exception</a></p>
         </RadzenTabsItem>
         <RadzenTabsItem Text="Customer Rates">
             <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
@@ -138,17 +138,19 @@
 
             <ExceptionsFragment @ref="serviceExceptionsFragment" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
 
-            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddServiceRateException())">Add Exception</a></p>
+            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates)">Add Exception</a></p>
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Populate">Perform Populate</button>
+<button class="btn btn-primary" type="button" @onclick="Populate" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates)">Perform Populate</button>
 <button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
+<i class="@((working || loadingBasePayrollRates || loadingBaseServiceRates) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
 
 @code {
+    private bool working = false;
     private bool loadingBasePayrollRates = true;
     private bool loadingBaseServiceRates = true;
     private List<Rate> basePayrollRates = new List<Rate>();
@@ -199,6 +201,8 @@
         if (confirm != true)
             return;
 
+        working = true;
+
         var populateRateOptions = new List<Dictionary<string, object>>();
 
         for (var i = 0; i < payrollExceptions.Count; i++)
@@ -223,6 +227,8 @@
 
         // Send the request.
         await punchService.PostPopulateRatesAsync(sharedService.RangeMin, sharedService.RangeMax, populateRateOptions);
+
+        working = false;
 
         dialogService.Close(false);
     }
@@ -250,7 +256,7 @@
         {
             case "Punches Before":
                 option = new Dictionary<string, object>()
-                {
+            {
                     { "Type", exception.CalculatedType },
                     { "RangeDirection", exception.CalculatedRangeDirection },
                     { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
@@ -258,7 +264,7 @@
                 break;
             case "Punches After":
                 option = new Dictionary<string, object>()
-                {
+            {
                     { "Type", exception.CalculatedType },
                     { "RangeDirection", exception.CalculatedRangeDirection },
                     { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
@@ -266,7 +272,7 @@
                 break;
             case "After Hours/Minutes Per Day":
                 option = new Dictionary<string, object>()
-                {
+            {
                     { "Type", exception.CalculatedType },
                     { "CountScope", exception.CalculatedCountScope },
                     { "CountMinute", exception.CalculatedCountMinutes }
@@ -274,7 +280,7 @@
                 break;
             case "After Hours/Minutes in Range":
                 option = new Dictionary<string, object>()
-                {
+            {
                     { "Type", exception.CalculatedType },
                     { "CountScope", exception.CalculatedCountScope },
                     { "CountMinute", exception.CalculatedCountMinutes }
@@ -282,7 +288,7 @@
                 break;
             case "Punches on Specific Date":
                 option = new Dictionary<string, object>()
-                {
+            {
                     { "Type", exception.CalculatedType },
                     { "CountMinute", exception.Date.ToString("yyyy-MM-dd") }
                 };
