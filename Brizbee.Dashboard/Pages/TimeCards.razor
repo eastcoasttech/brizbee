@@ -80,7 +80,7 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" ng-click="showNewTimesheetEntry()"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Time Card</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenNewTimeCardDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Time Card</button>
                 </div>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => RefreshTimeCards())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
@@ -197,7 +197,7 @@
         <tbody>
             @foreach (var timeCard in timeCards)
             {
-                <tr class="fadeIn selectable">
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyTimeCardDialog(timeCard))">
                     <td><a href="javascript:void(0)">@timeCard.EnteredAt.ToShortDateString()</a></td>
                     <td><a href="javascript:void(0)">@formatMinutes(timeCard.Minutes)</a></td>
                     <td><a href="javascript:void(0)">@formatNotes(timeCard.Notes)</a></td>
@@ -308,7 +308,7 @@
     {
         working = true;
         timeCards.Clear();
-        var result = await timesheetEntryService.GetPunchesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
+        var result = await timesheetEntryService.GetTimesheetEntriesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
         timeCards = result.Item1;
         timeCardsCount = result.Item2.GetValueOrDefault();
         RefreshHoursAndMinutes();
@@ -326,6 +326,20 @@
         string quotient = Math.Floor(minutes / 60).ToString("N0");
         double remainder = minutes % 60;
         hoursAndMinutes = $"{quotient} hours and {remainder} minutes";
+    }
+
+    private void OpenNewTimeCardDialog()
+    {
+        dialogService.Open<TimeCardDialog>("New Time Card",
+                                new Dictionary<string, object>() { { "Id", null } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenModifyTimeCardDialog(TimesheetEntry timeCard)
+    {
+        dialogService.Open<TimeCardDialog>("Edit Time Card",
+                                new Dictionary<string, object>() { { "Id", timeCard.Id } },
+                                new DialogOptions() { Width = "600px" });
     }
 
     private void OpenRangeDialog()
