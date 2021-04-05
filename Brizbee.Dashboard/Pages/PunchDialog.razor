@@ -478,7 +478,8 @@
     {
         loadingCustomers = true;
 
-        customers = await customerService.GetCustomersAsync();
+        var result = await customerService.GetCustomersAsync();
+        customers = result.Item1;
 
         if (customerId.HasValue)
         {
@@ -505,7 +506,8 @@
     {
         loadingJobs = true;
 
-        jobs = await jobService.GetJobsAsync(selectedCustomerId);
+        var result = await jobService.GetJobsAsync(selectedCustomerId);
+        jobs = result.Item1;
 
         if (jobId.HasValue)
         {
@@ -532,7 +534,8 @@
     {
         loadingTasks = true;
 
-        tasks = await taskService.GetTasksAsync(selectedJobId);
+        var result = await taskService.GetTasksAsync(selectedJobId);
+        tasks = result.Item1;
 
         if (taskId.HasValue)
         {

@@ -38,14 +38,14 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
-        public async System.Threading.Tasks.Task<List<Task>> GetTasksAsync(int jobId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        public async System.Threading.Tasks.Task<(List<Task>, long?)> GetTasksAsync(int jobId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}&$filter=JobId eq {jobId}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var odataResponse = await JsonSerializer.DeserializeAsync<ODataResponse<Task>>(responseContent, options);
-            return odataResponse.Value.ToList();
+            return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
         public async System.Threading.Tasks.Task<Task> GetTaskByIdAsync(int id)
