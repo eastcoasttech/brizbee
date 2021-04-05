@@ -48,7 +48,7 @@ namespace Brizbee.Dashboard.Services
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataResponse<TimesheetEntry>>(responseContent, options);
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<TimesheetEntry>>(responseContent, options);
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 

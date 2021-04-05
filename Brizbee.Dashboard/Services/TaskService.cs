@@ -4,7 +4,11 @@ using Brizbee.Common.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Brizbee.Dashboard.Services
 {
@@ -38,33 +42,106 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
-        public async System.Threading.Tasks.Task<(List<Task>, long?)> GetTasksAsync(int jobId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        public async Task<(List<Brizbee.Common.Models.Task>, long?)> GetTasksAsync(int jobId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}&$filter=JobId eq {jobId}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataResponse<Task>>(responseContent, options);
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Brizbee.Common.Models.Task>>(responseContent, options);
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async System.Threading.Tasks.Task<Task> GetTaskByIdAsync(int id)
+        public async Task<Brizbee.Common.Models.Task> GetTaskByIdAsync(int id)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks({id})");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<Task>(responseContent);
+            return await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent);
         }
 
-        public async System.Threading.Tasks.Task<List<Task>> GetTasksForPunchesAsync(DateTime min, DateTime max)
+        public async Task<List<Brizbee.Common.Models.Task>> GetTasksForPunchesAsync(DateTime min, DateTime max)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks/Default.ForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true&$expand=BasePayrollRate,BaseServiceRate,Job($expand=Customer)");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataResponse<Task>>(responseContent, options);
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Brizbee.Common.Models.Task>>(responseContent, options);
             return odataResponse.Value.ToList();
+        }
+
+        public async Task<bool> DeleteTaskAsync(int id)
+        {
+            var response = await _apiService.GetHttpClient().DeleteAsync($"odata/Tasks({id})");
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<Brizbee.Common.Models.Task> SaveTaskAsync(Brizbee.Common.Models.Task task)
+        {
+            var url = task.Id != 0 ? $"odata/Tasks({task.Id})" : "odata/Tasks";
+            var method = task.Id != 0 ? HttpMethod.Patch : HttpMethod.Post;
+
+            using (var request = new HttpRequestMessage(method, url))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "Name", task.Name },
+                    { "Number", task.Number }
+                };
+
+                // Can only be configured at creation.
+                if (task.Id == 0)
+                    payload.Add("JobId", task.JobId);
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            using var responseContent = await response.Content.ReadAsStreamAsync();
+
+                            if (response.StatusCode == HttpStatusCode.NoContent)
+                            {
+                                return null;
+                            }
+                            else
+                            {
+                                var deserialized = await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent, options);
+                                return deserialized;
+                            }
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task<string> GetNextNumberAsync()
+        {
+            var response = await _apiService.GetHttpClient().PostAsync("odata/Tasks/Default.NextNumber", new StringContent(""));
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataSingleResponse<string>>(responseContent, options);
+            return odataResponse.Value;
         }
     }
 }

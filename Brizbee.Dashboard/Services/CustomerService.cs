@@ -3,6 +3,9 @@ using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -44,7 +47,7 @@ namespace Brizbee.Dashboard.Services
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataResponse<Customer>>(responseContent, options);
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Customer>>(responseContent, options);
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
@@ -55,6 +58,76 @@ namespace Brizbee.Dashboard.Services
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             return await JsonSerializer.DeserializeAsync<Customer>(responseContent);
+        }
+
+        public async Task<bool> DeleteCustomerAsync(int id)
+        {
+            var response = await _apiService.GetHttpClient().DeleteAsync($"odata/Customers({id})");
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<Customer> SaveCustomerAsync(Customer customer)
+        {
+            var url = customer.Id != 0 ? $"odata/Customers({customer.Id})" : "odata/Customers";
+            var method = customer.Id != 0 ? HttpMethod.Patch : HttpMethod.Post;
+
+            using (var request = new HttpRequestMessage(method, url))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "Name", customer.Name },
+                    { "Number", customer.Number },
+                    { "Description", customer.Description }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            using var responseContent = await response.Content.ReadAsStreamAsync();
+
+                            if (response.StatusCode == HttpStatusCode.NoContent)
+                            {
+                                return null;
+                            }
+                            else
+                            {
+                                var deserialized = await JsonSerializer.DeserializeAsync<Customer>(responseContent, options);
+                                return deserialized;
+                            }
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task<string> GetNextNumberAsync()
+        {
+            var response = await _apiService.GetHttpClient().PostAsync("odata/Customers/Default.NextNumber", new StringContent(""));
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataSingleResponse<string>>(responseContent, options);
+            return odataResponse.Value;
         }
     }
 }

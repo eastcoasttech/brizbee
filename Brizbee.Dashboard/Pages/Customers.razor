@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
+@inject ApiService apiService 
 @inject UserService userService
 @inject PunchService punchService
 @inject CustomerService customerService
@@ -264,7 +265,7 @@
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-default" @onclick="@(e => OpenNewTaskDialog())" disabled="@(!selectedProjectId.HasValue)"><i class="fa fa-plus" aria-hidden="true"></i> New Task</button>
-                            <a class="btn btn-default" ng-disabled="selected.job == null" ng-href="{{baseUrl}}/api/Reports/TasksByJob?JobId={{selected.job.Id}}&AuthUserId={{auth.userId}}&AuthExpiration={{auth.expiration}}&AuthToken={{auth.token}}">
+                            <a class="btn btn-default" ng-disabled="selected.job == null" href="@downloadUrl">
                                 Download
                             </a>
                         </div>
@@ -387,6 +388,7 @@
     private int projectsPageStart = 0;
     private long tasksCount = 0;
     private int tasksPageStart = 0;
+    private string downloadUrl = "";
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -499,50 +501,43 @@
 
     private void OpenNewCustomerDialog()
     {
-        dialogService.Open<PunchDialog>("New Customer",
+        dialogService.Open<CustomerDialog>("New Customer",
                                 new Dictionary<string, object>() { { "Id", null } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenModifyCustomerDialog(Customer customer)
     {
-        dialogService.Open<PunchDialog>("Edit Customer",
+        dialogService.Open<CustomerDialog>("Edit Customer",
                                 new Dictionary<string, object>() { { "Id", customer.Id } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenNewProjectDialog()
     {
-        dialogService.Open<PunchDialog>("New Project",
-                                new Dictionary<string, object>() { { "Id", null } },
+        dialogService.Open<ProjectDialog>("New Project",
+                                new Dictionary<string, object>() { { "Id", null }, { "CustomerId", selectedCustomerId } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenModifyProjectDialog(Job project)
     {
-        dialogService.Open<PunchDialog>("Edit Project",
+        dialogService.Open<ProjectDialog>("Edit Project",
                                 new Dictionary<string, object>() { { "Id", project.Id } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenNewTaskDialog()
     {
-        dialogService.Open<PunchDialog>("New Task",
-                                new Dictionary<string, object>() { { "Id", null } },
+        dialogService.Open<TaskDialog>("New Task",
+                                new Dictionary<string, object>() { { "Id", null }, { "ProjectId", selectedProjectId } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenModifyTaskDialog(Brizbee.Common.Models.Task task)
     {
-        dialogService.Open<PunchDialog>("Edit Task",
+        dialogService.Open<TaskDialog>("Edit Task",
                                 new Dictionary<string, object>() { { "Id", task.Id } },
-                                new DialogOptions() { Width = "600px" });
-    }
-
-    private void OpenDownloadDialog()
-    {
-        dialogService.Open<DownloadDialog>("Download Punches",
-                                new Dictionary<string, object>() { },
                                 new DialogOptions() { Width = "600px" });
     }
 
@@ -614,6 +609,13 @@
         // Select the first task
         if (tasks.Any())
             SelectTask(tasks.FirstOrDefault());
+
+        // Refresh the task download URL
+        var authUserId = await localStorageService.GetFromLocalStorage("AuthUserId");
+        var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
+        var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
+
+        downloadUrl = $"{apiService.GetBaseUrl()}/api/Reports/TasksByJob?JobId={selectedProjectId}&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
 
         StateHasChanged();
     }

@@ -1,0 +1,113 @@
+﻿@page "/dialogs/project"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject JobService projectService
+
+<EditForm Model="@project" OnValidSubmit="SaveProject" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="project_number" class="col-sm-3 control-label">Number</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="project_number" @bind-Value="project.Number" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="project_name" class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="project_name" @bind-Value="project.Name" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="project_description" class="col-sm-3 control-label">Description</label>
+        <div class="col-sm-9">
+            <InputTextArea class="form-control" id="project_description" @bind-Value="project.Description" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <hr />
+
+    <button class="btn btn-primary" type="submit" disabled="@(working || loading)">OK</button>
+    <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    @if (project.Id != 0)
+    {
+        <button class="btn btn-danger pull-right" type="button" @onclick="DeleteProject" disabled="@(working || loading)">Delete</button>
+    }
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Parameter] public int? CustomerId { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private Job project = new Job();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the project, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            project = await projectService.GetJobByIdAsync(Id.Value);
+        }
+        else
+        {
+            project.Number = await projectService.GetNextNumberAsync();
+        }
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveProject()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this project?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Set the cutomer id.
+        project.CustomerId = CustomerId.Value;
+
+        // Save the project on the server and close the dialog.
+        await projectService.SaveJobAsync(project);
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task DeleteProject()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this project?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+
+        // Delete the project on the server and close the dialog.
+        var result = await projectService.DeleteJobAsync(project.Id);
+        if (result)
+            dialogService.Close(false);
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}
