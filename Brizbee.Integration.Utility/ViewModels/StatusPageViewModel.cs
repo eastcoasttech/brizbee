@@ -99,6 +99,7 @@ namespace Brizbee.Integration.Utility.ViewModels
                 ValidateServiceItems(req, ticket);
                 ValidatePayrollItems(req, ticket);
                 ValidateCustomers(req, ticket);
+                ValidateClasses(req, ticket);
 
                 // Do not continue if there are validation errors
                 if (ValidationErrorCount > 0)
@@ -235,7 +236,7 @@ namespace Brizbee.Integration.Utility.ViewModels
             }
         }
 
-        private async System.Threading.Tasks.Task<Commit> UpdateCommit(Commit commit, DateTime exportedAt)
+        private async System.Threading.Tasks.Task<Commit> UpdateLock(Commit commit, DateTime exportedAt)
         {
             // Build the request
             var url = string.Format("odata/Commits({0})", commit.Id);
@@ -287,17 +288,15 @@ namespace Brizbee.Integration.Utility.ViewModels
             return replaced;
         }
 
-
         private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
         {
             var date = punch.InAt.ToString("yyyy-MM-dd");
-            var customer = ReplaceCharacters(punch.Task.Job.QuickBooksCustomerJob);
-            var employee = ReplaceCharacters(punch.User.QuickBooksEmployee);
+            var customerName = ReplaceCharacters(punch.Task.Job.QuickBooksCustomerJob);
+            var className = ReplaceCharacters(punch.Task.Job.QuickBooksClass);
+            var employeeName = ReplaceCharacters(punch.User.QuickBooksEmployee);
             var span = punch.OutAt.Value.Subtract(punch.InAt);
             var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
             var guid = string.Format("{{{0}}}", punch.Guid.ToString());
-            //var payrollItem = punch.Task.QuickBooksPayrollItem;
-            //var serviceItem = punch.Task.QuickBooksServiceItem;
             var payrollItem = punch.PayrollRate.QBDPayrollItem;
             var serviceItem = punch.ServiceRate.QBDServiceItem;
 
@@ -315,13 +314,13 @@ namespace Brizbee.Integration.Utility.ViewModels
             XmlElement EntityRef = doc.CreateElement("EntityRef");
             TimeTrackingAdd.AppendChild(EntityRef);
             // Set field value for FullName
-            EntityRef.AppendChild(MakeSimpleElem(doc, "FullName", employee));
+            EntityRef.AppendChild(MakeSimpleElem(doc, "FullName", employeeName));
 
             // Create CustomerRef aggregate and fill in field values for it
             XmlElement CustomerRef = doc.CreateElement("CustomerRef");
             TimeTrackingAdd.AppendChild(CustomerRef);
             // Set field value for FullName
-            CustomerRef.AppendChild(MakeSimpleElem(doc, "FullName", customer));
+            CustomerRef.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
 
             // Create ItemServiceRef aggregate and fill in field values for it
             XmlElement ItemServiceRef = doc.CreateElement("ItemServiceRef");
@@ -332,11 +331,11 @@ namespace Brizbee.Integration.Utility.ViewModels
             // Set field value for Duration
             TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "Duration", duration));
 
-            //// Create ClassRef aggregate and fill in field values for it
-            //XmlElement ClassRef = doc.CreateElement("ClassRef");
-            //TimeTrackingAdd.AppendChild(ClassRef);
-            //// Set field value for FullName
-            //ClassRef.AppendChild(MakeSimpleElem(doc, "FullName", "ab"));
+            // Create ClassRef aggregate and fill in field values for it
+            XmlElement ClassRef = doc.CreateElement("ClassRef");
+            TimeTrackingAdd.AppendChild(ClassRef);
+            // Set field value for FullName
+            ClassRef.AppendChild(MakeSimpleElem(doc, "FullName", className));
 
             // Create PayrollItemWageRef aggregate and fill in field values for it
             XmlElement PayrollItemWageRef = doc.CreateElement("PayrollItemWageRef");
@@ -409,6 +408,19 @@ namespace Brizbee.Integration.Utility.ViewModels
             CustomerQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
+        private void BuildClassQueryRq(XmlDocument doc, XmlElement parent, string className)
+        {
+            // Create ClassQueryRq aggregate and fill in field values for it
+            XmlElement ClassQueryRq = doc.CreateElement("ClassQueryRq");
+            parent.AppendChild(ClassQueryRq);
+
+            // Populate the FullName field
+            ClassQueryRq.AppendChild(MakeSimpleElem(doc, "FullName", className));
+
+            // Only include certain fields
+            ClassQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+        }
+
         private void BuildHostQueryRq(XmlDocument doc, XmlElement parent)
         {
             // Create HostQueryRq aggregate and fill in field values for it
@@ -422,7 +434,6 @@ namespace Brizbee.Integration.Utility.ViewModels
             HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Country"));
             HostQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "SupportedQBXMLVersion"));
         }
-
 
         private void WalkTimeTrackingAddRs(string response)
         {
@@ -500,8 +511,8 @@ namespace Brizbee.Integration.Utility.ViewModels
 
                     if (match.Success)
                     {
-                        var employee = match.Groups[2].Value;
-                        var errorMessage = string.Format("Missing employee in the company file: {0}", employee);
+                        var employeeName = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing employee in the company file: {0}", employeeName);
                         ValidationErrorCount += 1;
                         StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
                         OnPropertyChanged("StatusText");
@@ -632,8 +643,52 @@ namespace Brizbee.Integration.Utility.ViewModels
 
                     if (match.Success)
                     {
-                        var payrollItem = match.Groups[2].Value;
-                        var errorMessage = string.Format("Missing customer:job in the company file: {0}", payrollItem);
+                        var customerName = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing customer:job in the company file: {0}", customerName);
+                        ValidationErrorCount += 1;
+                        StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
+                        OnPropertyChanged("StatusText");
+                    }
+                }
+                else if (iStatusCode > 0)
+                {
+                    ValidationErrorCount += 1;
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    OnPropertyChanged("StatusText");
+                }
+            }
+        }
+
+        private void WalkClassQueryRs(string response)
+        {
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList ClassQueryRsList = responseXmlDoc.GetElementsByTagName("ClassQueryRs");
+            foreach (var result in ClassQueryRsList)
+            {
+                XmlNode responseNode = result as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                //status code = 0 all OK, > 0 is warning
+                if (iStatusCode == 500)
+                {
+                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    Match match = regex.Match(statusMessage);
+
+                    if (match.Success)
+                    {
+                        var className = match.Groups[2].Value;
+                        var errorMessage = string.Format("Missing class in the company file: {0}", className);
                         ValidationErrorCount += 1;
                         StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
                         OnPropertyChanged("StatusText");
@@ -703,7 +758,6 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             return quickBooksExport;
         }
-
 
         private void WalkTimeTrackingRet(XmlNode TimeTrackingRet)
         {
@@ -965,6 +1019,39 @@ namespace Brizbee.Integration.Utility.ViewModels
             var response = req.ProcessRequest(ticket, doc.OuterXml);
 
             WalkCustomerQueryRs(response);
+        }
+
+        /// <summary>
+        /// Uses the given QuickBooks connection details to verify that the classes
+        /// in the list of punches exists.
+        /// </summary>
+        /// <param name="req">QuickBooks request processor</param>
+        /// <param name="ticket">Security token</param>
+        private void ValidateClasses(RequestProcessor2 req, string ticket)
+        {
+            // Requests to the QuickBooks API are made in QBXML format
+            var doc = new XmlDocument();
+
+            // Add the prolog processing instructions
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            var classes = punches.GroupBy(p => p.Task.Job.QuickBooksClass).Select(g => g.Key);
+            foreach (var name in classes)
+            {
+                BuildClassQueryRq(doc, inner, name);
+            }
+
+            var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            WalkClassQueryRs(response);
         }
 
         private async System.Threading.Tasks.Task SaveQuickBooksDesktopExport(RequestProcessor2 req, string ticket)

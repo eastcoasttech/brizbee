@@ -77,6 +77,9 @@ namespace Brizbee.Common.Models
             }
         }
 
+        [NotMapped]
+        public int CumulativeMinutes { get; set; }
+
         [Column(TypeName = "datetime2")]
         public DateTime? OutAt { get; set; }
 

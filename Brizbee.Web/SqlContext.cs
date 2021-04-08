@@ -55,9 +55,9 @@ namespace Brizbee.Web
             mb.Entity<User>().Ignore(u => u.Password);
 
             // Organization codes should be universally unique
-            mb.Entity<Organization>()
-                .HasIndex(o => o.Code)
-                .IsUnique();
+            mb.Entity<Organization>();
+                //.HasIndex(o => o.Code)
+                //.IsUnique();
         }
 
         public void MarkAsModified(object obj)
