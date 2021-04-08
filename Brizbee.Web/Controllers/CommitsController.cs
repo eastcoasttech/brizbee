@@ -98,8 +98,9 @@ namespace Brizbee.Web.Controllers
         public HttpResponseMessage Export([FromODataUri] int key, [FromODataUri] string Delimiter)
         {
             var commitId = key;
+            var currentUser = CurrentUser();
 
-            var exportService = new ExportService(commitId);
+            var exportService = new ExportService(commitId, currentUser.Id);
             string csv = exportService.BuildCsv(Delimiter);
 
             var response = new HttpResponseMessage(HttpStatusCode.OK);

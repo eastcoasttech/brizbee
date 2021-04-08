@@ -36,27 +36,32 @@ namespace Brizbee.Web.Services
         private int? _commitId;
         private DateTime? _inAt;
         private DateTime? _outAt;
+        private int _currentUserId;
 
-        public ExportService(int? commitId)
+        public ExportService(int? commitId, int currentUserId)
         {
             _commitId = commitId;
         }
 
-        public ExportService(DateTime? inAt, DateTime? outAt)
+        public ExportService(DateTime? inAt, DateTime? outAt, int currentUserId)
         {
             _inAt = inAt;
             _outAt = outAt;
+            _currentUserId = currentUserId;
         }
 
         public string BuildCsv(string delimiter = ",")
         {
             using (var db = new SqlContext())
             {
+                var currentUser = db.Users.Find(_currentUserId);
+
                 IQueryable<Punch> punches = db.Punches
                     .Include("Task")
                     .Include("Task.Job")
                     .Include("Task.Job.Customer")
-                    .Include("User");
+                    .Include("User")
+                    .Where(p => p.Task.Job.Customer.OrganizationId == currentUser.OrganizationId);
 
                 if (_commitId.HasValue)
                 {
@@ -80,31 +85,31 @@ namespace Brizbee.Web.Services
                         PunchId = p.Id,
                         PunchInAt = p.InAt,
                         PunchInAtTimeZone = p.InAtTimeZone,
-                        PunchSourceForInAt = p.SourceForInAt,
+                        InAtSourceHardware = p.InAtSourceHardware,
+                        InAtSourcePhoneNumber = p.InAtSourcePhoneNumber,
+                        InAtSourceHostname = p.InAtSourceHostname,
                         PunchOutAt = p.OutAt,
                         PunchOutAtTimeZone = p.OutAtTimeZone,
-                        PunchSourceForOutAt = p.SourceForOutAt,
+                        OutAtSourceHardware = p.OutAtSourceHardware,
+                        OutAtSourcePhoneNumber = p.OutAtSourcePhoneNumber,
+                        OutAtSourceHostname = p.OutAtSourceHostname,
                         PunchCreatedAtUtc = p.CreatedAt,
                         User = new
                         {
-                            UserId = p.User.Id,
                             UserName = p.User.Name
                         },
                         Task = new
                         {
-                            TaskId = p.Task.Id,
                             TaskNumber = p.Task.Number,
                             TaskName = p.Task.Name
                         },
                         Job = new
                         {
-                            JobId = p.Task.Job.Id,
                             JobNumber = p.Task.Job.Number,
                             JobName = p.Task.Job.Name
                         },
                         Customer = new
                         {
-                            CustomerId = p.Task.Job.Customer.Id,
                             CustomerNumber = p.Task.Job.Customer.Number,
                             CustomerName = p.Task.Job.Customer.Name
                         },

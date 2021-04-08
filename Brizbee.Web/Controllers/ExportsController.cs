@@ -45,10 +45,12 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime? InAt = null,
             [FromUri] DateTime? OutAt = null)
         {
+            var currentUser = CurrentUser();
+
             if (CommitId.HasValue)
             {
                 var commit = db.Commits.Find(CommitId.Value);
-                var exportService = new ExportService(commit.Id);
+                var exportService = new ExportService(commit.Id, currentUser.Id);
 
                 string csv = exportService.BuildCsv(Delimiter);
                 var bytes = Encoding.UTF8.GetBytes(csv);
@@ -62,7 +64,7 @@ namespace Brizbee.Web.Controllers
             }
             else if (InAt.HasValue && OutAt.HasValue)
             {
-                var exportService = new ExportService(InAt.Value, OutAt.Value);
+                var exportService = new ExportService(InAt.Value, OutAt.Value, currentUser.Id);
 
                 string csv = exportService.BuildCsv(Delimiter);
                 var bytes = Encoding.UTF8.GetBytes(csv);
