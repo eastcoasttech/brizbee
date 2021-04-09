@@ -316,32 +316,44 @@ namespace Brizbee.Integration.Utility.ViewModels
             // Set field value for FullName
             EntityRef.AppendChild(MakeSimpleElem(doc, "FullName", employeeName));
 
-            // Create CustomerRef aggregate and fill in field values for it
-            XmlElement CustomerRef = doc.CreateElement("CustomerRef");
-            TimeTrackingAdd.AppendChild(CustomerRef);
-            // Set field value for FullName
-            CustomerRef.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
+            if (!string.IsNullOrEmpty(customerName))
+            {
+                // Create CustomerRef aggregate and fill in field values for it
+                XmlElement CustomerRef = doc.CreateElement("CustomerRef");
+                TimeTrackingAdd.AppendChild(CustomerRef);
+                // Set field value for FullName
+                CustomerRef.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
+            }
 
-            // Create ItemServiceRef aggregate and fill in field values for it
-            XmlElement ItemServiceRef = doc.CreateElement("ItemServiceRef");
-            TimeTrackingAdd.AppendChild(ItemServiceRef);
-            // Set field value for FullName
-            ItemServiceRef.AppendChild(MakeSimpleElem(doc, "FullName", serviceItem));
+            if (!string.IsNullOrEmpty(serviceItem))
+            {
+                // Create ItemServiceRef aggregate and fill in field values for it
+                XmlElement ItemServiceRef = doc.CreateElement("ItemServiceRef");
+                TimeTrackingAdd.AppendChild(ItemServiceRef);
+                // Set field value for FullName
+                ItemServiceRef.AppendChild(MakeSimpleElem(doc, "FullName", serviceItem));
+            }
 
             // Set field value for Duration
             TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "Duration", duration));
 
             // Create ClassRef aggregate and fill in field values for it
-            XmlElement ClassRef = doc.CreateElement("ClassRef");
-            TimeTrackingAdd.AppendChild(ClassRef);
-            // Set field value for FullName
-            ClassRef.AppendChild(MakeSimpleElem(doc, "FullName", className));
+            if (!string.IsNullOrEmpty(className))
+            {
+                XmlElement ClassRef = doc.CreateElement("ClassRef");
+                TimeTrackingAdd.AppendChild(ClassRef);
+                // Set field value for FullName
+                ClassRef.AppendChild(MakeSimpleElem(doc, "FullName", className));
+            }
 
-            // Create PayrollItemWageRef aggregate and fill in field values for it
-            XmlElement PayrollItemWageRef = doc.CreateElement("PayrollItemWageRef");
-            TimeTrackingAdd.AppendChild(PayrollItemWageRef);
-            // Set field value for FullName
-            PayrollItemWageRef.AppendChild(MakeSimpleElem(doc, "FullName", payrollItem));
+            if (!string.IsNullOrEmpty(payrollItem))
+            {
+                // Create PayrollItemWageRef aggregate and fill in field values for it
+                XmlElement PayrollItemWageRef = doc.CreateElement("PayrollItemWageRef");
+                TimeTrackingAdd.AppendChild(PayrollItemWageRef);
+                // Set field value for FullName
+                PayrollItemWageRef.AppendChild(MakeSimpleElem(doc, "FullName", payrollItem));
+            }
 
             //// Set field value for Notes <!-- optional -->
             //TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "Notes", "ab"));
@@ -1011,6 +1023,11 @@ namespace Brizbee.Integration.Utility.ViewModels
             inner.SetAttribute("onError", "stopOnError");
 
             var customers = punches.GroupBy(p => p.Task.Job.QuickBooksCustomerJob).Select(g => g.Key);
+
+            // Do not continue if there are no customers.
+            if (!customers.Any())
+                return;
+
             foreach (var name in customers)
             {
                 BuildCustomerQueryRq(doc, inner, name);
@@ -1044,6 +1061,11 @@ namespace Brizbee.Integration.Utility.ViewModels
             inner.SetAttribute("onError", "stopOnError");
 
             var classes = punches.GroupBy(p => p.Task.Job.QuickBooksClass).Select(g => g.Key);
+
+            // Do not continue if there are no classes.
+            if (!classes.Any())
+                return;
+
             foreach (var name in classes)
             {
                 BuildClassQueryRq(doc, inner, name);

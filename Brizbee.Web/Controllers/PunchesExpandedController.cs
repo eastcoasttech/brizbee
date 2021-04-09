@@ -50,7 +50,7 @@ namespace Brizbee.Web.Controllers
         [HttpGet]
         [Route("api/PunchesExpanded")]
         public HttpResponseMessage GetPunches([FromUri] DateTime inAt, [FromUri] DateTime outAt,
-            [FromUri] int pageNumber = 1, [FromUri] int pageSize = 1000,
+            [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
             [FromUri] string orderBy = "PUNCHES/INAT", [FromUri] string orderByDirection = "ASC",
             [FromUri] int[] jobIds = null, [FromUri] string[] jobNames = null,
             [FromUri] int[] taskIds = null, [FromUri] string[] taskNames = null,
@@ -65,7 +65,7 @@ namespace Brizbee.Web.Controllers
             //    return BadRequest();
 
             // Determine the number of records to skip.
-            int skip = (pageNumber - 1) * pageSize;
+            //int skip = (pageNumber - 1) * pageSize;
 
             var total = 0;
             List<Punch> punches = new List<Punch>();
@@ -475,7 +475,7 @@ namespace Brizbee.Web.Controllers
             };
 
             // Set headers for paging.
-            response.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
+            //response.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
             response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
             response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
             response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="BRIZBEE Integration Utility" Language="1033" Version="1.1.0.0" Manufacturer="BRIZBEE" UpgradeCode="247144C2-ED15-4C58-9675-1DDF3716CE0F">
+  <Product Id="*" Name="BRIZBEE Integration Utility" Language="1033" Version="1.2.0.0" Manufacturer="BRIZBEE" UpgradeCode="247144C2-ED15-4C58-9675-1DDF3716CE0F">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <Icon Id="ICON.ICO" SourceFile="$(var.Brizbee.Integration.Utility.TargetDir)Images/favicon.ico" />
