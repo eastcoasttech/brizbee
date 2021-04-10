@@ -49,20 +49,20 @@ namespace Brizbee.Web.Controllers
         // GET: api/PunchesExpanded
         [HttpGet]
         [Route("api/PunchesExpanded")]
-        public HttpResponseMessage GetPunches([FromUri] DateTime inAt, [FromUri] DateTime outAt,
+        public HttpResponseMessage GetPunches([FromUri] DateTime min, [FromUri] DateTime max,
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
             [FromUri] string orderBy = "PUNCHES/INAT", [FromUri] string orderByDirection = "ASC",
             [FromUri] int[] jobIds = null, [FromUri] string[] jobNames = null,
             [FromUri] int[] taskIds = null, [FromUri] string[] taskNames = null,
             [FromUri] int[] customerIds = null, [FromUri] string[] customerNames = null)
         {
-            //if (pageSize > 1000) { return BadRequest(); }
+            if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
             var currentUser = CurrentUser();
 
             // Ensure Administrator.
-            //if (currentUser.Role != "Administrator")
-            //    return BadRequest();
+            if (currentUser.Role != "Administrator")
+                Request.CreateResponse(HttpStatusCode.BadRequest);
 
             // Determine the number of records to skip.
             //int skip = (pageNumber - 1) * pageSize;
@@ -137,8 +137,8 @@ namespace Brizbee.Web.Controllers
                 var parameters = new DynamicParameters();
 
                 // Common clause.
-                parameters.Add("@InAt", inAt);
-                parameters.Add("@OutAt", outAt);
+                parameters.Add("@Min", min);
+                parameters.Add("@Max", max);
                 parameters.Add("@OrganizationId", currentUser.OrganizationId);
 
                 // Clause for job ids.
@@ -199,8 +199,8 @@ namespace Brizbee.Web.Controllers
                         [Users] AS U ON P.[UserId] = U.[Id]
                     WHERE
                         U.[OrganizationId] = @OrganizationId AND
-                        P.[InAt] >= @InAt AND
-                        P.[OutAt] <= @OutAt {whereClause};";
+                        P.[InAt] >= @Min AND
+                        P.[InAt] <= @Max {whereClause};";
 
                 total = connection.QuerySingle<int>(countSql, parameters);
 
@@ -330,10 +330,11 @@ namespace Brizbee.Web.Controllers
                         [Rates] AS SR ON P.[ServiceRateId] = SR.[Id]
                     WHERE
                         U.[OrganizationId] = @OrganizationId AND
-                        P.[InAt] >= @InAt AND
-                        P.[OutAt] <= @OutAt {whereClause}
+                        P.[InAt] >= @Min AND
+                        P.[InAt] <= @Max {whereClause}
                     ORDER BY
                         {orderByFormatted} {orderByDirectionFormatted}
+                        {(orderByFormatted == "P.[InAt]" ? "" : $", P.[InAt] {orderByDirectionFormatted}")}
                     OFFSET @Skip ROWS
                     FETCH NEXT @PageSize ROWS ONLY;";
 

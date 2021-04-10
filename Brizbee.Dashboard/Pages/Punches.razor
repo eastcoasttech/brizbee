@@ -113,81 +113,87 @@
     <table class="table table-bordered table-condensed table-supercondensed">
         <thead>
             <tr>
-                <th style="width: 15%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("User/Name"))">
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
                         User
-                        @if (sortBy == "User/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Users/Name" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "User/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Users/Name" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
-                <th style="width: 10%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("InAt"))">
+                <th style="width: 8%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Punches/InAt"))">
                         In
-                        @if (sortBy == "InAt" && sortDirection == "ASC")
+                        @if (sortBy == "Punches/InAt" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "InAt" && sortDirection == "DESC")
+                        else if (sortBy == "Punches/InAt" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
-                <th style="width: 10%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("OutAt"))">
+                <th style="width: 8%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Punches/OutAt"))">
                         Out
-                        @if (sortBy == "OutAt" && sortDirection == "ASC")
+                        @if (sortBy == "Punches/OutAt" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "OutAt" && sortDirection == "DESC")
+                        else if (sortBy == "Punches/OutAt" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
+                <th style="width: 5%;">
+                    Hours
+                </th>
+                <th style="width: 5%;">
+                    Running
+                </th>
                 <th style="width: 15%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Customer/Name"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Customers/Name"))">
                         Customer
-                        @if (sortBy == "Task/Job/Customer/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Customers/Name" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "Task/Job/Customer/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Customers/Name" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th style="width: 15%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Name"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Jobs/Name"))">
                         Job
-                        @if (sortBy == "Task/Job/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Jobs/Name" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "Task/Job/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Jobs/Name" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
-                <th style="width: 10%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Name"))">
+                <th style="width: 12%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Tasks/Name"))">
                         Task
-                        @if (sortBy == "Task/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Tasks/Name" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "Task/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Tasks/Name" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -196,11 +202,11 @@
                         Payroll Rate
                         @if (sortBy == "PayrollRate/Name" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "PayrollRate/Name" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -209,56 +215,58 @@
                         Customer Rate
                         @if (sortBy == "ServiceRate/Name" && sortDirection == "ASC")
                         {
-                            <span class="fa fa-caret-up"></span>
+                        <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "ServiceRate/Name" && sortDirection == "DESC")
                         {
-                            <span class="fa fa-caret-down"></span>
+                        <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
-                <th style="width: 5%;">
+                <th style="width: 2%;">
                 </th>
             </tr>
         </thead>
         <tbody>
             @foreach (var punch in punches)
             {
-                <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
-                    <td><a href="javascript:void(0)">@punch.User.Name</a></td>
-                    <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
-                    <td>
-                        @if (punch.OutAt.HasValue)
+            <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
+                <td><a href="javascript:void(0)">@punch.User.Name</a></td>
+                <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
+                <td>
+                    @if (punch.OutAt.HasValue)
                         {
-                            <a href="javascript:void(0)">@punch.OutAt.Value.ToString("M/d/yyyy h:mm tt")</a>
+                    <a href="javascript:void(0)">@punch.OutAt.Value.ToString("M/d/yyyy h:mm tt")</a>
                         }
                         else
                         {
-                            <span>STILL WORKING</span>
+                    <span>STILL WORKING</span>
                         }
-                    </td>
-                    <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number &ndash; @punch.Task.Job.Customer.Name</a></td>
-                    <td><a href="javascript:void(0)">@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</a></td>
-                    <td><a href="javascript:void(0)">@punch.Task.Number &ndash; @punch.Task.Name</a></td>
-                    <td>
-                        @if (punch.PayrollRate != null)
+                </td>
+                <td><a href="">@(Math.Round(punch.Minutes / 60.0, 2))</a></td>
+                <td><a href="">@(Math.Round(punch.CumulativeMinutes / 60.0, 2))</a></td>
+                <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number &ndash; @punch.Task.Job.Customer.Name</a></td>
+                <td><a href="javascript:void(0)">@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</a></td>
+                <td><a href="javascript:void(0)">@punch.Task.Number &ndash; @punch.Task.Name</a></td>
+                <td>
+                    @if (punch.PayrollRate != null)
                         {
-                            <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
+                    <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
                         }
-                    </td>
-                    <td>
-                        @if (punch.ServiceRate != null)
+                </td>
+                <td>
+                    @if (punch.ServiceRate != null)
                         {
-                            <a href="javascript:void(0)">@punch.ServiceRate.Name</a>
+                    <a href="javascript:void(0)">@punch.ServiceRate.Name</a>
                         }
-                    </td>
-                    <td class="text-center">
-                        @if (punch.CommitId.HasValue)
+                </td>
+                <td class="text-center">
+                    @if (punch.CommitId.HasValue)
                         {
-                            <i class="fa fa-lock" aria-hidden="true"></i>
+                    <i class="fa fa-lock" aria-hidden="true"></i>
                         }
-                    </td>
-                </tr>
+                </td>
+            </tr>
             }
             @if (working)
             {
@@ -315,7 +323,7 @@
     private bool working = false;
     private User currentUser;
     private List<Punch> punches = new List<Punch>();
-    private string sortBy = "InAt";
+    private string sortBy = "Punches/InAt";
     private string sortDirection = "ASC";
     private int pageSize = 100;
     private int skip = 0;
@@ -371,7 +379,7 @@
     {
         working = true;
         punches.Clear();
-        var result = await punchService.GetPunchesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
+        var result = await punchService.GetExpandedPunchesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
         punches = result.Item1;
         punchesCount = result.Item2.GetValueOrDefault();
         RefreshHoursAndMinutes();
