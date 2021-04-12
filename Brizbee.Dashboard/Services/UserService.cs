@@ -145,5 +145,15 @@ namespace Brizbee.Dashboard.Services
                 return null;
             }
         }
+
+        public async Task<List<User>> SearchUsersAsync(string query)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?$filter=contains(Name,'{query}')&$select=EmailAddress,Name,Id");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<User>>(responseContent, options);
+            return odataResponse.Value.ToList();
+        }
     }
 }

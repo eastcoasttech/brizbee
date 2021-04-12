@@ -103,11 +103,6 @@ table {
             text-decoration: none;
         }
 
-        .table-report tbody tr td i {
-            font-size: 40px;
-            color: #ffc600;
-        }
-
         .table-report tbody tr td h4 {
             margin: 3px;
             padding: 0;

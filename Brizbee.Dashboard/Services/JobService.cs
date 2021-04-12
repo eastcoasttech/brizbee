@@ -41,7 +41,7 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
-        public async System.Threading.Tasks.Task<(List<Job>, long?)> GetJobsAsync(int customerId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        public async Task<(List<Job>, long?)> GetJobsAsync(int customerId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}&$filter=CustomerId eq {customerId}");
             response.EnsureSuccessStatusCode();
@@ -51,13 +51,23 @@ namespace Brizbee.Dashboard.Services
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async System.Threading.Tasks.Task<Job> GetJobByIdAsync(int id)
+        public async Task<Job> GetJobByIdAsync(int id)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs({id})");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             return await JsonSerializer.DeserializeAsync<Job>(responseContent);
+        }
+
+        public async Task<List<Job>> SearchJobsAsync(string query)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs?$filter=contains(Name,'{query}')&$select=Name,Number,Id&$expand=Customer($select=Name,Number)");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Job>>(responseContent, options);
+            return odataResponse.Value.ToList();
         }
 
         public async Task<bool> DeleteJobAsync(int id)
