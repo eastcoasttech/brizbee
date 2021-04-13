@@ -71,6 +71,22 @@ namespace Brizbee.Dashboard.Services
             return odataResponse.Value.ToList();
         }
 
+        public async Task<Brizbee.Common.Models.Task> SearchTasksAsync(string number)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks/Default.Search(Number='{number}')");
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var responseContent = await response.Content.ReadAsStreamAsync();
+                var odataResponse = await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent, options);
+                return odataResponse;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public async Task<bool> DeleteTaskAsync(int id)
         {
             var response = await _apiService.GetHttpClient().DeleteAsync($"odata/Tasks({id})");

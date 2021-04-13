@@ -1,4 +1,4 @@
-﻿@page "/status"
+﻿@page "/kiosk/status"
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
@@ -21,15 +21,15 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#!/status">
-                <img alt="BRIZBEE Logo" src="/icon-32x32.png" style="height: 22px;">
-            </a>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li class="active">
-                    <NavLink class="nav-link" href="status">
-                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Status <span class="sr-only">(current)</span>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
                     </NavLink>
                 </li>
                 @if (currentUser.Role == "Administrator")
@@ -71,7 +71,7 @@
     </div>
 </nav>
 
-<div class="container-fluid">
+<div class="container-fluid fadeIn">
     <div class="row">
         <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
             <div class="panel panel-default panel-kiosk">
@@ -101,12 +101,20 @@
                         <table class="table table-noborder">
                             <tbody>
                                 <tr>
-                                    <td><a href="#!/in/task" class="btn btn-block btn-lg btn-success">Punch In</a></td>
+                                    <td>
+                                        <NavLink class="btn btn-block btn-lg btn-success" href="kiosk/in/tasknumber">
+                                            Punch In
+                                        </NavLink>
+                                    </td>
                                 </tr>
                                 @if (currentPunch != null)
                                 {
                                     <tr>
-                                        <td><a href="#!/out/confirm" class="btn btn-block btn-lg btn-danger">Punch Out</a></td>
+                                        <td>
+                                            <NavLink class="btn btn-block btn-lg btn-danger" href="kiosk/out/confirm">
+                                                Punch Out
+                                            </NavLink>
+                                        </td>
                                     </tr>
                                 }
                                 <tr>

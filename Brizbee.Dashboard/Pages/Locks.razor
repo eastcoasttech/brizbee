@@ -22,15 +22,15 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#!/status">
-                <img alt="BRIZBEE Logo" src="/icon-32x32.png" style="height: 22px;">
-            </a>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li>
-                    <NavLink class="nav-link" href="status">
-                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Status
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
                     </NavLink>
                 </li>
                 @if (currentUser.Role == "Administrator")
@@ -72,7 +72,7 @@
     </div>
 </nav>
 
-<div class="container-fluid">
+<div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
         <li role="presentation"><NavLink href="punches">Punches</NavLink></li>
         <li role="presentation"><NavLink href="timecards">Time Cards</NavLink></li>

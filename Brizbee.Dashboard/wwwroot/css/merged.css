@@ -19,12 +19,17 @@ ol.breadcrumb {
     margin-bottom: 5em;
 }
 
-.navbar-nav i.fa {
+.navbar-nav i.far {
     margin-right: 3px;
 }
 
 .navbar-fixed-top {
     z-index: 999;
+}
+
+.navbar-header a.navbar-brand img {
+    width: 22px;
+    height: 22px;
 }
 
 table.table-exceptions tr td label {

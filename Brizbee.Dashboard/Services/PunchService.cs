@@ -279,5 +279,84 @@ namespace Brizbee.Dashboard.Services
                 }
             }
         }
+
+        public async Task<bool> PunchIn(int taskId, string latitude, string longitude, string timeZone)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PunchIn"))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "InAtTimeZone", timeZone },
+                    { "LatitudeForInAt", latitude },
+                    { "LongitudeForInAt", longitude },
+                    { "TaskId", taskId },
+                    { "SourceHardware", "Web" },
+                    { "SourceOperatingSystem", "Unknown" },
+                    { "SourceOperatingSystemVersion", "Unknown" },
+                    { "SourceBrowser", "Unknown" },
+                    { "SourceBrowserVersion", "Unknown" }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        public async Task<bool> PunchOut(string latitude, string longitude, string timeZone)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PunchOut"))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "OutAtTimeZone", timeZone },
+                    { "LatitudeForOutAt", latitude },
+                    { "LongitudeForOutAt", longitude },
+                    { "SourceHardware", "Web" },
+                    { "SourceOperatingSystem", "Unknown" },
+                    { "SourceOperatingSystemVersion", "Unknown" },
+                    { "SourceBrowser", "Unknown" },
+                    { "SourceBrowserVersion", "Unknown" }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

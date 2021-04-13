@@ -90,6 +90,8 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
+        public Task AttemptedTask { get; set; }
+
         public event Action OnChange;
 
         private void NotifyDataChanged() => OnChange?.Invoke();
