@@ -87,44 +87,34 @@
                     {
                         @if (currentPunch != null)
                         {
-                            <p class="text-center fadeIn" style="text-transform: uppercase;">You are <span class="label label-success"><strong>PUNCHED IN</strong></span></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-top: 2em;">You are <span class="label label-success"><strong>PUNCHED IN</strong></span></p>
                             <p class="text-center fadeIn" style="text-transform: uppercase;"><small>on job</small><br /><strong>@currentPunch.Task.Job.Number &ndash; @currentPunch.Task.Job.Name</strong></p>
                             <p class="text-center fadeIn" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@currentPunch.Task.Job.Customer.Number &ndash; @currentPunch.Task.Job.Customer.Name</strong></p>
                             <p class="text-center fadeIn" style="text-transform: uppercase;"><small>doing task</small><br /><strong>@currentPunch.Task.Number &ndash; @currentPunch.Task.Name</strong></p>
-                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>since @currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@currentPunch.InAtTimeZone</small></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-bottom: 2em;"><small>since @currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@currentPunch.InAtTimeZone</small></p>
                         }
 
                         @if (currentPunch == null)
                         {
-                            <p class="text-center fadeIn" style="text-transform: uppercase;">You are <span class="label label-danger"><strong>PUNCHED OUT</strong></span></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-top: 2em; padding-bottom: 2em;">You are <span class="label label-danger"><strong>PUNCHED OUT</strong></span></p>
                         }
-                        <table class="table table-noborder">
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <NavLink class="btn btn-block btn-lg btn-success" href="kiosk/in/tasknumber">
-                                            Punch In
-                                        </NavLink>
-                                    </td>
-                                </tr>
-                                @if (currentPunch != null)
-                                {
-                                    <tr>
-                                        <td>
-                                            <NavLink class="btn btn-block btn-lg btn-danger" href="kiosk/out/confirm">
-                                                Punch Out
-                                            </NavLink>
-                                        </td>
-                                    </tr>
-                                }
-                                <tr>
-                                    <td><a href="#!/timesheets/add" class="btn btn-block btn-lg btn-default">Time Card</a></td>
-                                </tr>
-                                <tr>
-                                    <td><button type="button" class="btn btn-block btn-lg btn-default" @onclick="SignOutClicked">Logout</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                        <NavLink class="btn btn-block btn-lg btn-success" href="kiosk/in/tasknumber">
+                            Punch In
+                        </NavLink>
+
+                        @if (currentPunch != null)
+                        {
+                            <NavLink class="btn btn-block btn-lg btn-danger" href="kiosk/out/confirm">
+                                Punch Out
+                            </NavLink>
+                        }
+
+                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/timecard/task">
+                            Time Card
+                        </NavLink>
+
+                        <button type="button" class="btn btn-block btn-lg btn-default" @onclick="SignOutClicked">Logout</button>
                     }
                 </div>
             </div>
