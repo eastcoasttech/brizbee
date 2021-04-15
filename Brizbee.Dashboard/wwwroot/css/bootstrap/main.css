@@ -217,15 +217,6 @@ ol.getting-started li {
     font-size: 12px;
 }
 
-.panel-login {
-    margin-bottom: 10px;
-}
-
-.header-status {
-    padding-bottom: 1em;
-    text-transform: uppercase;
-}
-
 /**
  * The CSS shown here will not be introduced in the Quickstart guide, but shows
  * how you can use CSS to style your Element's container.

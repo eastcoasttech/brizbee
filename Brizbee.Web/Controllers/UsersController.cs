@@ -157,6 +157,7 @@ namespace Brizbee.Web.Controllers
                     .Where(u => u.OrganizationId == user.OrganizationId)
                     .Where(u => u.Pin == castedPin)
                     .Where(u => u.IsDeleted == false)
+                    .Where(u => u.Id != user.Id) // Do not include current user in determination
                     .Any())
                 {
                     throw new Exception("Another user in the organization already has that Pin");

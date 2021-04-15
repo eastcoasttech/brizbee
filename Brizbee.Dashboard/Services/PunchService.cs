@@ -42,6 +42,16 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
+        public async Task<(List<Punch>, long?)> GetCurrentPunchesAsync(int pageSize = 100, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches?$count=true&$filter=OutAt eq null&$expand=User,Task($expand=Job($expand=Customer))&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Punch>>(responseContent, options);
+            return (odataResponse.Value.ToList(), odataResponse.Count);
+        }
+
         public async Task<(List<Punch>, long?)> GetPunchesAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches?$count=true&$expand=User,ServiceRate,PayrollRate,Task($expand=Job($expand=Customer))&$top={pageSize}&$skip={skip}&$filter=InAt ge {min.ToString("yyyy-MM-ddTHH:mm:ssZ")} and InAt le {max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&$orderby={sortBy} {sortDirection}");

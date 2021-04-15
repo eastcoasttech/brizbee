@@ -9,6 +9,7 @@
 @inject UserService userService
 @inject PunchService punchService
 @inject RateService rateService
+@inject OrganizationService organizationService
 @inject ExportService exportService
 @inject TaskService taskService
 @inject JobService jobService
@@ -50,6 +51,7 @@
         userService.ResetHeaders();
         punchService.ResetHeaders();
         rateService.ResetHeaders();
+        organizationService.ResetHeaders();
         exportService.ResetHeaders();
         taskService.ResetHeaders();
         jobService.ResetHeaders();

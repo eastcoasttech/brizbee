@@ -53,7 +53,11 @@
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
                     </li>
-                    <li><a href="#!/users"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Users</a></li>
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
                 }
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -61,10 +65,19 @@
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="javascript:void(0)">Account Details</a></li>
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
                         @if (currentUser.Role == "Administrator")
                         {
-                            <li><a href="javascript:void(0)">Organization Details</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
                         }
                         <li role="separator" class="divider"></li>
                         <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
@@ -96,7 +109,7 @@
             </div>
 
             <!--List of Customers-->
-            <table class="table table-bordered table-condensed table-supercondensed table-jobs">
+            <table class="table table-bordered table-jobs">
                 <thead>
                     <tr>
                         <th class="col-md-2">
@@ -189,7 +202,7 @@
             </div>
 
             <!--List of Jobs-->
-            <table class="table table-bordered table-condensed table-supercondensed table-jobs">
+            <table class="table table-bordered table-jobs">
                 <thead>
                     <tr>
                         <th class="col-md-2">
@@ -285,7 +298,7 @@
             </div>
 
             <!--List of Tasks-->
-            <table class="table table-bordered table-condensed table-supercondensed table-jobs">
+            <table class="table table-bordered table-jobs">
                 <thead>
                     <tr>
                         <th class="col-md-2">

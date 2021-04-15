@@ -201,13 +201,8 @@ ol.getting-started {
         font-size: 12px;
     }
 
-.panel-login {
-    margin-bottom: 10px;
-}
-
-.header-status {
-    padding-bottom: 1em;
-    text-transform: uppercase;
+.panel-default > .panel-heading {
+    font-size: 1.2em;
 }
 
 select.input-sm {

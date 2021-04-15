@@ -1,4 +1,4 @@
-﻿@page "/rates"
+﻿@page "/users"
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Common.Models
@@ -7,9 +7,7 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject UserService userService
-@inject CommitService commitService
 @inject PunchService punchService
-@inject RateService rateService
 @inject DialogService dialogService
 
 @implements IDisposable
@@ -36,9 +34,9 @@
                 </li>
                 @if (currentUser.Role == "Administrator")
                 {
-                    <li class="active">
+                    <li>
                         <NavLink class="nav-link" href="punches">
-                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time <span class="sr-only">(current)</span>
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
                         </NavLink>
                     </li>
                     <li>
@@ -51,9 +49,9 @@
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
                     </li>
-                    <li>
+                    <li class="active">
                         <NavLink class="nav-link" href="users">
-                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users <span class="sr-only">(current)</span>
                         </NavLink>
                     </li>
                 }
@@ -88,11 +86,8 @@
 
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
-        <li role="presentation"><NavLink href="punches">Punches</NavLink></li>
-        <li role="presentation"><NavLink href="timecards">Time Cards</NavLink></li>
-        <li role="presentation"><NavLink href="locks">Locks</NavLink></li>
-        <li role="presentation"><NavLink href="exports">Export History</NavLink></li>
-        <li role="presentation" class="active"><NavLink href="rates">Rates</NavLink></li>
+        <li role="presentation"><NavLink href="who">Who's Working</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="users">All Users</NavLink></li>
     </ul>
 
     <hr />
@@ -102,52 +97,121 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenNewRateDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Rate</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenNewUserDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New User</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshRates())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshUsers())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!--List of Rates-->
+    <!--List of Users-->
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Base</th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Name"))">
+                        Name
+                        @if (sortBy == "Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("EmailAddress"))">
+                        Email Address
+                        @if (sortBy == "EmailAddress" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "EmailAddress" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Pin"))">
+                        PIN
+                        @if (sortBy == "Pin" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Pin" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Role"))">
+                        Role
+                        @if (sortBy == "Role" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Role" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("TimeZone"))">
+                        Default Time Zone
+                        @if (sortBy == "TimeZone" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "TimeZone" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CreatedAt"))">
+                        Added
+                        @if (sortBy == "CreatedAt" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "CreatedAt" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var rate in rates)
+            @foreach (var user in users)
             {
-                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyRateDialog(rate))">
-                    <td><a href="javascript:void(0)">@rate.Name</a></td>
-                    <td>
-                        @if (rate.Type == "Payroll")
-                        {
-                            <span><i class="fas fa-money-bill" aria-hidden="true" style="margin-right: 5px;"></i> Payroll</span>
-                        }
-                        else if (rate.Type == "Service")
-                        {
-                            <span><i class="fas fa-handshake" aria-hidden="true" style="margin-right: 5px;"></i> Customer</span>
-                        }
-                    </td>
-                    <td><span>@(rate.ParentRateId.HasValue ? rate.ParentRate.Name : "")</span></td>
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyUserDialog(user))">
+                    <td><a href="javascript:void(0)">@user.Name</a></td>
+                    <td><a href="javascript:void(0)">@user.EmailAddress</a></td>
+                    <td><a href="javascript:void(0)">@user.Pin</a></td>
+                    <td><a href="javascript:void(0)">@user.Role</a></td>
+                    <td><a href="javascript:void(0)">@user.TimeZone</a></td>
+                    <td><a href="javascript:void(0)">@user.CreatedAt.ToString("M/d/yyyy h:mm tt")</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="6"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
-            @if (!working && rates.Count == 0)
+            @if (!working && users.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="3">You haven't added any rates</td>
+                    <td colspan="6">No Users</td>
                 </tr>
             }
         </tbody>
@@ -155,7 +219,7 @@
 
     <div class="row">
         <div class="col-md-6">
-            @if (ratesCount > pageSize)
+            @if (usersCount > pageSize)
             {
                 <div class="pull-left" style="margin-right: 1rem;">
                     <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
@@ -163,9 +227,9 @@
                 </div>
             }
 
-            @if (ratesCount > 0 && !working)
+            @if (usersCount > 0 && !working)
             {
-                <p class="form-control-static pull-left">@(ratesPageStart + 1) to @(ratesPageStart + pageSize < ratesCount ? ratesPageStart + pageSize : ratesCount) of @ratesCount</p>
+                <p class="form-control-static pull-left">@(usersPageStart + 1) to @(usersPageStart + pageSize < usersCount ? usersPageStart + pageSize : usersCount) of @usersCount</p>
             }
         </div>
     </div>
@@ -177,13 +241,13 @@
 
     private bool working = false;
     private User currentUser;
-    private List<Rate> rates = new List<Rate>();
-    private string sortBy = "Type,Name";
+    private List<User> users = new List<User>();
+    private string sortBy = "Name";
     private string sortDirection = "ASC";
-    private int pageSize = 20;
+    private int pageSize = 100;
     private int skip = 0;
-    private long ratesCount = 0;
-    private int ratesPageStart = 0;
+    private long usersCount = 0;
+    private int usersPageStart = 0;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -192,7 +256,7 @@
 
         currentUser = sharedService.CurrentUser;
 
-        await RefreshRates();
+        await RefreshUsers();
 
         dialogService.OnOpen += Open;
         dialogService.OnClose += Close;
@@ -206,16 +270,16 @@
 
     private async void NextPage(MouseEventArgs e)
     {
-        ratesPageStart = ratesPageStart + pageSize;
-        skip = ratesPageStart;
-        await RefreshRates();
+        usersPageStart = usersPageStart + pageSize;
+        skip = usersPageStart;
+        await RefreshUsers();
     }
 
     private async void PreviousPage(MouseEventArgs e)
     {
-        ratesPageStart = ratesPageStart - pageSize;
-        skip = ratesPageStart;
-        await RefreshRates();
+        usersPageStart = usersPageStart - pageSize;
+        skip = usersPageStart;
+        await RefreshUsers();
     }
 
     private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
@@ -226,31 +290,31 @@
     private async void Close(dynamic result)
     {
         Console.WriteLine($"Dialog closed with result: {result}");
-        await RefreshRates();
+        await RefreshUsers();
     }
 
-    private async System.Threading.Tasks.Task RefreshRates()
+    private async System.Threading.Tasks.Task RefreshUsers()
     {
         working = true;
-        rates.Clear();
-        var result = await rateService.GetRatesAsync(pageSize, skip, sortBy, sortDirection);
-        rates = result.Item1;
-        ratesCount = result.Item2.GetValueOrDefault();
+        users.Clear();
+        var result = await userService.GetUsersAsync(pageSize, skip, sortBy, sortDirection);
+        users = result.Item1;
+        usersCount = result.Item2.GetValueOrDefault();
         working = false;
         StateHasChanged();
     }
 
-    private void OpenNewRateDialog()
+    private void OpenNewUserDialog()
     {
-        dialogService.Open<RateDialog>("New Rate",
+        dialogService.Open<UserDialog>("New User",
                                 new Dictionary<string, object>() { { "Id", null } },
                                 new DialogOptions() { Width = "600px" });
     }
 
-    private void OpenModifyRateDialog(Rate rate)
+    private void OpenModifyUserDialog(User user)
     {
-        dialogService.Open<RateDialog>("Edit Rate",
-                                new Dictionary<string, object>() { { "Id", rate.Id } },
+        dialogService.Open<UserDialog>("Edit User",
+                                new Dictionary<string, object>() { { "Id", user.Id } },
                                 new DialogOptions() { Width = "600px" });
     }
 
@@ -267,6 +331,6 @@
             sortDirection = "ASC";
         }
 
-        await RefreshRates();
+        await RefreshUsers();
     }
 }

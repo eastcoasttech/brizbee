@@ -14,6 +14,7 @@
 @inject TaskService taskService
 @inject JobService jobService
 @inject RateService rateService
+@inject OrganizationService organizationService
 @inject TimesheetEntryService timesheetEntryService
 @inject ExportService exportService
 
@@ -24,73 +25,77 @@
     </div>
 }
 
-<div class="container-fluid fadeIn" style="min-height: 85vh;">
+<div class="container-fluid fadeIn" style="min-height: 50vh;">
     @if (confirmed == true)
     {
         <div class="alert alert-info">Your account is now confirmed! Please sign in to continue.</div>
     }
 
-    <div class="row" style="margin-top: 7%; margin-bottom: 7%;">
+    <div class="row">
         <div class="col-md-4 col-md-offset-4 col-xs-12">
-            <p class="text-center" style="margin-bottom: 20%;">
-                <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
-            </p>
+            <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
+                <div class="col-md-8 col-md-offset-2 col-xs-12">
+                    <p class="text-center" style="margin-bottom: 4em;">
+                        <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
+                    </p>
 
-            @if (method == "pin")
-            {
-                <div class="panel panel-default panel-login">
-                    <div class="panel-heading">Login with Your PIN</div>
-                    <div class="panel-body">
-                        <EditForm Model="@pinSession" OnValidSubmit="AuthenticateAsync" autocomplete="off">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary />
+                    @if (method == "pin")
+                    {
+                        <div class="panel panel-default panel-login">
+                            <div class="panel-heading">Login with Your PIN</div>
+                            <div class="panel-body">
+                                <EditForm Model="@pinSession" OnValidSubmit="AuthenticateAsync" autocomplete="off">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary />
 
-                            <div class="form-group">
-                                <InputText @bind-Value="pinSession.OrganizationCode" class="form-control" placeholder="Organization Code" autofocus disabled="@(working ? true : false)" />
+                                    <div class="form-group form-group-lg">
+                                        <InputText @bind-Value="pinSession.OrganizationCode" class="form-control" placeholder="Organization Code" disabled="@(working ? true : false)" />
+                                    </div>
+                                    <div class="form-group form-group-lg">
+                                        <InputText @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@(working ? true : false)" />
+                                    </div>
+                                    <button type="submit" class="btn btn-lg btn-primary" disabled="@(working ? true : false)">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
+                                </EditForm>
                             </div>
-                            <div class="form-group">
-                                <InputText @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@(working ? true : false)" />
+                        </div>
+                        <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => { method = "email"; })">Login with Email Address Instead</a></p>
+                    }
+
+                    @if (method == "email")
+                    {
+                        <div class="panel panel-default panel-login">
+                            <div class="panel-heading">Login with Email Address</div>
+                            <div class="panel-body">
+                                <EditForm Model="@emailSession" OnValidSubmit="AuthenticateAsync" autocomplete="off">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary />
+
+                                    <div class="form-group form-group-lg">
+                                        <InputText @bind-Value="emailSession.EmailAddress" class="form-control" type="email" placeholder="Email Address" disabled="@(working ? true : false)" />
+                                    </div>
+                                    <div class="form-group form-group-lg">
+                                        <InputText @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@(working ? true : false)" />
+                                    </div>
+                                    <button type="submit" class="btn btn-lg btn-primary" disabled="@(working ? true : false)">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
+                                    <a href="#!/reset" class="btn btn-lg btn-default" disabled="@(working ? true : false)">Reset Password</a>
+                                </EditForm>
                             </div>
-                            <button type="submit" class="btn btn-primary" disabled="@(working ? true : false)">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
-                        </EditForm>
-                    </div>
+                        </div>
+                        <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => { method = "pin"; })">Login with PIN Number Instead</a></p>
+                    }
+
+                    <p class="text-center" style="margin-top: 4em;">
+                        Don't have an account?
+                    </p>
+                    <p class="text-center">
+                        <a href="#!/register" class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" style="padding-left: 2em; padding-right: 2em;">Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i></a>
+                        <a href="#!/register" class="btn btn-sm btn-block btn-primary visible-xs visible-sm" style="padding-left: 2em; padding-right: 2em;">Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i></a>
+                    </p>
+                    <p class="text-center text-muted">
+                        No Credit Card Required. Cancel Anytime.
+                    </p>
                 </div>
-                <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => method = "email")">Login with Email Address Instead</a></p>
-            }
-
-            @if (method == "email")
-            {
-                <div class="panel panel-default panel-login">
-                    <div class="panel-heading">Login with Email Address</div>
-                    <div class="panel-body">
-                        <EditForm Model="@emailSession" OnValidSubmit="AuthenticateAsync" autocomplete="off">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary />
-
-                            <div class="form-group">
-                                <InputText @bind-Value="emailSession.EmailAddress" class="form-control" type="email" placeholder="Email Address" disabled="@(working ? true : false)" />
-                            </div>
-                            <div class="form-group">
-                                <InputText @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@(working ? true : false)" />
-                            </div>
-                            <button type="submit" class="btn btn-primary" disabled="@(working ? true : false)">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
-                            <a href="#!/reset" class="btn btn-default" disabled="@(working ? true : false)">Reset Password</a>
-                        </EditForm>
-                    </div>
-                </div>
-                <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => method = "pin")">Login with PIN Number Instead</a></p>
-            }
-
-            <p class="text-center" style="margin-top: 50px;">
-                Don't have an account?
-            </p>
-            <p class="text-center">
-                <a href="#!/register" class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" style="padding-left: 2em; padding-right: 2em;">Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i></a>
-                <a href="#!/register" class="btn btn-sm btn-block btn-primary visible-xs visible-sm" style="padding-left: 2em; padding-right: 2em;">Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i></a>
-            </p>
-            <p class="text-center text-muted" style="line-height: 22px;">
-                No Credit Card Required. Cancel Anytime.
-            </p>
+            </div>
         </div>
     </div>
 </div>
@@ -125,6 +130,7 @@
             taskService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
+            organizationService.ConfigureHeadersWithCredentials(credential);
             timesheetEntryService.ConfigureHeadersWithCredentials(credential);
             exportService.ConfigureHeadersWithCredentials(credential);
 
@@ -176,6 +182,7 @@
             taskService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
+            organizationService.ConfigureHeadersWithCredentials(credential);
             timesheetEntryService.ConfigureHeadersWithCredentials(credential);
             exportService.ConfigureHeadersWithCredentials(credential);
 

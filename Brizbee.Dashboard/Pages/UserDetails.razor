@@ -1,4 +1,4 @@
-﻿@page "/kiosk/out/confirm"
+﻿@page "/user-details"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
@@ -9,9 +9,14 @@
 @using Brizbee.Common.Serialization
 
 @inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
 @inject SharedService sharedService
-@inject PunchService punchService
 @inject UserService userService
+@inject OrganizationService organizationService
+@inject DialogService dialogService
+@inject IJSRuntime JSRuntime
+
+@implements IDisposable
 
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
@@ -28,21 +33,53 @@
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
-                <li class="active">
+                <li>
                     <NavLink class="nav-link" href="kiosk/status">
-                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
                     </NavLink>
                 </li>
+                @if (currentUser.Role == "Administrator")
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
                 <li class="dropdown">
                     <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="javascript:void(0)">Account Details</a></li>
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
                         @if (currentUser.Role == "Administrator")
                         {
-                            <li><a href="javascript:void(0)">Organization Details</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
                         }
                         <li role="separator" class="divider"></li>
                         <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
@@ -55,21 +92,29 @@
 
 <div class="container-fluid fadeIn">
     <div class="row">
-        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
-            <div class="panel panel-default panel-kiosk">
-                <div class="panel-heading">Please Confirm</div>
+        <div class="col-md-4 col-md-offset-4 col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">User Details</div>
                 <div class="panel-body">
-                    <EditForm Model="@model" OnValidSubmit="Continue" class="form" autocomplete="off">
+                    <EditForm Model="@model" OnValidSubmit="SaveUser" class="form" autocomplete="off">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
-                        <p class="text-center" style="text-transform: uppercase; padding-top: 2em; padding-bottom: 2em;">
-                            ARE YOU SURE YOU WANT TO PUNCH <span class="text-danger"><strong>OUT</strong></span>?
-                        </p>
+                        <div class="form-group">
+                            <label for="user_email_address">Email Address</label>
+                            <InputText id="user_email_address" @bind-Value="model.EmailAddress" type="email" class="form-control" readonly />
+                        </div>
 
                         <div class="form-group">
-                            <label for="country_code">Country</label>
-                            <InputSelect class="form-control" id="country_code" disabled="@working"
+                            <label for="user_name">Name</label>
+                            <InputText id="user_name" @bind-Value="model.Name" class="form-control" disabled="@working" />
+                        </div>
+
+                        <hr />
+
+                        <div class="form-group">
+                            <label for="user_country_code">Country</label>
+                            <InputSelect class="form-control" id="user_country_code" disabled="@working"
                                          ValueChanged="@( (string x) => selectedCountryCodeValueChangeHandler(x) )"
                                          ValueExpression="@( () => model.CountryCode )"
                                          Value="@model.CountryCode">
@@ -81,8 +126,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="time_zone">Time Zone</label>
-                            <InputSelect class="form-control" id="time_zone" disabled="@working"
+                            <label for="user_time_zone">Default Time Zone</label>
+                            <InputSelect class="form-control" id="user_time_zone" disabled="@working"
                                          ValueChanged="@( (string x) => selectedTimeZoneValueChangeHandler(x) )"
                                          ValueExpression="@( () => model.TimeZone )"
                                          Value="@model.TimeZone">
@@ -91,12 +136,38 @@
                                     <option value="@timeZone.Id">@timeZone.Id</option>
                                 }
                             </InputSelect>
+                            <p class="help-block">Any future punches will be in this time zone if you do not specify otherwise.</p>
                         </div>
 
-                        <button type="submit" class="btn btn-block btn-lg btn-primary" disabled="@working">Continue</button>
-                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/status" disabled="@working">
-                            Cancel
-                        </NavLink>
+                        <hr />
+
+                        @if (showPassword)
+                        {
+                            <div style="margin-top: 2em; margin-bottom: 2em;">
+                                <div class="form-group">
+                                    <label for="user_password">Password</label>
+                                    <InputText type="password" id="user_password" @bind-Value="model.Password" class="form-control" disabled="@working" />
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="margin-top: 2em; margin-bottom: 2em;">
+                                <a href="javascript:void(0)" @onclick="@(e => { showPassword = true; })">Change Password</a>
+                            </div>
+                        }
+
+                        <hr />
+
+                        <div class="form-group">
+                            <label for="user_pin">PIN Number (for login via Pin)</label>
+                            <InputText id="user_pin" @bind-Value="model.Pin" class="form-control" disabled="@working" />
+                            <p class="help-block">This 4+ digit code is private and unique to each user. Users can login via Organization Code and User Pin on the Web, mobile apps, and hotline.</p>
+                        </div>
+
+                        <hr />
+
+                        <button class="btn btn-primary" type="submit" disabled="@working">Save Changes</button>
                     </EditForm>
                 </div>
             </div>
@@ -110,14 +181,18 @@
 
     private bool working = false;
     private User currentUser;
+    private bool showPassword = false;
     private List<Country> countries = new List<Country>();
     private List<IanaTimeZone> countryZones = new List<IanaTimeZone>();
     private List<IanaTimeZone> zones = new List<IanaTimeZone>();
-    private TimeZoneModel model = new TimeZoneModel();
+    private UserModel model = new UserModel();
 
     protected override void OnInitialized()
     {
-        working = true;
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
 
         // --------------------------------------------------------------------
         // Build list of time zones.
@@ -170,29 +245,43 @@
             }
         }
 
-        currentUser = sharedService.CurrentUser;
-
         var defaultTimeZone = currentUser.TimeZone;
         var defaultCountryCode = zones.Where(z => z.Id == defaultTimeZone).Select(z => z.CountryCode).FirstOrDefault();
 
         selectedCountryCodeValueChangeHandler(defaultCountryCode);
         selectedTimeZoneValueChangeHandler(defaultTimeZone);
 
-        working = false;
+        model = new UserModel()
+        {
+            Name = currentUser.Name,
+            EmailAddress = currentUser.EmailAddress,
+            Pin = currentUser.Pin,
+            TimeZone = currentUser.TimeZone,
+            CountryCode = zones.Where(z => z.Id == currentUser.TimeZone).Select(z => z.CountryCode).FirstOrDefault()
+        };
     }
 
-    private async System.Threading.Tasks.Task Continue()
+    public void Dispose()
     {
-        var success = await punchService.PunchOut("", "", model.TimeZone);
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
 
-        if (success)
-        {
-            NavigationManager.NavigateTo("kiosk/out/done");
-        }
+    private async System.Threading.Tasks.Task SaveUser()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save the changes?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Save the user on the server and close the dialog.
+        if (showPassword)
+            await userService.SaveUserDetailsAsync(currentUser.Id, model.TimeZone, model.EmailAddress, model.Name, model.Pin, model.Password);
         else
-        {
-            Console.WriteLine("Could not punch out!");
-        }
+            await userService.SaveUserDetailsAsync(currentUser.Id, model.TimeZone, model.EmailAddress, model.Name, model.Pin);
     }
 
     private void selectedCountryCodeValueChangeHandler(string country)
@@ -206,12 +295,21 @@
         model.TimeZone = timeZone;
     }
 
-    class TimeZoneModel
+    class UserModel
     {
         [Required]
         public string CountryCode { get; set; }
 
         [Required]
         public string TimeZone { get; set; }
+
+        public string EmailAddress { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        public string Pin { get; set; }
+
+        public string Password { get; set; }
     }
 }

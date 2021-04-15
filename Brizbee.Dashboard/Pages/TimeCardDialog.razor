@@ -230,7 +230,8 @@
     {
         loadingUsers = true;
 
-        users = await userService.GetUsersAsync();
+        var result = await userService.GetUsersAsync();
+        users = result.Item1;
         selectedUserId = users.FirstOrDefault().Id;
 
         // Update the time card.
