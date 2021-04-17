@@ -8,7 +8,7 @@
 @inject SharedService sharedService
 @inject UserService userService
 @inject PunchService punchService
-@inject TimesheetEntryService timesheetEntryService 
+@inject TimesheetEntryService timesheetEntryService
 @inject DialogService dialogService
 
 @implements IDisposable
@@ -111,7 +111,6 @@
         <div class="col-md-6">
             <div class="btn-toolbar pull-right" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" ng-click="showFilters()"><i class="fa fa-filter" aria-hidden="true" style="margin-right: 5px;"></i> Showing {{filters.user.Name}}</button>
                     <button type="button" class="btn btn-default" @onclick="@(e => OpenRangeDialog())"><i class="far fa-calendar-alt" aria-hidden="true" style="margin-right: 5px;"></i> @sharedService.RangeMin.ToShortDateString() <small>thru</small> @sharedService.RangeMax.ToShortDateString()</button>
                 </div>
             </div>

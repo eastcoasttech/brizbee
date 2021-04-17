@@ -167,13 +167,6 @@
 
 
         // --------------------------------------------------------------------
-        // Load the drop downs.
-        // --------------------------------------------------------------------
-
-        await RefreshUsers();
-
-
-        // --------------------------------------------------------------------
         // Attempt to load the time card, if necessary.
         // --------------------------------------------------------------------
 
@@ -188,12 +181,19 @@
             await RefreshCustomers(timeCard.Task.Job.CustomerId);
             await RefreshJobs(timeCard.Task.JobId);
             await RefreshTasks(timeCard.TaskId);
+
+            // Set the user based on the UserId for this time card.
+            await RefreshUsers();
         }
         else
         {
             // Set the customer, job, and task by selecting defaults.
             await RefreshCustomers();
+
+            // Set a default user.
+            await RefreshUsers();
         }
+
 
         loading = false;
     }
@@ -232,10 +232,12 @@
 
         var result = await userService.GetUsersAsync();
         users = result.Item1;
-        selectedUserId = users.FirstOrDefault().Id;
 
-        // Update the time card.
-        timeCard.UserId = selectedUserId;
+        // Update the selected user.
+        if (timeCard.UserId != 0)
+            SelectedUserValueChangeHandler(timeCard.UserId);
+        else
+            SelectedUserValueChangeHandler(users.FirstOrDefault().Id);
 
         loadingUsers = false;
 

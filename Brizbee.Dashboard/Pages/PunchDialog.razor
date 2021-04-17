@@ -339,13 +339,6 @@
 
 
         // --------------------------------------------------------------------
-        // Load the drop downs.
-        // --------------------------------------------------------------------
-
-        await RefreshUsers();
-
-
-        // --------------------------------------------------------------------
         // Attempt to load the punch, if necessary.
         // --------------------------------------------------------------------
 
@@ -397,12 +390,19 @@
             selectedOutAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
             selectedOutAtTimeZone = outAtTimeZone.Id;
             selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
+
+            // Set the user based on the UserId for this punch.
+            await RefreshUsers();
         }
         else
         {
             // Set the customer, job, and task by selecting defaults.
             await RefreshCustomers();
+
+            // Set a default user.
+            await RefreshUsers();
         }
+
 
         loading = false;
     }
@@ -465,10 +465,12 @@
 
         var result = await userService.GetUsersAsync();
         users = result.Item1;
-        selectedUserId = users.FirstOrDefault().Id;
 
-        // Update the punch.
-        punch.UserId = selectedUserId;
+        // Update the selected user.
+        if (punch.UserId != 0)
+            SelectedUserValueChangeHandler(punch.UserId);
+        else
+            SelectedUserValueChangeHandler(users.FirstOrDefault().Id);
 
         loadingUsers = false;
 

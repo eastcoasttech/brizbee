@@ -168,6 +168,13 @@ input:focus {
     padding: 6px;
 }
 
+input[type="date"].form-control,
+input[type="time"].form-control,
+input[type="datetime-local"].form-control,
+input[type="month"].form-control {
+    line-height: 1em;
+}
+
 ol.getting-started {
     margin-top: 25px;
     font-size: 25px;
