@@ -16,6 +16,8 @@
 @inject CustomerService customerService
 @inject CommitService commitService
 @inject TimesheetEntryService timesheetEntryService
+@inject QBDInventoryItemService qbdInventoryItemService
+@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
 
 <RadzenDialog />
 <RadzenTooltip />
@@ -58,6 +60,8 @@
         customerService.ResetHeaders();
         commitService.ResetHeaders();
         timesheetEntryService.ResetHeaders();
+        qbdInventoryItemService.ResetHeaders();
+        qbdInventoryConsumptionService.ResetHeaders();
 
         // Reset shared variables
         sharedService.Reset();

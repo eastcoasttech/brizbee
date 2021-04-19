@@ -66,7 +66,7 @@ namespace Brizbee.Integration.Utility.Views
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
         }
     }
 }

@@ -69,6 +69,12 @@
     <Compile Include="Models\Job.cs" />
     <Compile Include="Models\Organization.cs" />
     <Compile Include="Models\Punch.cs" />
+    <Compile Include="Models\QBDInventoryConsumption.cs" />
+    <Compile Include="Models\QBDInventoryConsumptionSync.cs" />
+    <Compile Include="Models\QBDInventoryItem.cs" />
+    <Compile Include="Models\QBDInventoryItemSync.cs" />
+    <Compile Include="Models\QBDInventorySite.cs" />
+    <Compile Include="Models\QBDUnitOfMeasureSet.cs" />
     <Compile Include="Models\QuickBooksDesktopExport.cs" />
     <Compile Include="Models\QuickBooksOnlineExport.cs" />
     <Compile Include="Models\Rate.cs" />
@@ -83,6 +89,7 @@
     <Compile Include="Security\Session.cs" />
     <Compile Include="Serialization\Country.cs" />
     <Compile Include="Serialization\IanaTimeZone.cs" />
+    <Compile Include="Serialization\QBDInventorySyncDetails.cs" />
     <Compile Include="Serialization\QuickBooksHostDetails.cs" />
   </ItemGroup>
   <ItemGroup>

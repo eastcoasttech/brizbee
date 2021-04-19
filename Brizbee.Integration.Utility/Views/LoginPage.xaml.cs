@@ -41,7 +41,7 @@ namespace Brizbee.Integration.Utility.Views
             try
             {
                 await (DataContext as LoginPageViewModel).Login();
-                NavigationService.Navigate(new Uri("Views/CommitsPage.xaml", UriKind.Relative));
+                NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
             }
             catch (InvalidLoginException)
             {

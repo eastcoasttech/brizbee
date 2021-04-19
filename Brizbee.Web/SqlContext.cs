@@ -43,6 +43,12 @@ namespace Brizbee.Web
         public DbSet<Punch> Punches { get; set; }
         public DbSet<QuickBooksDesktopExport> QuickBooksDesktopExports { get; set; }
         public DbSet<QuickBooksOnlineExport> QuickBooksOnlineExports { get; set; }
+        public DbSet<QBDInventoryConsumption> QBDInventoryConsumptions { get; set; }
+        public DbSet<QBDInventoryConsumptionSync> QBDInventoryConsumptionSyncs { get; set; }
+        public DbSet<QBDInventoryItem> QBDInventoryItems { get; set; }
+        public DbSet<QBDInventoryItemSync> QBDInventoryItemSyncs { get; set; }
+        public DbSet<QBDInventorySite> QBDInventorySites { get; set; }
+        public DbSet<QBDUnitOfMeasureSet> QBDUnitOfMeasureSets { get; set; }
         public DbSet<Rate> Rates { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<TaskTemplate> TaskTemplates { get; set; }

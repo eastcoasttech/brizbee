@@ -110,5 +110,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0003 Adding QuickBooksClass.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\0004 Adding Inventory.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

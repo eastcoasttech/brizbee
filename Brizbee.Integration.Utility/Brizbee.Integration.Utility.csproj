@@ -129,6 +129,21 @@
     <Compile Include="Messages\RefreshCommitsMessage.cs" />
     <Compile Include="Messages\SignedInMessage.cs" />
     <Compile Include="ODataResponse.cs" />
+    <Compile Include="Services\InventoryService.cs" />
+    <Compile Include="ViewModels\InventoryConsumptions\SyncViewModel.cs" />
+    <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
+    <Compile Include="Views\InventoryConsumptions\ConfirmPage.xaml.cs">
+      <DependentUpon>ConfirmPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\InventoryConsumptions\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\InventoryItems\ConfirmPage.xaml.cs">
+      <DependentUpon>ConfirmPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\InventoryItems\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\PasswordHelper.cs" />
     <Compile Include="RelayCommand.cs" />
     <Compile Include="ViewModels\ConfirmPageViewModel.cs" />
@@ -173,6 +188,22 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\DashboardPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryConsumptions\ConfirmPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryConsumptions\SyncPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryItems\ConfirmPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryItems\SyncPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -268,6 +299,7 @@
       <Name>Brizbee.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.5.0.5\build\Fody.targets" Condition="Exists('..\packages\Fody.5.0.5\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
