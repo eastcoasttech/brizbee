@@ -16,6 +16,8 @@
 @inject RateService rateService
 @inject OrganizationService organizationService
 @inject TimesheetEntryService timesheetEntryService
+@inject QBDInventoryItemService qbdInventoryItemService
+@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
 @inject ExportService exportService
 
 @if (loading == true)
@@ -132,6 +134,8 @@
             rateService.ConfigureHeadersWithCredentials(credential);
             organizationService.ConfigureHeadersWithCredentials(credential);
             timesheetEntryService.ConfigureHeadersWithCredentials(credential);
+            qbdInventoryItemService.ConfigureHeadersWithCredentials(credential);
+            qbdInventoryConsumptionService.ConfigureHeadersWithCredentials(credential);
             exportService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service.
@@ -184,6 +188,8 @@
             rateService.ConfigureHeadersWithCredentials(credential);
             organizationService.ConfigureHeadersWithCredentials(credential);
             timesheetEntryService.ConfigureHeadersWithCredentials(credential);
+            qbdInventoryItemService.ConfigureHeadersWithCredentials(credential);
+            qbdInventoryConsumptionService.ConfigureHeadersWithCredentials(credential);
             exportService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service

@@ -45,6 +45,11 @@
                         </NavLink>
                     </li>
                     <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                    <li>
                         <NavLink class="nav-link" href="reports">
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
@@ -135,11 +140,11 @@
                         User
                         @if (sortBy == "Users/Name" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "Users/Name" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -148,11 +153,11 @@
                         In
                         @if (sortBy == "Punches/InAt" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "Punches/InAt" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -161,11 +166,11 @@
                         Out
                         @if (sortBy == "Punches/OutAt" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "Punches/OutAt" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -180,11 +185,11 @@
                         Customer
                         @if (sortBy == "Customers/Name" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "Customers/Name" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -193,11 +198,11 @@
                         Job
                         @if (sortBy == "Jobs/Name" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "Jobs/Name" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -206,11 +211,11 @@
                         Task
                         @if (sortBy == "Tasks/Name" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "Tasks/Name" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -219,11 +224,11 @@
                         Payroll Rate
                         @if (sortBy == "PayrollRate/Name" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "PayrollRate/Name" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -232,11 +237,11 @@
                         Customer Rate
                         @if (sortBy == "ServiceRate/Name" && sortDirection == "ASC")
                         {
-                        <span class="fa fa-caret-up"></span>
+                            <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "ServiceRate/Name" && sortDirection == "DESC")
                         {
-                        <span class="fa fa-caret-down"></span>
+                            <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
@@ -247,43 +252,43 @@
         <tbody>
             @foreach (var punch in punches)
             {
-            <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
-                <td><a href="javascript:void(0)">@punch.User.Name</a></td>
-                <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
-                <td>
-                    @if (punch.OutAt.HasValue)
+                <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
+                    <td><a href="javascript:void(0)">@punch.User.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
+                    <td>
+                        @if (punch.OutAt.HasValue)
                         {
-                    <a href="javascript:void(0)">@punch.OutAt.Value.ToString("M/d/yyyy h:mm tt")</a>
+                            <a href="javascript:void(0)">@punch.OutAt.Value.ToString("M/d/yyyy h:mm tt")</a>
                         }
                         else
                         {
-                    <span>STILL WORKING</span>
+                            <span>STILL WORKING</span>
                         }
-                </td>
-                <td><a href="">@(Math.Round(punch.Minutes / 60.0, 2))</a></td>
-                <td><a href="">@(Math.Round(punch.CumulativeMinutes / 60.0, 2))</a></td>
-                <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number &ndash; @punch.Task.Job.Customer.Name</a></td>
-                <td><a href="javascript:void(0)">@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</a></td>
-                <td><a href="javascript:void(0)">@punch.Task.Number &ndash; @punch.Task.Name</a></td>
-                <td>
-                    @if (punch.PayrollRate != null)
+                    </td>
+                    <td><a href="">@(Math.Round(punch.Minutes / 60.0, 2))</a></td>
+                    <td><a href="">@(Math.Round(punch.CumulativeMinutes / 60.0, 2))</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number &ndash; @punch.Task.Job.Customer.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Number &ndash; @punch.Task.Name</a></td>
+                    <td>
+                        @if (punch.PayrollRate != null)
                         {
-                    <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
+                            <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
                         }
-                </td>
-                <td>
-                    @if (punch.ServiceRate != null)
+                    </td>
+                    <td>
+                        @if (punch.ServiceRate != null)
                         {
-                    <a href="javascript:void(0)">@punch.ServiceRate.Name</a>
+                            <a href="javascript:void(0)">@punch.ServiceRate.Name</a>
                         }
-                </td>
-                <td class="text-center">
-                    @if (punch.CommitId.HasValue)
+                    </td>
+                    <td class="text-center">
+                        @if (punch.CommitId.HasValue)
                         {
-                    <i class="fa fa-lock" aria-hidden="true"></i>
+                            <i class="fa fa-lock" aria-hidden="true"></i>
                         }
-                </td>
-            </tr>
+                    </td>
+                </tr>
             }
             @if (working)
             {

@@ -19,26 +19,29 @@
         <StackPanel DockPanel.Dock="Bottom" Background="White">
             <Separator />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Cancel" Width="85"
-                    Name="CancelButton"
+                <Button Content="Exit" Width="85"
+                    Name="ExitButton"
+                    Click="ExitButton_Click"
                     Margin="5 8 15 11"
                     Height="24" />
             </StackPanel>
         </StackPanel>
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="3*" MinWidth="200"/>
-                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*" MinWidth="200"/>
+                <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-                <Label Content="Inventory" Margin="5" />
-                <Button Content="Sync Items" Margin="5" />
-                <Button Content="Sync Adjustments" Margin="5" />
-                <Label Content="Time" Margin="5" />
-                <Button Content="Sync Punches" Margin="5" />
-                <Button Content="Sync Time Cards" Margin="5" />
+                <Button Content="Sync Inventory Items" Margin="0 5 0 2" Padding="10" Name="SyncItemsButton" Click="SyncItemsButton_Click" />
+                <Label Content="Last Synced July 1, 2020" Margin="0" Padding="0" FontSize="10" Name="ItemsSyncLabel" />
+                <Button Content="Sync Inventory Consumptions" Margin="0 15 0 2" Padding="10" Name="SyncAdjustmentsButton" Click="SyncAdjustmentsButton_Click" />
+                <Label Content="Last Synced July 1, 2020" Margin="0" Padding="0" FontSize="10" Name="AdjustmentsSyncLabel" />
+                <Button Content="Sync Punches" Margin="0 15 0 2" Padding="10" Name="SyncPunchesButton" Click="SyncPunchesButton_Click" />
+                <Label Content="Last Synced July 1, 2020" Margin="0" Padding="0" FontSize="10" Name="PunchesSyncLabel" />
+                <Button Content="Sync Time Cards" Margin="0 15 0 2" Padding="10" IsEnabled="False" Name="SyncTimeCardsButton" />
+                <Label Content="Last Synced July 1, 2020" Margin="0" Padding="0" FontSize="10" Foreground="DimGray" />
             </StackPanel>
         </Grid>
     </DockPanel>

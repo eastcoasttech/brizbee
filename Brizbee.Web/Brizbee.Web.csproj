@@ -427,6 +427,8 @@
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
     <Compile Include="Controllers\PunchesExpandedController.cs" />
+    <Compile Include="Controllers\QBDInventoryConsumptionsController.cs" />
+    <Compile Include="Controllers\QBDInventoryItemsController.cs" />
     <Compile Include="Controllers\QuickBooksDesktopExportsController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineController.cs" />
     <Compile Include="Controllers\QuickBooksOnlineExportsController.cs" />
