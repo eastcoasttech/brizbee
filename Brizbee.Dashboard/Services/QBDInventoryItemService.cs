@@ -37,7 +37,7 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
-        public async Task<(List<QBDInventoryItem>, long?)> GetQBDInventoryItemsAsync(int pageSize = 100, int skip = 0, string sortBy = "QBDINVENTORYITEMS/CREATEDAT", string sortDirection = "ASC")
+        public async Task<(List<QBDInventoryItem>, long?)> GetQBDInventoryItemsAsync(int pageSize = 100, int skip = 0, string sortBy = "QBDInventoryItems/Name", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/QBDInventoryItems?pageSize={pageSize}&skip={skip}&orderBy={sortBy}&orderByDirection={sortDirection}");
             response.EnsureSuccessStatusCode();

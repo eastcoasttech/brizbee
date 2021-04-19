@@ -118,28 +118,80 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Created</th>
-                <th>Quantity</th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptions/Created"))">
+                        Created
+                        @if (sortBy == "QBDInventoryConsumptions/Created" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryConsumptions/Created" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/Name"))">
+                        Item
+                        @if (sortBy == "QBDInventoryItems/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
+                        User
+                        @if (sortBy == "Users/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Users/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptions/Quantity"))">
+                        Quantity
+                        @if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
             </tr>
         </thead>
         <tbody>
             @foreach (var consumption in consumptions)
             {
-            <tr class="fadeIn selectable" @onclick="@(e => OpenModifyItemDialog(consumption))">
-                <td><a href="javascript:void(0)">@consumption.CreatedAt</a></td>
-                <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
-            </tr>
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyItemDialog(consumption))">
+                    <td><a href="javascript:void(0)">@consumption.CreatedAt</a></td>
+                    <td><a href="javascript:void(0)">@consumption.QBDInventoryItem.Name</a></td>
+                    <td><a href="javascript:void(0)">@consumption.CreatedByUser.Name</a></td>
+                    <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
+                </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="2"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && consumptions.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="2">You haven't consumed any inventory items</td>
+                    <td colspan="4">You haven't consumed any inventory items</td>
                 </tr>
             }
         </tbody>
@@ -170,8 +222,8 @@
     private bool working = false;
     private User currentUser;
     private List<QBDInventoryConsumption> consumptions = new List<QBDInventoryConsumption>();
-    private string sortBy = "QBDINVENTORYCONSUMPTIONS/CREATEDAT";
-    private string sortDirection = "ASC";
+    private string sortBy = "QBDInventoryConsumptions/CreatedAt";
+    private string sortDirection = "DESC";
     private int pageSize = 20;
     private int skip = 0;
     private long consumptionsCount = 0;

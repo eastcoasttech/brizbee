@@ -1,6 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Xml;
 
 namespace Brizbee.Integration.Utility.Services
@@ -235,6 +236,8 @@ namespace Brizbee.Integration.Utility.Services
 
             int iStatusCode = Convert.ToInt32(statusCode);
 
+            Trace.TraceInformation(iStatusCode.ToString());
+
             if (iStatusCode == 0)
             {
                 var items = new List<QBDUnitOfMeasureSet>();
@@ -288,6 +291,11 @@ namespace Brizbee.Integration.Utility.Services
                 }
 
                 return (true, "", items);
+            }
+            else if (iStatusCode == 3250)
+            {
+                // Feature is not enabled or available
+                return (true, "", new List<QBDUnitOfMeasureSet>());
             }
             else
             {
@@ -345,6 +353,11 @@ namespace Brizbee.Integration.Utility.Services
                 }
 
                 return (true, "", items);
+            }
+            else if (iStatusCode == 3250)
+            {
+                // Feature is not enabled or available
+                return (true, "", new List<QBDInventorySite>());
             }
             else
             {

@@ -5,6 +5,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Xml;
@@ -28,7 +29,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         #endregion
 
-        public void Sync()
+        public async System.Threading.Tasks.Task Sync()
         {
             // Disable the buttons
             IsExitEnabled = false;
@@ -58,9 +59,20 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 OnPropertyChanged("StatusText");
 
                 var service = new InventoryService();
-                var items = SyncInventoryItems(service, ticket, req);
-                var sites = SyncInventorySites(service, ticket, req);
-                var units = SyncUnitOfMeasureSets(service, ticket, req);
+                var items = new List<QBDInventoryItem>();
+                var sites = new List<QBDInventorySite>();
+                var units = new List<QBDUnitOfMeasureSet>();
+
+                StatusText += string.Format("{0} - Syncing inventory items.\r\n", DateTime.Now.ToString());
+                items = SyncInventoryItems(service, ticket, req);
+
+                // Attempt to sync sites even if they are not enabled or available
+                StatusText += string.Format("{0} - Syncing inventory sites.\r\n", DateTime.Now.ToString());
+                sites = SyncInventorySites(service, ticket, req);
+
+                // Attempt to sync sites even if they are not enabled or available
+                StatusText += string.Format("{0} - Syncing unit of measure sets.\r\n", DateTime.Now.ToString());
+                units = SyncUnitOfMeasureSets(service, ticket, req);
 
                 // Build the request to send the sync details
                 var httpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
@@ -163,6 +175,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
             var response = req.ProcessRequest(ticket, doc.OuterXml);
 
+            Trace.TraceInformation(response);
+
             // Then walk the response
             var walkReponse = service.WalkInventoryItemQueryRs(response);
 
@@ -206,7 +220,14 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             // Build the request to get inventory sites
             service.BuildInventorySiteQueryRq(doc, inner);
 
+            Trace.TraceInformation(doc.OuterXml);
+
             var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            Trace.TraceInformation(response);
+
+            if (string.IsNullOrEmpty(response))
+                return new List<QBDInventorySite>();
 
             // Then walk the response
             var walkReponse = service.WalkInventorySiteQueryRs(response);
@@ -251,7 +272,14 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             // Build the request to get unit of measure sets
             service.BuildUnitOfMeasureSetQueryRq(doc, inner);
 
+            Trace.TraceInformation(doc.OuterXml);
+
             var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+            Trace.TraceInformation(response);
+
+            if (string.IsNullOrEmpty(response))
+                return new List<QBDUnitOfMeasureSet>();
 
             // Then walk the response
             var walkReponse = service.WalkUnitOfMeasureSetQueryRs(response);

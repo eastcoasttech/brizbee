@@ -62,7 +62,7 @@ namespace Brizbee.Dashboard.Services
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async Task<(List<Punch>, long?)> GetExpandedPunchesAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
+        public async Task<(List<Punch>, long?)> GetExpandedPunchesAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Punches/InAt", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/PunchesExpanded?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}");
             response.EnsureSuccessStatusCode();

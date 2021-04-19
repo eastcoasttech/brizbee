@@ -100,13 +100,14 @@
 
     <hr />
 
+    <p class="alert alert-info">
+        These items are synced from QuickBooks Desktop Pro, Premier, and Enterprise 2002 and newer. Use the BRIZBEE Integration Utility to sync items from QuickBooks to BRIZBEE.
+    </p>
+
     <!--Toolbar-->
     <div class="row row-toolbar">
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenNewItemDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> Add Item</button>
-                </div>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => RefreshItems())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
@@ -118,11 +119,71 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Part Number</th>
-                <th>Bar Code</th>
-                <th>Purchase Description</th>
-                <th>Sales Description</th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/Name"))">
+                        Name
+                        @if (sortBy == "QBDInventoryItems/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/ManufacturerPartNumber"))">
+                        Part Number
+                        @if (sortBy == "QBDInventoryItems/ManufacturerPartNumber" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/ManufacturerPartNumber" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/BarCodeValue"))">
+                        Bar Code
+                        @if (sortBy == "QBDInventoryItems/BarCodeValue" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/BarCodeValue" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/PurchaseDescription"))">
+                        Purchase Description
+                        @if (sortBy == "QBDInventoryItems/PurchaseDescription" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/PurchaseDescription" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/SalesDescription"))">
+                        Sales Description
+                        @if (sortBy == "QBDInventoryItems/SalesDescription" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/SalesDescription" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -176,7 +237,7 @@
     private bool working = false;
     private User currentUser;
     private List<QBDInventoryItem> items = new List<QBDInventoryItem>();
-    private string sortBy = "QBDINVENTORYITEMS/CREATEDAT";
+    private string sortBy = "QBDInventoryItems/Name";
     private string sortDirection = "ASC";
     private int pageSize = 20;
     private int skip = 0;

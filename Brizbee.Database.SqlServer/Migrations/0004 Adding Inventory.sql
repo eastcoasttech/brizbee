@@ -90,10 +90,10 @@ CREATE TABLE [dbo].[QBDInventoryConsumptions] (
     [CreatedAt] DATETIME2(7) NOT NULL,
     [CreatedByUserId] INT NOT NULL,
     [QBDInventoryItemId] BIGINT NOT NULL,
-    [QBDInventorySiteId] BIGINT NOT NULL,
+    [QBDInventorySiteId] BIGINT NULL,
     [OrganizationId] INT NOT NULL,
     [QBDInventoryConsumptionSyncId] BIGINT NULL,
-    [QBDUnitOfMeasureSetId] BIGINT NOT NULL,
+    [QBDUnitOfMeasureSetId] BIGINT NULL,
     [Hostname] VARCHAR(30) NOT NULL,
     CONSTRAINT [PK_dbo.QBDInventoryConsumptions] PRIMARY KEY CLUSTERED ([Id])
 );
