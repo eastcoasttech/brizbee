@@ -175,7 +175,7 @@
             @foreach (var consumption in consumptions)
             {
                 <tr class="fadeIn selectable">
-                    <td><a href="javascript:void(0)">@consumption.CreatedAt</a></td>
+                    <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(consumption.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@consumption.QBDInventoryItem.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.CreatedByUser.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
@@ -220,6 +220,7 @@
 
     private bool working = false;
     private User currentUser;
+    private TimeZoneInfo systemTimeZone = TimeZoneInfo.Local;
     private List<QBDInventoryConsumption> consumptions = new List<QBDInventoryConsumption>();
     private string sortBy = "QBDInventoryConsumptions/CreatedAt";
     private string sortDirection = "DESC";

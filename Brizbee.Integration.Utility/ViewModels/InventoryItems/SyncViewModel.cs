@@ -29,7 +29,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         #endregion
 
-        public async System.Threading.Tasks.Task Sync()
+        public void Sync()
         {
             // Disable the buttons
             IsExitEnabled = false;
@@ -49,10 +49,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
-            var req = new RequestProcessor2();
-
             try
             {
+                var req = new RequestProcessor2();
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
@@ -99,6 +98,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                     OnPropertyChanged("StatusText");
                 }
 
+                // Close the QuickBooks connection
+                req.EndSession(ticket);
+                req.CloseConnection();
+                req = null;
+
                 // Enable the buttons
                 IsExitEnabled = true;
                 IsTryEnabled = true;
@@ -106,12 +110,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 OnPropertyChanged("IsExitEnabled");
                 OnPropertyChanged("IsTryEnabled");
                 OnPropertyChanged("IsStartOverEnabled");
-
-                // Close the QuickBooks connection
-                req.EndSession(ticket);
             }
             catch (COMException cex)
             {
+                Trace.TraceError(cex.ToString());
+
                 // Enable the buttons
                 IsExitEnabled = true;
                 IsTryEnabled = true;
@@ -134,11 +137,13 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                     OnPropertyChanged("StatusText");
 
                     // Bubbles exception up to user interface
-                    throw;
+                    //throw;
                 }
             }
             catch (Exception ex)
             {
+                Trace.TraceError(ex.ToString());
+
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
 
@@ -151,13 +156,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 OnPropertyChanged("IsStartOverEnabled");
 
                 // Bubbles exception up to user interface
-                throw;
-            }
-            finally
-            {
-                // Close the QuickBooks connection
-                req.CloseConnection();
-                req = null;
+                //throw;
             }
         }
 
@@ -180,29 +179,39 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             // Build the request to get inventory items
             service.BuildInventoryItemQueryRq(doc, inner);
 
-            var response = req.ProcessRequest(ticket, doc.OuterXml);
-
-            // Then walk the response
-            var walkReponse = service.WalkInventoryItemQueryRs(response);
-
-            if (SaveErrorCount > 0)
+            try
             {
-                StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
-                OnPropertyChanged("StatusText");
+                Trace.TraceInformation(doc.OuterXml);
 
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
+                var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                return null;
+                // Then walk the response
+                var walkReponse = service.WalkInventoryItemQueryRs(response);
+
+                if (SaveErrorCount > 0)
+                {
+                    StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                    OnPropertyChanged("StatusText");
+
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsTryEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsTryEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
+
+                    return new List<QBDInventoryItem>();
+                }
+                else
+                {
+                    return walkReponse.Item3;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return walkReponse.Item3;
+                Trace.TraceError(ex.ToString());
+                return new List<QBDInventoryItem>();
             }
         }
 
@@ -225,32 +234,44 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             // Build the request to get inventory sites
             service.BuildInventorySiteQueryRq(doc, inner);
 
-            var response = req.ProcessRequest(ticket, doc.OuterXml);
-
-            if (string.IsNullOrEmpty(response))
-                return new List<QBDInventorySite>();
-
-            // Then walk the response
-            var walkReponse = service.WalkInventorySiteQueryRs(response);
-
-            if (SaveErrorCount > 0)
+            try
             {
-                StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
-                OnPropertyChanged("StatusText");
+                Trace.TraceInformation(doc.OuterXml);
 
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
+                var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                return null;
+                Trace.TraceInformation(response);
+
+                if (string.IsNullOrEmpty(response))
+                    return new List<QBDInventorySite>();
+
+                // Then walk the response
+                var walkReponse = service.WalkInventorySiteQueryRs(response);
+
+                if (SaveErrorCount > 0)
+                {
+                    StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                    OnPropertyChanged("StatusText");
+
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsTryEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsTryEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
+
+                    return new List<QBDInventorySite>();
+                }
+                else
+                {
+                    return walkReponse.Item3;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return walkReponse.Item3;
+                Trace.TraceError(ex.ToString());
+                return new List<QBDInventorySite>();
             }
         }
 
@@ -273,32 +294,44 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             // Build the request to get unit of measure sets
             service.BuildUnitOfMeasureSetQueryRq(doc, inner);
 
-            var response = req.ProcessRequest(ticket, doc.OuterXml);
-
-            if (string.IsNullOrEmpty(response))
-                return new List<QBDUnitOfMeasureSet>();
-
-            // Then walk the response
-            var walkReponse = service.WalkUnitOfMeasureSetQueryRs(response);
-
-            if (SaveErrorCount > 0)
+            try
             {
-                StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
-                OnPropertyChanged("StatusText");
+                Trace.TraceInformation(doc.OuterXml);
 
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
+                var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                return null;
+                Trace.TraceInformation(response);
+
+                if (string.IsNullOrEmpty(response))
+                    return new List<QBDUnitOfMeasureSet>();
+
+                // Then walk the response
+                var walkReponse = service.WalkUnitOfMeasureSetQueryRs(response);
+
+                if (SaveErrorCount > 0)
+                {
+                    StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                    OnPropertyChanged("StatusText");
+
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsTryEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsTryEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
+
+                    return new List<QBDUnitOfMeasureSet>();
+                }
+                else
+                {
+                    return walkReponse.Item3;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return walkReponse.Item3;
+                Trace.TraceError(ex.ToString());
+                return new List<QBDUnitOfMeasureSet>();
             }
         }
 

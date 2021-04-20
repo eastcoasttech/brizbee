@@ -36,7 +36,8 @@ namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
         {
             try
             {
-                (DataContext as SyncViewModel).Sync();
+                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                thread.Start();
             }
             catch (Exception ex)
             {

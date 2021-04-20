@@ -914,7 +914,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
@@ -947,7 +947,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
@@ -980,7 +980,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
@@ -1013,7 +1013,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
@@ -1051,7 +1051,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
@@ -1083,7 +1083,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);

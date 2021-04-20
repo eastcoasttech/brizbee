@@ -149,7 +149,7 @@
             @foreach (var sync in syncs)
             {
                 <tr class="fadeIn selectable">
-                    <td><a href="javascript:void(0)">@sync.CreatedAt.ToString("MM/dd/yyyy hh:mm tt")</a></td>
+                    <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
                 </tr>
             }
@@ -192,6 +192,7 @@
 
     private bool working = false;
     private User currentUser;
+    private TimeZoneInfo systemTimeZone = TimeZoneInfo.Local;
     private List<QBDInventoryConsumptionSync> syncs = new List<QBDInventoryConsumptionSync>();
     private string sortBy = "QBDInventoryConsumptionSyncs/CreatedAt";
     private string sortDirection = "DESC";

@@ -19,11 +19,12 @@ namespace Brizbee.Integration.Utility.Views.InventoryItems
             DataContext = new SyncViewModel();
         }
 
-        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                await (DataContext as SyncViewModel).Sync();
+                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                thread.Start();
             }
             catch (Exception ex)
             {
@@ -31,11 +32,12 @@ namespace Brizbee.Integration.Utility.Views.InventoryItems
             }
         }
 
-        private async void TryButton_Click(object sender, RoutedEventArgs e)
+        private void TryButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await (DataContext as SyncViewModel).Sync();
+                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                thread.Start();
             }
             catch (Exception ex)
             {

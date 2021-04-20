@@ -67,7 +67,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             try
             {
                 var req = new RequestProcessor2();
-
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
@@ -153,8 +152,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             }
             catch (COMException cex)
             {
-                Trace.TraceInformation(cex.ToString());
-
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
                     StatusText += string.Format("{0} - Sync failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
@@ -190,8 +187,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             }
             catch (Exception ex)
             {
-                Trace.TraceInformation(ex.ToString());
-
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
 
