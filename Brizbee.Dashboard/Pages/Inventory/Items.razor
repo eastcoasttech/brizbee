@@ -95,7 +95,9 @@
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
         <li role="presentation"><NavLink href="inventory/consumption">Consumption</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/consumption-syncs">Consumption Syncs</NavLink></li>
         <li role="presentation" class="active"><NavLink href="inventory/items">Items</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Item Syncs</NavLink></li>
     </ul>
 
     <hr />
@@ -189,7 +191,7 @@
         <tbody>
             @foreach (var item in items)
             {
-                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyItemDialog(item))">
+                <tr class="fadeIn selectable">
                     <td><a href="javascript:void(0)">@item.Name</a></td>
                     <td><a href="javascript:void(0)">@item.ManufacturerPartNumber</a></td>
                     <td><a href="javascript:void(0)">@item.BarCodeValue</a></td>
@@ -297,20 +299,6 @@
         itemsCount = result.Item2.GetValueOrDefault();
         working = false;
         StateHasChanged();
-    }
-
-    private void OpenNewItemDialog()
-    {
-        dialogService.Open<RateDialog>("New Rate",
-                                new Dictionary<string, object>() { { "Id", null } },
-                                new DialogOptions() { Width = "600px" });
-    }
-
-    private void OpenModifyItemDialog(QBDInventoryItem item)
-    {
-        dialogService.Open<RateDialog>("Edit Rate",
-                                new Dictionary<string, object>() { { "Id", item.Id } },
-                                new DialogOptions() { Width = "600px" });
     }
 
     private async void ChangeSortBy(string column)

@@ -5,6 +5,8 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Xml;
@@ -50,7 +52,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
             // Add the prolog processing instructions
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
             XmlElement outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
@@ -65,6 +67,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             try
             {
                 var req = new RequestProcessor2();
+
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
@@ -73,61 +76,73 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
                 var inventoryService = new InventoryService();
 
-                // Build the request to get unsynced adjustments
-                var httpRequest = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.GET);
+                // Build the request to get unsynced consumption
+                var unsyncedHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.GET);
+                unsyncedHttpRequest.AddHeader("X-Paging-PageNumber", "1");
+                unsyncedHttpRequest.AddHeader("X-Paging-PageSize", "1000");
 
                 // Execute request
-                var httpResponse = client.Execute<List<QBDInventoryConsumption>>(httpRequest);
-                if ((httpResponse.ResponseStatus == ResponseStatus.Completed) &&
-                        (httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+                var unsyncedHttpResponse = client.Execute<List<QBDInventoryConsumption>>(unsyncedHttpRequest);
+                if ((unsyncedHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
+                        (unsyncedHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                 {
-                    var consumptions = httpResponse.Data;
+                    var consumptions = unsyncedHttpResponse.Data;
 
-                    // Build the request to store adjustments as sales receipts
-                    inventoryService.BuildSalesReceiptAddRq(doc, inner, consumptions);
-
-                    var response = req.ProcessRequest(ticket, doc.OuterXml);
-
-                    // Then walk the response
-                    var walkReponse = inventoryService.WalkSalesReceiptAddRs(response);
-
-                    if (SaveErrorCount > 0)
+                    if (consumptions.Count == 0)
                     {
-                        StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                        StatusText += string.Format("{0} - There is no inventory consumption to sync.\r\n", DateTime.Now.ToString());
                         OnPropertyChanged("StatusText");
-
-                        // Enable the buttons
-                        IsExitEnabled = true;
-                        IsTryEnabled = true;
-                        IsStartOverEnabled = true;
-                        OnPropertyChanged("IsExitEnabled");
-                        OnPropertyChanged("IsTryEnabled");
-                        OnPropertyChanged("IsStartOverEnabled");
                     }
                     else
                     {
-                        StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
-                        OnPropertyChanged("StatusText");
+                        // Build the request to store consumptions as sales receipts
+                        inventoryService.BuildSalesReceiptAddRq(doc, inner, consumptions);
 
-                        // Enable the buttons
-                        IsExitEnabled = true;
-                        IsStartOverEnabled = true;
-                        OnPropertyChanged("IsExitEnabled");
-                        OnPropertyChanged("IsStartOverEnabled");
+                        var response = req.ProcessRequest(ticket, doc.OuterXml);
+
+                        // Then walk the response
+                        var walkReponse = inventoryService.WalkSalesReceiptAddRs(response);
+
+                        if (SaveErrorCount > 0)
+                        {
+                            StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                            OnPropertyChanged("StatusText");
+                        }
+                        else
+                        {
+                            // Build the request to send the sync details
+                            var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.POST);
+                            syncHttpRequest.AddJsonBody(consumptions.Select(c => c.Id).ToArray());
+
+                            // Execute request
+                            var syncHttpResponse = client.Execute(syncHttpRequest);
+                            if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
+                                    (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+                            {
+                                StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
+                                OnPropertyChanged("StatusText");
+                            }
+                            else
+                            {
+                                StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
+                                StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
+                                OnPropertyChanged("StatusText");
+                            }
+                        }
                     }
                 }
                 else
                 {
-
+                    StatusText += $"{DateTime.Now} - {unsyncedHttpResponse.Content}";
+                    StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
                 }
 
                 // Close the QuickBooks connection
                 req.EndSession(ticket);
                 req.CloseConnection();
                 req = null;
-            }
-            catch (COMException cex)
-            {
+
                 // Enable the buttons
                 IsExitEnabled = true;
                 IsTryEnabled = true;
@@ -135,11 +150,23 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 OnPropertyChanged("IsExitEnabled");
                 OnPropertyChanged("IsTryEnabled");
                 OnPropertyChanged("IsStartOverEnabled");
+            }
+            catch (COMException cex)
+            {
+                Trace.TraceInformation(cex.ToString());
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
                     StatusText += string.Format("{0} - Sync failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
+
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsTryEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsTryEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
 
                     // Bubbles exception up to user interface
                     throw new Exception("You must open QuickBooks Desktop before you can sync.");
@@ -149,12 +176,22 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), cex.Message);
                     OnPropertyChanged("StatusText");
 
+                    // Enable the buttons
+                    IsExitEnabled = true;
+                    IsTryEnabled = true;
+                    IsStartOverEnabled = true;
+                    OnPropertyChanged("IsExitEnabled");
+                    OnPropertyChanged("IsTryEnabled");
+                    OnPropertyChanged("IsStartOverEnabled");
+
                     // Bubbles exception up to user interface
-                    throw;
+                    //throw;
                 }
             }
             catch (Exception ex)
             {
+                Trace.TraceInformation(ex.ToString());
+
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
 
@@ -167,7 +204,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 OnPropertyChanged("IsStartOverEnabled");
 
                 // Bubbles exception up to user interface
-                throw;
+                //throw;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿@page "/inventory/consumption"
+﻿@page "/inventory/item-syncs"
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Common.Models
@@ -10,7 +10,7 @@
 @inject CommitService commitService
 @inject PunchService punchService
 @inject RateService rateService
-@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
+@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
 @inject DialogService dialogService
 
 @implements IDisposable
@@ -94,10 +94,10 @@
 
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
-        <li role="presentation" class="active"><NavLink href="inventory/consumption">Consumption</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/consumption">Consumption</NavLink></li>
         <li role="presentation"><NavLink href="inventory/consumption-syncs">Consumption Syncs</NavLink></li>
         <li role="presentation"><NavLink href="inventory/items">Items</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Item Syncs</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="inventory/item-syncs">Item Syncs</NavLink></li>
     </ul>
 
     <hr />
@@ -107,43 +107,30 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshConsumptions())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshSyncs())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!--List of Consumptions-->
+    <!--List of Syncs-->
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-3">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptions/CreatedAt"))">
+                <th class="col-md-6">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItemSyncs/CreatedAt"))">
                         Created
-                        @if (sortBy == "QBDInventoryConsumptions/CreatedAt" && sortDirection == "ASC")
+                        @if (sortBy == "QBDInventoryItemSyncs/CreatedAt" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "QBDInventoryConsumptions/CreatedAt" && sortDirection == "DESC")
+                        else if (sortBy == "QBDInventoryItemSyncs/CreatedAt" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/Name"))">
-                        Item
-                        @if (sortBy == "QBDInventoryItems/Name" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "QBDInventoryItems/Name" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th class="col-md-3">
+                <th class="col-md-6">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
                         User
                         @if (sortBy == "Users/Name" && sortDirection == "ASC")
@@ -156,41 +143,26 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptions/Quantity"))">
-                        Quantity
-                        @if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var consumption in consumptions)
+            @foreach (var sync in syncs)
             {
                 <tr class="fadeIn selectable">
-                    <td><a href="javascript:void(0)">@consumption.CreatedAt</a></td>
-                    <td><a href="javascript:void(0)">@consumption.QBDInventoryItem.Name</a></td>
-                    <td><a href="javascript:void(0)">@consumption.CreatedByUser.Name</a></td>
-                    <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
+                    <td><a href="javascript:void(0)">@sync.CreatedAt.ToString("MM/dd/yyyy hh:mm tt")</a></td>
+                    <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="2"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
-            @if (!working && consumptions.Count == 0)
+            @if (!working && syncs.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="4">You haven't consumed any inventory items</td>
+                    <td colspan="2">You have not synced any items from QuickBooks</td>
                 </tr>
             }
         </tbody>
@@ -198,7 +170,7 @@
 
     <div class="row">
         <div class="col-md-6">
-            @if (consumptionsCount > pageSize)
+            @if (syncsCount > pageSize)
             {
                 <div class="pull-left" style="margin-right: 1rem;">
                     <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
@@ -206,9 +178,9 @@
                 </div>
             }
 
-            @if (consumptionsCount > 0 && !working)
+            @if (syncsCount > 0 && !working)
             {
-                <p class="form-control-static pull-left">@(consumptionsPageStart + 1) to @(consumptionsPageStart + pageSize < consumptionsCount ? consumptionsPageStart + pageSize : consumptionsCount) of @consumptionsCount</p>
+                <p class="form-control-static pull-left">@(syncsPageStart + 1) to @(syncsPageStart + pageSize < syncsCount ? syncsPageStart + pageSize : syncsCount) of @syncsCount</p>
             }
         </div>
     </div>
@@ -220,13 +192,13 @@
 
     private bool working = false;
     private User currentUser;
-    private List<QBDInventoryConsumption> consumptions = new List<QBDInventoryConsumption>();
-    private string sortBy = "QBDInventoryConsumptions/CreatedAt";
+    private List<QBDInventoryItemSync> syncs = new List<QBDInventoryItemSync>();
+    private string sortBy = "QBDInventoryItemSyncs/CreatedAt";
     private string sortDirection = "DESC";
     private int pageSize = 20;
     private int skip = 0;
-    private long consumptionsCount = 0;
-    private int consumptionsPageStart = 0;
+    private long syncsCount = 0;
+    private int syncsPageStart = 0;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -235,7 +207,7 @@
 
         currentUser = sharedService.CurrentUser;
 
-        await RefreshConsumptions();
+        await RefreshSyncs();
 
         dialogService.OnOpen += Open;
         dialogService.OnClose += Close;
@@ -249,16 +221,16 @@
 
     private async void NextPage(MouseEventArgs e)
     {
-        consumptionsPageStart = consumptionsPageStart + pageSize;
-        skip = consumptionsPageStart;
-        await RefreshConsumptions();
+        syncsPageStart = syncsPageStart + pageSize;
+        skip = syncsPageStart;
+        await RefreshSyncs();
     }
 
     private async void PreviousPage(MouseEventArgs e)
     {
-        consumptionsPageStart = consumptionsPageStart - pageSize;
-        skip = consumptionsPageStart;
-        await RefreshConsumptions();
+        syncsPageStart = syncsPageStart - pageSize;
+        skip = syncsPageStart;
+        await RefreshSyncs();
     }
 
     private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
@@ -269,16 +241,16 @@
     private async void Close(dynamic result)
     {
         Console.WriteLine($"Dialog closed with result: {result}");
-        await RefreshConsumptions();
+        await RefreshSyncs();
     }
 
-    private async System.Threading.Tasks.Task RefreshConsumptions()
+    private async System.Threading.Tasks.Task RefreshSyncs()
     {
         working = true;
-        consumptions.Clear();
-        var result = await qbdInventoryConsumptionService.GetQBDInventoryConsumptionsAsync(pageSize, skip, sortBy, sortDirection);
-        consumptions = result.Item1;
-        consumptionsCount = result.Item2.GetValueOrDefault();
+        syncs.Clear();
+        var result = await qbdInventoryItemSyncService.GetQBDInventoryItemSyncsAsync(pageSize, skip, sortBy, sortDirection);
+        syncs = result.Item1;
+        syncsCount = result.Item2.GetValueOrDefault();
         working = false;
         StateHasChanged();
     }
@@ -296,6 +268,6 @@
             sortDirection = "ASC";
         }
 
-        await RefreshConsumptions();
+        await RefreshSyncs();
     }
 }

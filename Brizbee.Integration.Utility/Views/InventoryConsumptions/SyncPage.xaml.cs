@@ -1,5 +1,6 @@
 ﻿using Brizbee.Integration.Utility.ViewModels.InventoryConsumptions;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,8 +36,7 @@ namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
         {
             try
             {
-                var thread = new Thread((DataContext as SyncViewModel).Sync);
-                thread.Start();
+                (DataContext as SyncViewModel).Sync();
             }
             catch (Exception ex)
             {

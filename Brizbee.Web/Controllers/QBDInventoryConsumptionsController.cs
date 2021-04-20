@@ -226,7 +226,7 @@ namespace Brizbee.Web.Controllers
         // GET: api/QBDInventoryConsumptions/Unsynced
         [HttpGet]
         [Route("api/QBDInventoryConsumptions/Unsynced")]
-        public IHttpActionResult GetUnsynced()
+        public HttpResponseMessage GetUnsynced()
         {
             IEnumerable<string> pageNumberHeaders;
             Request.Headers.TryGetValues("X-Paging-PageNumber", out pageNumberHeaders);
@@ -235,22 +235,31 @@ namespace Brizbee.Web.Controllers
             Request.Headers.TryGetValues("X-Paging-PageSize", out pageSizeHeaders);
 
             // Validate page number.
-            if (pageNumberHeaders == null) { return BadRequest("Header X-Paging-PageNumber must be provided."); }
+            if (pageNumberHeaders == null)
+                Request.CreateResponse(HttpStatusCode.BadRequest, "Header X-Paging-PageNumber must be provided.");
+
             var pageNumber = int.Parse(pageNumberHeaders.First(), CultureInfo.InvariantCulture);
 
             // Validate page size.
-            if (pageSizeHeaders == null) { return BadRequest("Header X-Paging-PageSize must be provided."); }
+            if (pageSizeHeaders == null)
+                Request.CreateResponse(HttpStatusCode.BadRequest, "Header X-Paging-PageSize must be provided.");
 
             var pageSize = int.Parse(pageSizeHeaders.First(), CultureInfo.InvariantCulture);
-            if (pageSize > 1000) { return BadRequest("Cannot exceed 1000 records per page in a single request"); }
+            if (pageSize > 1000)
+                Request.CreateResponse(HttpStatusCode.BadRequest, "Cannot exceed 1000 records per page in a single request.");
 
             var currentUser = CurrentUser();
 
+            // Ensure Administrator.
+            if (currentUser.Role != "Administrator")
+                Request.CreateResponse(HttpStatusCode.BadRequest);
+
             var consumptions = _context.QBDInventoryConsumptions
                 .Include("QBDInventoryItem")
-                .Include("QBDInventorySite")
-                .Where(a => a.OrganizationId == currentUser.OrganizationId)
-                .Where(a => !a.QBDInventoryConsumptionSyncId.HasValue);
+                //.Include("QBDInventorySite")
+                //.DefaultIfEmpty()
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => !c.QBDInventoryConsumptionSyncId.HasValue);
 
             // Determine the number of records to skip.
             int skip = (pageNumber - 1) * pageSize;
@@ -263,19 +272,26 @@ namespace Brizbee.Web.Controllers
                 ? (int)Math.Ceiling(total / (double)pageSize)
                 : 0;
 
-            // Set headers for paging.
-            Request.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
-            Request.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
-            Request.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
-            Request.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
-
             var records = consumptions
                 .OrderBy(a => a.CreatedAt)
                 .Skip(skip)
                 .Take(pageSize)
                 .ToList();
 
-            return Ok(records);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(records, settings),
+                System.Text.Encoding.UTF8,
+                "application/json")
+            };
+
+            // Set headers for paging.
+            response.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
+            response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
+            response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
+            response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
+
+            return response;
         }
 
         // POST: api/QBDInventoryConsumptions/Sync

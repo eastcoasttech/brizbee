@@ -47,27 +47,35 @@ namespace Brizbee.Integration.Utility.Services
                 XmlElement line = doc.CreateElement("SalesReceiptLineAdd");
                 salesReceipt.AppendChild(line);
 
-                // Specify details.
-                line.AppendChild(MakeSimpleElement(doc, "Quantity", consumption.Quantity.ToString()));
-                line.AppendChild(MakeSimpleElement(doc, "UnitOfMeasure", consumption.UnitOfMeasure));
-
-                // Item reference is the ListID.
+                // Inventory Item reference is the ListID.
                 XmlElement itemRef = doc.CreateElement("ItemRef");
                 line.AppendChild(itemRef);
 
                 itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
 
-                // Inventory Site reference is the ListID.
-                XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
-                line.AppendChild(inventorySiteRef);
+                // Specify details (Desc is filled in by the Inventory Item automatically).
+                line.AppendChild(MakeSimpleElement(doc, "Quantity", consumption.Quantity.ToString()));
+                //line.AppendChild(MakeSimpleElement(doc, "Rate", "1.52"));
 
-                inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", ""));
+                // Unit of Measure is optional because it is not supported in all editions of QuickBooks.
+                if (!string.IsNullOrEmpty(consumption.UnitOfMeasure))
+                    line.AppendChild(MakeSimpleElement(doc, "UnitOfMeasure", consumption.UnitOfMeasure));
 
-                // Inventory Site Location reference is the ListID.
-                XmlElement inventorySiteLocationRef = doc.CreateElement("InventorySiteLocationRef");
-                line.AppendChild(inventorySiteLocationRef);
+                // Inventory Site is optional because it is not supported in all editions of QuickBooks.
+                if (consumption.QBDInventorySiteId.HasValue)
+                {
+                    // Inventory Site reference is the ListID.
+                    XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                    line.AppendChild(inventorySiteRef);
 
-                inventorySiteLocationRef.AppendChild(MakeSimpleElement(doc, "ListID", ""));
+                    inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
+
+                    // Inventory Site Location reference is the ListID.
+                    //XmlElement inventorySiteLocationRef = doc.CreateElement("InventorySiteLocationRef");
+                    //line.AppendChild(inventorySiteLocationRef);
+
+                    //inventorySiteLocationRef.AppendChild(MakeSimpleElement(doc, "ListID", ""));
+                }
             }
         }
 
@@ -235,8 +243,6 @@ namespace Brizbee.Integration.Utility.Services
             string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
             int iStatusCode = Convert.ToInt32(statusCode);
-
-            Trace.TraceInformation(iStatusCode.ToString());
 
             if (iStatusCode == 0)
             {

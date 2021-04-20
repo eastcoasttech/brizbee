@@ -33,7 +33,9 @@ namespace Brizbee.Dashboard
             builder.Services.AddSingleton<OrganizationService>();
             builder.Services.AddSingleton<TimesheetEntryService>();
             builder.Services.AddSingleton<QBDInventoryItemService>();
+            builder.Services.AddSingleton<QBDInventoryItemSyncService>();
             builder.Services.AddSingleton<QBDInventoryConsumptionService>();
+            builder.Services.AddSingleton<QBDInventoryConsumptionSyncService>();
             builder.Services.AddSingleton<SharedService>();
 
             builder.Services.AddScoped<LocalStorageService>();

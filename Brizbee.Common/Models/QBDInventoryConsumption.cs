@@ -63,14 +63,18 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Id of the site in QuickBooks Desktop where the inventory item was adjusted.
         /// </summary>
-        [Required]
-        public long QBDInventorySiteId { get; set; }
+        public long? QBDInventorySiteId { get; set; }
 
         /// <summary>
         /// The site in QuickBooks Desktop where the inventory item was adjusted.
         /// </summary>
         [ForeignKey("QBDInventorySiteId")]
         public virtual QBDInventorySite QBDInventorySite { get; set; }
+        
+        public long? QBDUnitOfMeasureSetId { get; set; }
+
+        [ForeignKey("QBDUnitOfMeasureSetId")]
+        public virtual QBDUnitOfMeasureSet QBDUnitOfMeasureSet { get; set; }
 
         /// <summary>
         /// Id of the organization to which the inventory adjustment belongs.
@@ -87,7 +91,6 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Id of the sync which records the sync with QuickBooks Desktop.
         /// </summary>
-        [Required]
         public long? QBDInventoryConsumptionSyncId { get; set; }
 
         /// <summary>
