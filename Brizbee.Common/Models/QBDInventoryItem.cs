@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Common.Models
@@ -65,5 +64,17 @@ namespace Brizbee.Common.Models
         /// </summary>
         [ForeignKey("QBDInventoryItemSyncId")]
         public virtual QBDInventoryItemSync QBDInventoryItemSync { get; set; }
+
+        /// <summary>
+        /// Id of the organization to which the item belongs.
+        /// </summary>
+        [Required]
+        public int OrganizationId { get; set; }
+
+        /// <summary>
+        /// Organization to which the item belongs.
+        /// </summary>
+        [ForeignKey("OrganizationId")]
+        public virtual Organization Organization { get; set; }
     }
 }

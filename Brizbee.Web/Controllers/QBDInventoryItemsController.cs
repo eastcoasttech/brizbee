@@ -173,6 +173,24 @@ namespace Brizbee.Web.Controllers
             return response;
         }
 
+        // GET: api/QBDInventoryItems/Search
+        [HttpGet]
+        [Route("api/QBDInventoryItems/Search")]
+        public IHttpActionResult GetQBDInventoryItemsSearch([FromUri] string barCode)
+        {
+            var currentUser = CurrentUser();
+
+            var item = _context.QBDInventoryItems
+                .Where(i => i.OrganizationId == currentUser.OrganizationId)
+                .Where(i => i.BarCodeValue == barCode)
+                .FirstOrDefault();
+
+            if (item != null)
+                return Ok(item);
+            else
+                return NotFound();
+        }
+
         // POST: api/QBDInventoryItems/Sync
         [HttpPost]
         [Route("api/QBDInventoryItems/Sync")]
@@ -248,8 +266,9 @@ namespace Brizbee.Web.Controllers
 
             foreach (var item in details.InventoryItems)
             {
-                // Find by list id, which is unique across inventory items
+                // Find by list id, which is unique across inventory items for the organization
                 var found = _context.QBDInventoryItems
+                    .Where(i => i.OrganizationId == currentUser.OrganizationId)
                     .Where(i => i.ListId == item.ListId)
                     .FirstOrDefault();
 
@@ -271,6 +290,7 @@ namespace Brizbee.Web.Controllers
                     item.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
                     item.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
                     item.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
+                    item.OrganizationId = currentUser.OrganizationId;
                     _context.QBDInventoryItems.Add(item);
                 }
             }
