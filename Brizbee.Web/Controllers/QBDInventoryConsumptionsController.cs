@@ -81,6 +81,24 @@ namespace Brizbee.Web.Controllers
                     case "QBDINVENTORYITEMS/NAME":
                         orderByFormatted = "I.[Name]";
                         break;
+                    case "TASKS/NUMBER":
+                        orderByFormatted = "T.[Number]";
+                        break;
+                    case "TASKS/NAME":
+                        orderByFormatted = "T.[Name]";
+                        break;
+                    case "JOBS/NUMBER":
+                        orderByFormatted = "J.[Number]";
+                        break;
+                    case "JOBS/NAME":
+                        orderByFormatted = "J.[Name]";
+                        break;
+                    case "CUSTOMERS/NUMBER":
+                        orderByFormatted = "CR.[Number]";
+                        break;
+                    case "CUSTOMERS/NAME":
+                        orderByFormatted = "CR.[Name]";
+                        break;
                     case "USERS/NAME":
                         orderByFormatted = "U.[Name]";
                         break;
@@ -148,12 +166,27 @@ namespace Brizbee.Web.Controllers
                         I.FullName AS Item_FullName,
                         I.ListId AS Item_ListId,
 
+                        T.Name as Task_Name,
+                        T.Number as Task_Number,
+
+                        J.Name as Job_Name,
+                        J.Number as Job_Number,
+
+                        CR.Name as Customer_Name,
+                        CR.Number as Customer_Number,
+
                         U.Id AS User_Id,
                         U.Name AS User_Name
                     FROM
                         [QBDInventoryConsumptions] AS C
                     INNER JOIN
                         [QBDInventoryItems] AS I ON C.[QBDInventoryItemId] = I.[Id]
+                    INNER JOIN
+                        [Tasks] AS T ON C.[TaskId] = T.[Id]
+                    INNER JOIN
+                        [Jobs] AS J ON T.[JobId] = J.[Id]
+                    INNER JOIN
+                        [Customers] AS CR ON J.[CustomerId] = CR.[Id]
                     INNER JOIN
                         [Users] AS U ON C.[CreatedByUserId] = U.[Id]
                     WHERE
@@ -190,6 +223,21 @@ namespace Brizbee.Web.Controllers
                             QBDInventoryItemSyncId = result.Item_QBDInventoryItemSyncId,
                             FullName = result.Item_FullName,
                             ListId = result.Item_ListId
+                        },
+                        Task = new Task()
+                        {
+                            Number = result.Task_Number,
+                            Name = result.Task_Name,
+                            Job = new Job()
+                            {
+                                Number = result.Job_Number,
+                                Name = result.Job_Name,
+                                Customer = new Customer()
+                                {
+                                    Number = result.Customer_Number,
+                                    Name = result.Customer_Name
+                                }
+                            }
                         },
                         CreatedByUser = new User()
                         {
@@ -410,6 +458,27 @@ namespace Brizbee.Web.Controllers
         public string Item_SalesDescription { get; set; }
 
         public long Item_QBDInventoryItemSyncId { get; set; }
+
+
+        // Task Details
+
+        public string Task_Number { get; set; }
+
+        public string Task_Name { get; set; }
+
+
+        // Job Details
+
+        public string Job_Number { get; set; }
+
+        public string Job_Name { get; set; }
+
+
+        // Customer Details
+
+        public string Customer_Number { get; set; }
+
+        public string Customer_Name { get; set; }
 
 
         // User Details

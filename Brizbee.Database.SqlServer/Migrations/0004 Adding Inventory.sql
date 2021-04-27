@@ -89,6 +89,7 @@ CREATE TABLE [dbo].[QBDInventoryConsumptions] (
     [UnitOfMeasure] VARCHAR(31) NOT NULL,
     [CreatedAt] DATETIME2(7) NOT NULL,
     [CreatedByUserId] INT NOT NULL,
+    [TaskId] INT NOT NULL,
     [QBDInventoryItemId] BIGINT NOT NULL,
     [QBDInventorySiteId] BIGINT NULL,
     [OrganizationId] INT NOT NULL,

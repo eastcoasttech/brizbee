@@ -37,6 +37,7 @@ CREATE TABLE [dbo].[Jobs] (
     [Name] nvarchar(max) NOT NULL,
     [Number] nvarchar(max) NOT NULL,
     [QuickBooksCustomerJob] nvarchar(max) NULL,
+    [Status] nvarchar(20) NULL,
     CONSTRAINT [PK_dbo.Jobs] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO

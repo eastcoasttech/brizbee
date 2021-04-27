@@ -20,9 +20,6 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Brizbee.Common.Security
 {
     public class Credential
@@ -30,9 +27,5 @@ namespace Brizbee.Common.Security
         public string AuthUserId { get; set; }
         public string AuthExpiration { get; set; }
         public string AuthToken { get; set; }
-
-        [JsonProperty("odata.type")]
-        [NotMapped]
-        public string OdataType { get; set; } = "Brizbee.Common.Security.Credentials";
     }
 }

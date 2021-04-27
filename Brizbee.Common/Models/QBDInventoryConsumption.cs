@@ -98,5 +98,17 @@ namespace Brizbee.Common.Models
         /// </summary>
         [ForeignKey("QBDInventoryConsumptionSyncId")]
         public virtual QBDInventoryConsumptionSync QBDInventoryConsumptionSync { get; set; }
+
+        /// <summary>
+        /// Id of the task which was being performed when the inventory was consumed.
+        /// </summary>
+        [Required]
+        public int TaskId { get; set; }
+
+        /// <summary>
+        /// The task which was being performed when the inventory was consumed.
+        /// </summary>
+        [ForeignKey("TaskId")]
+        public virtual Task Task { get; set; }
     }
 }

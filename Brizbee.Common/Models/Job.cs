@@ -53,5 +53,8 @@ namespace Brizbee.Common.Models
 
         [StringLength(159)]
         public string QuickBooksClass { get; set; }
+
+        [StringLength(20)]
+        public string Status { get; set; }
     }
 }

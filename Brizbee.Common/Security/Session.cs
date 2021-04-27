@@ -20,9 +20,6 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Brizbee.Common.Security
 {
     public class Session
@@ -32,9 +29,5 @@ namespace Brizbee.Common.Security
         public string Method { get; set; }
         public string PinOrganizationCode { get; set; }
         public string PinUserPin { get; set; }
-
-        [JsonProperty("odata.type")]
-        [NotMapped]
-        public string OdataType { get; set; } = "Brizbee.Common.Security.Session";
     }
 }

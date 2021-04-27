@@ -12,6 +12,8 @@
 @inject SharedService sharedService
 @inject PunchService punchService
 @inject UserService userService
+@inject GeolocationService GeolocationService
+@inject IJSRuntime JSRuntime
 
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
@@ -183,7 +185,33 @@
 
     private async System.Threading.Tasks.Task Continue()
     {
-        var success = await punchService.PunchOut("", "", model.TimeZone);
+        working = true;
+
+        // Attempt to collect coordinates.
+        var currentPositionResult = await GeolocationService.GetCurrentPosition();
+
+        var latitude = "";
+        var longitude = "";
+        if (!currentPositionResult.IsSuccess && currentUser.RequiresLocation == true)
+        {
+            working = false;
+            return;
+        }
+
+        // Store the successfully collected coordinates.
+        latitude = currentPositionResult.Position.Coords.Latitude.ToString();
+        longitude = currentPositionResult.Position.Coords.Longitude.ToString();
+
+        // Collection platform details.
+        var details = await JSRuntime.InvokeAsync<Dictionary<string, string>>("getPlatformDetails");
+        var browserName = details["BrowserName"];
+        var browserVersion = details["BrowserVersion"];
+        var operatingSystemName = details["OperatingSystemName"];
+        var operatingSystemVersion = details["OperatingSystemVersion"];
+
+        var success = await punchService.PunchOut(latitude, longitude,
+            browserName, browserVersion,
+            operatingSystemName, operatingSystemVersion, model.TimeZone);
 
         if (success)
         {
@@ -191,6 +219,7 @@
         }
         else
         {
+            working = false;
             Console.WriteLine("Could not punch out!");
         }
     }

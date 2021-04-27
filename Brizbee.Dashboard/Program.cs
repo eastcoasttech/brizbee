@@ -37,6 +37,7 @@ namespace Brizbee.Dashboard
             builder.Services.AddSingleton<QBDInventoryConsumptionService>();
             builder.Services.AddSingleton<QBDInventoryConsumptionSyncService>();
             builder.Services.AddSingleton<SharedService>();
+            builder.Services.AddSingleton<GeolocationService>();
 
             builder.Services.AddScoped<LocalStorageService>();
 

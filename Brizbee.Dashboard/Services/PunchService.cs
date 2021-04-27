@@ -290,7 +290,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<bool> PunchIn(int taskId, string latitude, string longitude, string timeZone)
+        public async Task<bool> PunchIn(int taskId, string latitude, string longitude, string browserName, string browserVersion, string operationSystemName, string operationSystemVersion, string timeZone)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PunchIn"))
             {
@@ -300,10 +300,10 @@ namespace Brizbee.Dashboard.Services
                     { "LongitudeForInAt", longitude },
                     { "TaskId", taskId },
                     { "SourceHardware", "Web" },
-                    { "SourceOperatingSystem", "Unknown" },
-                    { "SourceOperatingSystemVersion", "Unknown" },
-                    { "SourceBrowser", "Unknown" },
-                    { "SourceBrowserVersion", "Unknown" }
+                    { "SourceOperatingSystem", operationSystemName },
+                    { "SourceOperatingSystemVersion", operationSystemVersion },
+                    { "SourceBrowser", browserName },
+                    { "SourceBrowserVersion", browserVersion }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);
@@ -330,7 +330,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<bool> PunchOut(string latitude, string longitude, string timeZone)
+        public async Task<bool> PunchOut(string latitude, string longitude, string browserName, string browserVersion, string operationSystemName, string operationSystemVersion, string timeZone)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PunchOut"))
             {
@@ -339,10 +339,10 @@ namespace Brizbee.Dashboard.Services
                     { "LatitudeForOutAt", latitude },
                     { "LongitudeForOutAt", longitude },
                     { "SourceHardware", "Web" },
-                    { "SourceOperatingSystem", "Unknown" },
-                    { "SourceOperatingSystemVersion", "Unknown" },
-                    { "SourceBrowser", "Unknown" },
-                    { "SourceBrowserVersion", "Unknown" }
+                    { "SourceOperatingSystem", operationSystemName },
+                    { "SourceOperatingSystemVersion", operationSystemVersion },
+                    { "SourceBrowser", browserName },
+                    { "SourceBrowserVersion", browserVersion }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);
