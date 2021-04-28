@@ -389,6 +389,54 @@ namespace Brizbee.Web.Controllers
             }
         }
 
+        // POST: api/QBDInventoryConsumptions/Consume
+        public IHttpActionResult PostConsume([FromUri] int qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure)
+        {
+            var currentUser = CurrentUser();
+
+            // Find the current punch.
+            var currentPunch = _context.Punches
+                .Where(p => p.UserId == currentUser.Id)
+                .Where(p => p.OutAt == null)
+                .OrderByDescending(p => p.InAt)
+                .FirstOrDefault();
+
+            // Site is determined by the hostname.
+            var sites = new Dictionary<string, string>()
+            {
+                { "RR01", "Site 01" }
+            };
+            var siteForHostname = sites[hostname];
+
+            var siteId = _context.QBDInventorySites
+                .Where(s => s.Name == siteForHostname)
+                .Select(s => s.Id)
+                .FirstOrDefault();
+
+            var uomId = _context.QBDUnitOfMeasureSets
+                .Where(u => u.Name == unitOfMeasure)
+                .Select(u => u.Id)
+                .FirstOrDefault();
+
+            var consumption = new QBDInventoryConsumption()
+            {
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = currentUser.Id,
+                OrganizationId = currentUser.OrganizationId,
+                Quantity = quantity,
+                TaskId = currentPunch.TaskId,
+                QBDInventoryItemId = qbdInventoryItemId,
+                Hostname = hostname,
+                QBDInventorySiteId = siteId,
+                QBDUnitOfMeasureSetId = uomId
+            };
+
+            _context.QBDInventoryConsumptions.Add(consumption);
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
         private User CurrentUser()
         {
             if (ActionContext.RequestContext.Principal.Identity.Name.Length > 0)

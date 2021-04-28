@@ -54,6 +54,29 @@ namespace Brizbee.Common.Models
         public string SalesDescription { get; set; }
 
         /// <summary>
+        /// Name of the optional unit of measure set within QuickBooks.
+        /// </summary>
+        [StringLength(31)]
+        public string QBDUnitOfMeasureSetFullName { get; set; }
+
+        /// <summary>
+        /// ListID of the optional unit of measure set within QuickBooks.
+        /// </summary>
+        [StringLength(20)]
+        public string QBDUnitOfMeasureSetListId { get; set; }
+
+        /// <summary>
+        /// Id of the optional unit of measure set within QuickBooks Desktop.
+        /// </summary>
+        public long? QBDUnitOfMeasureSetId { get; set; }
+
+        /// <summary>
+        /// The optional unit of measure set within QuickBooks Desktop.
+        /// </summary>
+        [ForeignKey("QBDUnitOfMeasureSetId")]
+        public virtual QBDUnitOfMeasureSet QBDUnitOfMeasureSet { get; set; }
+
+        /// <summary>
         /// Id of the sync which records the sync with QuickBooks Desktop.
         /// </summary>
         [Required]

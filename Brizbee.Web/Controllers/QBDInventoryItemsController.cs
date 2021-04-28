@@ -185,10 +185,18 @@ namespace Brizbee.Web.Controllers
                 .Where(i => i.BarCodeValue == barCode)
                 .FirstOrDefault();
 
-            if (item != null)
-                return Ok(item);
-            else
+            if (item == null)
                 return NotFound();
+
+            // Return item with units of measure
+            if (item.QBDUnitOfMeasureSetId.HasValue)
+            {
+                item.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
+                    .Where(s => s.Id == item.QBDUnitOfMeasureSetId)
+                    .FirstOrDefault();
+            }
+
+            return Ok(item);
         }
 
         // POST: api/QBDInventoryItems/Sync
@@ -274,23 +282,50 @@ namespace Brizbee.Web.Controllers
 
                 if (found != null)
                 {
-                    // Update any changes
+                    // Update any changes.
                     found.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
                     found.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
                     found.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
                     found.Name = item.Name;
                     found.FullName = item.FullName;
                     found.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
+
+                    // Associate the Unit of Measure Set.
+                    found.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
+                    found.QBDUnitOfMeasureSetListId = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetListId) ? "" : item.QBDUnitOfMeasureSetListId;
+
+                    if (!string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName))
+                    {
+                        var uomsId = _context.QBDUnitOfMeasureSets
+                            .Where(u => u.ListId == found.QBDUnitOfMeasureSetListId)
+                            .Select(u => u.Id)
+                            .FirstOrDefault();
+                        found.QBDUnitOfMeasureSetId = uomsId;
+                    }
                 }
                 else
                 {
-                    // Create the inventory item
+                    // Create the inventory item.
                     item.QBDInventoryItemSyncId = sync.Id;
                     item.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
                     item.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
                     item.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
                     item.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
                     item.OrganizationId = currentUser.OrganizationId;
+
+                    // Associate the Unit of Measure Set.
+                    item.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
+                    item.QBDUnitOfMeasureSetListId = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetListId) ? "" : item.QBDUnitOfMeasureSetListId;
+
+                    if (!string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName))
+                    {
+                        var uomsId = _context.QBDUnitOfMeasureSets
+                            .Where(u => u.ListId == item.QBDUnitOfMeasureSetListId)
+                            .Select(u => u.Id)
+                            .FirstOrDefault();
+                        item.QBDUnitOfMeasureSetId = uomsId;
+                    }
+
                     _context.QBDInventoryItems.Add(item);
                 }
             }

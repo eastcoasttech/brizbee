@@ -31,7 +31,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
         public void Sync()
         {
-            // Disable the buttons
+            // Disable the buttons.
             IsExitEnabled = false;
             IsTryEnabled = false;
             IsStartOverEnabled = false;
@@ -39,7 +39,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             OnPropertyChanged("IsTryEnabled");
             OnPropertyChanged("IsStartOverEnabled");
 
-            // Reset error count
+            // Reset error count.
             ValidationErrorCount = 0;
             SaveErrorCount = 0;
 
@@ -49,9 +49,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
+            // QBXML request processor must always be closed after use.
+            var req = new RequestProcessor2();
+
             try
             {
-                var req = new RequestProcessor2();
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
@@ -66,24 +68,27 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 StatusText += string.Format("{0} - Syncing inventory items.\r\n", DateTime.Now.ToString());
                 items = SyncInventoryItems(service, ticket, req);
 
-                // Attempt to sync sites even if they are not enabled or available
+                // Attempt to sync sites even if they are not enabled or available.
                 StatusText += string.Format("{0} - Syncing inventory sites.\r\n", DateTime.Now.ToString());
                 sites = SyncInventorySites(service, ticket, req);
 
-                // Attempt to sync sites even if they are not enabled or available
+                // Attempt to sync sites even if they are not enabled or available.
                 StatusText += string.Format("{0} - Syncing unit of measure sets.\r\n", DateTime.Now.ToString());
                 units = SyncUnitOfMeasureSets(service, ticket, req);
 
-                // Build the request to send the sync details
-                var httpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
-                httpRequest.AddJsonBody(new
+                // Build the payload.
+                var payload = new
                 {
-                    InventoryItems = items,
-                    InventorySites = sites,
-                    UnitOfMeasureSets = units
-                });
+                    InventoryItems = items ?? new List<QBDInventoryItem>(),
+                    InventorySites = sites ?? new List<QBDInventorySite>(),
+                    UnitOfMeasureSets = units ?? new List<QBDUnitOfMeasureSet>()
+                };
 
-                // Execute request
+                // Build the request to send the sync details.
+                var httpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
+                httpRequest.AddJsonBody(payload);
+
+                // Send request.
                 var httpResponse = client.Execute(httpRequest);
                 if ((httpResponse.ResponseStatus == ResponseStatus.Completed) &&
                         (httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
@@ -98,46 +103,24 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                     OnPropertyChanged("StatusText");
                 }
 
-                // Close the QuickBooks connection
+                // Close the QuickBooks connection.
                 req.EndSession(ticket);
                 req.CloseConnection();
                 req = null;
-
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
             }
             catch (COMException cex)
             {
                 Trace.TraceError(cex.ToString());
 
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
-
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
                     StatusText += string.Format("{0} - Sync failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
-
-                    // Bubbles exception up to user interface
-                    throw new Exception("You must open QuickBooks Desktop before you can sync.");
                 }
                 else
                 {
                     StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), cex.Message);
                     OnPropertyChanged("StatusText");
-
-                    // Bubbles exception up to user interface
-                    //throw;
                 }
             }
             catch (Exception ex)
@@ -146,8 +129,10 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
-
-                // Enable the buttons
+            }
+            finally
+            {
+                // Enable the buttons.
                 IsExitEnabled = true;
                 IsTryEnabled = true;
                 IsStartOverEnabled = true;
@@ -155,17 +140,21 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 OnPropertyChanged("IsTryEnabled");
                 OnPropertyChanged("IsStartOverEnabled");
 
-                // Bubbles exception up to user interface
-                //throw;
+                // Try to close the QuickBooks connection if it is still open.
+                if (req != null)
+                {
+                    req.CloseConnection();
+                    req = null;
+                }
             }
         }
 
         private List<QBDInventoryItem> SyncInventoryItems(InventoryService service, string ticket, RequestProcessor2 req)
         {
-            // Requests to the QuickBooks API are made in QBXML format
+            // Requests to the QuickBooks API are made in QBXML format.
             var doc = new XmlDocument();
 
-            // Add the prolog processing instructions
+            // Add the prolog processing instructions.
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
@@ -176,7 +165,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            // Build the request to get inventory items
+            // Build the request to get inventory items.
             service.BuildInventoryItemQueryRq(doc, inner);
 
             try
@@ -185,21 +174,15 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
                 var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                // Then walk the response
+                Trace.TraceInformation(response);
+
+                // Then walk the response.
                 var walkReponse = service.WalkInventoryItemQueryRs(response);
 
                 if (SaveErrorCount > 0)
                 {
                     StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
                     OnPropertyChanged("StatusText");
-
-                    // Enable the buttons
-                    IsExitEnabled = true;
-                    IsTryEnabled = true;
-                    IsStartOverEnabled = true;
-                    OnPropertyChanged("IsExitEnabled");
-                    OnPropertyChanged("IsTryEnabled");
-                    OnPropertyChanged("IsStartOverEnabled");
 
                     return new List<QBDInventoryItem>();
                 }
@@ -253,14 +236,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                     StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
                     OnPropertyChanged("StatusText");
 
-                    // Enable the buttons
-                    IsExitEnabled = true;
-                    IsTryEnabled = true;
-                    IsStartOverEnabled = true;
-                    OnPropertyChanged("IsExitEnabled");
-                    OnPropertyChanged("IsTryEnabled");
-                    OnPropertyChanged("IsStartOverEnabled");
-
                     return new List<QBDInventorySite>();
                 }
                 else
@@ -312,14 +287,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 {
                     StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
                     OnPropertyChanged("StatusText");
-
-                    // Enable the buttons
-                    IsExitEnabled = true;
-                    IsTryEnabled = true;
-                    IsStartOverEnabled = true;
-                    OnPropertyChanged("IsExitEnabled");
-                    OnPropertyChanged("IsTryEnabled");
-                    OnPropertyChanged("IsStartOverEnabled");
 
                     return new List<QBDUnitOfMeasureSet>();
                 }

@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64\signtool.exe" sign /n "East Coast Technology Services, LLC" /sm /tr http://timestamp.digicert.com /td sha256 /fd sha256 /d "BRIZBEE Integration Utility" "$(TargetPath)"

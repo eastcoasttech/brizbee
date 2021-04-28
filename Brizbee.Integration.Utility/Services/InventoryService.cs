@@ -180,6 +180,20 @@ namespace Brizbee.Integration.Utility.Services
                                     inventoryItem.PurchaseDescription = xmlNode.InnerText;
                                 }
                                 break;
+                            case "UnitOfMeasureSetRef":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "FullName")
+                                    {
+                                        inventoryItem.QBDUnitOfMeasureSetFullName = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "ListID")
+                                    {
+                                        inventoryItem.QBDUnitOfMeasureSetListId = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
                         }
                     }
 
