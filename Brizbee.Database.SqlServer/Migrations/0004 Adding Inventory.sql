@@ -73,13 +73,12 @@ GO
 
 -- QBDUnitOfMeasureSets Table
 CREATE TABLE [dbo].[QBDUnitOfMeasureSets] (
-    [Id] BIGINT IDENTITY (1, 1) NOT NULL,
-    [Name] VARCHAR(31) NOT NULL,
-    [ListId] VARCHAR(20) NOT NULL,
-    [UnitOfMeasureType] VARCHAR(255) NOT NULL,
-    [IsActive] BIT NOT NULL,
-    [BaseUnitName] VARCHAR(31) NOT NULL,
-    [BaseUnitAbbreviation] VARCHAR(31) NOT NULL,
+    [Id]                            BIGINT IDENTITY (1, 1) NOT NULL,
+    [Name]                          VARCHAR(31) NOT NULL,
+    [ListId]                        VARCHAR(20) NOT NULL,
+    [UnitOfMeasureType]             VARCHAR(255) NOT NULL,
+    [IsActive]                      BIT NOT NULL,
+    [UnitNamesAndAbbreviations]     NVARCHAR(MAX) CONSTRAINT [CT_UnitNamesAndAbbreviations] CHECK (ISJSON([UnitNamesAndAbbreviations])=1) NOT NULL,
     CONSTRAINT [PK_dbo.QBDUnitOfMeasureSets] PRIMARY KEY CLUSTERED ([Id])
 );
 GO

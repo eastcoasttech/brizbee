@@ -254,8 +254,7 @@ namespace Brizbee.Web.Controllers
                 {
                     // Update any changes
                     found.Name = unit.Name;
-                    found.BaseUnitName = unit.BaseUnitName;
-                    found.BaseUnitAbbreviation = unit.BaseUnitAbbreviation;
+                    found.UnitNamesAndAbbreviations = unit.UnitNamesAndAbbreviations;
                     found.IsActive = unit.IsActive;
                     found.UnitOfMeasureType = unit.UnitOfMeasureType;
                 }

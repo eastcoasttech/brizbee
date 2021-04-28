@@ -38,16 +38,9 @@ namespace Brizbee.Common.Models
         public bool IsActive { get; set; }
 
         /// <summary>
-        /// Name of the object's base unit in QuickBooks.
+        /// JSON representation of the available unit names and abbreviations.
         /// </summary>
-        [MaxLength(31)]
-        public string BaseUnitName { get; set; }
-
-        /// <summary>
-        /// Abbreviation for the object's base unit in QuickBooks.
-        /// </summary>
-        [MaxLength(31)]
-        public string BaseUnitAbbreviation { get; set; }
+        public string UnitNamesAndAbbreviations { get; set; }
 
         /// <summary>
         /// Id of the sync which records the sync with QuickBooks Desktop.

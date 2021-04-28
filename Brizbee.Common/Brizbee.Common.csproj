@@ -88,6 +88,8 @@
     <Compile Include="Serialization\IanaTimeZone.cs" />
     <Compile Include="Serialization\QBDInventorySyncDetails.cs" />
     <Compile Include="Serialization\QuickBooksHostDetails.cs" />
+    <Compile Include="Serialization\QuickBooksUnitOfMeasure.cs" />
+    <Compile Include="Serialization\QuickBooksUnitOfMeasures.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

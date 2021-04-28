@@ -1,4 +1,6 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Common.Serialization;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -284,25 +286,51 @@ namespace Brizbee.Integration.Utility.Services
                             case "IsActive":
                                 unit.IsActive = bool.Parse(xmlNode.InnerText);
                                 break;
-                            case "BaseUnitName":
+                            case "BaseUnit":
+
+                                // Adding details for the base unit.
+                                var baseUnit = new QuickBooksUnitOfMeasure();
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
                                     XmlNode xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "Name")
                                     {
-                                        unit.BaseUnitName = xmlNode.ChildNodes[0].InnerText;
+                                        baseUnit.Name = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Abbreviation")
+                                    {
+                                        baseUnit.Abbreviation = xmlInnerNode.InnerText;
                                     }
                                 }
+
+                                // Deserialize the existing units, add details, and re-serialize.
+                                var deserializedForBaseUnit = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(unit.UnitNamesAndAbbreviations);
+                                deserializedForBaseUnit.BaseUnit = baseUnit;
+                                unit.UnitNamesAndAbbreviations = JsonConvert.SerializeObject(deserializedForBaseUnit);
+
                                 break;
-                            case "BaseUnitAbbreviation":
+                            case "RelatedUnit":
+
+                                // Adding details for a related unit.
+                                var relatedUnit = new QuickBooksUnitOfMeasure();
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
                                     XmlNode xmlInnerNode = innerNode as XmlNode;
-                                    if (xmlInnerNode.Name == "Abbreviation")
+                                    if (xmlInnerNode.Name == "Name")
                                     {
-                                        unit.BaseUnitAbbreviation = xmlNode.ChildNodes[1].InnerText;
+                                        relatedUnit.Name = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Abbreviation")
+                                    {
+                                        relatedUnit.Abbreviation = xmlInnerNode.InnerText;
                                     }
                                 }
+
+                                // Deserialize the existing units, add details, and re-serialize.
+                                var deserializedForRelatedUnit = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(unit.UnitNamesAndAbbreviations);
+                                deserializedForRelatedUnit.RelatedUnits.Add(relatedUnit);
+                                unit.UnitNamesAndAbbreviations = JsonConvert.SerializeObject(deserializedForRelatedUnit);
+
                                 break;
                         }
                     }
