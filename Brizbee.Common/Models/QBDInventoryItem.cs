@@ -48,10 +48,20 @@ namespace Brizbee.Common.Models
         public string PurchaseDescription { get; set; }
 
         /// <summary>
+        /// Cost of the item to purchase.
+        /// </summary>
+        public decimal PurchaseCost { get; set; }
+
+        /// <summary>
         /// Sales description.
         /// </summary>
         [MaxLength(256)]
         public string SalesDescription { get; set; }
+
+        /// <summary>
+        /// Price at which to sell the item.
+        /// </summary>
+        public decimal SalesPrice { get; set; }
 
         /// <summary>
         /// Name of the optional unit of measure set within QuickBooks.

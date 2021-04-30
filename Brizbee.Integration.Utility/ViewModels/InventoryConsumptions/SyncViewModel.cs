@@ -28,6 +28,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
+        private string selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
+        private string selectedValue = Application.Current.Properties["SelectedValue"] as string;
         #endregion
 
         public void Sync()
@@ -64,13 +66,18 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
+            // QBXML request processor must always be closed after use.
+            var req = new RequestProcessor2();
+
             try
             {
-                var req = new RequestProcessor2();
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
 
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
+
+                StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
                 OnPropertyChanged("StatusText");
 
                 var inventoryService = new InventoryService();
@@ -94,13 +101,32 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     }
                     else
                     {
-                        // Build the request to store consumptions as sales receipts
-                        inventoryService.BuildSalesReceiptAddRq(doc, inner, consumptions);
+                        // Build the request to store consumptions.
+                        if (selectedMethod == "Sales Receipt")
+                        {
+                            inventoryService.BuildSalesReceiptAddRq(doc, inner, consumptions, selectedValue.ToUpperInvariant());
+                        }
+                        else if (selectedMethod == "Inventory Adjustment")
+                        {
+                            inventoryService.BuildInventoryAdjustmentAddRq(doc, inner, consumptions, selectedValue.ToUpperInvariant());
+                        }
 
+                        Trace.TraceInformation(doc.OuterXml);
+
+                        // Make the request.
                         var response = req.ProcessRequest(ticket, doc.OuterXml);
 
+                        Trace.TraceInformation(response);
+
                         // Then walk the response
-                        var walkReponse = inventoryService.WalkSalesReceiptAddRs(response);
+                        if (selectedMethod == "Sales Receipt")
+                        {
+                            var walkReponse = inventoryService.WalkSalesReceiptAddRs(response);
+                        }
+                        else if (selectedMethod == "Inventory Adjustment")
+                        {
+                            var walkReponse = inventoryService.WalkInventoryAdjustmentAddRs(response);
+                        }
 
                         if (SaveErrorCount > 0)
                         {
@@ -141,56 +167,32 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 req.EndSession(ticket);
                 req.CloseConnection();
                 req = null;
-
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
             }
             catch (COMException cex)
             {
+                Trace.TraceError(cex.ToString());
+
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
                     StatusText += string.Format("{0} - Sync failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
-
-                    // Enable the buttons
-                    IsExitEnabled = true;
-                    IsTryEnabled = true;
-                    IsStartOverEnabled = true;
-                    OnPropertyChanged("IsExitEnabled");
-                    OnPropertyChanged("IsTryEnabled");
-                    OnPropertyChanged("IsStartOverEnabled");
-
-                    // Bubbles exception up to user interface
-                    throw new Exception("You must open QuickBooks Desktop before you can sync.");
                 }
                 else
                 {
                     StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), cex.Message);
                     OnPropertyChanged("StatusText");
-
-                    // Enable the buttons
-                    IsExitEnabled = true;
-                    IsTryEnabled = true;
-                    IsStartOverEnabled = true;
-                    OnPropertyChanged("IsExitEnabled");
-                    OnPropertyChanged("IsTryEnabled");
-                    OnPropertyChanged("IsStartOverEnabled");
-
-                    // Bubbles exception up to user interface
-                    //throw;
                 }
             }
             catch (Exception ex)
             {
+                Trace.TraceError(ex.ToString());
+
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
-
-                // Enable the buttons
+            }
+            finally
+            {
+                // Enable the buttons.
                 IsExitEnabled = true;
                 IsTryEnabled = true;
                 IsStartOverEnabled = true;
@@ -198,8 +200,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 OnPropertyChanged("IsTryEnabled");
                 OnPropertyChanged("IsStartOverEnabled");
 
-                // Bubbles exception up to user interface
-                //throw;
+                // Try to close the QuickBooks connection if it is still open.
+                if (req != null)
+                {
+                    req.CloseConnection();
+                    req = null;
+                }
             }
         }
 

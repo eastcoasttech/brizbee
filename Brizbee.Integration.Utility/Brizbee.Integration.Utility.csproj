@@ -130,10 +130,14 @@
     <Compile Include="Messages\SignedInMessage.cs" />
     <Compile Include="ODataResponse.cs" />
     <Compile Include="Services\InventoryService.cs" />
+    <Compile Include="ViewModels\InventoryConsumptions\OptionsViewModel.cs" />
     <Compile Include="ViewModels\InventoryConsumptions\SyncViewModel.cs" />
     <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
     <Compile Include="Views\InventoryConsumptions\ConfirmPage.xaml.cs">
       <DependentUpon>ConfirmPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\InventoryConsumptions\OptionsPage.xaml.cs">
+      <DependentUpon>OptionsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\InventoryConsumptions\SyncPage.xaml.cs">
       <DependentUpon>SyncPage.xaml</DependentUpon>
@@ -192,6 +196,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\InventoryConsumptions\ConfirmPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InventoryConsumptions\OptionsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -22,7 +22,7 @@ namespace Brizbee.Integration.Utility.Views
 
         private void SyncAdjustmentsButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/InventoryConsumptions/ConfirmPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/InventoryConsumptions/OptionsPage.xaml", UriKind.Relative));
         }
 
         private void SyncPunchesButton_Click(object sender, RoutedEventArgs e)

@@ -12,105 +12,29 @@ namespace Brizbee.Integration.Utility.Services
     {
         public void BuildInventoryItemQueryRq(XmlDocument doc, XmlElement parent)
         {
-            // Create ItemInventoryQueryRq.
             XmlElement request = doc.CreateElement("ItemInventoryQueryRq");
             parent.AppendChild(request);
 
-            // Return 500 items at a time.
+            // ------------------------------------------------------------
+            // ItemInventoryQueryRq > MaxReturned
+            // ------------------------------------------------------------
+
             request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
 
-            // Only include certain fields.
+            // ------------------------------------------------------------
+            // ItemInventoryQueryRq > IncludeRetElement
+            // ------------------------------------------------------------
+
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "FullName"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "BarCodeValue"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ManufacturerPartNumber"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "SalesDesc"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "SalesPrice"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "PurchaseDesc"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "PurchaseCost"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "UnitOfMeasureSetRef"));
-        }
-
-        public void BuildSalesReceiptAddRq(XmlDocument doc, XmlElement parent, List<QBDInventoryConsumption> consumptions)
-        {
-            // Create SalesReceiptAddRq.
-            XmlElement request = doc.CreateElement("SalesReceiptAddRq");
-            parent.AppendChild(request);
-
-            foreach (var consumption in consumptions)
-            {
-                // Create SalesReceiptAdd.
-                XmlElement salesReceipt = doc.CreateElement("SalesReceiptAdd");
-                request.AppendChild(salesReceipt);
-
-                // Specify details.
-                salesReceipt.AppendChild(MakeSimpleElement(doc, "TxnDate", consumption.CreatedAt.ToString("yyyy-MM-dd")));
-
-                // Create SalesReceiptLineAdd.
-                XmlElement line = doc.CreateElement("SalesReceiptLineAdd");
-                salesReceipt.AppendChild(line);
-
-                // Inventory Item reference is the ListID.
-                XmlElement itemRef = doc.CreateElement("ItemRef");
-                line.AppendChild(itemRef);
-
-                itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
-
-                // Specify details (Desc is filled in by the Inventory Item automatically).
-                line.AppendChild(MakeSimpleElement(doc, "Quantity", consumption.Quantity.ToString()));
-                //line.AppendChild(MakeSimpleElement(doc, "Rate", "1.52"));
-
-                // Unit of Measure is optional because it is not supported in all editions of QuickBooks.
-                if (!string.IsNullOrEmpty(consumption.UnitOfMeasure))
-                    line.AppendChild(MakeSimpleElement(doc, "UnitOfMeasure", consumption.UnitOfMeasure));
-
-                // Inventory Site is optional because it is not supported in all editions of QuickBooks.
-                if (consumption.QBDInventorySiteId.HasValue)
-                {
-                    // Inventory Site reference is the ListID.
-                    XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
-                    line.AppendChild(inventorySiteRef);
-
-                    inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
-
-                    // Inventory Site Location reference is the ListID.
-                    //XmlElement inventorySiteLocationRef = doc.CreateElement("InventorySiteLocationRef");
-                    //line.AppendChild(inventorySiteLocationRef);
-
-                    //inventorySiteLocationRef.AppendChild(MakeSimpleElement(doc, "ListID", ""));
-                }
-            }
-        }
-
-        public void BuildUnitOfMeasureSetQueryRq(XmlDocument doc, XmlElement parent)
-        {
-            // Create UnitOfMeasureSetQueryRq.
-            XmlElement request = doc.CreateElement("UnitOfMeasureSetQueryRq");
-            parent.AppendChild(request);
-
-            // Return 500 items at a time.
-            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
-
-            // Only include certain fields.
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "BaseUnit"));
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "UnitOfMeasureType"));
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
-        }
-
-        public void BuildInventorySiteQueryRq(XmlDocument doc, XmlElement parent)
-        {
-            // Create UnitOfMeasureSetQueryRq.
-            XmlElement request = doc.CreateElement("InventorySiteQueryRq");
-            parent.AppendChild(request);
-
-            // Return 500 items at a time.
-            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
-
-            // Only include certain fields.
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
-            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
         }
 
         public (bool, string, List<QBDInventoryItem>) WalkInventoryItemQueryRs(string response)
@@ -172,6 +96,9 @@ namespace Brizbee.Integration.Utility.Services
                                     inventoryItem.SalesDescription = xmlNode.InnerText;
                                 }
                                 break;
+                            case "SalesPrice":
+                                inventoryItem.SalesPrice = decimal.Parse(xmlNode.InnerText);
+                                break;
                             case "PurchaseDesc":
                                 if (xmlNode.InnerText.Length > 255)
                                 {
@@ -181,6 +108,9 @@ namespace Brizbee.Integration.Utility.Services
                                 {
                                     inventoryItem.PurchaseDescription = xmlNode.InnerText;
                                 }
+                                break;
+                            case "PurchaseCost":
+                                inventoryItem.PurchaseCost = decimal.Parse(xmlNode.InnerText);
                                 break;
                             case "UnitOfMeasureSetRef":
                                 foreach (var innerNode in xmlNode.ChildNodes)
@@ -207,6 +137,115 @@ namespace Brizbee.Integration.Utility.Services
             else
             {
                 return (false, statusMessage, null);
+            }
+        }
+
+        public void BuildSalesReceiptAddRq(XmlDocument doc, XmlElement parent, List<QBDInventoryConsumption> consumptions, string valueMethod)
+        {
+            XmlElement request = doc.CreateElement("SalesReceiptAddRq");
+            parent.AppendChild(request);
+
+            foreach (var consumption in consumptions)
+            {
+                // ------------------------------------------------------------
+                // SalesReceiptAddRq > SalesReceiptAdd
+                // ------------------------------------------------------------
+
+                XmlElement salesReceipt = doc.CreateElement("SalesReceiptAdd");
+                request.AppendChild(salesReceipt);
+
+                // ------------------------------------------------------------
+                // SalesReceiptAdd > CustomerRef
+                // ------------------------------------------------------------
+
+                if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksCustomerJob))
+                {
+                    XmlElement customerRef = doc.CreateElement("CustomerRef");
+                    salesReceipt.AppendChild(customerRef);
+
+                    customerRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksCustomerJob));
+                }
+
+                // ------------------------------------------------------------
+                // SalesReceiptAdd > ClassRef
+                // ------------------------------------------------------------
+
+                if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
+                {
+                    XmlElement classRef = doc.CreateElement("ClassRef");
+                    salesReceipt.AppendChild(classRef);
+
+                    classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
+                }
+
+                // ------------------------------------------------------------
+                // SalesReceiptAdd > TxnDate
+                // ------------------------------------------------------------
+
+                salesReceipt.AppendChild(MakeSimpleElement(doc, "TxnDate", consumption.CreatedAt.ToString("yyyy-MM-dd")));
+
+                // ------------------------------------------------------------
+                // SalesReceiptAdd > SalesReceiptLineAdd
+                // ------------------------------------------------------------
+
+                XmlElement line = doc.CreateElement("SalesReceiptLineAdd");
+                salesReceipt.AppendChild(line);
+
+                // ------------------------------------------------------------
+                // SalesReceiptLineAdd > ItemRef
+                // ------------------------------------------------------------
+
+                XmlElement itemRef = doc.CreateElement("ItemRef");
+                line.AppendChild(itemRef);
+
+                itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
+
+                // ------------------------------------------------------------
+                // SalesReceiptLineAdd > Quantity
+                // ------------------------------------------------------------
+
+                line.AppendChild(MakeSimpleElement(doc, "Quantity", consumption.Quantity.ToString()));
+
+                // ------------------------------------------------------------
+                // SalesReceiptLineAdd > Rate
+                // ------------------------------------------------------------
+
+                // Amount is determined by the value method.
+                var amount = new decimal(0.00);
+                if (valueMethod.ToUpperInvariant() == "PURCHASE COST")
+                {
+                    amount = consumption.QBDInventoryItem.PurchaseCost;
+                }
+                else if (valueMethod.ToUpperInvariant() == "SALES PRICE")
+                {
+                    amount = consumption.QBDInventoryItem.SalesPrice;
+                }
+                line.AppendChild(MakeSimpleElement(doc, "Rate", amount.ToString()));
+
+                // ------------------------------------------------------------
+                // SalesReceiptLineAdd > UnitOfMeasure
+                // ------------------------------------------------------------
+
+                if (!string.IsNullOrEmpty(consumption.UnitOfMeasure)) // Optional, not always available
+                    line.AppendChild(MakeSimpleElement(doc, "UnitOfMeasure", consumption.UnitOfMeasure));
+
+                // ------------------------------------------------------------
+                // SalesReceiptLineAdd > InventorySiteRef
+                // ------------------------------------------------------------
+
+                if (consumption.QBDInventorySiteId.HasValue) // Optional, not always available
+                {
+                    XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                    line.AppendChild(inventorySiteRef);
+
+                    inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
+
+                    // Inventory Site Location reference is the ListID.
+                    //XmlElement inventorySiteLocationRef = doc.CreateElement("InventorySiteLocationRef");
+                    //line.AppendChild(inventorySiteLocationRef);
+
+                    //inventorySiteLocationRef.AppendChild(MakeSimpleElement(doc, "ListID", ""));
+                }
             }
         }
 
@@ -238,6 +277,157 @@ namespace Brizbee.Integration.Utility.Services
             {
                 return (false, statusMessage, null);
             }
+        }
+
+        public void BuildInventoryAdjustmentAddRq(XmlDocument doc, XmlElement parent, List<QBDInventoryConsumption> consumptions, string valueMethod)
+        {
+            XmlElement request = doc.CreateElement("InventoryAdjustmentAddRq");
+            parent.AppendChild(request);
+
+            foreach (var consumption in consumptions)
+            {
+                // ------------------------------------------------------------
+                // InventoryAdjustmentAddRq > InventoryAdjustmentAdd
+                // ------------------------------------------------------------
+
+                XmlElement adjustment = doc.CreateElement("InventoryAdjustmentAdd");
+                request.AppendChild(adjustment);
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentAdd > AccountRef
+                // ------------------------------------------------------------
+
+                XmlElement accountRef = doc.CreateElement("AccountRef");
+                adjustment.AppendChild(accountRef);
+
+                accountRef.AppendChild(MakeSimpleElement(doc, "FullName", "Consumption"));
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentAdd > TxnDate
+                // ------------------------------------------------------------
+
+                adjustment.AppendChild(MakeSimpleElement(doc, "TxnDate", consumption.CreatedAt.ToString("yyyy-MM-dd")));
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentAdd > CustomerRef
+                // ------------------------------------------------------------
+
+                if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksCustomerJob))
+                {
+                    XmlElement customerRef = doc.CreateElement("CustomerRef");
+                    adjustment.AppendChild(customerRef);
+
+                    customerRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksCustomerJob));
+                }
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentAdd > ClassRef
+                // ------------------------------------------------------------
+
+                if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
+                {
+                    XmlElement classRef = doc.CreateElement("ClassRef");
+                    adjustment.AppendChild(classRef);
+
+                    classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
+                }
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentAdd > InventoryAdjustmentLineAdd
+                // ------------------------------------------------------------
+
+                XmlElement line = doc.CreateElement("InventoryAdjustmentLineAdd");
+                adjustment.AppendChild(line);
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentLineAdd > ItemRef
+                // ------------------------------------------------------------
+
+                XmlElement itemRef = doc.CreateElement("ItemRef");
+                line.AppendChild(itemRef);
+
+                itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentLineAdd > QuantityAdjustment
+                // ------------------------------------------------------------
+
+                XmlElement quantity = doc.CreateElement("QuantityAdjustment");
+                line.AppendChild(quantity);
+
+                quantity.AppendChild(MakeSimpleElement(doc, "QuantityDifference", (-consumption.Quantity).ToString()));
+
+                // Amount is determined by the value method.
+                //var amount = new decimal(0.00);
+                //if (valueMethod.ToUpperInvariant() == "PURCHASE COST")
+                //{
+                //    amount = -consumption.QBDInventoryItem.PurchaseCost;
+                //}
+                //else if (valueMethod.ToUpperInvariant() == "SALES PRICE")
+                //{
+                //    amount = - consumption.QBDInventoryItem.SalesPrice;
+                //}
+                //quantity.AppendChild(MakeSimpleElement(doc, "ValueDifference", amount.ToString()));
+
+                // ------------------------------------------------------------
+                // InventoryAdjustmentLineAdd > InventorySiteRef
+                // ------------------------------------------------------------
+
+                if (consumption.QBDInventorySiteId.HasValue)
+                {
+                    XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                    line.AppendChild(inventorySiteRef);
+
+                    inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
+                }
+            }
+        }
+
+        public (bool, string, object) WalkInventoryAdjustmentAddRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("InventoryAdjustmentAddRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                return (true, "", null);
+            }
+            else
+            {
+                return (false, statusMessage, null);
+            }
+        }
+
+        public void BuildUnitOfMeasureSetQueryRq(XmlDocument doc, XmlElement parent)
+        {
+            // Create UnitOfMeasureSetQueryRq.
+            XmlElement request = doc.CreateElement("UnitOfMeasureSetQueryRq");
+            parent.AppendChild(request);
+
+            // Return 500 items at a time.
+            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
+
+            // Only include certain fields.
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "BaseUnit"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "UnitOfMeasureType"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
         }
 
         public (bool, string, List<QBDUnitOfMeasureSet>) WalkUnitOfMeasureSetQueryRs(string response)
@@ -349,6 +539,21 @@ namespace Brizbee.Integration.Utility.Services
             {
                 return (false, statusMessage, null);
             }
+        }
+
+        public void BuildInventorySiteQueryRq(XmlDocument doc, XmlElement parent)
+        {
+            // Create UnitOfMeasureSetQueryRq.
+            XmlElement request = doc.CreateElement("InventorySiteQueryRq");
+            parent.AppendChild(request);
+
+            // Return 500 items at a time.
+            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
+
+            // Only include certain fields.
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
         }
 
         public (bool, string, List<QBDInventorySite>) WalkInventorySiteQueryRs(string response)

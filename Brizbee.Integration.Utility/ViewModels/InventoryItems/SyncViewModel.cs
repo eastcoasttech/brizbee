@@ -84,6 +84,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                     UnitOfMeasureSets = units ?? new List<QBDUnitOfMeasureSet>()
                 };
 
+                foreach (var item in payload.InventoryItems)
+                {
+                    Trace.TraceInformation(item.SalesPrice.ToString());
+                    Trace.TraceInformation(item.PurchaseCost.ToString());
+                }
+
                 // Build the request to send the sync details.
                 var httpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
                 httpRequest.AddJsonBody(payload);

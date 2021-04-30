@@ -285,9 +285,11 @@ namespace Brizbee.Web.Controllers
                     found.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
                     found.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
                     found.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
+                    found.PurchaseCost = item.PurchaseCost;
                     found.Name = item.Name;
                     found.FullName = item.FullName;
                     found.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
+                    found.SalesPrice = item.SalesPrice;
 
                     // Associate the Unit of Measure Set.
                     found.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;

@@ -304,6 +304,8 @@ namespace Brizbee.Web.Controllers
 
             var consumptions = _context.QBDInventoryConsumptions
                 .Include("QBDInventoryItem")
+                .Include("Task")
+                .Include("Task.Job")
                 //.Include("QBDInventorySite")
                 //.DefaultIfEmpty()
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
