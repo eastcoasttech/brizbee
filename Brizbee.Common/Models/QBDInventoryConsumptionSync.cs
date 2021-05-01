@@ -42,5 +42,53 @@ namespace Brizbee.Common.Models
         /// </summary>
         [ForeignKey("OrganizationId")]
         public virtual Organization Organization { get; set; }
+
+        /// <summary>
+        /// Method used to record the consumption: Inventory Adjustment or Sales Receipt
+        /// </summary>
+        [Required]
+        [StringLength(25)]
+        public string RecordingMethod { get; set; }
+
+        /// <summary>
+        /// Method used to value the inventory: Purchase Cost, Sales Price, or Zero
+        /// </summary>
+        [StringLength(25)]
+        public string ValueMethod { get; set; }
+
+        /// <summary>
+        /// Product name collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(50)]
+        public string HostProductName { get; set; }
+
+        /// <summary>
+        /// Major version collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(10)]
+        public string HostMajorVersion { get; set; }
+
+        /// <summary>
+        /// Minor version collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(10)]
+        public string HostMinorVersion { get; set; }
+
+        /// <summary>
+        /// Country collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(10)]
+        public string HostCountry { get; set; }
+
+        /// <summary>
+        /// Supported QBXML version collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(100)]
+        public string HostSupportedQBXMLVersion { get; set; }
     }
 }

@@ -347,7 +347,15 @@ namespace Brizbee.Web.Controllers
         // POST: api/QBDInventoryConsumptions/Sync
         [HttpPost]
         [Route("api/QBDInventoryConsumptions/Sync")]
-        public IHttpActionResult PostSync([FromBody] long[] ids)
+        public IHttpActionResult PostSync(
+            [FromBody] long[] ids,
+            [FromUri] string productName,
+            [FromUri] string majorVersion,
+            [FromUri] string minorVersion,
+            [FromUri] string country,
+            [FromUri] string supportedQBXMLVersion,
+            [FromUri] string recordingMethod,
+            [FromUri] string valueMethod)
         {
             var currentUser = CurrentUser();
 
@@ -361,7 +369,14 @@ namespace Brizbee.Web.Controllers
             {
                 CreatedAt = DateTime.UtcNow,
                 CreatedByUserId = currentUser.Id,
-                OrganizationId = currentUser.OrganizationId
+                OrganizationId = currentUser.OrganizationId,
+                RecordingMethod = recordingMethod,
+                ValueMethod = valueMethod,
+                HostProductName = productName,
+                HostMajorVersion = majorVersion,
+                HostMinorVersion = minorVersion,
+                HostCountry = country,
+                HostSupportedQBXMLVersion = supportedQBXMLVersion
             };
             _context.QBDInventoryConsumptionSyncs.Add(sync);
 

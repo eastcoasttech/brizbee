@@ -49,19 +49,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
-            // Requests to the QuickBooks API are made in QBXML format
-            var doc = new XmlDocument();
-
-            // Add the prolog processing instructions
-            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
-            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
-
-            XmlElement outer = doc.CreateElement("QBXML");
-            doc.AppendChild(outer);
-
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
-            outer.AppendChild(inner);
-            inner.SetAttribute("onError", "stopOnError");
+            var inventoryService = new InventoryService();
 
             StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
@@ -77,6 +65,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
+                // Determine the method of recording consumption.
                 if (selectedMethod == "Inventory Adjustment")
                 {
                     StatusText += string.Format("{0} - Using {1} method.\r\n", DateTime.Now.ToString(), selectedMethod);
@@ -88,7 +77,26 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     OnPropertyChanged("StatusText");
                 }
 
-                var inventoryService = new InventoryService();
+                // ------------------------------------------------------------
+                // Collect the QuickBooks host details.
+                // ------------------------------------------------------------
+
+                // Prepare a new QBXML document.
+                var hostQBXML = inventoryService.GetQBXMLDocument();
+                var hostDocument = hostQBXML.Item1;
+                var hostElement = hostQBXML.Item2;
+                inventoryService.BuildHostQueryRq(hostDocument, hostElement);
+
+                // Make the request.
+                var hostResponse = req.ProcessRequest(ticket, hostDocument.OuterXml);
+
+                // Then walk the response
+                var hostWalkResponse = inventoryService.WalkHostQueryRsAndParseHostDetails(hostResponse);
+                var hostDetails = hostWalkResponse.Item3;
+
+                // ------------------------------------------------------------
+                // Collect any unsynced consumption.
+                // ------------------------------------------------------------
 
                 // Build the request to get unsynced consumption
                 var unsyncedHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.GET);
@@ -109,31 +117,36 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     }
                     else
                     {
+                        // ------------------------------------------------------------
+                        // Record the unsynced consumption.
+                        // ------------------------------------------------------------
+
+                        // Prepare a new QBXML document.
+                        var consQBXML = inventoryService.GetQBXMLDocument();
+                        var consDocument = consQBXML.Item1;
+                        var consElement = consQBXML.Item2;
+
                         // Build the request to store consumptions.
                         if (selectedMethod == "Sales Receipt")
                         {
-                            inventoryService.BuildSalesReceiptAddRq(doc, inner, consumptions, selectedValue.ToUpperInvariant());
+                            inventoryService.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
                         }
                         else if (selectedMethod == "Inventory Adjustment")
                         {
-                            inventoryService.BuildInventoryAdjustmentAddRq(doc, inner, consumptions, selectedValue.ToUpperInvariant());
+                            inventoryService.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
                         }
 
-                        Trace.TraceInformation(doc.OuterXml);
-
                         // Make the request.
-                        var response = req.ProcessRequest(ticket, doc.OuterXml);
-
-                        Trace.TraceInformation(response);
+                        var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
 
                         // Then walk the response
                         if (selectedMethod == "Sales Receipt")
                         {
-                            var walkReponse = inventoryService.WalkSalesReceiptAddRs(response);
+                            var walkReponse = inventoryService.WalkSalesReceiptAddRs(consResponse);
                         }
                         else if (selectedMethod == "Inventory Adjustment")
                         {
-                            var walkReponse = inventoryService.WalkInventoryAdjustmentAddRs(response);
+                            var walkReponse = inventoryService.WalkInventoryAdjustmentAddRs(consResponse);
                         }
 
                         if (SaveErrorCount > 0)
@@ -146,6 +159,13 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                             // Build the request to send the sync details
                             var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.POST);
                             syncHttpRequest.AddJsonBody(consumptions.Select(c => c.Id).ToArray());
+                            syncHttpRequest.AddQueryParameter("recordingMethod", selectedMethod);
+                            syncHttpRequest.AddQueryParameter("valueMethod", selectedValue);
+                            syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
+                            syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);
+                            syncHttpRequest.AddQueryParameter("minorVersion", hostDetails.QBMinorVersion);
+                            syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
+                            syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
 
                             // Execute request
                             var syncHttpResponse = client.Execute(syncHttpRequest);

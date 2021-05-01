@@ -117,7 +117,7 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-2">
+                <th class="col-md-3">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/Name"))">
                         Name
                         @if (sortBy == "QBDInventoryItems/Name" && sortDirection == "ASC")
@@ -143,7 +143,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-2">
+                <th class="col-md-1">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/BarCodeValue"))">
                         Bar Code
                         @if (sortBy == "QBDInventoryItems/BarCodeValue" && sortDirection == "ASC")
@@ -156,7 +156,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/PurchaseDescription"))">
                         Purchase Description
                         @if (sortBy == "QBDInventoryItems/PurchaseDescription" && sortDirection == "ASC")
@@ -169,7 +169,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/SalesDescription"))">
                         Sales Description
                         @if (sortBy == "QBDInventoryItems/SalesDescription" && sortDirection == "ASC")
@@ -182,6 +182,12 @@
                         }
                     </a>
                 </th>
+                <th class="col-md-1">
+                    Purchase Cost
+                </th>
+                <th class="col-md-1">
+                    Sales Price
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -193,18 +199,20 @@
                     <td><a href="javascript:void(0)">@item.BarCodeValue</a></td>
                     <td><a href="javascript:void(0)">@formatDescription(item.PurchaseDescription)</a></td>
                     <td><a href="javascript:void(0)">@formatDescription(item.SalesDescription)</a></td>
+                    <td><a href="javascript:void(0)">@item.PurchaseCost.ToString("C")</a></td>
+                    <td><a href="javascript:void(0)">@item.SalesPrice.ToString("C")</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && items.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="5">You haven't added any inventory items</td>
+                    <td colspan="7">You haven't added any inventory items</td>
                 </tr>
             }
         </tbody>

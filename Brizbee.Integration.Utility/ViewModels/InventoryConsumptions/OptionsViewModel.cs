@@ -40,6 +40,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             else if (SelectedMethod == "Inventory Adjustment")
                 IsEnabled = false;
 
+            SelectedValue = "Purchase Cost";
+            OnPropertyChanged("SelectedValue");
             OnPropertyChanged("IsEnabled");
         }
 

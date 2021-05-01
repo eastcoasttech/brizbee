@@ -144,6 +144,32 @@
                     </a>
                 </th>
                 <th style="width: 5%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptions/Quantity"))">
+                        Quantity
+                        @if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 11%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
+                        User
+                        @if (sortBy == "Users/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Users/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 5%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Customers/Number"))">
                         Customer #
                         @if (sortBy == "Customers/Number" && sortDirection == "ASC")
@@ -221,31 +247,8 @@
                         }
                     </a>
                 </th>
-                <th style="width: 11%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
-                        User
-                        @if (sortBy == "Users/Name" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "Users/Name" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th style="width: 5%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptions/Quantity"))">
-                        Quantity
-                        @if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "QBDInventoryConsumptions/Quantity" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
+                <th>
+                    Synced?
                 </th>
             </tr>
         </thead>
@@ -255,14 +258,15 @@
                 <tr class="fadeIn selectable">
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(consumption.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@consumption.QBDInventoryItem.Name</a></td>
+                    <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
+                    <td><a href="javascript:void(0)">@consumption.CreatedByUser.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Job.Customer.Number</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Job.Customer.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Job.Number</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Job.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Number</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Name</a></td>
-                    <td><a href="javascript:void(0)">@consumption.CreatedByUser.Name</a></td>
-                    <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
+                    <td><a href="javascript:void(0)">@consumption.QBDInventoryConsumptionSyncId.HasValue</a></td>
                 </tr>
             }
             @if (working)

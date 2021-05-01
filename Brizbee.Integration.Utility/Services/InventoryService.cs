@@ -633,6 +633,95 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
+        public void BuildHostQueryRq(XmlDocument doc, XmlElement parent)
+        {
+            XmlElement HostQuery = doc.CreateElement("HostQueryRq");
+            parent.AppendChild(HostQuery);
+
+            // ------------------------------------------------------------
+            // HostQueryRq > IncludeRetElement
+            // ------------------------------------------------------------
+
+            HostQuery.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ProductName"));
+            HostQuery.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "MajorVersion"));
+            HostQuery.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "MinorVersion"));
+            HostQuery.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Country"));
+            HostQuery.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "SupportedQBXMLVersion"));
+        }
+
+        public (bool, string, QuickBooksHostDetails) WalkHostQueryRsAndParseHostDetails(string response)
+        {
+            var supportedQBXMLVersions = new List<string>();
+            var quickBooksExport = new QuickBooksHostDetails();
+
+            //Parse the response XML string into an XmlDocument
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            //Get the response for our request
+            XmlNodeList HostQueryRsList = responseXmlDoc.GetElementsByTagName("HostQueryRs");
+            foreach (var hostQueryResult in HostQueryRsList)
+            {
+                XmlNode responseNode = hostQueryResult as XmlNode;
+
+                //Check the status code, info, and severity
+                XmlAttributeCollection rsAttributes = responseNode.Attributes;
+                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+                int iStatusCode = Convert.ToInt32(statusCode);
+
+                if (iStatusCode == 0)
+                {
+                    XmlNode hostReturnResult = responseNode.FirstChild as XmlNode;
+                    foreach (var node in hostReturnResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+                        switch (xmlNode.Name)
+                        {
+                            case "ProductName":
+                                quickBooksExport.QBProductName = xmlNode.InnerText;
+                                break;
+                            case "MajorVersion":
+                                quickBooksExport.QBMajorVersion = xmlNode.InnerText;
+                                break;
+                            case "MinorVersion":
+                                quickBooksExport.QBMinorVersion = xmlNode.InnerText;
+                                break;
+                            case "Country":
+                                quickBooksExport.QBCountry = xmlNode.InnerText;
+                                break;
+                            case "SupportedQBXMLVersion":
+                                supportedQBXMLVersions.Add(xmlNode.InnerText);
+                                break;
+                        }
+                    }
+
+                    quickBooksExport.QBSupportedQBXMLVersions = string.Join(",", supportedQBXMLVersions);
+                }
+            }
+
+            return (true, "", quickBooksExport);
+        }
+
+        public (XmlDocument, XmlElement) GetQBXMLDocument()
+        {
+            var doc = new XmlDocument();
+
+            doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
+            doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
+
+            XmlElement outer = doc.CreateElement("QBXML");
+            doc.AppendChild(outer);
+
+            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            outer.AppendChild(inner);
+            inner.SetAttribute("onError", "stopOnError");
+
+            return (doc, inner);
+        }
+
         private XmlElement MakeSimpleElement(XmlDocument doc, string tagName, string tagvalue)
         {
             XmlElement element = doc.CreateElement(tagName);

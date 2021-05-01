@@ -47,10 +47,17 @@ GO
 
 -- QBDInventoryConsumptionSyncs Table
 CREATE TABLE [dbo].[QBDInventoryConsumptionSyncs] (
-    [Id] BIGINT IDENTITY (1, 1) NOT NULL,
-    [CreatedAt] DATETIME2(7) NOT NULL,
-    [CreatedByUserId] INT NOT NULL,
-    [OrganizationId] INT NOT NULL,
+    [Id]                            BIGINT IDENTITY (1, 1) NOT NULL,
+    [CreatedAt]                     DATETIME2 (7) NOT NULL,
+    [CreatedByUserId]               INT NOT NULL,
+    [OrganizationId]                INT NOT NULL,
+    [RecordingMethod]               VARCHAR (25) NOT NULL,
+    [ValueMethod]                   VARCHAR (25) NOT NULL,
+    [HostProductName]               VARCHAR (50) NOT NULL,
+    [HostMajorVersion]              VARCHAR (10) NOT NULL,
+    [HostMinorVersion]              VARCHAR (10) NOT NULL,
+    [HostCountry]                   VARCHAR (10) NOT NULL,
+    [HostSupportedQBXMLVersion]     VARCHAR (100) NOT NULL,
     CONSTRAINT [PK_dbo.QBDInventoryConsumptionSyncs] PRIMARY KEY CLUSTERED ([Id])
 );
 GO

@@ -117,7 +117,7 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-6">
+                <th class="col-md-4">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItemSyncs/CreatedAt"))">
                         Created
                         @if (sortBy == "QBDInventoryItemSyncs/CreatedAt" && sortDirection == "ASC")
@@ -130,7 +130,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-6">
+                <th class="col-md-4">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
                         User
                         @if (sortBy == "Users/Name" && sortDirection == "ASC")
@@ -143,6 +143,9 @@
                         }
                     </a>
                 </th>
+                <th class="col-md-4">
+                    Source
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -151,18 +154,19 @@
                 <tr class="fadeIn selectable">
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
+                    <td><a href="javascript:void(0)">QuickBooks Desktop</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="2"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && syncs.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="2">You have not synced any items from QuickBooks</td>
+                    <td colspan="3">You have not synced any items from QuickBooks</td>
                 </tr>
             }
         </tbody>
