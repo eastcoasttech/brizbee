@@ -77,8 +77,16 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
-                OnPropertyChanged("StatusText");
+                if (selectedMethod == "Inventory Adjustment")
+                {
+                    StatusText += string.Format("{0} - Using {1} method.\r\n", DateTime.Now.ToString(), selectedMethod);
+                    OnPropertyChanged("StatusText");
+                }
+                else if (selectedMethod == "Sales Receipt")
+                {
+                    StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
+                    OnPropertyChanged("StatusText");
+                }
 
                 var inventoryService = new InventoryService();
 

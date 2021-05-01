@@ -35,6 +35,7 @@ namespace Brizbee.Integration.Utility.Services
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "PurchaseDesc"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "PurchaseCost"));
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "UnitOfMeasureSetRef"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "COGSAccountRef"));
         }
 
         public (bool, string, List<QBDInventoryItem>) WalkInventoryItemQueryRs(string response)
@@ -123,6 +124,20 @@ namespace Brizbee.Integration.Utility.Services
                                     else if (xmlInnerNode.Name == "ListID")
                                     {
                                         inventoryItem.QBDUnitOfMeasureSetListId = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
+                            case "COGSAccountRef":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "FullName")
+                                    {
+                                        inventoryItem.QBDCOGSAccountFullName = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "ListID")
+                                    {
+                                        inventoryItem.QBDCOGSAccountListId = xmlInnerNode.InnerText;
                                     }
                                 }
                                 break;
@@ -300,7 +315,7 @@ namespace Brizbee.Integration.Utility.Services
                 XmlElement accountRef = doc.CreateElement("AccountRef");
                 adjustment.AppendChild(accountRef);
 
-                accountRef.AppendChild(MakeSimpleElement(doc, "FullName", "Consumption"));
+                accountRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.QBDInventoryItem.QBDCOGSAccountFullName));
 
                 // ------------------------------------------------------------
                 // InventoryAdjustmentAdd > TxnDate

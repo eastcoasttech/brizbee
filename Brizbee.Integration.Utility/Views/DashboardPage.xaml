@@ -34,10 +34,10 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-                <Button Content="Sync Inventory Items" Margin="0 5 0 2" Padding="10" Name="SyncItemsButton" Click="SyncItemsButton_Click" />
-                <Button Content="Sync Inventory Consumptions" Margin="0 15 0 2" Padding="10" Name="SyncAdjustmentsButton" Click="SyncAdjustmentsButton_Click" />
-                <Button Content="Sync Punches" Margin="0 15 0 2" Padding="10" Name="SyncPunchesButton" Click="SyncPunchesButton_Click" />
+                <Button Content="Sync Punches" Margin="0 0 0 2" Padding="10" Name="SyncPunchesButton" Click="SyncPunchesButton_Click" />
                 <Button Content="Sync Time Cards" Margin="0 15 0 2" Padding="10" IsEnabled="False" Name="SyncTimeCardsButton" />
+                <Button Content="Sync Inventory Items" Margin="0 15 0 2" Padding="10" Name="SyncItemsButton" Click="SyncItemsButton_Click" />
+                <Button Content="Sync Inventory Consumptions" Margin="0 15 0 0" Padding="10" Name="SyncAdjustmentsButton" Click="SyncAdjustmentsButton_Click" />
             </StackPanel>
         </Grid>
     </DockPanel>

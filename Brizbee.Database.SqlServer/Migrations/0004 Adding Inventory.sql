@@ -15,6 +15,8 @@ CREATE TABLE [dbo].[QBDInventoryItems] (
     [QBDUnitOfMeasureSetId] BIGINT NULL,
     [PurchaseCost] DECIMAL(10,2) NOT NULL,
     [SalesPrice] DECIMAL(10,2) NOT NULL,
+    [QBDCOGSAccountListId] VARCHAR(20) NULL,
+    [QBDCOGSAccountFullName] VARCHAR(31) NULL,
     CONSTRAINT [PK_dbo.QBDInventoryItems] PRIMARY KEY CLUSTERED ([Id])
 );
 GO

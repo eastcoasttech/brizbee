@@ -290,6 +290,8 @@ namespace Brizbee.Web.Controllers
                     found.FullName = item.FullName;
                     found.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
                     found.SalesPrice = item.SalesPrice;
+                    found.QBDCOGSAccountFullName = item.QBDCOGSAccountFullName;
+                    found.QBDCOGSAccountListId = item.QBDCOGSAccountListId;
 
                     // Associate the Unit of Measure Set.
                     found.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;

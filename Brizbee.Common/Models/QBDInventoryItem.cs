@@ -99,6 +99,18 @@ namespace Brizbee.Common.Models
         public virtual QBDInventoryItemSync QBDInventoryItemSync { get; set; }
 
         /// <summary>
+        /// Name of the Cost of Goods Sold account for the item within QuickBooks.
+        /// </summary>
+        [StringLength(31)]
+        public string QBDCOGSAccountFullName { get; set; }
+
+        /// <summary>
+        /// ListID of the Cost of Goods Sold account for the item within QuickBooks.
+        /// </summary>
+        [StringLength(20)]
+        public string QBDCOGSAccountListId { get; set; }
+
+        /// <summary>
         /// Id of the organization to which the item belongs.
         /// </summary>
         [Required]
