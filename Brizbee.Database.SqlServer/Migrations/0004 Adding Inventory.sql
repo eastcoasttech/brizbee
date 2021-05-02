@@ -58,6 +58,7 @@ CREATE TABLE [dbo].[QBDInventoryConsumptionSyncs] (
     [HostMinorVersion]              VARCHAR (10) NOT NULL,
     [HostCountry]                   VARCHAR (10) NOT NULL,
     [HostSupportedQBXMLVersion]     VARCHAR (100) NOT NULL,
+    [ConsumptionsCount]             INT NOT NULL,
     CONSTRAINT [PK_dbo.QBDInventoryConsumptionSyncs] PRIMARY KEY CLUSTERED ([Id])
 );
 GO

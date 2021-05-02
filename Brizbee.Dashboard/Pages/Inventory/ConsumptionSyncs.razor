@@ -117,7 +117,13 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-3">
+                <th class="col-md-1">
+                    Id
+                </th>
+                <th class="col-md-1">
+                    Consumptions
+                </th>
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptionSyncs/CreatedAt"))">
                         Created
                         @if (sortBy == "QBDInventoryConsumptionSyncs/CreatedAt" && sortDirection == "ASC")
@@ -130,7 +136,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
                         User
                         @if (sortBy == "Users/Name" && sortDirection == "ASC")
@@ -144,7 +150,7 @@
                     </a>
                 </th>
                 <th class="col-md-2">
-                    Source
+                    Product
                 </th>
                 <th class="col-md-2">
                     Recording Method
@@ -158,9 +164,11 @@
             @foreach (var sync in syncs)
             {
                 <tr class="fadeIn selectable">
+                    <td><a href="javascript:void(0)">@sync.Id</a></td>
+                    <td><a href="javascript:void(0)">@sync.ConsumptionsCount</a></td>
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
-                    <td><a href="javascript:void(0)">QuickBooks Desktop</a></td>
+                    <td><a href="javascript:void(0)">@sync.HostProductName</a></td>
                     <td><a href="javascript:void(0)">@sync.RecordingMethod</a></td>
                     <td><a href="javascript:void(0)">@sync.ValueMethod</a></td>
                 </tr>
@@ -168,13 +176,13 @@
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && syncs.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="5">You have not synced any consumption to QuickBooks</td>
+                    <td colspan="7">You have not synced any consumption to QuickBooks</td>
                 </tr>
             }
         </tbody>

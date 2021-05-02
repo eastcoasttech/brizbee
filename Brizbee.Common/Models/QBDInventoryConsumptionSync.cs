@@ -90,5 +90,11 @@ namespace Brizbee.Common.Models
         [Required]
         [StringLength(100)]
         public string HostSupportedQBXMLVersion { get; set; }
+
+        /// <summary>
+        /// Indicates the number of consumptions that were synced.
+        /// </summary>
+        [Required]
+        public int ConsumptionsCount { get; set; }
     }
 }

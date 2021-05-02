@@ -362,7 +362,8 @@ namespace Brizbee.Web.Controllers
             var consumptions = _context.QBDInventoryConsumptions
                 .Where(a => a.OrganizationId == currentUser.OrganizationId)
                 .Where(a => !a.QBDInventoryConsumptionSyncId.HasValue)
-                .Where(a => ids.Contains(a.Id));
+                .Where(a => ids.Contains(a.Id))
+                .ToList();
 
             // Record the sync.
             var sync = new QBDInventoryConsumptionSync()
@@ -376,7 +377,8 @@ namespace Brizbee.Web.Controllers
                 HostMajorVersion = majorVersion,
                 HostMinorVersion = minorVersion,
                 HostCountry = country,
-                HostSupportedQBXMLVersion = supportedQBXMLVersion
+                HostSupportedQBXMLVersion = supportedQBXMLVersion,
+                ConsumptionsCount = consumptions.Count
             };
             _context.QBDInventoryConsumptionSyncs.Add(sync);
 

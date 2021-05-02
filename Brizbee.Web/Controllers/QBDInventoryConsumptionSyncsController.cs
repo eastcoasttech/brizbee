@@ -104,6 +104,8 @@ namespace Brizbee.Web.Controllers
                         S.OrganizationId AS Sync_OrganizationId,
                         S.RecordingMethod AS Sync_RecordingMethod,
                         S.ValueMethod AS Sync_ValueMethod,
+                        S.HostProductName AS Sync_HostProductName,
+                        S.ConsumptionsCount AS Sync_ConsumptionsCount,
 
                         U.Id AS User_Id,
                         U.Name AS User_Name
@@ -130,6 +132,8 @@ namespace Brizbee.Web.Controllers
                         OrganizationId = result.Sync_OrganizationId,
                         RecordingMethod = result.Sync_RecordingMethod,
                         ValueMethod = result.Sync_ValueMethod,
+                        HostProductName = result.Sync_HostProductName,
+                        ConsumptionsCount = result.Sync_ConsumptionsCount,
                         CreatedByUser = new User()
                         {
                             Id = result.User_Id,
@@ -202,6 +206,10 @@ namespace Brizbee.Web.Controllers
         public string Sync_RecordingMethod { get; set; }
 
         public string Sync_ValueMethod { get; set; }
+
+        public string Sync_HostProductName { get; set; }
+
+        public int Sync_ConsumptionsCount { get; set; }
 
 
         // User Details
