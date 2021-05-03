@@ -119,7 +119,7 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-3">
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CreatedAt"))">
                         Exported
                         @if (sortBy == "CreatedAt" && sortDirection == "ASC")
@@ -132,7 +132,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
+                <th class="col-md-1">
                     Lock Id
                 </th>
                 <th class="col-md-3">
@@ -161,6 +161,9 @@
                         }
                     </a>
                 </th>
+                <th class="col-md-3">
+                    Product
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -171,18 +174,19 @@
                     <td>@export.CommitId</td>
                     <td>@export.Commit.InAt.ToShortDateString()</td>
                     <td>@export.Commit.OutAt.ToShortDateString()</td>
+                    <td>@export.QBProductName</td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && exports.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="4">You Have Not Exported Any Time to QuickBooks Desktop Yet</td>
+                    <td colspan="5">You Have Not Exported Any Time to QuickBooks Desktop Yet</td>
                 </tr>
             }
         </tbody>

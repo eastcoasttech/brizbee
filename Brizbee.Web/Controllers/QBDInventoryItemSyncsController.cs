@@ -102,6 +102,8 @@ namespace Brizbee.Web.Controllers
                         S.CreatedAt AS Sync_CreatedAt,
                         S.CreatedByUserId AS Sync_CreatedByUserId,
                         S.OrganizationId AS Sync_OrganizationId,
+                        S.HostProductName AS Sync_HostProductName,
+                        S.Hostname AS Sync_Hostname,
 
                         U.Id AS User_Id,
                         U.Name AS User_Name
@@ -126,6 +128,8 @@ namespace Brizbee.Web.Controllers
                         CreatedAt = result.Sync_CreatedAt,
                         CreatedByUserId = result.Sync_CreatedByUserId,
                         OrganizationId = result.Sync_OrganizationId,
+                        HostProductName = result.Sync_HostProductName,
+                        Hostname = result.Sync_Hostname,
                         CreatedByUser = new User()
                         {
                             Id = result.User_Id,
@@ -194,6 +198,10 @@ namespace Brizbee.Web.Controllers
         public int Sync_CreatedByUserId { get; set; }
 
         public int Sync_OrganizationId { get; set; }
+
+        public string Sync_HostProductName { get; set; }
+
+        public string Sync_Hostname { get; set; }
 
 
         // User Details

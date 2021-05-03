@@ -15,6 +15,10 @@ ol.breadcrumb {
     margin-bottom: 30px;
 }
 
+.fa-padded {
+    margin-right: 10px;
+}
+
 .navbar {
     margin-bottom: 5em;
 }
@@ -216,10 +220,11 @@ select.input-sm {
     padding: 0;
 }
 
-/**
- * The CSS shown here will not be introduced in the Quickstart guide, but shows
- * how you can use CSS to style your Element's container.
- */
+
+/* ------------------------------------------------------------------------- */
+/* STRIPE MODIFICATIONS */
+/* ------------------------------------------------------------------------- */
+
 .StripeElement {
     background-color: white;
     height: 34px;
@@ -382,8 +387,9 @@ table.table-exceptions tr td p.input-group-sm {
 }
 
 
-
+/* ------------------------------------------------------------------------- */
 /* RADZEN MODIFICATIONS */
+/* ------------------------------------------------------------------------- */
 
 .rz-tooltip-content {
     background-color: #444;
@@ -543,7 +549,10 @@ span.rz-calendar {
 }
 
 
+/* ------------------------------------------------------------------------- */
 /* BLAZOR MODIFICATIONS */
+/* ------------------------------------------------------------------------- */
+
 ul.validation-errors {
     list-style-type: none;
     padding: 0.5em;
@@ -572,7 +581,10 @@ ul.validation-errors {
     }
 
 
+/* ------------------------------------------------------------------------- */
 /* SPINNER */
+/* ------------------------------------------------------------------------- */
+
 .spinner-background {
     display: -ms-flexbox;
     display: flex;

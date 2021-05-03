@@ -143,8 +143,11 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-4">
-                    Source
+                <th class="col-md-2">
+                    Product
+                </th>
+                <th class="col-md-2">
+                    Hostname
                 </th>
             </tr>
         </thead>
@@ -154,19 +157,20 @@
                 <tr class="fadeIn selectable">
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
-                    <td><a href="javascript:void(0)">QuickBooks Desktop</a></td>
+                    <td><a href="javascript:void(0)">@sync.HostProductName</a></td>
+                    <td><a href="javascript:void(0)"><i class="fas fa-desktop" style="margin-right: 5px;"></i>@sync.Hostname</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && syncs.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="3">You have not synced any items from QuickBooks</td>
+                    <td colspan="4">You have not synced any items from QuickBooks</td>
                 </tr>
             }
         </tbody>

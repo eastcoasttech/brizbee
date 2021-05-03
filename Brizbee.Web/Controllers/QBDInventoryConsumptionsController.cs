@@ -355,7 +355,8 @@ namespace Brizbee.Web.Controllers
             [FromUri] string country,
             [FromUri] string supportedQBXMLVersion,
             [FromUri] string recordingMethod,
-            [FromUri] string valueMethod)
+            [FromUri] string valueMethod,
+            [FromUri] string hostname)
         {
             var currentUser = CurrentUser();
 
@@ -378,7 +379,8 @@ namespace Brizbee.Web.Controllers
                 HostMinorVersion = minorVersion,
                 HostCountry = country,
                 HostSupportedQBXMLVersion = supportedQBXMLVersion,
-                ConsumptionsCount = consumptions.Count
+                ConsumptionsCount = consumptions.Count,
+                Hostname = hostname
             };
             _context.QBDInventoryConsumptionSyncs.Add(sync);
 

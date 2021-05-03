@@ -42,5 +42,46 @@ namespace Brizbee.Common.Models
         /// </summary>
         [ForeignKey("OrganizationId")]
         public virtual Organization Organization { get; set; }
+
+        /// <summary>
+        /// Hostname of the machine with QuickBooks.
+        /// </summary>
+        [StringLength(15)]
+        public string Hostname { get; set; }
+
+        /// <summary>
+        /// Product name collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(50)]
+        public string HostProductName { get; set; }
+
+        /// <summary>
+        /// Major version collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(10)]
+        public string HostMajorVersion { get; set; }
+
+        /// <summary>
+        /// Minor version collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(10)]
+        public string HostMinorVersion { get; set; }
+
+        /// <summary>
+        /// Country collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(10)]
+        public string HostCountry { get; set; }
+
+        /// <summary>
+        /// Supported QBXML version collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(100)]
+        public string HostSupportedQBXMLVersion { get; set; }
     }
 }

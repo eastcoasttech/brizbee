@@ -44,6 +44,12 @@ namespace Brizbee.Common.Models
         public virtual Organization Organization { get; set; }
 
         /// <summary>
+        /// Hostname of the machine with QuickBooks.
+        /// </summary>
+        [StringLength(15)]
+        public string Hostname { get; set; }
+
+        /// <summary>
         /// Method used to record the consumption: Inventory Adjustment or Sales Receipt
         /// </summary>
         [Required]

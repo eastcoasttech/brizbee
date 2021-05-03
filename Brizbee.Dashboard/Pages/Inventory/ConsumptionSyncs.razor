@@ -152,10 +152,13 @@
                 <th class="col-md-2">
                     Product
                 </th>
+                <th class="col-md-1">
+                    Hostname
+                </th>
                 <th class="col-md-2">
                     Recording Method
                 </th>
-                <th class="col-md-2">
+                <th class="col-md-1">
                     Value Method
                 </th>
             </tr>
@@ -169,20 +172,31 @@
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
                     <td><a href="javascript:void(0)">@sync.HostProductName</a></td>
-                    <td><a href="javascript:void(0)">@sync.RecordingMethod</a></td>
+                    <td><a href="javascript:void(0)"><i class="fas fa-desktop" style="margin-right: 5px;"></i>@sync.Hostname</a></td>
+                    <td>
+                        @if (sync.RecordingMethod == "Inventory Adjustment")
+                        {
+                            <i class="fas fa-sliders-h fa-padded" style="margin-right: 5px;"></i>
+                        }
+                        else if (sync.RecordingMethod == "Sales Receipt")
+                        {
+                            <i class="fas fa-receipt fa-padded" style="margin-right: 5px;"></i>
+                        }
+                        <a href="javascript:void(0)">@sync.RecordingMethod</a>
+                    </td>
                     <td><a href="javascript:void(0)">@sync.ValueMethod</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="8"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && syncs.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="7">You have not synced any consumption to QuickBooks</td>
+                    <td colspan="8">You have not synced any consumption to QuickBooks</td>
                 </tr>
             }
         </tbody>

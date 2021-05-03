@@ -69,6 +69,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
+            var service = new QuickBooksService();
+
             StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
@@ -83,21 +85,55 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                var service = new QuickBooksService();
+                // ------------------------------------------------------------
+                // Collect the QuickBooks host details.
+                // ------------------------------------------------------------
+
+                // Prepare a new QBXML document.
+                var hostQBXML = service.GetQBXMLDocument();
+                var hostDocument = hostQBXML.Item1;
+                var hostElement = hostQBXML.Item2;
+                service.BuildHostQueryRq(hostDocument, hostElement);
+
+                // Make the request.
+                var hostResponse = req.ProcessRequest(ticket, hostDocument.OuterXml);
+
+                // Then walk the response.
+                var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
+                var hostDetails = hostWalkResponse.Item3;
+
+                // ------------------------------------------------------------
+                // Collect the inventory items.
+                // ------------------------------------------------------------
+
                 var items = new List<QBDInventoryItem>();
-                var sites = new List<QBDInventorySite>();
-                var units = new List<QBDUnitOfMeasureSet>();
 
                 StatusText += string.Format("{0} - Syncing inventory items.\r\n", DateTime.Now.ToString());
                 items = SyncInventoryItems(service, ticket, req);
+
+                // ------------------------------------------------------------
+                // Collect the inventory sites.
+                // ------------------------------------------------------------
+
+                var sites = new List<QBDInventorySite>();
 
                 // Attempt to sync sites even if they are not enabled or available.
                 StatusText += string.Format("{0} - Syncing inventory sites.\r\n", DateTime.Now.ToString());
                 sites = SyncInventorySites(service, ticket, req);
 
+                // ------------------------------------------------------------
+                // Collect the units of measure.
+                // ------------------------------------------------------------
+
+                var units = new List<QBDUnitOfMeasureSet>();
+
                 // Attempt to sync sites even if they are not enabled or available.
                 StatusText += string.Format("{0} - Syncing unit of measure sets.\r\n", DateTime.Now.ToString());
                 units = SyncUnitOfMeasureSets(service, ticket, req);
+
+                // ------------------------------------------------------------
+                // Send the items to the server.
+                // ------------------------------------------------------------
 
                 // Build the payload.
                 var payload = new
@@ -108,20 +144,26 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 };
 
                 // Build the request to send the sync details.
-                var httpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
-                httpRequest.AddJsonBody(payload);
+                var syncHttpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
+                syncHttpRequest.AddJsonBody(payload);
+                syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
+                syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);
+                syncHttpRequest.AddQueryParameter("minorVersion", hostDetails.QBMinorVersion);
+                syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
+                syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
+                syncHttpRequest.AddQueryParameter("hostname", Environment.MachineName);
 
-                // Send request.
-                var httpResponse = client.Execute(httpRequest);
-                if ((httpResponse.ResponseStatus == ResponseStatus.Completed) &&
-                        (httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+                // Execute request.
+                var syncHttpResponse = client.Execute(syncHttpRequest);
+                if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
+                        (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                 {
                     StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
                 }
                 else
                 {
-                    StatusText += $"{DateTime.Now} - {httpResponse.Content}";
+                    StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
                     StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
                 }
