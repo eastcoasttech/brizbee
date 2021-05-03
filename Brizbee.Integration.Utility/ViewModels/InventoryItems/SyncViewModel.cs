@@ -1,4 +1,27 @@
-﻿using Brizbee.Common.Models;
+﻿//
+//  SyncViewModel.cs
+//  BRIZBEE Integration Utility
+//
+//  Copyright (C) 2020 East Coast Technology Services, LLC
+//
+//  This file is part of BRIZBEE Database Management.
+//
+//  This program is free software: you can redistribute
+//  it and/or modify it under the terms of the GNU General Public
+//  License as published by the Free Software Foundation, either
+//  version 3 of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will
+//  be useful, but WITHOUT ANY WARRANTY; without even the implied
+//  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//  See the GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.
+//  If not, see <https://www.gnu.org/licenses/>.
+//
+
+using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
 using RestSharp;
@@ -60,7 +83,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                var service = new InventoryService();
+                var service = new QuickBooksService();
                 var items = new List<QBDInventoryItem>();
                 var sites = new List<QBDInventorySite>();
                 var units = new List<QBDUnitOfMeasureSet>();
@@ -83,12 +106,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                     InventorySites = sites ?? new List<QBDInventorySite>(),
                     UnitOfMeasureSets = units ?? new List<QBDUnitOfMeasureSet>()
                 };
-
-                foreach (var item in payload.InventoryItems)
-                {
-                    Trace.TraceInformation(item.SalesPrice.ToString());
-                    Trace.TraceInformation(item.PurchaseCost.ToString());
-                }
 
                 // Build the request to send the sync details.
                 var httpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
@@ -155,7 +172,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
         }
 
-        private List<QBDInventoryItem> SyncInventoryItems(InventoryService service, string ticket, RequestProcessor2 req)
+        private List<QBDInventoryItem> SyncInventoryItems(QuickBooksService service, string ticket, RequestProcessor2 req)
         {
             // Requests to the QuickBooks API are made in QBXML format.
             var doc = new XmlDocument();
@@ -204,12 +221,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
         }
 
-        private List<QBDInventorySite> SyncInventorySites(InventoryService service, string ticket, RequestProcessor2 req)
+        private List<QBDInventorySite> SyncInventorySites(QuickBooksService service, string ticket, RequestProcessor2 req)
         {
-            // Requests to the QuickBooks API are made in QBXML format
+            // Requests to the QuickBooks API are made in QBXML format.
             var doc = new XmlDocument();
 
-            // Add the prolog processing instructions
+            // Add the prolog processing instructions.
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
@@ -220,7 +237,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            // Build the request to get inventory sites
+            // Build the request to get inventory sites.
             service.BuildInventorySiteQueryRq(doc, inner);
 
             try
@@ -234,7 +251,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 if (string.IsNullOrEmpty(response))
                     return new List<QBDInventorySite>();
 
-                // Then walk the response
+                // Then walk the response.
                 var walkReponse = service.WalkInventorySiteQueryRs(response);
 
                 if (SaveErrorCount > 0)
@@ -256,12 +273,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
         }
 
-        private List<QBDUnitOfMeasureSet> SyncUnitOfMeasureSets(InventoryService service, string ticket, RequestProcessor2 req)
+        private List<QBDUnitOfMeasureSet> SyncUnitOfMeasureSets(QuickBooksService service, string ticket, RequestProcessor2 req)
         {
-            // Requests to the QuickBooks API are made in QBXML format
+            // Requests to the QuickBooks API are made in QBXML format.
             var doc = new XmlDocument();
 
-            // Add the prolog processing instructions
+            // Add the prolog processing instructions.
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
@@ -272,7 +289,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            // Build the request to get unit of measure sets
+            // Build the request to get unit of measure sets.
             service.BuildUnitOfMeasureSetQueryRq(doc, inner);
 
             try
@@ -286,7 +303,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 if (string.IsNullOrEmpty(response))
                     return new List<QBDUnitOfMeasureSet>();
 
-                // Then walk the response
+                // Then walk the response.
                 var walkReponse = service.WalkUnitOfMeasureSetQueryRs(response);
 
                 if (SaveErrorCount > 0)

@@ -1,9 +1,9 @@
-﻿<Page x:Class="Brizbee.Integration.Utility.Views.ConfirmPage"
+﻿<Page x:Class="Brizbee.Integration.Utility.Views.Punches.ConfirmPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Brizbee.Integration.Utility.Views"
+    xmlns:local="clr-namespace:Brizbee.Integration.Utility.Views.Punches"
     mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="640"
     WindowTitle="BRIZBEE Integration Utility"
@@ -48,7 +48,7 @@
                     <Label Content="Number of punches:" Margin="0" />
                     <Label Content="{Binding PunchCount}" Margin="0" FontWeight="Bold" />
                     <TextBlock Margin="10 0 0 0" Padding="0" VerticalAlignment="Center">
-                        <Hyperlink NavigateUri="http://www.google.com" RequestNavigate="Hyperlink_RequestNavigate">
+                        <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">
                             View Punches
                         </Hyperlink>
                     </TextBlock>

@@ -21,13 +21,14 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Integration.Utility.ViewModels.InventoryConsumptions;
+using Brizbee.Integration.Utility.ViewModels.Punches;
 using System;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 
-namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
+namespace Brizbee.Integration.Utility.Views.Punches
 {
     /// <summary>
     /// Interaction logic for SyncPage.xaml
@@ -45,7 +46,7 @@ namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
         {
             try
             {
-                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                var thread = new Thread((DataContext as SyncViewModel).Export);
                 thread.Start();
             }
             catch (Exception ex)
@@ -58,7 +59,7 @@ namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
         {
             try
             {
-                var thread = new Thread((DataContext as SyncViewModel).Sync);
+                var thread = new Thread((DataContext as SyncViewModel).Export);
                 thread.Start();
             }
             catch (Exception ex)
@@ -69,7 +70,7 @@ namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
 
         private void StartOverButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
         }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)

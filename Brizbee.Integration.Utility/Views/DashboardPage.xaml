@@ -38,6 +38,11 @@
                 <Button Content="Sync Time Cards" Margin="0 15 0 2" Padding="10" IsEnabled="False" Name="SyncTimeCardsButton" />
                 <Button Content="Sync Inventory Items" Margin="0 15 0 2" Padding="10" Name="SyncItemsButton" Click="SyncItemsButton_Click" />
                 <Button Content="Sync Inventory Consumptions" Margin="0 15 0 0" Padding="10" Name="SyncAdjustmentsButton" Click="SyncAdjustmentsButton_Click" />
+                <TextBlock Margin="0 20 0 0" Padding="0" VerticalAlignment="Center" Visibility="Collapsed">
+                        <Hyperlink>
+                            Reverse Sync
+                        </Hyperlink>
+                </TextBlock>
             </StackPanel>
         </Grid>
     </DockPanel>

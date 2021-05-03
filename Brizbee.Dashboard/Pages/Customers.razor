@@ -223,7 +223,7 @@
                                 }
                             </a>
                         </th>
-                        <th class="col-md-9">
+                        <th class="col-md-6">
                             <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Name"))">
                                 Name
                                 @if (projectsSortBy == "Name" && projectsSortDirection == "ASC")
@@ -231,6 +231,19 @@
                                     <span class="fa fa-caret-up"></span>
                                 }
                                 else if (projectsSortBy == "Name" && projectsSortDirection == "DESC")
+                                {
+                                    <span class="fa fa-caret-down"></span>
+                                }
+                            </a>
+                        </th>
+                        <th class="col-md-3">
+                            <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Status"))">
+                                Status
+                                @if (projectsSortBy == "Status" && projectsSortDirection == "ASC")
+                                {
+                                    <span class="fa fa-caret-up"></span>
+                                }
+                                else if (projectsSortBy == "Status" && projectsSortDirection == "DESC")
                                 {
                                     <span class="fa fa-caret-down"></span>
                                 }
@@ -245,6 +258,7 @@
                         <tr class="fadeIn selectable @(project.Id == selectedProjectId ? "selected" : "")">
                             <td @onclick="@(e => SelectProject(project))"><a href="javascript:void(0)">@project.Number</a></td>
                             <td @onclick="@(e => SelectProject(project))"><a href="javascript:void(0)">@project.Name</a></td>
+                            <td @onclick="@(e => SelectProject(project))"><a href="javascript:void(0)">@project.Status</a></td>
                             <td class="col-md-1 text-right text-muted" style="vertical-align: middle;">
                                 <a href="javascript:void(0)" @onclick="@(e => OpenModifyProjectDialog(project))"><i class="fas fa-pencil-alt" aria-hidden="true"></i></a>
                             </td>
@@ -253,13 +267,13 @@
                     @if (loadingProjects)
                     {
                         <tr class="fadeIn">
-                            <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                            <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                         </tr>
                     }
                     @if (!loadingProjects && projects.Count == 0)
                     {
                         <tr class="fadeIn">
-                            <td colspan="3">No Projects for Selected Customer</td>
+                            <td colspan="4">No Projects for Selected Customer</td>
                         </tr>
                     }
                 </tbody>
@@ -491,7 +505,12 @@
     private async System.Threading.Tasks.Task RefreshCustomers()
     {
         loadingCustomers = true;
+
+        // Prevent stagnation.
         customers.Clear();
+        projects.Clear();
+        tasks.Clear();
+
         var result = await customerService.GetCustomersAsync(pageSize, customersSkip, customersSortBy, customersSortDirection);
         customers = result.Item1;
         customersCount = result.Item2.GetValueOrDefault();
@@ -502,7 +521,11 @@
     private async System.Threading.Tasks.Task RefreshProjects()
     {
         loadingProjects = true;
+
+        // Prevent stagnation.
         projects.Clear();
+        tasks.Clear();
+
         var result = await jobService.GetJobsAsync(selectedCustomerId.Value, pageSize, projectsSkip, projectsSortBy, projectsSortDirection);
         projects = result.Item1;
         projectsCount = result.Item2.GetValueOrDefault();
@@ -513,7 +536,10 @@
     private async System.Threading.Tasks.Task RefreshTasks()
     {
         loadingTasks = true;
+
+        // Prevent stagnation.
         tasks.Clear();
+
         var result = await taskService.GetTasksAsync(selectedProjectId.Value, pageSize, tasksSkip, tasksSortBy, tasksSortDirection);
         tasks = result.Item1;
         tasksCount = result.Item2.GetValueOrDefault();
@@ -545,7 +571,7 @@
     private void OpenModifyProjectDialog(Job project)
     {
         dialogService.Open<ProjectDialog>("Edit Project",
-                                new Dictionary<string, object>() { { "Id", project.Id } },
+                                new Dictionary<string, object>() { { "Id", project.Id }, { "CustomerId", selectedCustomerId } },
                                 new DialogOptions() { Width = "600px" });
     }
 
@@ -559,7 +585,7 @@
     private void OpenModifyTaskDialog(Brizbee.Common.Models.Task task)
     {
         dialogService.Open<TaskDialog>("Edit Task",
-                                new Dictionary<string, object>() { { "Id", task.Id } },
+                                new Dictionary<string, object>() { { "Id", task.Id }, { "ProjectId", selectedProjectId } },
                                 new DialogOptions() { Width = "600px" });
     }
 

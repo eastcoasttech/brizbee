@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Brizbee.Integration.Utility.Views.Inventory
+namespace Brizbee.Integration.Utility.Views.Reverse
 {
     /// <summary>
-    /// Interaction logic for SyncInventoryItemsPage.xaml
+    /// Interaction logic for OptionsPage.xaml
     /// </summary>
-    public partial class SyncInventoryItemsPage : Page
+    public partial class OptionsPage : Page
     {
-        public SyncInventoryItemsPage()
+        public OptionsPage()
         {
             InitializeComponent();
         }

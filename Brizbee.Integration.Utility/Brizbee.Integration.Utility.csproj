@@ -82,9 +82,6 @@
     <Reference Include="Costura, Version=4.0.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.4.0.0\lib\net40\Costura.dll</HintPath>
     </Reference>
-    <Reference Include="Hellang.MessageBus, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Hellang.MessageBus.1.0.1.0\lib\net35\Hellang.MessageBus.dll</HintPath>
-    </Reference>
     <Reference Include="Interop.QBXMLRP2, Version=13.0.0.23, Culture=neutral, PublicKeyToken=31d8aec643e18259">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -126,10 +123,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Exceptions\InvalidLoginException.cs" />
-    <Compile Include="Messages\RefreshCommitsMessage.cs" />
-    <Compile Include="Messages\SignedInMessage.cs" />
     <Compile Include="ODataResponse.cs" />
-    <Compile Include="Services\InventoryService.cs" />
+    <Compile Include="Services\QuickBooksService.cs" />
     <Compile Include="ViewModels\InventoryConsumptions\OptionsViewModel.cs" />
     <Compile Include="ViewModels\InventoryConsumptions\SyncViewModel.cs" />
     <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
@@ -150,27 +145,27 @@
     </Compile>
     <Compile Include="Views\PasswordHelper.cs" />
     <Compile Include="RelayCommand.cs" />
-    <Compile Include="ViewModels\ConfirmPageViewModel.cs" />
-    <Compile Include="ViewModels\CommitsPageViewModel.cs" />
+    <Compile Include="ViewModels\Punches\ConfirmViewModel.cs" />
+    <Compile Include="ViewModels\Punches\LocksViewModel.cs" />
     <Compile Include="ViewModels\LoginPageViewModel.cs" />
-    <Compile Include="ViewModels\StatusPageViewModel.cs" />
-    <Compile Include="ViewModels\ViewPunchesViewModel.cs" />
-    <Compile Include="Views\CommitsPage.xaml.cs">
-      <DependentUpon>CommitsPage.xaml</DependentUpon>
+    <Compile Include="ViewModels\Punches\SyncViewModel.cs" />
+    <Compile Include="ViewModels\Punches\ViewPunchesViewModel.cs" />
+    <Compile Include="Views\Punches\LocksPage.xaml.cs">
+      <DependentUpon>LocksPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ConfirmPage.xaml.cs">
+    <Compile Include="Views\Punches\ConfirmPage.xaml.cs">
       <DependentUpon>ConfirmPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DashboardPage.xaml.cs">
       <DependentUpon>DashboardPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Inventory\SyncInventoryItemsPage.xaml.cs">
-      <DependentUpon>SyncInventoryItemsPage.xaml</DependentUpon>
+    <Compile Include="Views\Reverse\OptionsPage.xaml.cs">
+      <DependentUpon>OptionsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\StatusPage.xaml.cs">
-      <DependentUpon>StatusPage.xaml</DependentUpon>
+    <Compile Include="Views\Punches\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ViewPunchesWindow.xaml.cs">
+    <Compile Include="Views\Punches\ViewPunchesWindow.xaml.cs">
       <DependentUpon>ViewPunchesWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WizardWindow.xaml.cs">
@@ -179,11 +174,11 @@
     <Compile Include="Views\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
-    <Page Include="Views\CommitsPage.xaml">
+    <Page Include="Views\Punches\LocksPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ConfirmPage.xaml">
+    <Page Include="Views\Punches\ConfirmPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -215,15 +210,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Inventory\SyncInventoryItemsPage.xaml">
+    <Page Include="Views\Reverse\OptionsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\StatusPage.xaml">
+    <Page Include="Views\Punches\SyncPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ViewPunchesWindow.xaml">
+    <Page Include="Views\Punches\ViewPunchesWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

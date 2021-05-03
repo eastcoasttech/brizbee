@@ -25,6 +25,18 @@
     </div>
 
     <div class="form-group">
+        <label for="project_status" class="col-sm-3 control-label">Status</label>
+        <div class="col-sm-9">
+            <InputSelect id="project_status" @bind-Value="project.Status" class="form-control" disabled="@(working || loading)">
+                <option value="Open">Open</option>
+                <option value="Needs Invoice">Needs Invoice</option>
+                <option value="Merged">Merged</option>
+                <option value="Closed">Closed</option>
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
         <label for="project_description" class="col-sm-3 control-label">Description</label>
         <div class="col-sm-9">
             <InputTextArea class="form-control" id="project_description" @bind-Value="project.Description" disabled="@(working || loading)" />
@@ -78,6 +90,9 @@
         if (confirm != true)
             return;
 
+        working = true;
+        StateHasChanged();
+
         // Set the cutomer id.
         project.CustomerId = CustomerId.Value;
 
@@ -97,6 +112,7 @@
             return;
 
         working = true;
+        StateHasChanged();
 
         // Delete the project on the server and close the dialog.
         var result = await projectService.DeleteJobAsync(project.Id);

@@ -1,18 +1,34 @@
-﻿using Brizbee.Common.Models;
-using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Xml;
+﻿//
+//  ConfirmViewModel.cs
+//  BRIZBEE Integration Utility
+//
+//  Copyright (C) 2020 East Coast Technology Services, LLC
+//
+//  This file is part of BRIZBEE Database Management.
+//
+//  This program is free software: you can redistribute
+//  it and/or modify it under the terms of the GNU General Public
+//  License as published by the Free Software Foundation, either
+//  version 3 of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will
+//  be useful, but WITHOUT ANY WARRANTY; without even the implied
+//  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//  See the GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.
+//  If not, see <https://www.gnu.org/licenses/>.
+//
 
-namespace Brizbee.Integration.Utility.ViewModels
+using Brizbee.Common.Models;
+using RestSharp;
+using System.ComponentModel;
+using System.Windows;
+
+namespace Brizbee.Integration.Utility.ViewModels.Punches
 {
-    public class ConfirmPageViewModel : INotifyPropertyChanged
+    public class ConfirmViewModel : INotifyPropertyChanged
     {
         public string CommitId { get; set; }
         public string InAt { get; set; }
@@ -24,7 +40,7 @@ namespace Brizbee.Integration.Utility.ViewModels
 
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
 
-        public ConfirmPageViewModel()
+        public ConfirmViewModel()
         {
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
             InAt = commit.InAt.ToString("MMM dd, yyyy");

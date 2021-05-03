@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace Brizbee.Integration.Utility.Services
 {
-    public class InventoryService
+    public class QuickBooksService
     {
         public void BuildInventoryItemQueryRq(XmlDocument doc, XmlElement parent)
         {

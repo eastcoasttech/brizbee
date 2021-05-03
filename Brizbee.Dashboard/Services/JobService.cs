@@ -93,7 +93,8 @@ namespace Brizbee.Dashboard.Services
                 var payload = new Dictionary<string, object>() {
                     { "Name", job.Name },
                     { "Number", job.Number },
-                    { "Description", job.Description }
+                    { "Description", job.Description },
+                    { "Status", job.Status }
                 };
 
                 // Can only be configured at creation.

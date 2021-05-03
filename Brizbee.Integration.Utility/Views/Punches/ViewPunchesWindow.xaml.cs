@@ -1,5 +1,5 @@
 ﻿//
-//  ConfirmPage.xaml.cs
+//  ViewPunchesWindow.xaml.cs
 //  BRIZBEE Integration Utility
 //
 //  Copyright (C) 2020 East Coast Technology Services, LLC
@@ -21,31 +21,34 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Integration.Utility.ViewModels.Punches;
 using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
 
-namespace Brizbee.Integration.Utility.Views.InventoryConsumptions
+namespace Brizbee.Integration.Utility.Views.Punches
 {
     /// <summary>
-    /// Interaction logic for ConfirmPage.xaml
+    /// Interaction logic for ViewPunchesWindow.xaml
     /// </summary>
-    public partial class ConfirmPage : Page
+    public partial class ViewPunchesWindow : Window
     {
-        public ConfirmPage()
+        public ViewPunchesWindow()
         {
             InitializeComponent();
+
+            DataContext = new ViewPunchesViewModel();
         }
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
-        }
-
-        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationService.Navigate(new Uri("Views/InventoryConsumptions/SyncPage.xaml", UriKind.Relative));
+            try
+            {
+                await (DataContext as ViewPunchesViewModel).RefreshPunches();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Load the Punches", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

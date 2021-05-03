@@ -71,6 +71,9 @@
         if (confirm != true)
             return;
 
+        working = true;
+        StateHasChanged();
+
         // Set the project id.
         task.JobId = ProjectId.Value;
 
@@ -90,6 +93,7 @@
             return;
 
         working = true;
+        StateHasChanged();
 
         // Delete the task on the server and close the dialog.
         var result = await taskService.DeleteTaskAsync(task.Id);
