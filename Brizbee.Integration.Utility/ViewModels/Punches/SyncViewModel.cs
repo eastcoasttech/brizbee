@@ -95,7 +95,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 // ------------------------------------------------------------
 
                 // Prepare a new QBXML document.
-                var hostQBXML = service.GetQBXMLDocument();
+                var hostQBXML = service.MakeQBXMLDocument();
                 var hostDocument = hostQBXML.Item1;
                 var hostElement = hostQBXML.Item2;
                 service.BuildHostQueryRq(hostDocument, hostElement);
@@ -111,6 +111,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 // Collect the punches to be synced.
                 // ------------------------------------------------------------
 
+                var ids = new List<string>();
                 punches = GetPunches();
 
                 StatusText += string.Format("{0} - Preparing sync of {1} punches.\r\n", DateTime.Now.ToString(), punches.Count);
@@ -149,7 +150,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     // ------------------------------------------------------------
 
                     // Prepare a new QBXML document.
-                    var punchQBXML = service.GetQBXMLDocument();
+                    var punchQBXML = service.MakeQBXMLDocument();
                     var punchDocument = punchQBXML.Item1;
                     var punchElement = punchQBXML.Item2;
 
@@ -163,7 +164,8 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     var punchResponse = req.ProcessRequest(ticket, punchDocument.OuterXml);
 
                     // Then walk the response.
-                    WalkTimeTrackingAddRs(punchResponse);
+                    var walkReponse = WalkTimeTrackingAddRs(punchResponse);
+                    ids = walkReponse.Item3;
 
                     if (SaveErrorCount > 0)
                     {
@@ -210,7 +212,8 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     CommitId = commit.Id,
                     InAt = commit.InAt,
                     OutAt = commit.OutAt,
-                    Log = StatusText
+                    Log = StatusText,
+                    TxnIDs = string.Join(",", ids)
                 };
 
                 // Build the request.
@@ -506,51 +509,83 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             ClassQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
-        private void WalkTimeTrackingAddRs(string response)
+        private (bool, string, List<string>) WalkTimeTrackingAddRs(string response)
         {
-            //Parse the response XML string into an XmlDocument
+            // Parse the response XML string into an XmlDocument.
             XmlDocument responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
-            //Get the response for our request
-            XmlNodeList TimeTrackingAddRsList = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");
-            foreach (var result in TimeTrackingAddRsList)
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
             {
-                XmlNode responseNode = result as XmlNode;
+                var ids = new List<string>();
 
-                //Check the status code, info, and severity
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
-
-                int iStatusCode = Convert.ToInt32(statusCode);
-
-                //status code = 0 all OK, > 0 is warning
-                if (iStatusCode == 3310)
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
                 {
-                    Regex regex = new Regex(@".+(employee ""){1}(.+)("" provided){1}.+");
-                    Match match = regex.Match(statusMessage);
+                    var id = "";
 
-                    if (match.Success)
+                    foreach (var node in queryResult.ChildNodes)
                     {
-                        var employee = match.Groups[2].Value;
-                        var errorMessage = string.Format("Cannot determine if the employee in the company file should use time data to create paychecks. Please configure this for the employee: {0}", employee);
-                        SaveErrorCount += 1;
-                        StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
-                        OnPropertyChanged("StatusText");
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "TxnID":
+                                id = xmlNode.InnerText;
+                                break;
+                        }
                     }
+
+                    ids.Add(id);
                 }
-                else if (iStatusCode == 3231)
+
+                return (true, "", ids);
+            }
+            else if (iStatusCode == 3310)
+            {
+                Regex regex = new Regex(@".+(employee ""){1}(.+)("" provided){1}.+");
+                Match match = regex.Match(statusMessage);
+
+                if (match.Success)
                 {
-                    // Do nothing, it's just telling us that the request wasn't processed
-                }
-                else if (iStatusCode > 0)
-                {
+                    var employee = match.Groups[2].Value;
+                    var errorMessage = string.Format("Cannot determine if the employee in the company file should use time data to create paychecks. Please configure this for the employee: {0}", employee);
                     SaveErrorCount += 1;
-                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), errorMessage);
                     OnPropertyChanged("StatusText");
                 }
+
+                return (false, statusMessage, null);
+            }
+            else if (iStatusCode == 3231)
+            {
+                // Do nothing, it's just telling us that the request wasn't processed
+                return (false, statusMessage, null);
+            }
+            else if (iStatusCode > 0)
+            {
+                SaveErrorCount += 1;
+                StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), statusMessage);
+                OnPropertyChanged("StatusText");
+
+                return (false, statusMessage, null);
+            }
+            else
+            {
+                return (false, statusMessage, null);
             }
         }
 

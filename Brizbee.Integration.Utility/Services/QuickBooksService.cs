@@ -1,9 +1,31 @@
-﻿using Brizbee.Common.Models;
+﻿//
+//  QuickBooksService.cs
+//  BRIZBEE Integration Utility
+//
+//  Copyright (C) 2020 East Coast Technology Services, LLC
+//
+//  This file is part of BRIZBEE Database Management.
+//
+//  This program is free software: you can redistribute
+//  it and/or modify it under the terms of the GNU General Public
+//  License as published by the Free Software Foundation, either
+//  version 3 of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will
+//  be useful, but WITHOUT ANY WARRANTY; without even the implied
+//  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//  See the GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.
+//  If not, see <https://www.gnu.org/licenses/>.
+//
+
+using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Xml;
 
 namespace Brizbee.Integration.Utility.Services
@@ -264,7 +286,7 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
-        public (bool, string, object) WalkSalesReceiptAddRs(string response)
+        public (bool, string, List<string>) WalkSalesReceiptAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
             XmlDocument responseXmlDoc = new XmlDocument();
@@ -286,7 +308,28 @@ namespace Brizbee.Integration.Utility.Services
 
             if (iStatusCode == 0)
             {
-                return (true, "", null);
+                var ids = new List<string>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var id = "";
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "TxnID":
+                                id = xmlNode.InnerText;
+                                break;
+                        }
+                    }
+
+                    ids.Add(id);
+                }
+
+                return (true, "", ids);
             }
             else
             {
@@ -398,7 +441,7 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
-        public (bool, string, object) WalkInventoryAdjustmentAddRs(string response)
+        public (bool, string, List<string>) WalkInventoryAdjustmentAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
             XmlDocument responseXmlDoc = new XmlDocument();
@@ -420,7 +463,28 @@ namespace Brizbee.Integration.Utility.Services
 
             if (iStatusCode == 0)
             {
-                return (true, "", null);
+                var ids = new List<string>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var id = "";
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "TxnID":
+                                id = xmlNode.InnerText;
+                                break;
+                        }
+                    }
+
+                    ids.Add(id);
+                }
+
+                return (true, "", ids);
             }
             else
             {
@@ -467,7 +531,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (iStatusCode == 0)
             {
-                var items = new List<QBDUnitOfMeasureSet>();
+                var units = new List<QBDUnitOfMeasureSet>();
 
                 foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
                 {
@@ -540,10 +604,10 @@ namespace Brizbee.Integration.Utility.Services
                         }
                     }
 
-                    items.Add(unit);
+                    units.Add(unit);
                 }
 
-                return (true, "", items);
+                return (true, "", units);
             }
             else if (iStatusCode == 3250)
             {
@@ -593,7 +657,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (iStatusCode == 0)
             {
-                var items = new List<QBDInventorySite>();
+                var sites = new List<QBDInventorySite>();
 
                 foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
                 {
@@ -617,10 +681,10 @@ namespace Brizbee.Integration.Utility.Services
                         }
                     }
 
-                    items.Add(inventorySite);
+                    sites.Add(inventorySite);
                 }
 
-                return (true, "", items);
+                return (true, "", sites);
             }
             else if (iStatusCode == 3250)
             {
@@ -705,7 +769,76 @@ namespace Brizbee.Integration.Utility.Services
             return (true, "", quickBooksExport);
         }
 
-        public (XmlDocument, XmlElement) GetQBXMLDocument()
+        public void BuildTxnDelRq(XmlDocument doc, XmlElement parent, string transactionType, string transactionId)
+        {
+            XmlElement request = doc.CreateElement("TxnDelRq");
+            parent.AppendChild(request);
+
+            // ------------------------------------------------------------
+            // TxnDelRq > TxnDelType
+            // ------------------------------------------------------------
+
+            parent.AppendChild(MakeSimpleElement(doc, "TxnDelType", transactionType));
+
+            // ------------------------------------------------------------
+            // TxnDelRq > TxnID
+            // ------------------------------------------------------------
+
+            parent.AppendChild(MakeSimpleElement(doc, "TxnID", transactionId));
+        }
+
+        public (bool, string) WalkTxnDelRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("TxnDelRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response."); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                var ids = new List<string>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var id = "";
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "TxnID":
+                                id = xmlNode.InnerText;
+                                break;
+                        }
+                    }
+
+                    ids.Add(id);
+                }
+
+                return (true, "");
+            }
+            else
+            {
+                return (false, statusMessage);
+            }
+        }
+
+        public (XmlDocument, XmlElement) MakeQBXMLDocument()
         {
             var doc = new XmlDocument();
 

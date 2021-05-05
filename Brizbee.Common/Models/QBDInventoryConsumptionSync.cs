@@ -102,5 +102,10 @@ namespace Brizbee.Common.Models
         /// </summary>
         [Required]
         public int ConsumptionsCount { get; set; }
+
+        /// <summary>
+        /// Comma-separated list of TxnIDs from the added transactions in QuickBooks.
+        /// </summary>
+        public string TxnIDs { get; set; }
     }
 }

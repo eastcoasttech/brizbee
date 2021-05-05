@@ -57,5 +57,15 @@ namespace Brizbee.Integration.Utility.Views
         {
             Application.Current.Shutdown();
         }
+
+        private void ReversePunchesLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/Reverse/ConfirmReversePunchesPage.xaml", UriKind.Relative));
+        }
+
+        private void ReverseConsumptionsLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/Reverse/ConfirmReverseConsumptionsPage.xaml", UriKind.Relative));
+        }
     }
 }

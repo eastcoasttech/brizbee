@@ -90,7 +90,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 // ------------------------------------------------------------
 
                 // Prepare a new QBXML document.
-                var hostQBXML = service.GetQBXMLDocument();
+                var hostQBXML = service.MakeQBXMLDocument();
                 var hostDocument = hostQBXML.Item1;
                 var hostElement = hostQBXML.Item2;
                 service.BuildHostQueryRq(hostDocument, hostElement);

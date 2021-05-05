@@ -104,7 +104,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 // ------------------------------------------------------------
 
                 // Prepare a new QBXML document.
-                var hostQBXML = service.GetQBXMLDocument();
+                var hostQBXML = service.MakeQBXMLDocument();
                 var hostDocument = hostQBXML.Item1;
                 var hostElement = hostQBXML.Item2;
                 service.BuildHostQueryRq(hostDocument, hostElement);
@@ -144,7 +144,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         // ------------------------------------------------------------
 
                         // Prepare a new QBXML document.
-                        var consQBXML = service.GetQBXMLDocument();
+                        var consQBXML = service.MakeQBXMLDocument();
                         var consDocument = consQBXML.Item1;
                         var consElement = consQBXML.Item2;
 
@@ -162,13 +162,16 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
 
                         // Then walk the response.
+                        var ids = new List<string>();
                         if (selectedMethod == "Sales Receipt")
                         {
                             var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
+                            ids = walkReponse.Item3;
                         }
                         else if (selectedMethod == "Inventory Adjustment")
                         {
                             var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
+                            ids = walkReponse.Item3;
                         }
 
                         if (SaveErrorCount > 0)
@@ -178,9 +181,16 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         }
                         else
                         {
+                            // Build the payload.
+                            var payload = new
+                            {
+                                TxnIDs = ids,
+                                Ids = consumptions.Select(c => c.Id).ToArray()
+                            };
+
                             // Build the request to send the sync details.
                             var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.POST);
-                            syncHttpRequest.AddJsonBody(consumptions.Select(c => c.Id).ToArray());
+                            syncHttpRequest.AddJsonBody(payload);
                             syncHttpRequest.AddQueryParameter("recordingMethod", selectedMethod);
                             syncHttpRequest.AddQueryParameter("valueMethod", selectedValue);
                             syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);

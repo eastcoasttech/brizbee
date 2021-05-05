@@ -118,6 +118,7 @@ CREATE TABLE [dbo].[QuickBooksDesktopExports] (
     [QBSupportedQBXMLVersions] nvarchar(100) NULL,
     [UserId] int NOT NULL,
     [Log] nvarchar(max) NULL,
+    [TxnIDs]                        VARCHAR (MAX) NULL,
     CONSTRAINT [PK_dbo.QuickBooksDesktopExports] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO

@@ -115,5 +115,10 @@ namespace Brizbee.Common.Models
         /// </summary>
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
+
+        /// <summary>
+        /// Comma-separated list of TxnIDs from the added transactions in QuickBooks.
+        /// </summary>
+        public string TxnIDs { get; set; }
     }
 }

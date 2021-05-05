@@ -21,6 +21,7 @@
 //
 
 using Brizbee.Common.Models;
+using Brizbee.Common.Serialization;
 using Dapper;
 using Newtonsoft.Json;
 using System;
@@ -348,7 +349,7 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         [Route("api/QBDInventoryConsumptions/Sync")]
         public IHttpActionResult PostSync(
-            [FromBody] long[] ids,
+            [FromBody] QBDConsumptionSyncDetails details,
             [FromUri] string productName,
             [FromUri] string majorVersion,
             [FromUri] string minorVersion,
@@ -363,7 +364,7 @@ namespace Brizbee.Web.Controllers
             var consumptions = _context.QBDInventoryConsumptions
                 .Where(a => a.OrganizationId == currentUser.OrganizationId)
                 .Where(a => !a.QBDInventoryConsumptionSyncId.HasValue)
-                .Where(a => ids.Contains(a.Id))
+                .Where(a => details.Ids.Contains(a.Id))
                 .ToList();
 
             // Record the sync.
@@ -380,7 +381,8 @@ namespace Brizbee.Web.Controllers
                 HostCountry = country,
                 HostSupportedQBXMLVersion = supportedQBXMLVersion,
                 ConsumptionsCount = consumptions.Count,
-                Hostname = hostname
+                Hostname = hostname,
+                TxnIDs = string.Join(",", details.TxnIDs)
             };
             _context.QBDInventoryConsumptionSyncs.Add(sync);
 

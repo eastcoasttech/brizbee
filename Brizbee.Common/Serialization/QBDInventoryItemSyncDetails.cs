@@ -2,7 +2,7 @@
 
 namespace Brizbee.Common.Serialization
 {
-    public class QBDInventorySyncDetails
+    public class QBDInventoryItemSyncDetails
     {
         public QBDInventoryItem[] InventoryItems { get; set; }
         public QBDInventorySite[] InventorySites { get; set; }

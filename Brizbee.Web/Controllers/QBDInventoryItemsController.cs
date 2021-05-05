@@ -203,7 +203,7 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         [Route("api/QBDInventoryItems/Sync")]
         public IHttpActionResult PostSync(
-            [FromBody] QBDInventorySyncDetails details,
+            [FromBody] QBDInventoryItemSyncDetails details,
             [FromUri] string productName,
             [FromUri] string majorVersion,
             [FromUri] string minorVersion,

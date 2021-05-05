@@ -86,7 +86,8 @@
     <Compile Include="Security\Session.cs" />
     <Compile Include="Serialization\Country.cs" />
     <Compile Include="Serialization\IanaTimeZone.cs" />
-    <Compile Include="Serialization\QBDInventorySyncDetails.cs" />
+    <Compile Include="Serialization\QBDConsumptionSyncDetails.cs" />
+    <Compile Include="Serialization\QBDInventoryItemSyncDetails.cs" />
     <Compile Include="Serialization\QuickBooksHostDetails.cs" />
     <Compile Include="Serialization\QuickBooksUnitOfMeasure.cs" />
     <Compile Include="Serialization\QuickBooksUnitOfMeasures.cs" />
