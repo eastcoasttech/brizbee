@@ -34,7 +34,8 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-                <Button Content="Sync Punches" Margin="0 " Padding="10" Name="SyncPunchesButton" Click="SyncPunchesButton_Click" />
+                <Button Content="Sync Projects" Margin="0" Padding="10" Name="SyncProjectsButton" Click="SyncProjectsButton_Click" />
+                <Button Content="Sync Punches" Margin="0 15 0 0" Padding="10" Name="SyncPunchesButton" Click="SyncPunchesButton_Click" />
                 <TextBlock Margin="0 3 0 0" Padding="0" VerticalAlignment="Center">
                         <Hyperlink Foreground="Red" NavigateUri="" RequestNavigate="ReversePunchesLink_RequestNavigate">
                             Reverse

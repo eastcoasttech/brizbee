@@ -54,7 +54,7 @@
                         local:PasswordHelper.Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
             </Grid>
-            <Label Content="Works with QuickBooks Desktop 2002 and newer." HorizontalAlignment="Center" Margin="0 40 0 0" Foreground="#555555" FontSize="12" />
+            <Label Content="Works with QuickBooks Desktop 2018 and newer." HorizontalAlignment="Center" Margin="0 40 0 0" Foreground="#555555" FontSize="12" />
         </StackPanel>
     </DockPanel>
 </Page>

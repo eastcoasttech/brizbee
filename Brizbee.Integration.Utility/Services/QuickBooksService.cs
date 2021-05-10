@@ -697,6 +697,98 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
+        public void BuildCustomerAddRq(XmlDocument doc, XmlElement parent, string name, string parentName = "")
+        {
+            XmlElement request = doc.CreateElement("CustomerAddRq");
+            parent.AppendChild(request);
+
+            // ------------------------------------------------------------
+            // CustomerAddRq > CustomerAdd
+            // ------------------------------------------------------------
+
+            XmlElement customer = doc.CreateElement("CustomerAdd");
+            request.AppendChild(customer);
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Name
+            // ------------------------------------------------------------
+
+            customer.AppendChild(MakeSimpleElement(doc, "Name", name));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > ParentRef
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(parentName))
+            {
+                XmlElement customerRef = doc.CreateElement("ParentRef");
+                customer.AppendChild(customerRef);
+
+                customerRef.AppendChild(MakeSimpleElement(doc, "FullName", parentName));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAddRq > IncludeRetElement
+            // ------------------------------------------------------------
+
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "FullName"));
+        }
+
+        public (bool, string, List<string>) WalkCustomerAddRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("CustomerAddRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                var ids = new List<string>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var id = "";
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        //switch (xmlNode.Name)
+                        //{
+                        //    case "TxnID":
+                        //        id = xmlNode.InnerText;
+                        //        break;
+                        //}
+                    }
+
+                    ids.Add(id);
+                }
+
+                return (true, "", ids);
+            }
+            else if (iStatusCode == 3100)
+            {
+                // Customer already exists
+                return (true, "", null);
+            }
+            else
+                return (false, statusMessage, null);
+        }
+
         public void BuildHostQueryRq(XmlDocument doc, XmlElement parent)
         {
             XmlElement HostQuery = doc.CreateElement("HostQueryRq");

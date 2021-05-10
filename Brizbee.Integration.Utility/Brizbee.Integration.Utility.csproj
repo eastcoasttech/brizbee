@@ -104,6 +104,7 @@
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -128,6 +129,7 @@
     <Compile Include="ViewModels\InventoryConsumptions\OptionsViewModel.cs" />
     <Compile Include="ViewModels\InventoryConsumptions\SyncViewModel.cs" />
     <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
+    <Compile Include="ViewModels\Projects\SyncViewModel.cs" />
     <Compile Include="ViewModels\Reverse\ReverseViewModel.cs" />
     <Compile Include="Views\InventoryConsumptions\ConfirmPage.xaml.cs">
       <DependentUpon>ConfirmPage.xaml</DependentUpon>
@@ -151,6 +153,12 @@
     <Compile Include="ViewModels\LoginPageViewModel.cs" />
     <Compile Include="ViewModels\Punches\SyncViewModel.cs" />
     <Compile Include="ViewModels\Punches\ViewPunchesViewModel.cs" />
+    <Compile Include="Views\Projects\ConfirmPage.xaml.cs">
+      <DependentUpon>ConfirmPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Projects\SyncPage.xaml.cs">
+      <DependentUpon>SyncPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Punches\LocksPage.xaml.cs">
       <DependentUpon>LocksPage.xaml</DependentUpon>
     </Compile>
@@ -181,6 +189,14 @@
     <Compile Include="Views\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
+    <Page Include="Views\Projects\ConfirmPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Projects\SyncPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Punches\LocksPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -55,7 +55,7 @@ namespace Brizbee.Integration.Utility.Views
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            Application.Current.MainWindow.Close();
         }
 
         private void ReversePunchesLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
@@ -66,6 +66,11 @@ namespace Brizbee.Integration.Utility.Views
         private void ReverseConsumptionsLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             NavigationService.Navigate(new Uri("Views/Reverse/ConfirmReverseConsumptionsPage.xaml", UriKind.Relative));
+        }
+
+        private void SyncProjectsButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/Projects/ConfirmPage.xaml", UriKind.Relative));
         }
     }
 }

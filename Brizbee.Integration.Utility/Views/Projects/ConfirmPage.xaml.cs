@@ -1,5 +1,5 @@
 ﻿//
-//  WizardWindow.xaml.cs
+//  ConfirmPage.xaml.cs
 //  BRIZBEE Integration Utility
 //
 //  Copyright (C) 2020 East Coast Technology Services, LLC
@@ -21,25 +21,31 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using System;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace Brizbee.Integration.Utility.Views
+namespace Brizbee.Integration.Utility.Views.Projects
 {
     /// <summary>
-    /// Interaction logic for WizardWindow.xaml
+    /// Interaction logic for ConfirmPage.xaml
     /// </summary>
-    public partial class WizardWindow : NavigationWindow
+    public partial class ConfirmPage : Page
     {
-        public WizardWindow()
+        public ConfirmPage()
         {
             InitializeComponent();
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            base.OnClosing(e);
-            e.Cancel = true;
-            Hide();
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
+        }
+
+        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("Views/Projects/SyncPage.xaml", UriKind.Relative));
         }
     }
 }

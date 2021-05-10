@@ -21,8 +21,14 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Integration.Utility.Views;
 using System;
+using System.Drawing;
+using System.IO;
+using System.Reflection;
+using System.Threading;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Threading;
 
 namespace Brizbee.Integration.Utility
@@ -30,15 +36,74 @@ namespace Brizbee.Integration.Utility
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
+        private NotifyIcon icon = new NotifyIcon();
+
         public App()
         {
             // Initialize MessageBus Using Dispatcher
             Action<Action> uiThreadMarshaller =
                 action => Dispatcher.Invoke(DispatcherPriority.Normal, action);
+
+            System.Windows.Application.Current.Properties["EventSource"] = "BRIZBEE Integration Utility";
+            System.Windows.Application.Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            // Configure the tray icon.
+            Assembly a = Assembly.GetExecutingAssembly();
+            Stream st = a.GetManifestResourceStream("Brizbee.Integration.Utility.Images.favicon.ico");
             
-            Application.Current.Properties["EventSource"] = "BRIZBEE Integration Utility";
+            icon.Icon = new Icon(st);
+            icon.Visible = true;
+            icon.ShowBalloonTip(2000, "BRIZBEE Integration Utility", "Started", ToolTipIcon.Info);
+            icon.MouseClick += icon_MouseClick;
+
+            var strip = new ContextMenuStrip();
+            strip.Items.Add("Open...");
+            strip.Items.Add("Exit");
+
+            strip.ItemClicked += contexMenuStrip_ItemClicked;
+
+            icon.ContextMenuStrip = strip;
+
+            // Show the main window on first startup.
+            MainWindow = new WizardWindow();
+            MainWindow.Show();
+            MainWindow.Focus();
+        }
+
+        void icon_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                icon.ContextMenuStrip.Show();
+            }
+            else
+            {
+                MainWindow = new WizardWindow();
+                MainWindow.Show();
+                MainWindow.Focus();
+            }
+        }
+
+        void contexMenuStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            var item = e.ClickedItem;
+
+            if (item.Text == "Open...")
+            {
+                MainWindow = new WizardWindow();
+                MainWindow.Show();
+            }
+            else if (item.Text == "Exit")
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
+        }
+
+        void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
+        {
+            icon.Dispose();
         }
     }
 }
