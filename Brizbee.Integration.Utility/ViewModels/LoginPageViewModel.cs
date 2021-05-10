@@ -90,7 +90,7 @@ namespace Brizbee.Integration.Utility.ViewModels
             });
 
             // Execute request to authenticate user
-            var response = await client.ExecuteTaskAsync<Credential>(request);
+            var response = await client.ExecuteAsync<Credential>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.Created))
             {
@@ -129,7 +129,7 @@ namespace Brizbee.Integration.Utility.ViewModels
                 Application.Current.Properties["AuthUserId"]), Method.GET);
 
             // Execute request to retrieve authenticated user
-            var response = await client.ExecuteTaskAsync<User>(request);
+            var response = await client.ExecuteAsync<User>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
