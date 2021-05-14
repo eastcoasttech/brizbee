@@ -14,18 +14,21 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Name of the object in QuickBooks.
         /// </summary>
-        [MaxLength(159)]
-        public string Name { get; set; }
+        [Required]
+        [StringLength(159)]
+        public string FullName { get; set; }
 
         /// <summary>
         /// ListID of the object in QuickBooks Desktop.
         /// </summary>
-        [MaxLength(20)]
+        [Required]
+        [StringLength(20)]
         public string ListId { get; set; }
 
         /// <summary>
         /// Whether or not the inventory site is active in QuickBooks.
         /// </summary>
+        [Required]
         public bool IsActive { get; set; }
 
         /// <summary>

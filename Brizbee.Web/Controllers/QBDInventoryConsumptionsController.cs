@@ -413,7 +413,9 @@ namespace Brizbee.Web.Controllers
         }
 
         // POST: api/QBDInventoryConsumptions/Consume
-        public IHttpActionResult PostConsume([FromUri] int qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure)
+        [HttpPost]
+        [Route("api/QBDInventoryConsumptions/Consume")]
+        public IHttpActionResult PostConsume([FromUri] long qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure)
         {
             var currentUser = CurrentUser();
 
@@ -427,16 +429,17 @@ namespace Brizbee.Web.Controllers
             // Site is determined by the hostname.
             var sites = new Dictionary<string, string>()
             {
-                { "RR01", "Site 01" }
+                { "RR01", "Site 01" },
+                { "MARTIN-01", "Site 01" }
             };
-            var siteForHostname = sites[hostname];
+            var siteForHostname = "";// sites[hostname];
 
-            var siteId = _context.QBDInventorySites
-                .Where(s => s.Name == siteForHostname)
+            long? siteId = _context.QBDInventorySites
+                .Where(s => s.FullName == siteForHostname)
                 .Select(s => s.Id)
                 .FirstOrDefault();
 
-            var uomId = _context.QBDUnitOfMeasureSets
+            long? uomId = _context.QBDUnitOfMeasureSets
                 .Where(u => u.Name == unitOfMeasure)
                 .Select(u => u.Id)
                 .FirstOrDefault();
@@ -451,7 +454,8 @@ namespace Brizbee.Web.Controllers
                 QBDInventoryItemId = qbdInventoryItemId,
                 Hostname = hostname,
                 QBDInventorySiteId = siteId,
-                QBDUnitOfMeasureSetId = uomId
+                QBDUnitOfMeasureSetId = uomId,
+                UnitOfMeasure = "UOM"
             };
 
             _context.QBDInventoryConsumptions.Add(consumption);

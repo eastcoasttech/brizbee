@@ -241,7 +241,7 @@ namespace Brizbee.Web.Controllers
                 if (found != null)
                 {
                     // Update any changes
-                    found.Name = site.Name;
+                    found.FullName = site.FullName;
                 }
                 else
                 {

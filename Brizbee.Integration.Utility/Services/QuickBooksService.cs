@@ -670,7 +670,7 @@ namespace Brizbee.Integration.Utility.Services
                         switch (xmlNode.Name)
                         {
                             case "Name":
-                                inventorySite.Name = xmlNode.InnerText;
+                                inventorySite.FullName = xmlNode.InnerText;
                                 break;
                             case "ListID":
                                 inventorySite.ListId = xmlNode.InnerText;

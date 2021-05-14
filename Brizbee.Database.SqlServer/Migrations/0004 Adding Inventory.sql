@@ -86,6 +86,7 @@ CREATE TABLE [dbo].[QBDInventorySites] (
     [FullName] VARCHAR(159) NOT NULL,
     [ListId] VARCHAR(20) NOT NULL,
     [IsActive] BIT NOT NULL,
+    [QBDInventoryItemSyncId] BIGINT NOT NULL,
     CONSTRAINT [PK_dbo.QBDInventorySites] PRIMARY KEY CLUSTERED ([Id])
 );
 GO
@@ -99,6 +100,7 @@ CREATE TABLE [dbo].[QBDUnitOfMeasureSets] (
     [UnitOfMeasureType]             VARCHAR(255) NOT NULL,
     [IsActive]                      BIT NOT NULL,
     [UnitNamesAndAbbreviations]     NVARCHAR(MAX) CONSTRAINT [CT_UnitNamesAndAbbreviations] CHECK (ISJSON([UnitNamesAndAbbreviations])=1) NOT NULL,
+    [QBDInventoryItemSyncId] BIGINT NOT NULL,
     CONSTRAINT [PK_dbo.QBDUnitOfMeasureSets] PRIMARY KEY CLUSTERED ([Id])
 );
 GO

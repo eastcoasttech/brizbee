@@ -17,29 +17,34 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Name of the object in QuickBooks.
         /// </summary>
-        [MaxLength(31)]
+        [Required]
+        [StringLength(31)]
         public string Name { get; set; }
 
         /// <summary>
         /// ListID of the object in QuickBooks.
         /// </summary>
-        [MaxLength(20)]
+        [Required]
+        [StringLength(20)]
         public string ListId { get; set; }
 
         /// <summary>
         /// Type of the unit of measure in QuickBooks, potentially a custom value.
         /// </summary>
-        [MaxLength(255)]
+        [Required]
+        [StringLength(255)]
         public string UnitOfMeasureType { get; set; }
 
         /// <summary>
         /// Whether or not the unit of measure is active in QuickBooks.
         /// </summary>
+        [Required]
         public bool IsActive { get; set; }
 
         /// <summary>
         /// JSON representation of the available unit names and abbreviations.
         /// </summary>
+        [Required]
         public string UnitNamesAndAbbreviations { get; set; }
 
         /// <summary>

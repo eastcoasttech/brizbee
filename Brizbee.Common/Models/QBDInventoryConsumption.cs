@@ -15,12 +15,14 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Quantity of the inventory item to be adjusted.
         /// </summary>
+        [Required]
         public int Quantity { get; set; }
 
         /// <summary>
         /// Unit of measure of the inventory item being adjusted.
         /// </summary>
-        [MaxLength(31)]
+        [Required]
+        [StringLength(31)]
         public string UnitOfMeasure { get; set; }
 
         /// <summary>
@@ -45,6 +47,7 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Hostname of the machine where the adjustment was created.
         /// </summary>
+        [Required]
         [StringLength(30)]
         public string Hostname { get; set; }
 
