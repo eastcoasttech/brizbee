@@ -114,6 +114,12 @@
                             <p class="help-block">This 4+ digit code is public and shared throughout your organization. Users can login via Organization Code and User Pin on the Web, mobile app, and BRIZBEE hotline.</p>
                         </div>
 
+                        <div class="form-group">
+                            <label for="organization_groups">Tasks Groups</label>
+                            <InputText id="organization_groups" @bind-Value="organization.Groups" class="form-control" disabled="@working" />
+                            <p class="">Comma-separated list of groups by which to organize Tasks</p>
+                        </div>
+
                         <button class="btn btn-primary" type="submit" disabled="@working">Save Changes</button>
                     </EditForm>
                 </div>

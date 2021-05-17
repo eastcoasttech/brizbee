@@ -57,6 +57,7 @@ CREATE TABLE [dbo].[Organizations] (
     [StripeSourceCardLast4] nvarchar(max) NULL,
     [StripeSourceId] nvarchar(max) NULL,
     [StripeSubscriptionId] nvarchar(max) NOT NULL,
+    [Groups] VARCHAR (200) NULL,
     [PlanId] int NOT NULL DEFAULT (0),
     CONSTRAINT [PK_dbo.Organizations] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
@@ -169,6 +170,7 @@ CREATE TABLE [dbo].[Tasks] (
     [QuickBooksServiceItem] nvarchar(max) NULL,
     [BaseServiceRateId] int NULL,
     [BasePayrollRateId] int NULL,
+    [Group] VARCHAR(20) NULL,
     CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO

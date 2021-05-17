@@ -55,7 +55,8 @@ namespace Brizbee.Dashboard.Services
                 var payload = new Dictionary<string, object>() {
                     { "Name", organization.Name },
                     { "MinutesFormat", organization.MinutesFormat },
-                    { "Code", organization.Code }
+                    { "Code", organization.Code },
+                    { "Groups", organization.Groups }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);

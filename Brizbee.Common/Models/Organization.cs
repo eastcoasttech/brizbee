@@ -61,5 +61,8 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string StripeSubscriptionId { get; set; }
+
+        [StringLength(200)]
+        public string Groups { get; set; }
     }
 }

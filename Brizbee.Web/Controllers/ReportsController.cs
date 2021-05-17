@@ -205,11 +205,11 @@ namespace Brizbee.Web.Controllers
 
         // GET: api/Reports/TasksByJob
         [Route("api/Reports/TasksByJob")]
-        public IHttpActionResult GetTasksByJob([FromUri] int JobId)
+        public IHttpActionResult GetTasksByJob([FromUri] int JobId, [FromUri] string taskGroupScope = "")
         {
             var currentUser = CurrentUser();
             var job = db.Jobs.Where(j => j.Id == JobId).FirstOrDefault();
-            var bytes = new ReportBuilder().TasksByJobAsPdf(JobId, CurrentUser());
+            var bytes = new ReportBuilder().TasksByJobAsPdf(JobId, CurrentUser(), taskGroupScope);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
                     "Tasks by Job for {0} - {1}.pdf",

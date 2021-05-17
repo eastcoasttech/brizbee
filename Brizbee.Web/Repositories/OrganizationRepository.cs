@@ -71,10 +71,8 @@ namespace Brizbee.Web.Repositories
             if (organization == null) { throw new Exception("No object was found with that ID in the database"); }
 
             // Ensure that user is authorized
-            //if (!TaskPolicy.CanUpdate(task, currentUser))
-            //{
-            //    throw new Exception("Not authorized to modify the object");
-            //}
+            if (currentUser.Role != "Administrator" && currentUser.OrganizationId != id)
+                throw new Exception("Not authorized to modify the object");
 
             // Peform the update
             patch.Patch(organization);

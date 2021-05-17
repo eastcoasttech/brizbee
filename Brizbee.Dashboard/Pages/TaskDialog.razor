@@ -5,6 +5,7 @@
 
 @inject DialogService dialogService
 @inject TaskService taskService
+@inject SharedService sharedService
 
 <EditForm Model="@task" OnValidSubmit="SaveTask" class="form-horizontal" autocomplete="off">
     <DataAnnotationsValidator />
@@ -21,6 +22,19 @@
         <label for="task_name" class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
             <InputText class="form-control" id="task_name" @bind-Value="task.Name" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="task_group" class="col-sm-3 control-label">Group</label>
+        <div class="col-sm-9">
+            <InputSelect id="task_group" @bind-Value="task.Group" class="form-control" disabled="@(working || loading)">
+                <option value="Unspecified">Unspecified</option>
+                @foreach (var group in groups)
+                {
+                    <option value="@group">@group</option>
+                }
+            </InputSelect>
         </div>
     </div>
 
@@ -42,9 +56,17 @@
     private bool working = false;
     private bool loading = true;
     private Brizbee.Common.Models.Task task = new Brizbee.Common.Models.Task();
+    private string[] groups = new string[] { };
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
+        // --------------------------------------------------------------------
+        // Load the task groups from the organization.
+        // --------------------------------------------------------------------
+
+        groups = sharedService.CurrentUser.Organization.Groups.Split(",");
+
+
         // --------------------------------------------------------------------
         // Attempt to load the task, if necessary.
         // --------------------------------------------------------------------

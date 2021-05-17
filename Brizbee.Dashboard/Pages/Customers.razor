@@ -301,9 +301,7 @@
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-default" @onclick="@(e => OpenNewTaskDialog())" disabled="@(!selectedProjectId.HasValue)"><i class="fa fa-plus" aria-hidden="true"></i> New Task</button>
-                            <a class="btn btn-default" ng-disabled="selected.job == null" href="@downloadUrl">
-                                Download
-                            </a>
+                            <button type="button" class="btn btn-default" disabled="@(!selectedProjectId.HasValue)" @onclick="@(e => OpenDownloadBarCodesDialog(selectedProjectId))"><i class="fas fa-file-download"></i> Download Bar Codes</button>
                         </div>
                     </div>
                 </div>
@@ -333,7 +331,7 @@
                                 }
                             </a>
                         </th>
-                        <th class="col-md-9">
+                        <th class="col-md-5">
                             <a href="javascript:void(0)" @onclick="@(e => ChangeTasksSortBy("Name"))">
                                 Name
                                 @if (tasksSortBy == "Name" && tasksSortDirection == "ASC")
@@ -341,6 +339,19 @@
                                     <span class="fa fa-caret-up"></span>
                                 }
                                 else if (tasksSortBy == "Name" && tasksSortDirection == "DESC")
+                                {
+                                    <span class="fa fa-caret-down"></span>
+                                }
+                            </a>
+                        </th>
+                        <th class="col-md-4">
+                            <a href="javascript:void(0)" @onclick="@(e => ChangeTasksSortBy("Group"))">
+                                Group
+                                @if (tasksSortBy == "Group" && tasksSortDirection == "ASC")
+                                {
+                                    <span class="fa fa-caret-up"></span>
+                                }
+                                else if (tasksSortBy == "Group" && tasksSortDirection == "DESC")
                                 {
                                     <span class="fa fa-caret-down"></span>
                                 }
@@ -355,6 +366,7 @@
                         <tr class="selectable @(task.Id == selectedTaskId ? "selected" : "")">
                             <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Number</a></td>
                             <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Name</a></td>
+                            <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Group</a></td>
                             <td class="col-md-1 text-right text-muted" style="vertical-align: middle;">
                                 <a href="javascript:void(0)" @onclick="@(e => OpenModifyTaskDialog(task))"><i class="fas fa-pencil-alt" aria-hidden="true"></i></a>
                             </td>
@@ -363,13 +375,13 @@
                     @if (loadingTasks)
                     {
                         <tr class="fadeIn">
-                            <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                            <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                         </tr>
                     }
                     @if (!loadingTasks && tasks.Count == 0)
                     {
                         <tr class="fadeIn">
-                            <td colspan="3">No Tasks for Selected Job</td>
+                            <td colspan="4">No Tasks for Selected Job</td>
                         </tr>
                     }
                 </tbody>
@@ -587,6 +599,13 @@
         dialogService.Open<TaskDialog>("Edit Task",
                                 new Dictionary<string, object>() { { "Id", task.Id }, { "ProjectId", selectedProjectId } },
                                 new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenDownloadBarCodesDialog(int? projectId)
+    {
+        dialogService.Open<DownloadBarCodesDialog>("Download Bar Codes",
+                                new Dictionary<string, object>() { { "Id", projectId } },
+                                new DialogOptions() { Width = "500px" });
     }
 
     private async void ChangeCustomersSortBy(string column)

@@ -46,7 +46,10 @@ namespace Brizbee.Common.Models
 
         [Required]
         public string Number { get; set; }
-        
+
+        [StringLength(20)]
+        public string Group { get; set; }
+
         public string QuickBooksPayrollItem { get; set; }
 
         public string QuickBooksServiceItem { get; set; }

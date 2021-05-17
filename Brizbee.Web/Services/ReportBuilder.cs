@@ -1938,7 +1938,7 @@ namespace Brizbee.Web.Services
             return buffer;
         }
 
-        public byte[] TasksByJobAsPdf(int jobId, User currentUser)
+        public byte[] TasksByJobAsPdf(int jobId, User currentUser, string taskGroupScope)
         {
             var buffer = new byte[0];
             var output = new MemoryStream();
@@ -1991,7 +1991,22 @@ namespace Brizbee.Web.Services
                 details.Colspan = 2;
                 table.AddCell(details);
 
-                var tasks = db.Tasks.Where(t => t.JobId == jobId);
+                var tasks = new List<Task>();
+
+                if (string.IsNullOrEmpty(taskGroupScope) || taskGroupScope == "Unspecified")
+                {
+                    tasks = db.Tasks
+                        .Where(t => t.JobId == jobId)
+                        .ToList();
+                }
+                else
+                {
+                    tasks = db.Tasks
+                        .Where(t => t.JobId == jobId)
+                        .Where(t => t.Group == taskGroupScope)
+                        .ToList();
+                }
+
                 foreach (var task in tasks)
                 {
                     try
@@ -2028,6 +2043,10 @@ namespace Brizbee.Web.Services
                         Trace.TraceError(ex.ToString());
                     }
                 }
+
+                // Add a blank cell?
+                var blankCell = new PdfPCell();
+                table.AddCell(blankCell);
 
                 document.Add(table);
 
