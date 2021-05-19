@@ -44,7 +44,21 @@ namespace Brizbee.Dashboard.Services
         public async Task<(List<Job>, long?)> GetJobsAsync(int customerId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}&$filter=CustomerId eq {customerId}");
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+                return (new List<Job>(), 0);
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Job>>(responseContent, options);
+            return (odataResponse.Value.ToList(), odataResponse.Count);
+        }
+
+        public async Task<(List<Job>, long?)> GetOpenJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs/Default.Open?$expand=Customer&$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
+            
+            if (!response.IsSuccessStatusCode)
+                return (new List<Job>(), 0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Job>>(responseContent, options);
@@ -94,7 +108,11 @@ namespace Brizbee.Dashboard.Services
                     { "Name", job.Name },
                     { "Number", job.Number },
                     { "Description", job.Description },
-                    { "Status", job.Status }
+                    { "Status", job.Status },
+                    { "CustomerWorkOrder", job.CustomerWorkOrder },
+                    { "CustomerPurchaseOrder", job.CustomerPurchaseOrder },
+                    { "InvoiceNumber", job.InvoiceNumber },
+                    { "QuoteNumber", job.QuoteNumber },
                 };
 
                 // Can only be configured at creation.

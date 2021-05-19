@@ -56,5 +56,17 @@ namespace Brizbee.Common.Models
 
         [StringLength(20)]
         public string Status { get; set; }
+
+        [StringLength(50)]
+        public string CustomerWorkOrder { get; set; }
+
+        [StringLength(50)]
+        public string CustomerPurchaseOrder { get; set; }
+
+        [StringLength(50)]
+        public string InvoiceNumber { get; set; }
+
+        [StringLength(50)]
+        public string QuoteNumber { get; set; }
     }
 }

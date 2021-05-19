@@ -94,6 +94,13 @@
 </nav>
 
 <div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="open-projects">Open Projects</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="customers">Everything</NavLink></li>
+    </ul>
+
+    <hr />
+
     <div class="row">
         <div class="col-md-4">
             <div class="row row-toolbar">
@@ -206,7 +213,7 @@
                 </div>
             </div>
 
-            <!--List of Jobs-->
+            <!--List of Projects-->
             <table class="table table-bordered table-jobs">
                 <thead>
                     <tr>
@@ -300,8 +307,8 @@
                 <div class="col-md-8 col-sm-8 col-xs-8">
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => OpenNewTaskDialog())" disabled="@(!selectedProjectId.HasValue)"><i class="fa fa-plus" aria-hidden="true"></i> New Task</button>
-                            <button type="button" class="btn btn-default" disabled="@(!selectedProjectId.HasValue)" @onclick="@(e => OpenDownloadBarCodesDialog(selectedProjectId))"><i class="fas fa-file-download"></i> Download Bar Codes</button>
+                            <button type="button" class="btn btn-default" @onclick="@(e => OpenNewTaskDialog())" disabled="@(!selectedProjectId.HasValue)"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Task</button>
+                            <button type="button" class="btn btn-default" disabled="@(!selectedProjectId.HasValue)" @onclick="@(e => OpenDownloadBarCodesDialog(selectedProjectId))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
                         </div>
                     </div>
                 </div>
@@ -346,7 +353,7 @@
                         </th>
                         <th class="col-md-4">
                             <a href="javascript:void(0)" @onclick="@(e => ChangeTasksSortBy("Group"))">
-                                Group
+                                Bar Code Group
                                 @if (tasksSortBy == "Group" && tasksSortDirection == "ASC")
                                 {
                                     <span class="fa fa-caret-up"></span>
@@ -426,7 +433,7 @@
     private string projectsSortDirection = "ASC";
     private string tasksSortBy = "Number";
     private string tasksSortDirection = "ASC";
-    private int pageSize = 100;
+    private int pageSize = 20;
     private int customersSkip = 0;
     private int projectsSkip = 0;
     private int tasksSkip = 0;
@@ -532,6 +539,9 @@
 
     private async System.Threading.Tasks.Task RefreshProjects()
     {
+        if (!selectedCustomerId.HasValue)
+            return;
+
         loadingProjects = true;
 
         // Prevent stagnation.
@@ -547,6 +557,9 @@
 
     private async System.Threading.Tasks.Task RefreshTasks()
     {
+        if (!selectedProjectId.HasValue)
+            return;
+
         loadingTasks = true;
 
         // Prevent stagnation.
@@ -659,6 +672,11 @@
     private async void SelectCustomer(Customer customer)
     {
         selectedCustomerId = customer.Id;
+
+        // Reset the projects paging before refreshing
+        projectsPageStart = 0;
+        projectsSkip = 0;
+
         await RefreshProjects();
 
         // Select the first project
@@ -671,6 +689,11 @@
     private async void SelectProject(Job project)
     {
         selectedProjectId = project.Id;
+
+        // Reset the tasks paging before refreshing
+        tasksPageStart = 0;
+        tasksSkip = 0;
+
         await RefreshTasks();
 
         // Select the first task

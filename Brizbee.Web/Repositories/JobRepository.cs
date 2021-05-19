@@ -64,36 +64,6 @@ namespace Brizbee.Web.Repositories
         }
 
         /// <summary>
-        /// Returns the job with the given id.
-        /// </summary>
-        /// <param name="id">The id of the job</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The job with the given id</returns>
-        public IQueryable<Job> Get(int id, User currentUser)
-        {
-            var customerIds = db.Customers
-                .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Select(c => c.Id);
-            return db.Jobs
-                .Where(j => customerIds.Contains(j.CustomerId))
-                .Where(j => j.Id == id);
-        }
-
-        /// <summary>
-        /// Returns a queryable collection of jobs.
-        /// </summary>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The queryable collection of jobs</returns>
-        public IQueryable<Job> GetAll(User currentUser)
-        {
-            var customerIds = db.Customers
-                .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Select(c => c.Id);
-            return db.Jobs
-                .Where(j => customerIds.Contains(j.CustomerId));
-        }
-
-        /// <summary>
         /// Updates the given job with the given delta of changes.
         /// </summary>
         /// <param name="id">The id of the job</param>

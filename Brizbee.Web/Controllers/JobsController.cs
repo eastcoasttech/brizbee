@@ -38,14 +38,43 @@ namespace Brizbee.Web.Controllers
         [EnableQuery(PageSize = 20)]
         public IQueryable<Job> GetJobs()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+
+            return db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId));
+        }
+
+        // GET: odata/Jobs/Default.Open
+        [HttpGet]
+        [EnableQuery(PageSize = 1000, MaxExpansionDepth = 1)]
+        public IQueryable<Job> Open()
+        {
+            var currentUser = CurrentUser();
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+
+            return db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Where(j => j.Status != "Closed")
+                .Where(j => j.Status != "Merged");
         }
 
         // GET: odata/Jobs(5)
         [EnableQuery]
         public SingleResult<Job> GetJob([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+
+            return SingleResult.Create(db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Where(j => j.Id == key));
         }
 
         // POST: odata/Jobs

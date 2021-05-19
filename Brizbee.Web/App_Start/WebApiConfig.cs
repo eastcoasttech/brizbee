@@ -76,6 +76,12 @@ namespace Brizbee
             builder.EntitySet<TimesheetEntry>("TimesheetEntries");
             builder.EntitySet<User>("Users");
 
+            // Collection Function - Jobs/Open
+            builder.EntityType<Job>()
+                .Collection
+                .Function("Open")
+                .ReturnsCollectionFromEntitySet<Job>("Jobs");
+
             // Collection Function - Punches/Current
             builder.EntityType<Punch>()
                 .Collection

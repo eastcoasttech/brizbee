@@ -30,14 +30,18 @@ GO
 
 -- Jobs Table
 CREATE TABLE [dbo].[Jobs] (
-    [Id] int IDENTITY (1, 1) NOT NULL,
-    [CreatedAt] datetime2(7) NOT NULL,
-    [CustomerId] int NOT NULL,
-    [Description] nvarchar(max) NULL,
-    [Name] nvarchar(max) NOT NULL,
-    [Number] nvarchar(max) NOT NULL,
-    [QuickBooksCustomerJob] nvarchar(max) NULL,
-    [Status] nvarchar(20) NULL,
+    [Id]                            INT IDENTITY (1, 1) NOT NULL,
+    [CreatedAt]                     DATETIME2(7) NOT NULL,
+    [CustomerId]                    INT NOT NULL,
+    [Description]                   NVARCHAR(MAX) NULL,
+    [Name]                          NVARCHAR(MAX) NOT NULL,
+    [Number]                        NVARCHAR(MAX) NOT NULL,
+    [QuickBooksCustomerJob]         NVARCHAR(MAX) NULL,
+    [Status]                        NVARCHAR (20) NULL,
+    [CustomerWorkOrder]             NVARCHAR (50) NULL,
+    [CustomerPurchaseOrder]         NVARCHAR (50) NULL,
+    [InvoiceNumber]                 NVARCHAR (50) NULL,
+    [QuoteNumber]                   NVARCHAR (50) NULL,
     CONSTRAINT [PK_dbo.Jobs] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO
