@@ -426,6 +426,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
+    <Compile Include="Controllers\JobsExpandedController.cs" />
     <Compile Include="Controllers\PunchesExpandedController.cs" />
     <Compile Include="Controllers\QBDInventoryConsumptionsController.cs" />
     <Compile Include="Controllers\QBDInventoryConsumptionSyncsController.cs" />

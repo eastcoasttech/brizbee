@@ -166,6 +166,8 @@ namespace Brizbee.Web.Controllers
                         I.QBDInventoryItemSyncId AS Item_QBDInventoryItemSyncId,
                         I.FullName AS Item_FullName,
                         I.ListId AS Item_ListId,
+                        I.PurchaseCost AS Item_PurchaseCost,
+                        I.SalesPrice AS Item_SalesPrice,
 
                         T.Name as Task_Name,
                         T.Number as Task_Number,
@@ -223,7 +225,9 @@ namespace Brizbee.Web.Controllers
                             SalesDescription = result.Item_SalesDescription,
                             QBDInventoryItemSyncId = result.Item_QBDInventoryItemSyncId,
                             FullName = result.Item_FullName,
-                            ListId = result.Item_ListId
+                            ListId = result.Item_ListId,
+                            PurchaseCost = result.Item_PurchaseCost,
+                            SalesPrice = result.Item_SalesPrice
                         },
                         Task = new Task()
                         {
@@ -533,6 +537,10 @@ namespace Brizbee.Web.Controllers
         public string Item_SalesDescription { get; set; }
 
         public long Item_QBDInventoryItemSyncId { get; set; }
+
+        public decimal Item_PurchaseCost { get; set; }
+
+        public decimal Item_SalesPrice { get; set; }
 
 
         // Task Details
