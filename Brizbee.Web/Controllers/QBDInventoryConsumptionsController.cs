@@ -404,7 +404,17 @@ namespace Brizbee.Web.Controllers
             }
             catch (DbEntityValidationException ex)
             {
-                return BadRequest(ex.Message);
+                string message = "";
+
+                foreach (var eve in ex.EntityValidationErrors)
+                {
+                    foreach (var ve in eve.ValidationErrors)
+                    {
+                        message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                    }
+                }
+
+                return BadRequest(message);
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -422,6 +432,7 @@ namespace Brizbee.Web.Controllers
         public IHttpActionResult PostConsume([FromUri] long qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure)
         {
             var currentUser = CurrentUser();
+            var inventorySiteEnabled = false;
 
             // Find the current punch.
             var currentPunch = _context.Punches
@@ -430,22 +441,21 @@ namespace Brizbee.Web.Controllers
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
 
-            // Site is determined by the hostname.
+            // Inventory site is determined by the hostname.
             var sites = new Dictionary<string, string>()
             {
                 { "RR01", "Site 01" },
                 { "MARTIN-01", "Site 01" }
             };
-            var siteForHostname = "";// sites[hostname];
+            var siteForHostname = sites[hostname];
+
+            // Ensure there is an inventory site for the given hostname, if necessary.
+            if (string.IsNullOrEmpty(siteForHostname) && inventorySiteEnabled)
+                return BadRequest($"No inventory site for hostname {hostname} specified");
 
             long? siteId = _context.QBDInventorySites
                 .Where(s => s.FullName == siteForHostname)
                 .Select(s => s.Id)
-                .FirstOrDefault();
-
-            long? uomId = _context.QBDUnitOfMeasureSets
-                .Where(u => u.Name == unitOfMeasure)
-                .Select(u => u.Id)
                 .FirstOrDefault();
 
             var consumption = new QBDInventoryConsumption()
@@ -458,8 +468,7 @@ namespace Brizbee.Web.Controllers
                 QBDInventoryItemId = qbdInventoryItemId,
                 Hostname = hostname,
                 QBDInventorySiteId = siteId,
-                QBDUnitOfMeasureSetId = uomId,
-                UnitOfMeasure = "UOM"
+                UnitOfMeasure = unitOfMeasure
             };
 
             _context.QBDInventoryConsumptions.Add(consumption);

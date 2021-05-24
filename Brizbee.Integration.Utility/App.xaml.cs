@@ -26,7 +26,6 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
-using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;

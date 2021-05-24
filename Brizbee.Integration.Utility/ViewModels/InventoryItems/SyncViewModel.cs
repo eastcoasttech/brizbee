@@ -24,6 +24,7 @@
 using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
+using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -81,6 +82,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             {
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
+                var companyFileName = req.GetCurrentCompanyFileName(ticket);
 
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
@@ -108,8 +110,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
                 var items = new List<QBDInventoryItem>();
 
-                StatusText += string.Format("{0} - Syncing inventory items.\r\n", DateTime.Now.ToString());
+                StatusText += string.Format("{0} - Collecting inventory items.\r\n", DateTime.Now.ToString());
                 items = SyncInventoryItems(service, ticket, req);
+
+                // Cannot continue to sync if there are no items.
+                if (items.Count == 0)
+                    throw new Exception("There are no inventory items to sync.");
 
                 // ------------------------------------------------------------
                 // Collect the inventory sites.
@@ -118,7 +124,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 var sites = new List<QBDInventorySite>();
 
                 // Attempt to sync sites even if they are not enabled or available.
-                StatusText += string.Format("{0} - Syncing inventory sites.\r\n", DateTime.Now.ToString());
+                StatusText += string.Format("{0} - Collecting inventory sites.\r\n", DateTime.Now.ToString());
                 sites = SyncInventorySites(service, ticket, req);
 
                 // ------------------------------------------------------------
@@ -128,7 +134,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 var units = new List<QBDUnitOfMeasureSet>();
 
                 // Attempt to sync sites even if they are not enabled or available.
-                StatusText += string.Format("{0} - Syncing unit of measure sets.\r\n", DateTime.Now.ToString());
+                StatusText += string.Format("{0} - Collecting unit of measure sets.\r\n", DateTime.Now.ToString());
                 units = SyncUnitOfMeasureSets(service, ticket, req);
 
                 // ------------------------------------------------------------

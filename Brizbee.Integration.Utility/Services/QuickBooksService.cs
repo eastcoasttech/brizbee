@@ -573,9 +573,17 @@ namespace Brizbee.Integration.Utility.Services
                                 }
 
                                 // Deserialize the existing units, add details, and re-serialize.
-                                var deserializedForBaseUnit = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(unit.UnitNamesAndAbbreviations);
+                                var deserializedForBaseUnit = new QuickBooksUnitOfMeasures();
+
+                                if (!string.IsNullOrEmpty(unit.UnitNamesAndAbbreviations))
+                                {
+                                    deserializedForBaseUnit = JsonConvert.DeserializeObject
+                                        <QuickBooksUnitOfMeasures>(unit.UnitNamesAndAbbreviations);
+                                }
+
                                 deserializedForBaseUnit.BaseUnit = baseUnit;
-                                unit.UnitNamesAndAbbreviations = JsonConvert.SerializeObject(deserializedForBaseUnit);
+                                unit.UnitNamesAndAbbreviations =
+                                    JsonConvert.SerializeObject(deserializedForBaseUnit);
 
                                 break;
                             case "RelatedUnit":
@@ -596,9 +604,11 @@ namespace Brizbee.Integration.Utility.Services
                                 }
 
                                 // Deserialize the existing units, add details, and re-serialize.
-                                var deserializedForRelatedUnit = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(unit.UnitNamesAndAbbreviations);
+                                var deserializedForRelatedUnit = JsonConvert.DeserializeObject
+                                    <QuickBooksUnitOfMeasures>(unit.UnitNamesAndAbbreviations);
                                 deserializedForRelatedUnit.RelatedUnits.Add(relatedUnit);
-                                unit.UnitNamesAndAbbreviations = JsonConvert.SerializeObject(deserializedForRelatedUnit);
+                                unit.UnitNamesAndAbbreviations =
+                                    JsonConvert.SerializeObject(deserializedForRelatedUnit);
 
                                 break;
                         }
@@ -625,9 +635,6 @@ namespace Brizbee.Integration.Utility.Services
             // Create UnitOfMeasureSetQueryRq.
             XmlElement request = doc.CreateElement("InventorySiteQueryRq");
             parent.AppendChild(request);
-
-            // Return 500 items at a time.
-            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
 
             // Only include certain fields.
             request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));

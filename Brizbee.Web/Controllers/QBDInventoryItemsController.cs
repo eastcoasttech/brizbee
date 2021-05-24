@@ -196,7 +196,25 @@ namespace Brizbee.Web.Controllers
                     .FirstOrDefault();
             }
 
-            return Ok(item);
+            return Ok(new
+            {
+                item.FullName,
+                item.BarCodeValue,
+                item.ListId,
+                item.Name,
+                item.ManufacturerPartNumber,
+                item.PurchaseCost,
+                item.PurchaseDescription,
+                item.SalesPrice,
+                item.SalesDescription,
+                QBDUnitOfMeasureSet = new
+                {
+                    item.QBDUnitOfMeasureSet.ListId,
+                    item.QBDUnitOfMeasureSet.Name,
+                    item.QBDUnitOfMeasureSet.UnitOfMeasureType,
+                    UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(item.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
+                }
+            });
         }
 
         // POST: api/QBDInventoryItems/Sync
@@ -213,158 +231,183 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            var sync = new QBDInventoryItemSync()
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                CreatedAt = DateTime.UtcNow,
-                CreatedByUserId = currentUser.Id,
-                OrganizationId = currentUser.OrganizationId,
-                HostProductName = productName,
-                HostMajorVersion = majorVersion,
-                HostMinorVersion = minorVersion,
-                HostCountry = country,
-                HostSupportedQBXMLVersion = supportedQBXMLVersion,
-                Hostname = hostname
-            };
-
-
-            // ----------------------------------------------------------------
-            // Create or update the inventory sites
-            // ----------------------------------------------------------------
-
-            foreach (var site in details.InventorySites)
-            {
-                // Find by list id, which is unique across inventory sites
-                var found = _context.QBDInventorySites
-                    .Where(s => s.ListId == site.ListId)
-                    .FirstOrDefault();
-
-                if (found != null)
+                try
                 {
-                    // Update any changes
-                    found.FullName = site.FullName;
-                }
-                else
-                {
-                    // Create the inventory site
-                    site.QBDInventoryItemSyncId = sync.Id;
-                    _context.QBDInventorySites.Add(site);
-                }
-            }
-
-
-            // ----------------------------------------------------------------
-            // Create or update the unit of measure sets
-            // ----------------------------------------------------------------
-
-            foreach (var unit in details.UnitOfMeasureSets)
-            {
-                // Find by list id, which is unique across unit of measure sets
-                var found = _context.QBDUnitOfMeasureSets
-                    .Where(s => s.ListId == unit.ListId)
-                    .FirstOrDefault();
-
-                if (found != null)
-                {
-                    // Update any changes
-                    found.Name = unit.Name;
-                    found.UnitNamesAndAbbreviations = unit.UnitNamesAndAbbreviations;
-                    found.IsActive = unit.IsActive;
-                    found.UnitOfMeasureType = unit.UnitOfMeasureType;
-                }
-                else
-                {
-                    // Create the unit of measure set
-                    unit.QBDInventoryItemSyncId = sync.Id;
-                    _context.QBDUnitOfMeasureSets.Add(unit);
-                }
-            }
-
-
-            // ----------------------------------------------------------------
-            // Create or update the inventory items
-            // ----------------------------------------------------------------
-
-            foreach (var item in details.InventoryItems)
-            {
-                // Find by list id, which is unique across inventory items for the organization
-                var found = _context.QBDInventoryItems
-                    .Where(i => i.OrganizationId == currentUser.OrganizationId)
-                    .Where(i => i.ListId == item.ListId)
-                    .FirstOrDefault();
-
-                if (found != null)
-                {
-                    // Update any changes.
-                    found.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
-                    found.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
-                    found.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
-                    found.PurchaseCost = item.PurchaseCost;
-                    found.Name = item.Name;
-                    found.FullName = item.FullName;
-                    found.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
-                    found.SalesPrice = item.SalesPrice;
-                    found.QBDCOGSAccountFullName = item.QBDCOGSAccountFullName;
-                    found.QBDCOGSAccountListId = item.QBDCOGSAccountListId;
-
-                    // Associate the Unit of Measure Set.
-                    found.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
-                    found.QBDUnitOfMeasureSetListId = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetListId) ? "" : item.QBDUnitOfMeasureSetListId;
-
-                    if (!string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName))
+                    var sync = new QBDInventoryItemSync()
                     {
-                        var uomsId = _context.QBDUnitOfMeasureSets
-                            .Where(u => u.ListId == found.QBDUnitOfMeasureSetListId)
-                            .Select(u => u.Id)
-                            .FirstOrDefault();
-                        found.QBDUnitOfMeasureSetId = uomsId;
-                    }
-                }
-                else
-                {
-                    // Create the inventory item.
-                    item.QBDInventoryItemSyncId = sync.Id;
-                    item.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
-                    item.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
-                    item.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
-                    item.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
-                    item.OrganizationId = currentUser.OrganizationId;
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedByUserId = currentUser.Id,
+                        OrganizationId = currentUser.OrganizationId,
+                        HostProductName = productName,
+                        HostMajorVersion = majorVersion,
+                        HostMinorVersion = minorVersion,
+                        HostCountry = country,
+                        HostSupportedQBXMLVersion = supportedQBXMLVersion,
+                        Hostname = hostname
+                    };
+                    _context.QBDInventoryItemSyncs.Add(sync);
+                    _context.SaveChanges();
 
-                    // Associate the Unit of Measure Set.
-                    item.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
-                    item.QBDUnitOfMeasureSetListId = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetListId) ? "" : item.QBDUnitOfMeasureSetListId;
 
-                    if (!string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName))
+                    // ----------------------------------------------------------------
+                    // Create or update the inventory sites
+                    // ----------------------------------------------------------------
+
+                    foreach (var site in details.InventorySites)
                     {
-                        var uomsId = _context.QBDUnitOfMeasureSets
-                            .Where(u => u.ListId == item.QBDUnitOfMeasureSetListId)
-                            .Select(u => u.Id)
+                        // Find by list id, which is unique across inventory sites
+                        var found = _context.QBDInventorySites
+                            .Where(s => s.ListId == site.ListId)
                             .FirstOrDefault();
-                        item.QBDUnitOfMeasureSetId = uomsId;
+
+                        if (found != null)
+                        {
+                            // Update any changes
+                            found.FullName = site.FullName;
+                        }
+                        else
+                        {
+                            // Create the inventory site
+                            site.QBDInventoryItemSyncId = sync.Id;
+                            _context.QBDInventorySites.Add(site);
+                        }
                     }
 
-                    _context.QBDInventoryItems.Add(item);
+                    _context.SaveChanges();
+
+
+                    // ----------------------------------------------------------------
+                    // Create or update the unit of measure sets
+                    // ----------------------------------------------------------------
+
+                    foreach (var unit in details.UnitOfMeasureSets)
+                    {
+                        // Find by list id, which is unique across unit of measure sets
+                        var found = _context.QBDUnitOfMeasureSets
+                            .Where(s => s.ListId == unit.ListId)
+                            .FirstOrDefault();
+
+                        if (found != null)
+                        {
+                            // Update any changes
+                            found.Name = unit.Name;
+                            found.UnitNamesAndAbbreviations = unit.UnitNamesAndAbbreviations;
+                            found.IsActive = unit.IsActive;
+                            found.UnitOfMeasureType = unit.UnitOfMeasureType;
+                        }
+                        else
+                        {
+                            // Create the unit of measure set
+                            unit.QBDInventoryItemSyncId = sync.Id;
+                            _context.QBDUnitOfMeasureSets.Add(unit);
+                        }
+                    }
+
+                    _context.SaveChanges();
+
+
+                    // ----------------------------------------------------------------
+                    // Create or update the inventory items
+                    // ----------------------------------------------------------------
+
+                    foreach (var item in details.InventoryItems)
+                    {
+                        // Find by list id, which is unique across inventory items for the organization
+                        var found = _context.QBDInventoryItems
+                            .Where(i => i.OrganizationId == currentUser.OrganizationId)
+                            .Where(i => i.ListId == item.ListId)
+                            .FirstOrDefault();
+
+                        if (found != null)
+                        {
+                            // Update any changes.
+                            found.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
+                            found.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
+                            found.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
+                            found.PurchaseCost = item.PurchaseCost;
+                            found.Name = item.Name;
+                            found.FullName = item.FullName;
+                            found.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
+                            found.SalesPrice = item.SalesPrice;
+                            found.QBDCOGSAccountFullName = item.QBDCOGSAccountFullName;
+                            found.QBDCOGSAccountListId = item.QBDCOGSAccountListId;
+
+                            // Associate the Unit of Measure Set.
+                            found.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
+                            found.QBDUnitOfMeasureSetListId = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetListId) ? "" : item.QBDUnitOfMeasureSetListId;
+
+                            if (!string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName))
+                            {
+                                var uomsId = _context.QBDUnitOfMeasureSets
+                                    .Where(u => u.ListId == found.QBDUnitOfMeasureSetListId)
+                                    .Select(u => u.Id)
+                                    .FirstOrDefault();
+                                found.QBDUnitOfMeasureSetId = uomsId;
+                            }
+                        }
+                        else
+                        {
+                            // Create the inventory item.
+                            item.QBDInventoryItemSyncId = sync.Id;
+                            item.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
+                            item.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
+                            item.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
+                            item.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
+                            item.OrganizationId = currentUser.OrganizationId;
+
+                            // Associate the Unit of Measure Set.
+                            item.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
+                            item.QBDUnitOfMeasureSetListId = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetListId) ? "" : item.QBDUnitOfMeasureSetListId;
+
+                            if (!string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName))
+                            {
+                                var uomsId = _context.QBDUnitOfMeasureSets
+                                    .Where(u => u.ListId == item.QBDUnitOfMeasureSetListId)
+                                    .Select(u => u.Id)
+                                    .FirstOrDefault();
+                                item.QBDUnitOfMeasureSetId = uomsId;
+                            }
+
+                            _context.QBDInventoryItems.Add(item);
+                        }
+                    }
+
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+
+                    return Ok();
                 }
-            }
+                catch (DbEntityValidationException ex)
+                {
+                    string message = "";
 
-            try
-            {
-                _context.QBDInventoryItemSyncs.Add(sync);
+                    foreach (var eve in ex.EntityValidationErrors)
+                    {
+                        foreach (var ve in eve.ValidationErrors)
+                        {
+                            message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                        }
+                    }
 
-                _context.SaveChanges();
+                    transaction.Rollback();
 
-                return Ok();
-            }
-            catch (DbEntityValidationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (DbUpdateException ex)
-            {
-                return BadRequest(ex.ToString());
+                    return BadRequest(message);
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    transaction.Rollback();
+
+                    return BadRequest(ex.Message);
+                }
+                catch (DbUpdateException ex)
+                {
+                    transaction.Rollback();
+
+                    return BadRequest(ex.ToString());
+                }
             }
         }
 
