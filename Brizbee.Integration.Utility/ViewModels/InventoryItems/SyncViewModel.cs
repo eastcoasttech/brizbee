@@ -158,6 +158,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
                 syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
                 syncHttpRequest.AddQueryParameter("hostname", Environment.MachineName);
+                syncHttpRequest.AddQueryParameter("companyFilePath", companyFileName);
 
                 // Execute request.
                 var syncHttpResponse = client.Execute(syncHttpRequest);

@@ -31,6 +31,7 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -194,27 +195,42 @@ namespace Brizbee.Web.Controllers
                 item.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
                     .Where(s => s.Id == item.QBDUnitOfMeasureSetId)
                     .FirstOrDefault();
-            }
 
-            return Ok(new
-            {
-                item.FullName,
-                item.BarCodeValue,
-                item.ListId,
-                item.Name,
-                item.ManufacturerPartNumber,
-                item.PurchaseCost,
-                item.PurchaseDescription,
-                item.SalesPrice,
-                item.SalesDescription,
-                QBDUnitOfMeasureSet = new
+                return Ok(new
                 {
-                    item.QBDUnitOfMeasureSet.ListId,
-                    item.QBDUnitOfMeasureSet.Name,
-                    item.QBDUnitOfMeasureSet.UnitOfMeasureType,
-                    UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(item.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
-                }
-            });
+                    item.FullName,
+                    item.BarCodeValue,
+                    item.ListId,
+                    item.Name,
+                    item.ManufacturerPartNumber,
+                    item.PurchaseCost,
+                    item.PurchaseDescription,
+                    item.SalesPrice,
+                    item.SalesDescription,
+                    QBDUnitOfMeasureSet = new
+                    {
+                        item.QBDUnitOfMeasureSet.ListId,
+                        item.QBDUnitOfMeasureSet.Name,
+                        item.QBDUnitOfMeasureSet.UnitOfMeasureType,
+                        UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(item.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
+                    }
+                });
+            }
+            else
+            {
+                return Ok(new
+                {
+                    item.FullName,
+                    item.BarCodeValue,
+                    item.ListId,
+                    item.Name,
+                    item.ManufacturerPartNumber,
+                    item.PurchaseCost,
+                    item.PurchaseDescription,
+                    item.SalesPrice,
+                    item.SalesDescription
+                });
+            }
         }
 
         // POST: api/QBDInventoryItems/Sync
@@ -227,10 +243,21 @@ namespace Brizbee.Web.Controllers
             [FromUri] string minorVersion,
             [FromUri] string country,
             [FromUri] string supportedQBXMLVersion,
-            [FromUri] string hostname)
+            [FromUri] string hostname,
+            [FromUri] string companyFilePath)
         {
             var currentUser = CurrentUser();
 
+            // Ensure that the sync is for the same company file.
+            var companyFileName = Path.GetFileName(companyFilePath);
+            var previous = _context.QBDInventoryItemSyncs
+                .Where(q => q.OrganizationId == currentUser.OrganizationId)
+                .Where(q => q.HostCompanyFileName != companyFileName);
+
+            if (previous.Any())
+                return BadRequest("The company file appears to be different.");
+
+            // Attempt to sync.
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
@@ -245,6 +272,8 @@ namespace Brizbee.Web.Controllers
                         HostMinorVersion = minorVersion,
                         HostCountry = country,
                         HostSupportedQBXMLVersion = supportedQBXMLVersion,
+                        HostCompanyFileName = companyFileName,
+                        HostCompanyFilePath = companyFilePath,
                         Hostname = hostname
                     };
                     _context.QBDInventoryItemSyncs.Add(sync);

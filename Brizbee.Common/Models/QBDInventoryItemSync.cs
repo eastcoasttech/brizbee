@@ -83,5 +83,19 @@ namespace Brizbee.Common.Models
         [Required]
         [StringLength(100)]
         public string HostSupportedQBXMLVersion { get; set; }
+
+        /// <summary>
+        /// Company file name collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(200)]
+        public string HostCompanyFileName { get; set; }
+
+        /// <summary>
+        /// Path to the company file collected from QuickBooks host details.
+        /// </summary>
+        [Required]
+        [StringLength(500)]
+        public string HostCompanyFilePath { get; set; }
     }
 }

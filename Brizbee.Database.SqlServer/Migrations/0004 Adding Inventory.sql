@@ -38,6 +38,8 @@ CREATE TABLE [dbo].[QBDInventoryItemSyncs] (
     [HostCountry]                   VARCHAR (10) NOT NULL,
     [HostSupportedQBXMLVersion]     VARCHAR (100) NOT NULL,
     [Hostname]                      VARCHAR (15) NOT NULL,
+    [HostCompanyFileName]           VARCHAR (200) NOT NULL,
+    [HostCompanyFilePath]           VARCHAR (500) NOT NULL,
     CONSTRAINT [PK_dbo.QBDInventoryItemSyncs] PRIMARY KEY CLUSTERED ([Id])
 );
 GO
@@ -64,6 +66,8 @@ CREATE TABLE [dbo].[QBDInventoryConsumptionSyncs] (
     [HostMinorVersion]              VARCHAR (10) NOT NULL,
     [HostCountry]                   VARCHAR (10) NOT NULL,
     [HostSupportedQBXMLVersion]     VARCHAR (100) NOT NULL,
+    [HostCompanyFileName]           VARCHAR (200) NOT NULL,
+    [HostCompanyFilePath]           VARCHAR (500) NOT NULL,
     [ConsumptionsCount]             INT NOT NULL,
     [Hostname]                      VARCHAR (15) NOT NULL,
     [TxnIDs]                        VARCHAR (MAX) NOT NULL,

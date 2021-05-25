@@ -83,6 +83,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             {
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
+                var companyFileName = req.GetCurrentCompanyFileName(ticket);
 
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
@@ -94,6 +95,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     OnPropertyChanged("StatusText");
                 }
                 else if (selectedMethod == "Sales Receipt")
+                {
+                    StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
+                    OnPropertyChanged("StatusText");
+                }
+                else if (selectedMethod == "Bill")
                 {
                     StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
                     OnPropertyChanged("StatusText");
@@ -199,6 +205,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                             syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
                             syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
                             syncHttpRequest.AddQueryParameter("hostname", Environment.MachineName);
+                            syncHttpRequest.AddQueryParameter("companyFilePath", companyFileName);
 
                             // Execute request.
                             var syncHttpResponse = client.Execute(syncHttpRequest);

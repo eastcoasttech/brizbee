@@ -31,6 +31,7 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -361,10 +362,21 @@ namespace Brizbee.Web.Controllers
             [FromUri] string supportedQBXMLVersion,
             [FromUri] string recordingMethod,
             [FromUri] string valueMethod,
-            [FromUri] string hostname)
+            [FromUri] string hostname,
+            [FromUri] string companyFilePath)
         {
             var currentUser = CurrentUser();
 
+            // Ensure that the sync is for the same company file.
+            var companyFileName = Path.GetFileName(companyFilePath);
+            var previous = _context.QBDInventoryConsumptionSyncs
+                .Where(q => q.OrganizationId == currentUser.OrganizationId)
+                .Where(q => q.HostCompanyFileName != companyFileName);
+
+            if (previous.Any())
+                return BadRequest("The company file appears to be different.");
+
+            // Attempt to sync.
             var consumptions = _context.QBDInventoryConsumptions
                 .Where(a => a.OrganizationId == currentUser.OrganizationId)
                 .Where(a => !a.QBDInventoryConsumptionSyncId.HasValue)
@@ -384,6 +396,8 @@ namespace Brizbee.Web.Controllers
                 HostMinorVersion = minorVersion,
                 HostCountry = country,
                 HostSupportedQBXMLVersion = supportedQBXMLVersion,
+                HostCompanyFileName = companyFileName,
+                HostCompanyFilePath = companyFilePath,
                 ConsumptionsCount = consumptions.Count,
                 Hostname = hostname,
                 TxnIDs = string.Join(",", details.TxnIDs)

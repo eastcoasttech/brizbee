@@ -54,7 +54,7 @@ namespace Brizbee.Integration.Utility
             
             icon.Icon = new Icon(st);
             icon.Visible = true;
-            icon.ShowBalloonTip(2000, "BRIZBEE Integration Utility", "Started", ToolTipIcon.Info);
+            //icon.ShowBalloonTip(2000, "BRIZBEE Integration Utility", "Started", ToolTipIcon.Info);
             icon.MouseClick += icon_MouseClick;
 
             var strip = new ContextMenuStrip();
