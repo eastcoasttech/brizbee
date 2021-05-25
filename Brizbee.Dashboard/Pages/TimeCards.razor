@@ -225,7 +225,7 @@
                 <tr class="fadeIn selectable" @onclick="@(e => OpenModifyTimeCardDialog(timeCard))">
                     <td><a href="javascript:void(0)">@timeCard.EnteredAt.ToShortDateString()</a></td>
                     <td><a href="javascript:void(0)">@formatMinutes(timeCard.Minutes)</a></td>
-                    <td><a href="javascript:void(0)">@formatNotes(timeCard.Notes)</a></td>
+                    <td><a href="javascript:void(0)">@formatText(timeCard.Notes)</a></td>
                     <td><a href="javascript:void(0)">@timeCard.User.Name</a></td>
                     <td><a href="javascript:void(0)">@timeCard.Task.Job.Customer.Number &ndash; @timeCard.Task.Job.Customer.Name</a></td>
                     <td><a href="javascript:void(0)">@timeCard.Task.Job.Number &ndash; @timeCard.Task.Job.Name</a></td>
@@ -406,13 +406,13 @@
         }
     }
 
-    private string formatNotes(string notes)
+    private string formatText(string text)
     {
-        if (string.IsNullOrEmpty(notes)) return "";
+        if (string.IsNullOrEmpty(text)) return "";
 
-        if (notes.Length > 27)
-            return $"{notes.Substring(0, 26)}...";
+        if (text.Length > 27)
+            return $"{text.Substring(0, 26)}...";
         else
-            return notes;
+            return text;
     }
 }

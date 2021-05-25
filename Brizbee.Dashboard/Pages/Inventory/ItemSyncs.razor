@@ -157,7 +157,7 @@
                 <tr class="fadeIn selectable">
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
-                    <td><a href="javascript:void(0)">@sync.HostProductName</a></td>
+                    <td><a href="javascript:void(0)">@formatText(sync.HostProductName)</a></td>
                     <td><a href="javascript:void(0)"><i class="fas fa-desktop" style="margin-right: 5px;"></i>@sync.Hostname</a></td>
                 </tr>
             }
@@ -278,5 +278,15 @@
         }
 
         await RefreshSyncs();
+    }
+
+    private string formatText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        if (text.Length > 27)
+            return $"{text.Substring(0, 26)}...";
+        else
+            return text;
     }
 }

@@ -197,8 +197,8 @@
                     <td><a href="javascript:void(0)">@item.Name</a></td>
                     <td><a href="javascript:void(0)">@item.ManufacturerPartNumber</a></td>
                     <td><a href="javascript:void(0)">@item.BarCodeValue</a></td>
-                    <td><a href="javascript:void(0)">@formatDescription(item.PurchaseDescription)</a></td>
-                    <td><a href="javascript:void(0)">@formatDescription(item.SalesDescription)</a></td>
+                    <td><a href="javascript:void(0)">@formatText(item.PurchaseDescription)</a></td>
+                    <td><a href="javascript:void(0)">@formatText(item.SalesDescription)</a></td>
                     <td><a href="javascript:void(0)">@item.PurchaseCost.ToString("C")</a></td>
                     <td><a href="javascript:void(0)">@item.SalesPrice.ToString("C")</a></td>
                 </tr>
@@ -321,13 +321,13 @@
         await RefreshItems();
     }
 
-    private string formatDescription(string description)
+    private string formatText(string text)
     {
-        if (string.IsNullOrEmpty(description)) return "";
+        if (string.IsNullOrEmpty(text)) return "";
 
-        if (description.Length > 27)
-            return $"{description.Substring(0, 26)}...";
+        if (text.Length > 27)
+            return $"{text.Substring(0, 26)}...";
         else
-            return description;
+            return text;
     }
 }
