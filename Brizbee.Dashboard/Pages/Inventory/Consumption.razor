@@ -266,7 +266,12 @@
                     <td><a href="javascript:void(0)">@consumption.Task.Job.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Number</a></td>
                     <td><a href="javascript:void(0)">@consumption.Task.Name</a></td>
-                    <td><a href="javascript:void(0)">@consumption.QBDInventoryConsumptionSyncId.HasValue</a></td>
+                    <td class="text-center">
+                        @if (consumption.QBDInventoryConsumptionSyncId.HasValue)
+                        {
+                            <i class="fas fa-check"></i>
+                        }
+                    </td>
                 </tr>
             }
             @if (working)
