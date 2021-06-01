@@ -21,12 +21,14 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
 using RestSharp;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 
@@ -46,8 +48,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
 
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
-        private string transactionType = Application.Current.Properties["TransactionType"] as string;
-        private string transactionId = Application.Current.Properties["TransactionId"] as string;
+        private QBDInventoryConsumptionSync selectedSync = Application.Current.Properties["SelectedSync"] as QBDInventoryConsumptionSync;
         #endregion
 
         public void Reverse()
@@ -78,6 +79,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
             {
                 req.OpenConnection2("", "BRIZBEE Integration Utility", QBXMLRPConnectionType.localQBD);
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
+                var companyFileName = req.GetCurrentCompanyFileName(ticket);
 
                 StatusText += string.Format("{0} - Reversing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
@@ -99,40 +101,39 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                 var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
                 var hostDetails = hostWalkResponse.Item3;
 
+                if (Path.GetFileName(companyFileName) != selectedSync.HostCompanyFileName)
+                    throw new Exception("The open company file in QuickBooks is not the same as the one that was synced.");
+
                 // ------------------------------------------------------------
                 // Reverse the transaction.
                 // ------------------------------------------------------------
 
-                // Prepare a new QBXML document.
-                var delQBXML = service.MakeQBXMLDocument();
-                var delDocument = delQBXML.Item1;
-                var delElement = delQBXML.Item2;
-                service.BuildTxnDelRq(delDocument, delElement, transactionType, transactionId); // InventoryAdjustment or SalesReceipt or TimeTracking
+                var txnIds = selectedSync.TxnIDs.Split(',');
 
-                // Make the request.
-                var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
-
-                // Then walk the response.
-                var delWalkResponse = service.WalkTxnDelRs(delResponse);
-
-                // ------------------------------------------------------------
-                // Send the result to the server.
-                // ------------------------------------------------------------
-
-                // Build the payload.
-                var payload = new
+                foreach (var txnId in txnIds)
                 {
-                };
+                    // Prepare a new QBXML document.
+                    var delQBXML = service.MakeQBXMLDocument();
+                    var delDocument = delQBXML.Item1;
+                    var delElement = delQBXML.Item2;
+                    service.BuildTxnDelRq(delDocument, delElement, selectedSync.RecordingMethod, txnId); // InventoryAdjustment, SalesReceipt, TimeTracking, or Bill
+
+                    // Make the request.
+                    Trace.TraceInformation(delDocument.OuterXml);
+                    var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
+                    Trace.TraceInformation(delResponse);
+
+                    // Then walk the response.
+                    var delWalkResponse = service.WalkTxnDelRs(delResponse);
+                }
+
+                // ------------------------------------------------------------
+                // Send the request to the server.
+                // ------------------------------------------------------------
 
                 // Build the request.
-                var syncHttpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
-                syncHttpRequest.AddJsonBody(payload);
-                syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
-                syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);
-                syncHttpRequest.AddQueryParameter("minorVersion", hostDetails.QBMinorVersion);
-                syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
-                syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
-                syncHttpRequest.AddQueryParameter("hostname", Environment.MachineName);
+                var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptionSyncs/Reverse", Method.POST);
+                syncHttpRequest.AddQueryParameter("id", selectedSync.Id.ToString());
 
                 // Execute request.
                 var syncHttpResponse = client.Execute(syncHttpRequest);

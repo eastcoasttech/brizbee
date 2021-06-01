@@ -407,7 +407,7 @@ namespace Brizbee.Web.Controllers
             // Assign the consumptions to the sync.
             foreach (var consumption in consumptions)
             {
-                consumption.QBDInventoryConsumptionSyncId = consumption.Id;
+                consumption.QBDInventoryConsumptionSyncId = sync.Id;
             }
 
             try
@@ -443,7 +443,7 @@ namespace Brizbee.Web.Controllers
         // POST: api/QBDInventoryConsumptions/Consume
         [HttpPost]
         [Route("api/QBDInventoryConsumptions/Consume")]
-        public IHttpActionResult PostConsume([FromUri] long qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure)
+        public IHttpActionResult PostConsume([FromUri] long qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure = "")
         {
             var currentUser = CurrentUser();
             var inventorySiteEnabled = false;

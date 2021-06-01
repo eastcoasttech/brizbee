@@ -61,7 +61,7 @@ namespace Brizbee.Integration.Utility.Views.Punches
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Could Not Refresh Commits", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(ex.Message, "Could Not Refresh Locks", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -73,7 +73,7 @@ namespace Brizbee.Integration.Utility.Views.Punches
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Could Not Refresh Commits", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(ex.Message, "Could Not Refresh Locks", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Validation;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
@@ -106,7 +108,9 @@ namespace Brizbee.Web.Controllers
                         S.ValueMethod AS Sync_ValueMethod,
                         S.HostProductName AS Sync_HostProductName,
                         S.Hostname AS Sync_Hostname,
+                        S.HostCompanyFileName AS Sync_HostCompanyFileName,
                         S.ConsumptionsCount AS Sync_ConsumptionsCount,
+                        S.TxnIDs AS Sync_TxnIDs,
 
                         U.Id AS User_Id,
                         U.Name AS User_Name
@@ -135,7 +139,9 @@ namespace Brizbee.Web.Controllers
                         ValueMethod = result.Sync_ValueMethod,
                         HostProductName = result.Sync_HostProductName,
                         Hostname = result.Sync_Hostname,
+                        HostCompanyFileName = result.Sync_HostCompanyFileName,
                         ConsumptionsCount = result.Sync_ConsumptionsCount,
+                        TxnIDs = result.Sync_TxnIDs,
                         CreatedByUser = new User()
                         {
                             Id = result.User_Id,
@@ -166,6 +172,61 @@ namespace Brizbee.Web.Controllers
             response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
 
             return response;
+        }
+
+        // POST: api/QBDInventoryConsumptionSyncs/Reverse
+        [HttpPost]
+        [Route("api/QBDInventoryConsumptionSyncs/Reverse")]
+        public IHttpActionResult PostReverse([FromUri] long id)
+        {
+            var currentUser = CurrentUser();
+
+            var sync = _context.QBDInventoryConsumptionSyncs.Find(id);
+
+            if (sync == null) return BadRequest();
+
+            try
+            {
+                var consumptions = _context.QBDInventoryConsumptions
+                    .Where(c => c.QBDInventoryConsumptionSyncId == sync.Id)
+                    .ToList();
+
+                // Mark the consumptions as unsynced.
+                foreach (var consumption in consumptions)
+                {
+                    consumption.QBDInventoryConsumptionSyncId = null;
+                }
+
+                // Record the reverse details.
+                sync.ReversedAt = DateTime.UtcNow;
+                sync.ReversedByUserId = currentUser.Id;
+
+                _context.SaveChanges();
+
+                return Ok();
+            }
+            catch (DbEntityValidationException ex)
+            {
+                string message = "";
+
+                foreach (var eve in ex.EntityValidationErrors)
+                {
+                    foreach (var ve in eve.ValidationErrors)
+                    {
+                        message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                    }
+                }
+
+                return BadRequest(message);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest(ex.ToString());
+            }
         }
 
         private User CurrentUser()
@@ -213,7 +274,11 @@ namespace Brizbee.Web.Controllers
 
         public string Sync_Hostname { get; set; }
 
+        public string Sync_HostCompanyFileName { get; set; }
+
         public int Sync_ConsumptionsCount { get; set; }
+
+        public string Sync_TxnIDs { get; set; }
 
 
         // User Details

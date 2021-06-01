@@ -71,6 +71,8 @@ CREATE TABLE [dbo].[QBDInventoryConsumptionSyncs] (
     [ConsumptionsCount]             INT NOT NULL,
     [Hostname]                      VARCHAR (15) NOT NULL,
     [TxnIDs]                        VARCHAR (MAX) NOT NULL,
+    [ReversedAt]                    DATETIME2 (7) NULL,
+    [ReversedByUserId]              INT NULL,
     CONSTRAINT [PK_dbo.QBDInventoryConsumptionSyncs] PRIMARY KEY CLUSTERED ([Id])
 );
 GO

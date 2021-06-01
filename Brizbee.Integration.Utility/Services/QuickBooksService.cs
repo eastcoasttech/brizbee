@@ -492,6 +492,238 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
+        public void BuildBillAddRq(XmlDocument doc, XmlElement parent, QBDInventoryConsumption consumption, string vendorFullName, string cogsItemFullName, string refNumber, string valueMethod)
+        {
+            XmlElement request = doc.CreateElement("BillAddRq");
+            parent.AppendChild(request);
+
+            // ------------------------------------------------------------
+            // BillAddRq > BillAdd
+            // ------------------------------------------------------------
+
+            XmlElement bill = doc.CreateElement("BillAdd");
+            request.AppendChild(bill);
+
+            // ------------------------------------------------------------
+            // BillAdd > VendorRef
+            // ------------------------------------------------------------
+
+            XmlElement vendorRef = doc.CreateElement("VendorRef");
+            bill.AppendChild(vendorRef);
+
+            vendorRef.AppendChild(MakeSimpleElement(doc, "FullName", vendorFullName));
+
+            // ------------------------------------------------------------
+            // BillAdd > TxnDate
+            // ------------------------------------------------------------
+
+            bill.AppendChild(MakeSimpleElement(doc, "TxnDate", consumption.CreatedAt.ToString("yyyy-MM-dd")));
+
+            // ------------------------------------------------------------
+            // BillAdd > DueDate
+            // ------------------------------------------------------------
+
+            bill.AppendChild(MakeSimpleElement(doc, "DueDate", consumption.CreatedAt.ToString("yyyy-MM-dd")));
+
+            // ------------------------------------------------------------
+            // BillAdd > RefNumber
+            // ------------------------------------------------------------
+
+            bill.AppendChild(MakeSimpleElement(doc, "RefNumber", refNumber.ToUpperInvariant()));
+
+
+            // Determine the cost of the item, which is determined by the value method.
+            var cost = new decimal(0.00);
+            if (valueMethod.ToUpperInvariant() == "PURCHASE COST")
+            {
+                cost = consumption.QBDInventoryItem.PurchaseCost;
+            }
+            else if (valueMethod.ToUpperInvariant() == "SALES PRICE")
+            {
+                cost = consumption.QBDInventoryItem.SalesPrice;
+            }
+
+
+            // ------------------------------------------------------------
+            //
+            // Line 1 for adjusting the inventory
+            //
+            // ------------------------------------------------------------
+
+
+            // ------------------------------------------------------------
+            // BillAdd > ItemLineAdd 1
+            // ------------------------------------------------------------
+
+            XmlElement line1 = doc.CreateElement("ItemLineAdd");
+            bill.AppendChild(line1);
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 1 > ItemRef
+            // ------------------------------------------------------------
+
+            XmlElement itemRef = doc.CreateElement("ItemRef");
+            line1.AppendChild(itemRef);
+
+            itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 1 > ClassRef
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
+            {
+                XmlElement classRef = doc.CreateElement("ClassRef");
+                line1.AppendChild(classRef);
+
+                classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
+            }
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 1 > Quantity
+            // ------------------------------------------------------------
+
+            line1.AppendChild(MakeSimpleElement(doc, "Quantity", $"-{consumption.Quantity}"));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 1 > UnitOfMeasure
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(consumption.UnitOfMeasure)) // Optional, not always available
+                line1.AppendChild(MakeSimpleElement(doc, "UnitOfMeasure", consumption.UnitOfMeasure));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 1 > Cost
+            // ------------------------------------------------------------
+
+            line1.AppendChild(MakeSimpleElement(doc, "Cost", cost.ToString()));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 1 > InventorySiteRef
+            // ------------------------------------------------------------
+
+            if (consumption.QBDInventorySiteId.HasValue && consumption.QBDInventorySiteId != 0) // Optional, not always available
+            {
+                XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                line1.AppendChild(inventorySiteRef);
+
+                inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
+            }
+
+
+            // ------------------------------------------------------------
+            //
+            // Line 2 for increasing cost of goods sold
+            //
+            // ------------------------------------------------------------
+
+
+            // ------------------------------------------------------------
+            // BillAdd > ItemLineAdd 2
+            // ------------------------------------------------------------
+
+            XmlElement line2 = doc.CreateElement("ItemLineAdd");
+            bill.AppendChild(line2);
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > ItemRef
+            // ------------------------------------------------------------
+
+            XmlElement cogsItemRef = doc.CreateElement("ItemRef");
+            line2.AppendChild(cogsItemRef);
+
+            cogsItemRef.AppendChild(MakeSimpleElement(doc, "FullName", cogsItemFullName)); // Non-Inventory Item for COGS
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > Desc
+            // ------------------------------------------------------------
+
+            line2.AppendChild(MakeSimpleElement(doc, "Desc", consumption.QBDInventoryItem.SalesDescription));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > Quantity
+            // ------------------------------------------------------------
+
+            line2.AppendChild(MakeSimpleElement(doc, "Quantity", consumption.Quantity.ToString()));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > Cost
+            // ------------------------------------------------------------
+
+            line2.AppendChild(MakeSimpleElement(doc, "Cost", cost.ToString()));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > CustomerRef
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksCustomerJob))
+            {
+                XmlElement customerRef = doc.CreateElement("CustomerRef");
+                line2.AppendChild(customerRef);
+
+                customerRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksCustomerJob));
+            }
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > BillableStatus
+            // ------------------------------------------------------------
+
+            line2.AppendChild(MakeSimpleElement(doc, "BillableStatus", "Billable"));
+
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "TxnID"));
+        }
+
+        public (bool, string, List<string>) WalkBillAddRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("BillAddRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            //Check the status code, info, and severity
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                var ids = new List<string>();
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var id = "";
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "TxnID":
+                                id = xmlNode.InnerText;
+                                break;
+                        }
+                    }
+
+                    ids.Add(id);
+                }
+
+                return (true, "", ids);
+            }
+            else
+            {
+                return (false, statusMessage, null);
+            }
+        }
+
         public void BuildUnitOfMeasureSetQueryRq(XmlDocument doc, XmlElement parent)
         {
             // Create UnitOfMeasureSetQueryRq.
@@ -877,13 +1109,13 @@ namespace Brizbee.Integration.Utility.Services
             // TxnDelRq > TxnDelType
             // ------------------------------------------------------------
 
-            parent.AppendChild(MakeSimpleElement(doc, "TxnDelType", transactionType));
+            request.AppendChild(MakeSimpleElement(doc, "TxnDelType", transactionType));
 
             // ------------------------------------------------------------
             // TxnDelRq > TxnID
             // ------------------------------------------------------------
 
-            parent.AppendChild(MakeSimpleElement(doc, "TxnID", transactionId));
+            request.AppendChild(MakeSimpleElement(doc, "TxnID", transactionId));
         }
 
         public (bool, string) WalkTxnDelRs(string response)

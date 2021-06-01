@@ -52,6 +52,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private string selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
         private string selectedValue = Application.Current.Properties["SelectedValue"] as string;
+        private string cogsAccountFullName = "BRIZBEE Materials";
+        private string vendorFullName = "BRIZBEE Materials Vendor";
+        private string refNumber = "Materials";
         #endregion
 
         public void Sync()
@@ -101,7 +104,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 }
                 else if (selectedMethod == "Bill")
                 {
-                    StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
+                    StatusText += string.Format("{0} - Using {1} method and {2} value with {3} COGS item and {4} vendor.\r\n",
+                        DateTime.Now.ToString(), selectedMethod, selectedValue, cogsAccountFullName, vendorFullName);
                     OnPropertyChanged("StatusText");
                 }
 
@@ -116,7 +120,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 service.BuildHostQueryRq(hostDocument, hostElement);
 
                 // Make the request.
+                Trace.TraceInformation(hostDocument.OuterXml);
                 var hostResponse = req.ProcessRequest(ticket, hostDocument.OuterXml);
+                Trace.TraceInformation(hostResponse);
 
                 // Then walk the response.
                 var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
@@ -137,6 +143,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         (unsyncedHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                 {
                     var consumptions = unsyncedHttpResponse.Data;
+                    var ids = new List<string>();
 
                     if (consumptions.Count == 0)
                     {
@@ -146,36 +153,64 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     else
                     {
                         // ------------------------------------------------------------
-                        // Record the unsynced consumption.
+                        // Record the unsynced consumptions.
                         // ------------------------------------------------------------
-
-                        // Prepare a new QBXML document.
-                        var consQBXML = service.MakeQBXMLDocument();
-                        var consDocument = consQBXML.Item1;
-                        var consElement = consQBXML.Item2;
 
                         // Build the request to store consumptions.
                         if (selectedMethod == "Sales Receipt")
                         {
+                            // Prepare a new QBXML document.
+                            var consQBXML = service.MakeQBXMLDocument();
+                            var consDocument = consQBXML.Item1;
+                            var consElement = consQBXML.Item2;
+
                             service.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
-                        }
-                        else if (selectedMethod == "Inventory Adjustment")
-                        {
-                            service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
-                        }
 
-                        // Make the request.
-                        var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                            // Make the request.
+                            Trace.TraceInformation(consDocument.OuterXml);
+                            var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                            Trace.TraceInformation(consResponse);
 
-                        // Then walk the response.
-                        var ids = new List<string>();
-                        if (selectedMethod == "Sales Receipt")
-                        {
+                            // Then walk the response.
                             var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
                             ids = walkReponse.Item3;
                         }
+                        else if (selectedMethod == "Bill")
+                        {
+                            foreach (var consumption in consumptions)
+                            {
+                                // Prepare a new QBXML document.
+                                var consQBXML = service.MakeQBXMLDocument();
+                                var consDocument = consQBXML.Item1;
+                                var consElement = consQBXML.Item2;
+
+                                service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, cogsAccountFullName, refNumber, selectedValue.ToUpperInvariant());
+
+                                // Make the request.
+                                Trace.TraceInformation(consDocument.OuterXml);
+                                var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                                Trace.TraceInformation(consResponse);
+
+                                // Then walk the response.
+                                var walkReponse = service.WalkBillAddRs(consResponse);
+                                ids = ids.Concat(walkReponse.Item3).ToList();
+                            }
+                        }
                         else if (selectedMethod == "Inventory Adjustment")
                         {
+                            // Prepare a new QBXML document.
+                            var consQBXML = service.MakeQBXMLDocument();
+                            var consDocument = consQBXML.Item1;
+                            var consElement = consQBXML.Item2;
+
+                            service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
+
+                            // Make the request.
+                            Trace.TraceInformation(consDocument.OuterXml);
+                            var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                            Trace.TraceInformation(consResponse);
+
+                            // Then walk the response.
                             var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
                             ids = walkReponse.Item3;
                         }

@@ -37,7 +37,7 @@
                 <Button Content="Sync Projects" Margin="0" Padding="10" Name="SyncProjectsButton" Click="SyncProjectsButton_Click" />
                 <Button Content="Sync Punches" Margin="0 15 0 0" Padding="10" Name="SyncPunchesButton" Click="SyncPunchesButton_Click" />
                 <TextBlock Margin="0 3 0 0" Padding="0" VerticalAlignment="Center">
-                        <Hyperlink Foreground="Red" NavigateUri="" RequestNavigate="ReversePunchesLink_RequestNavigate">
+                        <Hyperlink NavigateUri="Reverse/ConfirmReversePunchesPage.xaml">
                             Reverse
                         </Hyperlink>
                 </TextBlock>
@@ -45,7 +45,7 @@
                 <Button Content="Sync Inventory Items" Margin="0 15 0 0" Padding="10" Name="SyncItemsButton" Click="SyncItemsButton_Click" />
                 <Button Content="Sync Inventory Consumptions" Margin="0 15 0 0" Padding="10" Name="SyncAdjustmentsButton" Click="SyncAdjustmentsButton_Click" />
                 <TextBlock Margin="0 3 0 0" Padding="0" VerticalAlignment="Center">
-                        <Hyperlink Foreground="Red" NavigateUri="" RequestNavigate="ReverseConsumptionsLink_RequestNavigate">
+                        <Hyperlink NavigateUri="Reverse/ConfirmReverseConsumptionsPage.xaml">
                             Reverse
                         </Hyperlink>
                 </TextBlock>

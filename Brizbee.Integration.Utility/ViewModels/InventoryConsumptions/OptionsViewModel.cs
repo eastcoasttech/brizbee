@@ -45,7 +45,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         {
             get
             {
-                return new List<string>() { "Sales Receipt", "Inventory Adjustment" };
+                return new List<string>() { "Sales Receipt", "Bill", "Inventory Adjustment" };
             }
         }
         #endregion
@@ -59,6 +59,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         public void RefreshEnabled()
         {
             if (SelectedMethod == "Sales Receipt")
+                IsEnabled = true;
+            else if (SelectedMethod == "Bill")
                 IsEnabled = true;
             else if (SelectedMethod == "Inventory Adjustment")
                 IsEnabled = false;

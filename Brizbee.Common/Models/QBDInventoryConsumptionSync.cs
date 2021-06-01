@@ -121,5 +121,31 @@ namespace Brizbee.Common.Models
         /// Comma-separated list of TxnIDs from the added transactions in QuickBooks.
         /// </summary>
         public string TxnIDs { get; set; }
+        
+        [NotMapped]
+        public string Name
+        {
+            get
+            {
+                return $"{CreatedAt.ToShortDateString()} - {Id} - {RecordingMethod} - {ValueMethod} - {HostCompanyFileName}";
+            }
+        }
+
+        /// <summary>
+        /// Moment when the sync was reversed.
+        /// </summary>
+        [Column(TypeName = "datetime2")]
+        public DateTime? ReversedAt { get; set; }
+
+        /// <summary>
+        /// Id for the user who reversed the sync.
+        /// </summary>
+        public int? ReversedByUserId { get; set; }
+
+        /// <summary>
+        /// The user who reversed the sync.
+        /// </summary>
+        [ForeignKey("ReversedByUserId")]
+        public virtual User ReversedByUser { get; set; }
     }
 }

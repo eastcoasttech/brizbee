@@ -7,7 +7,8 @@
     mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="640"
     WindowTitle="BRIZBEE Integration Utility"
-    ShowsNavigationUI="False">
+    ShowsNavigationUI="False"
+    Loaded="Page_Loaded">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Background="White">
             <DockPanel>
@@ -34,9 +35,9 @@
         </StackPanel>
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="3*" MinWidth="200"/>
-                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*" MinWidth="350"/>
+                <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
@@ -46,9 +47,9 @@
 
                 <ComboBox Height="26" IsEnabled="{Binding IsRefreshEnabled}"
                     DisplayMemberPath="Name"
-                    ItemsSource="{Binding Commits}"
-                    SelectedItem="{Binding SelectedCommit}"/>
-                <Label Content="{Binding CommitComboStatus}"
+                    ItemsSource="{Binding Syncs}"
+                    SelectedItem="{Binding SelectedSync}"/>
+                <Label Content="{Binding Status}"
                     Height="22" Padding="0 3 3 3" Foreground="DarkGray"/>
 
                 <Grid Margin="0 15 0 0">
