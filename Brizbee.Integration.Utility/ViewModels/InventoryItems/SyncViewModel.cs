@@ -23,13 +23,16 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
+using CsvHelper;
 using Interop.QBXMLRP2;
-using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Xml;
@@ -51,6 +54,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
+        private string offsetFileName = Application.Current.Properties["OffsetFileName"] as string;
         #endregion
 
         public void Sync()
@@ -69,6 +73,29 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
             StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
+
+            // Open the offset mapping file first, but only if one has been specified.
+            List<OffsetMapping> offsetMappings = new List<OffsetMapping>(0);
+            if (!string.IsNullOrEmpty(offsetFileName))
+            {
+                try
+                {
+                    using (var reader = new StreamReader(offsetFileName))
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        offsetMappings = csv.GetRecords<OffsetMapping>().ToList();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError(ex.ToString());
+
+                    StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
+                    OnPropertyChanged("StatusText");
+
+                    return;
+                }
+            }
 
             var service = new QuickBooksService();
 
@@ -116,6 +143,17 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 // Cannot continue to sync if there are no items.
                 if (items.Count == 0)
                     throw new Exception("There are no inventory items to sync.");
+
+                // Apply the offset items.
+                foreach (var item in items)
+                {
+                    var found = offsetMappings
+                        .Where(o => o.InventoryItemFullName == item.FullName)
+                        .FirstOrDefault();
+
+                    if (found != null)
+                        item.OffsetItemFullName = found.OffsetItemFullName;
+                }
 
                 // ------------------------------------------------------------
                 // Collect the inventory sites.
@@ -378,5 +416,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    class OffsetMapping
+    {
+        public string InventoryItemFullName { get; set; }
+        public string OffsetItemFullName { get; set; }
     }
 }

@@ -111,6 +111,13 @@ namespace Brizbee.Common.Models
         public string QBDCOGSAccountListId { get; set; }
 
         /// <summary>
+        /// Name of the non-inventory part item that can be used to offset the COGS
+        /// if using a Bill to record consumption.
+        /// </summary>
+        [StringLength(31)]
+        public string OffsetItemFullName { get; set; }
+
+        /// <summary>
         /// Id of the organization to which the item belongs.
         /// </summary>
         [Required]

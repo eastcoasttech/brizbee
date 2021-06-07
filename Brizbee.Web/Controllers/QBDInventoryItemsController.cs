@@ -362,6 +362,7 @@ namespace Brizbee.Web.Controllers
                             found.SalesPrice = item.SalesPrice;
                             found.QBDCOGSAccountFullName = item.QBDCOGSAccountFullName;
                             found.QBDCOGSAccountListId = item.QBDCOGSAccountListId;
+                            found.OffsetItemFullName = string.IsNullOrEmpty(item.OffsetItemFullName) ? "" : item.OffsetItemFullName;
 
                             // Associate the Unit of Measure Set.
                             found.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
@@ -378,13 +379,14 @@ namespace Brizbee.Web.Controllers
                         }
                         else
                         {
-                            // Create the inventory item.
+                            // Create the inventory item - massage properties if necessary.
                             item.QBDInventoryItemSyncId = sync.Id;
                             item.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
                             item.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
                             item.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
                             item.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
                             item.OrganizationId = currentUser.OrganizationId;
+                            item.OffsetItemFullName = string.IsNullOrEmpty(item.OffsetItemFullName) ? "" : item.OffsetItemFullName;
 
                             // Associate the Unit of Measure Set.
                             item.QBDUnitOfMeasureSetFullName = string.IsNullOrEmpty(item.QBDUnitOfMeasureSetFullName) ? "" : item.QBDUnitOfMeasureSetFullName;
