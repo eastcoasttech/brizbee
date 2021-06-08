@@ -52,7 +52,6 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private string selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
         private string selectedValue = Application.Current.Properties["SelectedValue"] as string;
-        private string cogsAccountFullName = "BRIZBEE Materials";
         private string vendorFullName = "BRIZBEE Materials Vendor";
         private string refNumber = "Materials";
         #endregion
@@ -104,8 +103,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 }
                 else if (selectedMethod == "Bill")
                 {
-                    StatusText += string.Format("{0} - Using {1} method and {2} value with {3} COGS item and {4} vendor.\r\n",
-                        DateTime.Now.ToString(), selectedMethod, selectedValue, cogsAccountFullName, vendorFullName);
+                    StatusText += string.Format("{0} - Using {1} method and {2} value with {3} vendor.\r\n",
+                        DateTime.Now.ToString(), selectedMethod, selectedValue, vendorFullName);
                     OnPropertyChanged("StatusText");
                 }
 
@@ -184,7 +183,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                                 var consDocument = consQBXML.Item1;
                                 var consElement = consQBXML.Item2;
 
-                                service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, cogsAccountFullName, refNumber, selectedValue.ToUpperInvariant());
+                                service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, refNumber, selectedValue.ToUpperInvariant());
 
                                 // Make the request.
                                 Trace.TraceInformation(consDocument.OuterXml);

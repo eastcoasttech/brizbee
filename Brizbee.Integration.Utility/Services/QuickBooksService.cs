@@ -492,7 +492,7 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
-        public void BuildBillAddRq(XmlDocument doc, XmlElement parent, QBDInventoryConsumption consumption, string vendorFullName, string cogsItemFullName, string refNumber, string valueMethod)
+        public void BuildBillAddRq(XmlDocument doc, XmlElement parent, QBDInventoryConsumption consumption, string vendorFullName, string refNumber, string valueMethod)
         {
             XmlElement request = doc.CreateElement("BillAddRq");
             parent.AppendChild(request);
@@ -629,10 +629,10 @@ namespace Brizbee.Integration.Utility.Services
             // ItemLineAdd 2 > ItemRef
             // ------------------------------------------------------------
 
-            XmlElement cogsItemRef = doc.CreateElement("ItemRef");
-            line2.AppendChild(cogsItemRef);
+            XmlElement offsetItemRef = doc.CreateElement("ItemRef");
+            line2.AppendChild(offsetItemRef);
 
-            cogsItemRef.AppendChild(MakeSimpleElement(doc, "FullName", cogsItemFullName)); // Non-Inventory Item for COGS
+            offsetItemRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.QBDInventoryItem.OffsetItemFullName)); // Non-Inventory Part Item
 
             // ------------------------------------------------------------
             // ItemLineAdd 2 > Desc
