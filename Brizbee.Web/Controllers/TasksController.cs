@@ -34,20 +34,39 @@ namespace Brizbee.Web.Controllers
     public class TasksController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private TaskRepository repo = new TaskRepository();
 
         // GET: odata/Tasks
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
         public IQueryable<Task> GetTasks()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            var jobIds = db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Select(j => j.Id);
+            return db.Tasks
+                .Where(t => jobIds.Contains(t.JobId));
         }
 
         // GET: odata/Tasks(5)
         [EnableQuery(MaxExpansionDepth = 3)]
         public SingleResult<Task> GetTask ([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
+            var jobIds = db.Jobs
+                .Where(j => customerIds.Contains(j.CustomerId))
+                .Select(j => j.Id);
+
+            return SingleResult.Create(db.Tasks
+                .Where(t => jobIds.Contains(t.JobId))
+                .Where(t => t.Id == key));
         }
 
         // POST: odata/Tasks
@@ -57,8 +76,31 @@ namespace Brizbee.Web.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
-            task = repo.Create(task, CurrentUser());
+
+            var currentUser = CurrentUser();
+
+            var job = db.Jobs
+                .Include("Customer")
+                .Where(j => j.Id == task.JobId)
+                .FirstOrDefault();
+
+            // Only permit administrators of the same organization.
+            if (currentUser.Role != "Administrator" ||
+                job.Customer.OrganizationId != currentUser.OrganizationId)
+                return BadRequest();
+
+            var max = db.Tasks
+                .Where(t => t.JobId == job.Id)
+                .Max(t => (int?)t.Order);
+
+            // Auto-generated
+            task.CreatedAt = DateTime.UtcNow;
+            task.JobId = job.Id;
+            task.Order = max.HasValue ? max.Value + 10 : 0;
+
+            db.Tasks.Add(task);
+
+            db.SaveChanges();
 
             return Created(task);
         }
@@ -72,7 +114,33 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var task = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var task = db.Tasks
+                .Include("Job")
+                .Include("Job.Customer")
+                .Where(t => t.Id == key)
+                .FirstOrDefault();
+
+            // Only permit administrators of the same organization.
+            if (currentUser.Role != "Administrator" ||
+                task.Job.Customer.OrganizationId != currentUser.OrganizationId)
+                return BadRequest();
+
+            // Ensure that object was found
+            if (task == null)
+                return NotFound();
+
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("JobId"))
+            {
+                return BadRequest("Cannot modify the JobId");
+            }
+
+            // Peform the update
+            patch.Patch(task);
+
+            db.SaveChanges();
 
             return Updated(task);
         }
@@ -80,7 +148,24 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/Tasks(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var task = db.Tasks
+                .Include("Job")
+                .Include("Job.Customer")
+                .Where(t => t.Id == key)
+                .FirstOrDefault();
+
+            // Only permit administrators of the same organization.
+            if (currentUser.Role != "Administrator" ||
+                task.Job.Customer.OrganizationId != currentUser.OrganizationId)
+                return BadRequest();
+
+            // Delete the object itself
+            db.Tasks.Remove(task);
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 
@@ -181,7 +266,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

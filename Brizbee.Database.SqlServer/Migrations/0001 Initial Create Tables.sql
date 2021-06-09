@@ -175,6 +175,7 @@ CREATE TABLE [dbo].[Tasks] (
     [BaseServiceRateId] int NULL,
     [BasePayrollRateId] int NULL,
     [Group] VARCHAR(20) NULL,
+    [Order] INT NOT NULL,
     CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO

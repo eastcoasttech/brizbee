@@ -47,6 +47,9 @@ namespace Brizbee.Common.Models
         [Required]
         public string Number { get; set; }
 
+        [Required]
+        public int Order { get; set; }
+
         [StringLength(20)]
         public string Group { get; set; }
 

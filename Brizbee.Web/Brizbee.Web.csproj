@@ -505,7 +505,6 @@
     <Compile Include="Policies\CustomerPolicy.cs" />
     <Compile Include="Policies\JobPolicy.cs" />
     <Compile Include="Policies\PunchPolicy.cs" />
-    <Compile Include="Policies\TaskPolicy.cs" />
     <Compile Include="Policies\TaskTemplatePolicy.cs" />
     <Compile Include="Policies\TimesheetEntryPolicy.cs" />
     <Compile Include="Policies\UserPolicy.cs" />
@@ -516,7 +515,6 @@
     <Compile Include="Repositories\OrganizationRepository.cs" />
     <Compile Include="Repositories\PunchRepository.cs" />
     <Compile Include="Repositories\RateRepository.cs" />
-    <Compile Include="Repositories\TaskRepository.cs" />
     <Compile Include="Repositories\TaskTemplateRepository.cs" />
     <Compile Include="Repositories\TimesheetEntryRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
