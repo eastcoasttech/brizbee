@@ -21,8 +21,9 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -32,20 +33,34 @@ namespace Brizbee.Web.Controllers
     public class TaskTemplatesController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private TaskTemplateRepository repo = new TaskTemplateRepository();
 
         // GET: odata/TaskTemplates
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<TaskTemplate> GetTaskTemplates()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Ensure user is administrator.
+            if (currentUser.Role != "Administrator")
+                return new List<TaskTemplate>().AsQueryable();
+
+            return db.TaskTemplates
+                .Where(t => t.OrganizationId == currentUser.OrganizationId);
         }
 
         // GET: odata/TaskTemplates(5)
         [EnableQuery]
         public SingleResult<TaskTemplate> GetTaskTemplate([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            // Ensure user is administrator.
+            if (currentUser.Role != "Administrator")
+                return SingleResult.Create(new List<TaskTemplate>().AsQueryable());
+
+            return SingleResult.Create(db.TaskTemplates
+                .Where(t => t.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Id == key));
         }
 
         // POST: odata/TaskTemplates
@@ -56,7 +71,19 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            taskTemplate = repo.Create(taskTemplate, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Ensure user is administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            // Auto-generated.
+            taskTemplate.CreatedAt = DateTime.UtcNow;
+            taskTemplate.OrganizationId = currentUser.OrganizationId;
+
+            db.TaskTemplates.Add(taskTemplate);
+
+            db.SaveChanges();
 
             return Created(taskTemplate);
         }
@@ -64,7 +91,20 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/TaskTemplates(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var taskTemplate = db.TaskTemplates.Find(key);
+
+            // Ensure user is administrator of the same organization.
+            if (currentUser.Role != "Administrator" ||
+                taskTemplate.OrganizationId != currentUser.OrganizationId)
+                return BadRequest();
+
+            // Delete the object itself.
+            db.TaskTemplates.Remove(taskTemplate);
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 
@@ -73,7 +113,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

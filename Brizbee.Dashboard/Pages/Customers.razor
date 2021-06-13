@@ -518,7 +518,29 @@
 
     private async void Close(dynamic result)
     {
-        Console.WriteLine($"Dialog closed with result: {result}");
+        string happened = result as string;
+
+        switch (happened)
+        {
+            case "customer.created":
+                await RefreshCustomers();
+                break;
+            case "customer.deleted":
+                await RefreshCustomers();
+                break;
+            case "project.created":
+                await RefreshProjects();
+                break;
+            case "project.deleted":
+                await RefreshProjects();
+                break;
+            case "task.created":
+                await RefreshTasks();
+                break;
+            case "task.deleted":
+                await RefreshTasks();
+                break;
+        }
     }
 
     private async System.Threading.Tasks.Task RefreshCustomers()

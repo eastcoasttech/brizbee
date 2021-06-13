@@ -117,7 +117,7 @@
 
         // Save the task on the server and close the dialog.
         await taskService.SaveTaskAsync(task);
-        dialogService.Close(false);
+        dialogService.Close("task.created");
     }
 
     private async System.Threading.Tasks.Task DeleteTask()
@@ -136,7 +136,7 @@
         // Delete the task on the server and close the dialog.
         var result = await taskService.DeleteTaskAsync(task.Id);
         if (result)
-            dialogService.Close(false);
+            dialogService.Close("task.deleted");
         else
             working = false;
     }

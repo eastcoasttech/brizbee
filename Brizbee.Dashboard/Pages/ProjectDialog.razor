@@ -143,7 +143,7 @@
 
         // Save the project on the server and close the dialog.
         await projectService.SaveJobAsync(project);
-        dialogService.Close(false);
+        dialogService.Close("project.created");
     }
 
     private async System.Threading.Tasks.Task DeleteProject()
@@ -162,7 +162,7 @@
         // Delete the project on the server and close the dialog.
         var result = await projectService.DeleteJobAsync(project.Id);
         if (result)
-            dialogService.Close(false);
+            dialogService.Close("project.deleted");
         else
             working = false;
     }

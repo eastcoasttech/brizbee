@@ -515,7 +515,6 @@
     <Compile Include="Repositories\OrganizationRepository.cs" />
     <Compile Include="Repositories\PunchRepository.cs" />
     <Compile Include="Repositories\RateRepository.cs" />
-    <Compile Include="Repositories\TaskTemplateRepository.cs" />
     <Compile Include="Repositories\TimesheetEntryRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />

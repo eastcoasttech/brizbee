@@ -82,7 +82,7 @@
 
         // Save the customer on the server and close the dialog.
         await customerService.SaveCustomerAsync(customer);
-        dialogService.Close(false);
+        dialogService.Close("customer.created");
     }
 
     private async System.Threading.Tasks.Task DeleteCustomer()
@@ -101,7 +101,7 @@
         // Delete the customer on the server and close the dialog.
         var result = await customerService.DeleteCustomerAsync(customer.Id);
         if (result)
-            dialogService.Close(false);
+            dialogService.Close("customer.deleted");
         else
             working = false;
     }

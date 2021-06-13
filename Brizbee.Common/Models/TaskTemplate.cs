@@ -21,10 +21,8 @@
 //
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace Brizbee.Common.Models
 {
@@ -44,5 +42,11 @@ namespace Brizbee.Common.Models
         public virtual Organization Organization { get; set; }
         
         public string Name { get; set; }
+
+        /// <summary>
+        /// JSON representation of the tasks that will be created automatically.
+        /// </summary>
+        [Required]
+        public string Template { get; set; }
     }
 }

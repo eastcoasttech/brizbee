@@ -183,10 +183,11 @@ GO
 
 -- TaskTemplates Table
 CREATE TABLE [dbo].[TaskTemplates] (
-    [Id] int IDENTITY (1, 1) NOT NULL,
-    [CreatedAt] datetime2(7) NOT NULL,
-    [OrganizationId] int NOT NULL,
-    [Name] nvarchar(max) NULL,
+    [Id]                INT IDENTITY (1, 1) NOT NULL,
+    [CreatedAt]         DATETIME2 (7) NOT NULL,
+    [OrganizationId]    INT NOT NULL,
+    [Name]              NVARCHAR(MAX) NULL,
+    [Template]          NVARCHAR(MAX) CONSTRAINT [CT_TaskTemplates_Template] CHECK (ISJSON([Template])=1) NOT NULL,
     CONSTRAINT [PK_dbo.TaskTemplates] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 GO
