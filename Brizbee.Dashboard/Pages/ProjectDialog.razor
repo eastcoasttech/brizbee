@@ -5,6 +5,7 @@
 
 @inject DialogService dialogService
 @inject JobService projectService
+@inject TaskTemplateService taskTemplateService
 
 <EditForm Model="@project" OnValidSubmit="SaveProject" class="form-horizontal" autocomplete="off">
     <DataAnnotationsValidator />
@@ -81,8 +82,10 @@
             <label for="project_task_template" class="col-sm-3 control-label">Task Template</label>
             <div class="col-sm-9">
                 <InputSelect id="project_task_template" @bind-Value="project.Status" class="form-control" disabled="@(working || loading)">
-                    <option value="Installation">Installation</option>
-                    <option value="Fabrication">Fabrication</option>
+                    @foreach (var template in taskTemplates)
+                    {
+                        <option value="@template.Id">@template.Name</option>
+                    }
                 </InputSelect>
             </div>
         </div>
@@ -106,6 +109,7 @@
     private bool working = false;
     private bool loading = true;
     private Job project = new Job();
+    private List<TaskTemplate> taskTemplates = new List<TaskTemplate>(0);
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -121,6 +125,8 @@
         {
             project.Number = await projectService.GetNextNumberAsync();
         }
+
+        await RefreshTaskTemplates();
 
         loading = false;
     }
@@ -165,6 +171,14 @@
             dialogService.Close("project.deleted");
         else
             working = false;
+    }
+
+    private async System.Threading.Tasks.Task RefreshTaskTemplates()
+    {
+        // Refresh the list of task templates.
+        var result = await taskTemplateService.GetTaskTemplatesAsync();
+
+        taskTemplates = result.Item1;
     }
 
     private void CloseDialog(MouseEventArgs e)

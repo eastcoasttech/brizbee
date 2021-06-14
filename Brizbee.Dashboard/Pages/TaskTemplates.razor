@@ -1,5 +1,6 @@
 ﻿@page "/task-templates"
 
+@using System.Text.Json 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Common.Models
 
@@ -8,6 +9,7 @@
 @inject SharedService sharedService
 @inject UserService userService
 @inject OrganizationService organizationService
+@inject TaskTemplateService taskTemplateService
 @inject DialogService dialogService
 @inject IJSRuntime JSRuntime
 
@@ -100,81 +102,40 @@
 
     <div class="row">
         <div class="col-md-6 col-md-offset-3 col-sm-12">
-            <div class="panel panel-default">
-                <div class="panel-heading"><i class="fas fa-stream" style="margin-right: 5px;"></i> Fabrication Template</div>
-                <div class="panel-body">
-                    <table class="table table-bordered">
-                        <tr>
-                            <th class="col-sm-3">Task Name</th>
-                            <th class="col-sm-3">Bar Code Group</th>
-                            <th class="col-sm-3">Base Payroll Rate</th>
-                            <th class="col-sm-3">Base Service Rate</th>
-                        </tr>
-                        <tr>
-                            <td>Welding</td>
-                            <td>Fabrication</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                        <tr>
-                            <td>Cutting</td>
-                            <td>Fabrication</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                        <tr>
-                            <td>Packaging</td>
-                            <td>Fabrication</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                        <tr>
-                            <td>Painting</td>
-                            <td>Fabrication</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                    </table>
 
-                    <button class="btn btn-default">Edit Template</button>
+            @foreach (var template in taskTemplates)
+            {
+                <div class="panel panel-default">
+                    <div class="panel-heading"><i class="fas fa-stream" style="margin-right: 5px;"></i> @template.Name Template</div>
+                    <div class="panel-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="col-sm-3">Task Name</th>
+                                    <th class="col-sm-3">Bar Code Group</th>
+                                    <th class="col-sm-3">Base Payroll Rate</th>
+                                    <th class="col-sm-3">Base Service Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in templateItems[template.Id])
+                                {
+                                    <tr>
+                                        <td>@item.Name</td>
+                                        <td>@item.Group</td>
+                                        <td>@item.BasePayrollRate</td>
+                                        <td>@item.BaseServiceRate</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <button class="btn btn-default">Edit Template</button>
+                    </div>
                 </div>
-            </div>
+            }
 
-            <div class="panel panel-default">
-                <div class="panel-heading"><i class="fas fa-stream" style="margin-right: 5px;"></i> Installation Template</div>
-                <div class="panel-body">
-                    <table class="table table-bordered">
-                        <tr>
-                            <th class="col-sm-3">Task Name</th>
-                            <th class="col-sm-3">Bar Code Group</th>
-                            <th class="col-sm-3">Base Payroll Rate</th>
-                            <th class="col-sm-3">Base Service Rate</th>
-                        </tr>
-                        <tr>
-                            <td>Onsite</td>
-                            <td>Installation</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                        <tr>
-                            <td>Travel</td>
-                            <td>Installation</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                        <tr>
-                            <td>Staging</td>
-                            <td>Installation</td>
-                            <td>&ndash;</td>
-                            <td>&ndash;</td>
-                        </tr>
-                    </table>
-
-                    <button class="btn btn-default">Edit Template</button>
-                </div>
-            </div>
-
-            <button class="btn btn-default btn-lg"><i class="fa fa-plus" style="margin-right: 5px;"></i> Add New Template</button>
+            <button class="btn btn-default btn-lg" @onclick="@(e => OpenNewTaskTemplateDialog())"><i class="fa fa-plus" style="margin-right: 5px;"></i> Add New Template</button>
         </div>
     </div>
 </div>
@@ -186,6 +147,8 @@
     private bool working = false;
     private User currentUser;
     private Organization organization = new Organization();
+    private List<TaskTemplate> taskTemplates = new List<TaskTemplate>(0);
+    private Dictionary<int, List<TemplateItem>> templateItems = new Dictionary<int, List<TemplateItem>>();
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -195,6 +158,8 @@
         currentUser = sharedService.CurrentUser;
 
         organization = await organizationService.GetOrganizationByIdAsync(currentUser.OrganizationId);
+
+        await RefreshTaskTemplates();
 
         dialogService.OnOpen += Open;
         dialogService.OnClose += Close;
@@ -206,6 +171,21 @@
         sharedService.OnChange -= StateHasChanged;
     }
 
+    private async System.Threading.Tasks.Task RefreshTaskTemplates()
+    {
+        // Refresh the list of task templates.
+        var result = await taskTemplateService.GetTaskTemplatesAsync();
+
+        foreach (var template in result.Item1)
+        {
+            var items = JsonSerializer.Deserialize<List<TemplateItem>>(template.Template);
+
+            templateItems[template.Id] = items;
+        }
+
+        taskTemplates = result.Item1;
+    }
+
     private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
     {
         Console.WriteLine("Dialog opened");
@@ -215,4 +195,29 @@
     {
         Console.WriteLine($"Dialog closed with result: {result}");
     }
-} 
+
+    private void OpenNewTaskTemplateDialog()
+    {
+        dialogService.Open<TaskTemplateDialog>("New Task Template",
+                                new Dictionary<string, object>() { { "Id", null } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenModifyTaskTemplateDialog(TaskTemplate template)
+    {
+        dialogService.Open<TaskTemplateDialog>("Edit Task Template",
+                                new Dictionary<string, object>() { { "Id", template.Id } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    public class TemplateItem
+    {
+        public string Name { get; set; }
+
+        public string Group { get; set; }
+
+        public string BasePayrollRate { get; set; }
+
+        public string BaseServiceRate { get; set; }
+    }
+}

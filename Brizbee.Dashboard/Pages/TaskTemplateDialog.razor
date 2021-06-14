@@ -4,44 +4,24 @@
 @using Brizbee.Common.Models
 
 @inject DialogService dialogService
-@inject TaskService taskService
+@inject TaskTemplateService taskTemplateService
 @inject SharedService sharedService
 
-<EditForm Model="@task" OnValidSubmit="SaveTask" class="form-horizontal" autocomplete="off">
+<EditForm Model="@template" OnValidSubmit="SaveTemplate" class="form-horizontal" autocomplete="off">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
     <div class="form-group">
-        <label for="task_name" class="col-sm-3 control-label">Name</label>
+        <label for="task_template_name" class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <InputText class="form-control" id="task_name" @bind-Value="task.Name" disabled="@(working || loading)" />
+            <InputText class="form-control" id="task_template_name" @bind-Value="template.Name" disabled="@(working || loading)" />
         </div>
     </div>
 
     <div class="form-group">
-        <label for="task_group" class="col-sm-3 control-label">Bar Code Group</label>
+        <label for="task_template_template" class="col-sm-3 control-label">Template</label>
         <div class="col-sm-9">
-            <InputSelect id="task_group" @bind-Value="task.Group" class="form-control" disabled="@(working || loading)">
-                <option value="Unspecified">Unspecified</option>
-                @foreach (var group in groups)
-                {
-                    <option value="@group">@group</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group">
-        <label for="task_base_payroll_rate_id" class="col-sm-3 control-label">Base Payroll Rate</label>
-        <div class="col-sm-9">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="task_base_service_rate_id" class="col-sm-3 control-label">Base Service Rate</label>
-        <div class="col-sm-9">
+            <InputTextArea id="task_template_template" @bind-Value="template.Template" class="form-control" disabled="@(working || loading)" />
         </div>
     </div>
 
@@ -50,7 +30,7 @@
     <button class="btn btn-primary" type="submit" disabled="@(working || loading)">OK</button>
     <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
     <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-    @if (task.Id != 0)
+    @if (template.Id != 0)
     {
         <button class="btn btn-danger pull-right" type="button" @onclick="DeleteTask" disabled="@(working || loading)">Delete</button>
     }
@@ -62,39 +42,27 @@
 
     private bool working = false;
     private bool loading = true;
-    private Brizbee.Common.Models.Task task = new Brizbee.Common.Models.Task();
-    private string[] groups = new string[] { };
+    private TaskTemplate template = new TaskTemplate();
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // --------------------------------------------------------------------
-        // Load the task groups from the organization.
-        // --------------------------------------------------------------------
-
-        groups = sharedService.CurrentUser.Organization.Groups.Split(",");
-
-
-        // --------------------------------------------------------------------
-        // Attempt to load the task, if necessary.
+        // Attempt to load the task template, if necessary.
         // --------------------------------------------------------------------
 
         if (Id.HasValue)
         {
-            task = await taskService.GetTaskByIdAsync(Id.Value);
-        }
-        else
-        {
-            task.Number = await taskService.GetNextNumberAsync();
+            template = await taskTemplateService.GetTaskTemplateByIdAsync(Id.Value);
         }
 
         loading = false;
     }
 
-    private async System.Threading.Tasks.Task SaveTask()
+    private async System.Threading.Tasks.Task SaveTemplate()
     {
         // Confirm that the user wants to make the change.
         var confirm = await dialogService.Confirm(
-            "Are you sure you want to save this task?",
+            "Are you sure you want to save this task template?",
             "Confirm",
             new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
         if (confirm != true)
@@ -103,11 +71,8 @@
         working = true;
         StateHasChanged();
 
-        // Set the project id.
-        task.JobId = ProjectId.Value;
-
-        // Save the task on the server and close the dialog.
-        await taskService.SaveTaskAsync(task);
+        // Save the task template on the server and close the dialog.
+        await taskTemplateService.SaveTaskTemplateAsync(template);
         dialogService.Close(false);
     }
 
@@ -115,7 +80,7 @@
     {
         // Confirm that the user wants to make the change.
         var confirm = await dialogService.Confirm(
-            "Are you sure you want to delete this task?",
+            "Are you sure you want to delete this task template?",
             "Confirm",
             new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
         if (confirm != true)
@@ -124,8 +89,8 @@
         working = true;
         StateHasChanged();
 
-        // Delete the task on the server and close the dialog.
-        var result = await taskService.DeleteTaskAsync(task.Id);
+        // Delete the task template on the server and close the dialog.
+        var result = await taskTemplateService.DeleteTaskTemplateAsync(template.Id);
         if (result)
             dialogService.Close(false);
         else

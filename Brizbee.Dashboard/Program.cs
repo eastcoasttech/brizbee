@@ -28,6 +28,7 @@ namespace Brizbee.Dashboard
             builder.Services.AddSingleton<UserService>();
             builder.Services.AddSingleton<CustomerService>();
             builder.Services.AddSingleton<TaskService>();
+            builder.Services.AddSingleton<TaskTemplateService>();
             builder.Services.AddSingleton<JobService>();
             builder.Services.AddSingleton<RateService>();
             builder.Services.AddSingleton<OrganizationService>();
