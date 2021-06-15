@@ -79,9 +79,9 @@
         <hr />
 
         <div class="form-group">
-            <label for="project_task_template" class="col-sm-3 control-label">Task Template</label>
+            <label for="project_task_template_id" class="col-sm-3 control-label">Task Template</label>
             <div class="col-sm-9">
-                <InputSelect id="project_task_template" @bind-Value="project.Status" class="form-control" disabled="@(working || loading)">
+                <InputSelect id="project_task_template_id" @bind-Value="project.TaskTemplateId" class="form-control" disabled="@(working || loading)">
                     @foreach (var template in taskTemplates)
                     {
                         <option value="@template.Id">@template.Name</option>

@@ -112,12 +112,18 @@ namespace Brizbee.Dashboard.Services
                     { "CustomerWorkOrder", job.CustomerWorkOrder },
                     { "CustomerPurchaseOrder", job.CustomerPurchaseOrder },
                     { "InvoiceNumber", job.InvoiceNumber },
-                    { "QuoteNumber", job.QuoteNumber },
+                    { "QuoteNumber", job.QuoteNumber }
                 };
 
                 // Can only be configured at creation.
                 if (job.Id == 0)
+                {
                     payload.Add("CustomerId", job.CustomerId);
+
+                    // Optional, task template.
+                    if (job.TaskTemplateId.HasValue)
+                        payload.Add("TaskTemplateId", job.TaskTemplateId);
+                }
 
                 var json = JsonSerializer.Serialize(payload, options);
 

@@ -60,6 +60,9 @@ namespace Brizbee.Web
             // Password is not a column, so should be ignored
             mb.Entity<User>().Ignore(u => u.Password);
 
+            // TaskTemplateId is not a column, so should be ignored
+            mb.Entity<Job>().Ignore(j => j.TaskTemplateId);
+
             // Organization codes should be universally unique
             mb.Entity<Organization>();
                 //.HasIndex(o => o.Code)

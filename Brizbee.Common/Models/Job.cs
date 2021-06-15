@@ -68,5 +68,7 @@ namespace Brizbee.Common.Models
 
         [StringLength(50)]
         public string QuoteNumber { get; set; }
+
+        public int? TaskTemplateId { get; set; }
     }
 }

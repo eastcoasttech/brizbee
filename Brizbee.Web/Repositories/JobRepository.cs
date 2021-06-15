@@ -35,27 +35,6 @@ namespace Brizbee.Web.Repositories
         private SqlContext db = new SqlContext();
 
         /// <summary>
-        /// Creates the given job in the database.
-        /// </summary>
-        /// <param name="job">The job to create</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The created job</returns>
-        public Job Create(Job job, User currentUser)
-        {
-            var customer = db.Customers.Find(job.CustomerId);
-
-            // Auto-generated
-            job.CreatedAt = DateTime.UtcNow;
-            job.CustomerId = customer.Id;
-
-            db.Jobs.Add(job);
-
-            db.SaveChanges();
-
-            return job;
-        }
-
-        /// <summary>
         /// Disposes of the database connection.
         /// </summary>
         public void Dispose()
