@@ -524,21 +524,51 @@
         {
             case "customer.created":
                 await RefreshCustomers();
+
+                // Select the first customer.
+                if (customers.Any())
+                    SelectCustomer(customers.FirstOrDefault());
+
                 break;
             case "customer.deleted":
                 await RefreshCustomers();
+
+                // Select the first customer.
+                if (customers.Any())
+                    SelectCustomer(customers.FirstOrDefault());
+
                 break;
             case "project.created":
                 await RefreshProjects();
+
+                // Select the first project.
+                if (projects.Any())
+                    SelectProject(projects.FirstOrDefault());
+
                 break;
             case "project.deleted":
                 await RefreshProjects();
+
+                // Select the first project.
+                if (projects.Any())
+                    SelectProject(projects.FirstOrDefault());
+
                 break;
             case "task.created":
                 await RefreshTasks();
+
+                // Select the first task.
+                if (tasks.Any())
+                    SelectTask(tasks.FirstOrDefault());
+
                 break;
             case "task.deleted":
                 await RefreshTasks();
+
+                // Select the first task.
+                if (tasks.Any())
+                    SelectTask(tasks.FirstOrDefault());
+
                 break;
         }
     }
@@ -546,6 +576,7 @@
     private async System.Threading.Tasks.Task RefreshCustomers()
     {
         loadingCustomers = true;
+        StateHasChanged();
 
         // Prevent stagnation.
         customers.Clear();
@@ -565,6 +596,7 @@
             return;
 
         loadingProjects = true;
+        StateHasChanged();
 
         // Prevent stagnation.
         projects.Clear();
@@ -583,6 +615,7 @@
             return;
 
         loadingTasks = true;
+        StateHasChanged();
 
         // Prevent stagnation.
         tasks.Clear();

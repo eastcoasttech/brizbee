@@ -103,6 +103,11 @@
     <div class="row">
         <div class="col-md-6 col-md-offset-3 col-sm-12">
 
+            @if (working)
+            {
+                <p class="fadeIn" style="font-size: 2rem;"><i class="fa fa-spinner fa-spin fa-fw"></i></p>
+            }
+
             @foreach (var template in taskTemplates)
             {
                 <div class="panel panel-default">
@@ -130,7 +135,7 @@
                             </tbody>
                         </table>
 
-                        <button class="btn btn-default">Edit Template</button>
+                        <button class="btn btn-default" @onclick="@(e => OpenModifyTaskTemplateDialog(template))">Edit Template</button>
                     </div>
                 </div>
             }
@@ -173,6 +178,9 @@
 
     private async System.Threading.Tasks.Task RefreshTaskTemplates()
     {
+        working = true;
+        StateHasChanged();
+
         // Refresh the list of task templates.
         var result = await taskTemplateService.GetTaskTemplatesAsync();
 
@@ -184,6 +192,9 @@
         }
 
         taskTemplates = result.Item1;
+
+        working = false;
+        StateHasChanged();
     }
 
     private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
@@ -193,7 +204,9 @@
 
     private async void Close(dynamic result)
     {
-        Console.WriteLine($"Dialog closed with result: {result}");
+        await RefreshTaskTemplates();
+
+        StateHasChanged();
     }
 
     private void OpenNewTaskTemplateDialog()

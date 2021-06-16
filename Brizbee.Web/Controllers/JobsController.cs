@@ -209,7 +209,7 @@ namespace Brizbee.Web.Controllers
                 return StatusCode(HttpStatusCode.Forbidden);
             }
 
-            // Only look within the organization's customer's jobs
+            // Only look within the jobs that belong to the organization.
             var customerIds = db.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Select(c => c.Id);
@@ -218,7 +218,11 @@ namespace Brizbee.Web.Controllers
                 .Where(j => j.Id == key)
                 .FirstOrDefault();
 
-            // Delete the object itself
+            // Remove tasks for the job.
+            var tasks = db.Tasks.Where(t => t.JobId == key).ToList();
+            db.Tasks.RemoveRange(tasks);
+
+            // Delete the job itself.
             db.Jobs.Remove(job);
 
             db.SaveChanges();

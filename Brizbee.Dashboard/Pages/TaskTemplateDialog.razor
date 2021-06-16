@@ -21,7 +21,7 @@
     <div class="form-group">
         <label for="task_template_template" class="col-sm-3 control-label">Template</label>
         <div class="col-sm-9">
-            <InputTextArea id="task_template_template" @bind-Value="template.Template" class="form-control" disabled="@(working || loading)" />
+            <InputTextArea id="task_template_template" @bind-Value="template.Template" class="form-control" disabled="@(working || loading)" rows="20" />
         </div>
     </div>
 
@@ -73,7 +73,7 @@
 
         // Save the task template on the server and close the dialog.
         await taskTemplateService.SaveTaskTemplateAsync(template);
-        dialogService.Close(false);
+        dialogService.Close(true);
     }
 
     private async System.Threading.Tasks.Task DeleteTask()
@@ -92,7 +92,7 @@
         // Delete the task template on the server and close the dialog.
         var result = await taskTemplateService.DeleteTaskTemplateAsync(template.Id);
         if (result)
-            dialogService.Close(false);
+            dialogService.Close(true);
         else
             working = false;
     }
