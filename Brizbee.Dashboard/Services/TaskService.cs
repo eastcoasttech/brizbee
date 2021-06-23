@@ -54,7 +54,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<Brizbee.Common.Models.Task> GetTaskByIdAsync(int id)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks({id})");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks({id})?$expand=BasePayrollRate,BaseServiceRate");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();

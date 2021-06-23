@@ -101,7 +101,7 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Name of the Cost of Goods Sold account for the item within QuickBooks.
         /// </summary>
-        [StringLength(31)]
+        [StringLength(100)]
         public string QBDCOGSAccountFullName { get; set; }
 
         /// <summary>

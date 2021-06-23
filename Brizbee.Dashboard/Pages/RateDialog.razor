@@ -181,7 +181,8 @@
         else
         {
             // Set the default value.
-            selectedParentRateId = baseRates.FirstOrDefault().Id;
+            if (baseRates.Any())
+                selectedParentRateId = baseRates.FirstOrDefault().Id;
         }
 
         loadingRates = false;

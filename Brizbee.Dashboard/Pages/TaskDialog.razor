@@ -30,12 +30,28 @@
     <div class="form-group">
         <label for="task_base_payroll_rate_id" class="col-sm-3 control-label">Base Payroll Rate</label>
         <div class="col-sm-9">
+            @if (task.BasePayrollRate != null)
+            {
+                <p class="form-control-static">@task.BasePayrollRate.Name</p>
+            }
+            else
+            {
+                <p class="form-control-static">Unspecified</p>
+            }
         </div>
     </div>
 
     <div class="form-group">
         <label for="task_base_service_rate_id" class="col-sm-3 control-label">Base Service Rate</label>
         <div class="col-sm-9">
+            @if (task.BaseServiceRate != null)
+            {
+                <p class="form-control-static">@task.BaseServiceRate.Name</p>
+            }
+            else
+            {
+                <p class="form-control-static">Unspecified</p>
+            }
         </div>
     </div>
 

@@ -28,7 +28,10 @@
     <div class="form-group">
         <label for="project_status" class="col-sm-3 control-label">Status</label>
         <div class="col-sm-9">
-            <InputSelect id="project_status" @bind-Value="project.Status" class="form-control" disabled="@(working || loading)">
+            <InputSelect id="project_status" class="form-control" disabled="@(working || loading)"
+                            ValueChanged="@( (string x) => SelectedStatusValueChangeHandler(x) )"
+                            ValueExpression="@( () => selectedStatus )"
+                            Value="@selectedStatus">
                 <option value="Open">Open</option>
                 <option value="Needs Invoice">Needs Invoice</option>
                 <option value="Merged">Merged</option>
@@ -81,7 +84,10 @@
         <div class="form-group">
             <label for="project_task_template_id" class="col-sm-3 control-label">Task Template</label>
             <div class="col-sm-9">
-                <InputSelect id="project_task_template_id" @bind-Value="project.TaskTemplateId" class="form-control" disabled="@(working || loading)">
+                <InputSelect id="project_task_template_id" class="form-control" disabled="@(working || loading)"
+                            ValueChanged="@( (int x) => SelectedTaskTemplateIdValueChangeHandler(x) )"
+                            ValueExpression="@( () => selectedTaskTemplateId )"
+                            Value="@selectedTaskTemplateId">
                     @foreach (var template in taskTemplates)
                     {
                         <option value="@template.Id">@template.Name</option>
@@ -109,6 +115,8 @@
     private bool working = false;
     private bool loading = true;
     private Job project = new Job();
+    private string selectedStatus;
+    private int selectedTaskTemplateId;
     private List<TaskTemplate> taskTemplates = new List<TaskTemplate>(0);
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
@@ -127,6 +135,13 @@
         }
 
         await RefreshTaskTemplates();
+
+        // Set the defaults.
+        SelectedStatusValueChangeHandler("Open");
+
+        // Select the default task template if there are any.
+        if (taskTemplates.Any())
+            SelectedTaskTemplateIdValueChangeHandler(taskTemplates.FirstOrDefault().Id);
 
         loading = false;
     }
@@ -184,5 +199,21 @@
     private void CloseDialog(MouseEventArgs e)
     {
         dialogService.Close(false);
+    }
+
+    private void SelectedStatusValueChangeHandler(string status)
+    {
+        selectedStatus = status;
+
+        // Update the project.
+        project.Status = selectedStatus;
+    }
+
+    private void SelectedTaskTemplateIdValueChangeHandler(int taskTemplateId)
+    {
+        selectedTaskTemplateId = taskTemplateId;
+
+        // Update the project.
+        project.TaskTemplateId = selectedTaskTemplateId;
     }
 }
