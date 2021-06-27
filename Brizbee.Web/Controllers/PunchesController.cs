@@ -25,14 +25,18 @@ using Brizbee.Web.Repositories;
 using Brizbee.Web.Serialization;
 using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Validation;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Web;
 using System.Web.Http;
 
@@ -241,64 +245,14 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        // POST: odata/Punches/Default.Split
-        [HttpPost]
-        public IHttpActionResult Split(ODataActionParameters parameters)
-        {
-            //var splitter = new PunchSplitter();
-            //string type = parameters["Type"] as string;
-            DateTime inAt = DateTime.Parse(parameters["InAt"] as string);
-            DateTime outAt = DateTime.Parse(parameters["OutAt"] as string);
-            var currentUser = CurrentUser();
-            int[] userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
-
-            //switch (type)
-            //{
-            //    case "minutes":
-            //        int minutes = int.Parse(parameters["Minutes"] as string);
-            //        splitter.SplitAtMinutes(userIds, inAt, outAt, minutes, currentUser);
-            //        Trace.TraceInformation("Splitting at minutes " + parameters["Minutes"] as string);
-            //        break;
-            //    case "time":
-            //        string time = parameters["Time"] as string;
-            //        var separated = time.Split(':');
-            //        int hour = int.Parse(separated[0]);
-            //        Trace.TraceInformation("Splitting at time " + parameters["Time"] as string);
-            //        splitter.SplitAtHour(userIds, inAt, outAt, hour, currentUser);
-            //        break;
-            //}
-
-            var service = new PunchService();
-
-            var punches = db.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                .OrderBy(p => p.UserId)
-                .ThenBy(p => p.InAt)
-                .ToList();
-
-            var split = service.SplitAtMidnight(punches, currentUser);
-            var processed = service.SplitAtMinute(split, currentUser, minuteOfDay: 990);
-
-            db.Punches.RemoveRange(punches);
-
-            db.Punches.AddRange(processed);
-
-            db.SaveChanges();
-
-            return Ok();
-        }
-
         // POST: odata/Punches/Default.SplitAtMidnight
         [HttpPost]
         public IHttpActionResult SplitAtMidnight(ODataActionParameters parameters)
         {
-            DateTime parsedInAt = DateTime.Parse(parameters["InAt"] as string);
-            DateTime parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
-            User currentUser = CurrentUser();
+            var parsedInAt = DateTime.Parse(parameters["InAt"] as string);
+            var parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
+            var currentUser = CurrentUser();
+            var nowUtc = DateTime.UtcNow;
             var inAt = new DateTime(parsedInAt.Year, parsedInAt.Month, parsedInAt.Day, 0, 0, 0, 0);
             var outAt = new DateTime(parsedOutAt.Year, parsedOutAt.Month, parsedOutAt.Day, 23, 59, 0, 0);
             int[] userIds = db.Users
@@ -313,7 +267,13 @@ namespace Brizbee.Web.Controllers
                 .AsNoTracking() // Will be manipulated in memory
                 .ToList();
 
+            // Save what the punches looked like before.
+            var before = originalPunchesNotTracked;
+
             var splitPunches = new PunchService().SplitAtMidnight(originalPunchesNotTracked, currentUser);
+
+            // Save what the punches look like after.
+            var after = splitPunches;
 
             // Delete the old punches and save the new ones
             db.Punches.RemoveRange(originalPunchesTracked);
@@ -321,6 +281,37 @@ namespace Brizbee.Web.Controllers
 
             db.Punches.AddRange(splitPunches);
             db.SaveChanges();
+            
+            try
+            {
+                // Attempt to save the backup of the punches on Azure.
+                var backup = new
+                {
+                    Before = before,
+                    After = after
+                };
+                var json = JsonConvert.SerializeObject(backup);
+
+                // Create reference to Azure Storage account.
+                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
+                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+
+                // Get the container or create if it doesn't exist already.
+                CloudBlobContainer azureContainer = blobClient.GetContainerReference("split-punch-backups");
+                await azureContainer.CreateIfNotExistsAsync();
+
+                // Upload the data to the blob.
+                CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                {
+                    await blockBlob.UploadFromStreamAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.ToString());
+            }
 
             return Ok();
         }
@@ -331,6 +322,7 @@ namespace Brizbee.Web.Controllers
         {
             var populateOptions = parameters["Options"] as PopulateRateOptions;
             var currentUser = CurrentUser();
+            var nowUtc = DateTime.UtcNow;
             var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0, DateTimeKind.Unspecified);
             var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0, DateTimeKind.Unspecified);
             populateOptions.InAt = inAt;
@@ -347,14 +339,51 @@ namespace Brizbee.Web.Controllers
                 .AsNoTracking() // Will be manipulated in memory
                 .ToList();
 
+            // Save what the punches looked like before.
+            var before = originalPunchesNotTracked;
+
             var populatedPunches = new PunchService().Populate(populateOptions, originalPunchesNotTracked, currentUser);
 
-            // Delete the old punches and save the new ones
+            // Save what the punches look like after.
+            var after = populatedPunches;
+
+            // Delete the old punches and save the new ones.
             db.Punches.RemoveRange(originalPunchesTracked);
             db.SaveChanges();
 
             db.Punches.AddRange(populatedPunches);
             db.SaveChanges();
+
+            try
+            {
+                // Attempt to save the backup of the punches on Azure.
+                var backup = new
+                {
+                    Before = before,
+                    After = after
+                };
+                var json = JsonConvert.SerializeObject(backup);
+
+                // Create reference to Azure Storage account.
+                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
+                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+
+                // Get the container or create if it doesn't exist already.
+                CloudBlobContainer azureContainer = blobClient.GetContainerReference("populate-punch-backups");
+                await azureContainer.CreateIfNotExistsAsync();
+
+                // Upload the data to the blob.
+                CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                {
+                    await blockBlob.UploadFromStreamAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.ToString());
+            }
 
             return Ok();
         }
