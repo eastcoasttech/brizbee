@@ -36,20 +36,33 @@ namespace Brizbee.Web.Controllers
     public class TimesheetEntriesController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private TimesheetEntryRepository repo = new TimesheetEntryRepository();
 
         // GET: odata/TimesheetEntries
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
         public IQueryable<TimesheetEntry> GetTimesheetEntries()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+
+            return db.TimesheetEntries.Where(p => userIds.Contains(p.UserId));
         }
 
         // GET: odata/TimesheetEntries(5)
         [EnableQuery]
         public SingleResult<TimesheetEntry> GetTimesheetEntry([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+
+            return SingleResult.Create(db.TimesheetEntries
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.Id == key));
         }
 
         // POST: odata/TimesheetEntries
@@ -60,7 +73,17 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            timesheetEntry = repo.Create(timesheetEntry, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var now = DateTime.UtcNow;
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
+
+            // Auto-generated
+            timesheetEntry.CreatedAt = now;
+
+            db.TimesheetEntries.Add(timesheetEntry);
+
+            db.SaveChanges();
 
             return Created(timesheetEntry);
         }
@@ -74,7 +97,14 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var timesheetEntry = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var timesheetEntry = db.TimesheetEntries.Find(key);
+
+            // Peform the update
+            patch.Patch(timesheetEntry);
+
+            db.SaveChanges();
 
             return Updated(timesheetEntry);
         }
@@ -82,7 +112,23 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/TimesheetEntries(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var timesheetEntry = db.TimesheetEntries
+                .Include("User")
+                .Where(t => t.Id == key)
+                .FirstOrDefault();
+
+            // Ensure that user is authorized.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != timesheetEntry.User.OrganizationId)
+                return BadRequest();
+
+            // Delete the object itself
+            db.TimesheetEntries.Remove(timesheetEntry);
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 

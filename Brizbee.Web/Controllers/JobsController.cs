@@ -34,7 +34,6 @@ namespace Brizbee.Web.Controllers
     public class JobsController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private JobRepository repo = new JobRepository();
 
         // GET: odata/Jobs
         [EnableQuery(PageSize = 20)]
@@ -193,7 +192,31 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var job = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var job = db.Jobs
+                .Include("Customer")
+                .Where(j => j.Id == key)
+                .FirstOrDefault();
+
+            // Ensure that object was found.
+            if (job == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != job.Customer.OrganizationId)
+                throw new Exception("Not authorized to modify the object");
+
+            // Do not allow modifying some properties.
+            if (patch.GetChangedPropertyNames().Contains("CustomerId"))
+            {
+                return BadRequest("Not authorized to modify the CustomerId");
+            }
+
+            // Peform the update
+            patch.Patch(job);
+
+            db.SaveChanges();
 
             return Updated(job);
         }
@@ -258,7 +281,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

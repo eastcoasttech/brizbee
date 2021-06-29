@@ -22,7 +22,6 @@
 
 using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
-using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using SendGrid;
 using SendGrid.Helpers.Mail;

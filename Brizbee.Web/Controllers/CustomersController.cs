@@ -23,6 +23,7 @@
 using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
+using System;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -32,20 +33,26 @@ namespace Brizbee.Web.Controllers
     public class CustomersController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private CustomerRepository repo = new CustomerRepository();
 
         // GET: odata/Customers
         [EnableQuery(PageSize = 20)]
         public IQueryable<Customer> GetCustomers()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            return db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId);
         }
 
         // GET: odata/Customers(5)
         [EnableQuery]
         public SingleResult<Customer> GetCustomer([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            return SingleResult.Create(db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == key));
         }
 
         // POST: odata/Customers
@@ -56,7 +63,20 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            customer = repo.Create(customer, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != customer.OrganizationId)
+                return BadRequest();
+
+            // Auto-generated
+            customer.CreatedAt = DateTime.UtcNow;
+            customer.OrganizationId = currentUser.OrganizationId;
+
+            db.Customers.Add(customer);
+
+            db.SaveChanges();
 
             return Created(customer);
         }
@@ -70,7 +90,28 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var customer = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var customer = db.Customers.Find(key);
+
+            // Ensure that object was found.
+            if (customer == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != customer.OrganizationId)
+                return BadRequest();
+
+            // Do not allow modifying some properties.
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
+            {
+                return BadRequest("Not authorized to modify the OrganizationId");
+            }
+
+            // Peform the update.
+            patch.Patch(customer);
+
+            db.SaveChanges();
 
             return Updated(customer);
         }
@@ -78,7 +119,20 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/Customers(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var customer = db.Customers.Find(key);
+
+            // Ensure that user is authorized.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != customer.OrganizationId)
+                return BadRequest();
+
+            // Delete the object itself
+            db.Customers.Remove(customer);
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 
@@ -107,7 +161,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

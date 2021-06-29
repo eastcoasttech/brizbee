@@ -26,6 +26,7 @@ using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using NodaTime;
 using NodaTime.TimeZones;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -37,13 +38,16 @@ namespace Brizbee.Web.Controllers
     public class OrganizationsController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private OrganizationRepository repo = new OrganizationRepository();
 
         // GET: odata/Organizations(5)
         [EnableQuery]
         public SingleResult<Organization> GetOrganization([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            return SingleResult.Create(db.Organizations
+                .Where(o => o.Id == currentUser.OrganizationId)
+                .Where(o => o.Id == key));
         }
 
         // PATCH: odata/Organizations(5)
@@ -55,7 +59,51 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var organization = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var organization = db.Organizations.Find(key);
+
+            // Ensure that object was found
+            if (organization == null) return NotFound();
+
+            // Ensure that user is authorized
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != key)
+                return BadRequest();
+
+            // Peform the update
+            patch.Patch(organization);
+            
+            // Update the Stripe payment source if it is provided
+            if (patch.GetChangedPropertyNames().Contains("StripeSourceId"))
+            {
+                var customerService = new CustomerService();
+                var sourceService = new SourceService();
+                
+                // Attach the card source id to the customer
+                var attachOptions = new SourceAttachOptions()
+                {
+                    Source = organization.StripeSourceId
+                };
+                sourceService.Attach(organization.StripeCustomerId, attachOptions);
+
+                // Update the customer's default source
+                var customerOptions = new CustomerUpdateOptions()
+                {
+                    DefaultSource = organization.StripeSourceId
+                };
+                Stripe.Customer customer = customerService.Update(organization.StripeCustomerId, customerOptions);
+
+                var source = sourceService.Get(organization.StripeSourceId);
+
+                // Record the card details
+                organization.StripeSourceCardLast4 = source.Card.Last4;
+                organization.StripeSourceCardBrand = source.Card.Brand;
+                organization.StripeSourceCardExpirationMonth = source.Card.ExpMonth.ToString();
+                organization.StripeSourceCardExpirationYear = source.Card.ExpYear.ToString();
+            }
+
+            db.SaveChanges();
 
             return Updated(organization);
         }
@@ -120,7 +168,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

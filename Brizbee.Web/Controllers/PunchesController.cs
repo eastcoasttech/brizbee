@@ -282,36 +282,36 @@ namespace Brizbee.Web.Controllers
             db.Punches.AddRange(splitPunches);
             db.SaveChanges();
             
-            try
-            {
-                // Attempt to save the backup of the punches on Azure.
-                var backup = new
-                {
-                    Before = before,
-                    After = after
-                };
-                var json = JsonConvert.SerializeObject(backup);
+            //try
+            //{
+            //    // Attempt to save the backup of the punches on Azure.
+            //    var backup = new
+            //    {
+            //        Before = before,
+            //        After = after
+            //    };
+            //    var json = JsonConvert.SerializeObject(backup);
 
-                // Create reference to Azure Storage account.
-                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
-                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            //    // Create reference to Azure Storage account.
+            //    var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+            //    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
+            //    CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
 
-                // Get the container or create if it doesn't exist already.
-                CloudBlobContainer azureContainer = blobClient.GetContainerReference("split-punch-backups");
-                await azureContainer.CreateIfNotExistsAsync();
+            //    // Get the container or create if it doesn't exist already.
+            //    CloudBlobContainer azureContainer = blobClient.GetContainerReference("split-punch-backups");
+            //    await azureContainer.CreateIfNotExistsAsync();
 
-                // Upload the data to the blob.
-                CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
-                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
-                {
-                    await blockBlob.UploadFromStreamAsync(stream);
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning(ex.ToString());
-            }
+            //    // Upload the data to the blob.
+            //    CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+            //    using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+            //    {
+            //        await blockBlob.UploadFromStreamAsync(stream);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Trace.TraceWarning(ex.ToString());
+            //}
 
             return Ok();
         }
@@ -354,36 +354,36 @@ namespace Brizbee.Web.Controllers
             db.Punches.AddRange(populatedPunches);
             db.SaveChanges();
 
-            try
-            {
-                // Attempt to save the backup of the punches on Azure.
-                var backup = new
-                {
-                    Before = before,
-                    After = after
-                };
-                var json = JsonConvert.SerializeObject(backup);
+            //try
+            //{
+            //    // Attempt to save the backup of the punches on Azure.
+            //    var backup = new
+            //    {
+            //        Before = before,
+            //        After = after
+            //    };
+            //    var json = JsonConvert.SerializeObject(backup);
 
-                // Create reference to Azure Storage account.
-                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
-                CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            //    // Create reference to Azure Storage account.
+            //    var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+            //    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
+            //    CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
 
-                // Get the container or create if it doesn't exist already.
-                CloudBlobContainer azureContainer = blobClient.GetContainerReference("populate-punch-backups");
-                await azureContainer.CreateIfNotExistsAsync();
+            //    // Get the container or create if it doesn't exist already.
+            //    CloudBlobContainer azureContainer = blobClient.GetContainerReference("populate-punch-backups");
+            //    await azureContainer.CreateIfNotExistsAsync();
 
-                // Upload the data to the blob.
-                CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
-                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
-                {
-                    await blockBlob.UploadFromStreamAsync(stream);
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning(ex.ToString());
-            }
+            //    // Upload the data to the blob.
+            //    CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+            //    using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+            //    {
+            //        await blockBlob.UploadFromStreamAsync(stream);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Trace.TraceWarning(ex.ToString());
+            //}
 
             return Ok();
         }

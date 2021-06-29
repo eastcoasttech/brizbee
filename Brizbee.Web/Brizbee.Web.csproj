@@ -449,8 +449,6 @@
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Filters\BrizbeeAuthorizeAttribute.cs" />
     <Compile Include="Filters\CustomExceptionFilterAttribute.cs" />
-    <Compile Include="Filters\HttpBasicAuthorizeAttribute.cs" />
-    <Compile Include="Filters\NotImplExceptionFilterAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -501,21 +499,8 @@
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
-    <Compile Include="Policies\CommitPolicy.cs" />
-    <Compile Include="Policies\CustomerPolicy.cs" />
-    <Compile Include="Policies\JobPolicy.cs" />
-    <Compile Include="Policies\PunchPolicy.cs" />
-    <Compile Include="Policies\TaskTemplatePolicy.cs" />
-    <Compile Include="Policies\TimesheetEntryPolicy.cs" />
-    <Compile Include="Policies\UserPolicy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Repositories\CommitRepository.cs" />
-    <Compile Include="Repositories\CustomerRepository.cs" />
-    <Compile Include="Repositories\JobRepository.cs" />
-    <Compile Include="Repositories\OrganizationRepository.cs" />
     <Compile Include="Repositories\PunchRepository.cs" />
-    <Compile Include="Repositories\RateRepository.cs" />
-    <Compile Include="Repositories\TimesheetEntryRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
     <Compile Include="Serialization\PopulateRateOption.cs" />

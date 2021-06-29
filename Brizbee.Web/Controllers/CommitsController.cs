@@ -27,6 +27,7 @@ using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -37,20 +38,26 @@ namespace Brizbee.Web.Controllers
     public class CommitsController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private CommitRepository repo = new CommitRepository();
-
+        
         // GET: odata/Commits
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<Commit> GetCommits()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            return db.Commits
+                .Where(c => c.OrganizationId == currentUser.OrganizationId);
         }
 
         // GET: odata/Commits(5)
         [EnableQuery]
         public SingleResult<Commit> GetCommit([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            return SingleResult.Create(db.Commits
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == key));
         }
 
         // POST: odata/Commits
@@ -61,9 +68,85 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            commit = repo.Create(commit, CurrentUser());
+            var currentUser = CurrentUser();
 
-            return Created(commit);
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != commit.OrganizationId)
+                return BadRequest();
+
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var inAt = new DateTime(commit.InAt.Year, commit.InAt.Month, commit.InAt.Day, 0, 0, 0, DateTimeKind.Unspecified);
+                    var outAt = new DateTime(commit.OutAt.Year, commit.OutAt.Month, commit.OutAt.Day, 23, 59, 59, DateTimeKind.Unspecified);
+
+                    // Ensure that no two commits overlap
+                    var overlap = db.Commits
+                        .Where(c => c.OrganizationId == commit.OrganizationId)
+                        .Where(c => (inAt < c.OutAt) && (c.InAt < outAt))
+                        .FirstOrDefault();
+                    if (overlap != null)
+                    {
+                        return BadRequest(string.Format(
+                                "The commit overlaps another commit: {0} thru {1}",
+                                overlap.InAt.ToString("yyyy-MM-dd"),
+                                overlap.OutAt.ToString("yyyy-MM-dd")
+                            ));
+                    }
+
+                    // Auto-generated
+                    commit.CreatedAt = DateTime.UtcNow;
+                    commit.Guid = Guid.NewGuid();
+                    commit.OrganizationId = currentUser.OrganizationId;
+                    commit.UserId = currentUser.Id;
+                    commit.InAt = inAt;
+                    commit.OutAt = outAt;
+
+                    db.Commits.Add(commit);
+
+                    db.SaveChanges();
+
+                    // Split the punches at midnight.
+                    var service = new PunchService();
+                    int[] userIds = db.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Select(u => u.Id)
+                        .ToArray();
+                    var originalPunchesTracked = db.Punches
+                        .Where(p => userIds.Contains(p.UserId))
+                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                        .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+                    var originalPunchesNotTracked = originalPunchesTracked
+                        .AsNoTracking() // Will be manipulated in memory
+                        .ToList();
+                    var splitPunches = service.SplitAtMidnight(originalPunchesNotTracked, currentUser);
+
+                    // Delete the old punches and save the new ones.
+                    db.Punches.RemoveRange(originalPunchesTracked);
+                    db.SaveChanges();
+
+                    // Save the commit id with the new punches.
+                    foreach (var punch in splitPunches)
+                    {
+                        punch.CommitId = commit.Id;
+                    }
+                    commit.PunchCount = splitPunches.Count();
+
+                    db.Punches.AddRange(splitPunches);
+                    db.SaveChanges();
+
+                    transaction.Commit();
+
+                    return Created(commit);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    return BadRequest(ex.ToString());
+                }
+            }
         }
         
         // POST: odata/Commits(5)/Undo
@@ -75,22 +158,39 @@ namespace Brizbee.Web.Controllers
                 return BadRequest();
             }
 
-            repo.Undo(key, CurrentUser());
-            return Ok();
-        }
+            var currentUser = CurrentUser();
 
-        // PATCH: odata/Commits(5)
-        [AcceptVerbs("PATCH", "MERGE")]
-        public IHttpActionResult Patch([FromODataUri] int key, Delta<Commit> patch)
-        {
-            if (!ModelState.IsValid)
+            var commit = db.Commits
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .FirstOrDefault(c => c.Id == key);
+
+            if (commit != null)
             {
-                return BadRequest(ModelState);
+                var punches = db.Punches.Where(p => p.CommitId == commit.Id).ToList();
+                punches.ForEach(p => {
+                    p.CommitId = null;
+                });
+
+                db.Commits.Remove(commit);
+
+                var qboExports = db.QuickBooksOnlineExports.Where(x => x.CommitId == key).ToList();
+                qboExports.ForEach(x => {
+                    db.QuickBooksOnlineExports.Remove(x);
+                });
+
+                var qbdExports = db.QuickBooksDesktopExports.Where(x => x.CommitId == key).ToList();
+                qbdExports.ForEach(x => {
+                    db.QuickBooksDesktopExports.Remove(x);
+                });
+
+                db.SaveChanges();
+
+                return Ok();
             }
-
-            var commit = repo.Update(key, patch, CurrentUser());
-
-            return Updated(commit);
+            else
+            {
+                return NotFound();
+            }
         }
 
         // GET: odata/Commits(5)/Default.Export
@@ -118,7 +218,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

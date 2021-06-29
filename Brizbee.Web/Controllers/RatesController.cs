@@ -37,20 +37,28 @@ namespace Brizbee.Web.Controllers
     public class RatesController : BaseODataController
     {
         private SqlContext db = new SqlContext();
-        private RateRepository repo = new RateRepository();
 
         // GET: odata/Rates
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
         public IQueryable<Rate> GetRates()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            return db.Rates
+                .Where(x => x.OrganizationId == currentUser.OrganizationId)
+                .Where(x => x.IsDeleted == false);
         }
 
         // GET: odata/Rates(5)
         [EnableQuery]
         public SingleResult<Rate> GetRate([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            return SingleResult.Create(db.Rates
+                .Where(x => x.OrganizationId == currentUser.OrganizationId)
+                .Where(x => x.IsDeleted == false)
+                .Where(x => x.Id == key));
         }
 
         // POST: odata/Rates
@@ -61,7 +69,16 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            rate = repo.Create(rate, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Auto-generated
+            rate.CreatedAt = DateTime.UtcNow;
+            rate.OrganizationId = currentUser.OrganizationId;
+            rate.IsDeleted = false;
+
+            db.Rates.Add(rate);
+
+            db.SaveChanges();
 
             return Created(rate);
         }
@@ -75,7 +92,33 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var rate = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var rate = db.Rates
+                .Where(x => x.OrganizationId == currentUser.OrganizationId)
+                .Where(x => x.Id == key)
+                .FirstOrDefault();
+
+            // Ensure that object was found
+            if (rate == null) return NotFound();
+
+            // Ensure that object is not deleted
+            if (rate.IsDeleted) return BadRequest();
+
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
+                patch.GetChangedPropertyNames().Contains("ParentRateId") ||
+                patch.GetChangedPropertyNames().Contains("Type") ||
+                patch.GetChangedPropertyNames().Contains("IsDeleted") ||
+                patch.GetChangedPropertyNames().Contains("CreatedAt"))
+            {
+                return BadRequest("Not authorized to modify CreatedAt, IsDeleted, OrganizationId, ParentRateId, Type");
+            }
+
+            // Peform the update
+            patch.Patch(rate);
+
+            db.SaveChanges();
 
             return Updated(rate);
         }
@@ -83,7 +126,18 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/Rates(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var rate = db.Rates
+                .Where(x => x.OrganizationId == currentUser.OrganizationId)
+                .Where(x => x.IsDeleted == false)
+                .Where(x => x.Id == key)
+                .FirstOrDefault();
+
+            // Mark the object as deleted
+            rate.IsDeleted = true;
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 
@@ -187,7 +241,6 @@ namespace Brizbee.Web.Controllers
             if (disposing)
             {
                 db.Dispose();
-                repo.Dispose();
             }
             base.Dispose(disposing);
         }

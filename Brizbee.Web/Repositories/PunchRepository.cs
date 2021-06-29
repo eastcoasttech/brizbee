@@ -21,7 +21,6 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Web.Policies;
 using Microsoft.AspNet.OData;
 using NodaTime;
 using System;
@@ -70,15 +69,17 @@ namespace Brizbee.Web.Repositories
         /// <param name="currentUser">The user to check for permissions</param>
         public void Delete(int id, User currentUser)
         {
-            var punch = db.Punches.Find(id);
+            var punch = db.Punches
+                .Include("User")
+                .Where(p => p.Id == id)
+                .FirstOrDefault();
 
-            // Ensure that user is authorized
-            if (!PunchPolicy.CanDelete(punch, currentUser))
-            {
+            // Ensure that user is authorized.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != punch.User.OrganizationId)
                 throw new Exception("Not authorized to delete the object");
-            }
 
-            // Delete the object itself
+            // Delete the object itself.
             db.Punches.Remove(punch);
 
             db.SaveChanges();
