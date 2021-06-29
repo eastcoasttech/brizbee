@@ -121,6 +121,10 @@
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
+        // Set the defaults.
+        selectedStatus = "Open";
+        SelectedStatusValueChangeHandler(selectedStatus);
+
         // --------------------------------------------------------------------
         // Attempt to load the project, if necessary.
         // --------------------------------------------------------------------
@@ -128,20 +132,21 @@
         if (Id.HasValue)
         {
             project = await projectService.GetJobByIdAsync(Id.Value);
+
+            // Set the status.
+            selectedStatus = project.Status;
+            SelectedStatusValueChangeHandler(selectedStatus);
         }
         else
         {
             project.Number = await projectService.GetNextNumberAsync();
+
+            await RefreshTaskTemplates();
+
+            // Select the default task template if there are any.
+            if (taskTemplates.Any())
+                SelectedTaskTemplateIdValueChangeHandler(taskTemplates.FirstOrDefault().Id);
         }
-
-        await RefreshTaskTemplates();
-
-        // Set the defaults.
-        SelectedStatusValueChangeHandler("Open");
-
-        // Select the default task template if there are any.
-        if (taskTemplates.Any())
-            SelectedTaskTemplateIdValueChangeHandler(taskTemplates.FirstOrDefault().Id);
 
         loading = false;
     }
