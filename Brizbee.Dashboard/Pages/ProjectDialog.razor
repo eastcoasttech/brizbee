@@ -29,9 +29,9 @@
         <label for="project_status" class="col-sm-3 control-label">Status</label>
         <div class="col-sm-9">
             <InputSelect id="project_status" class="form-control" disabled="@(working || loading)"
-                            ValueChanged="@( (string x) => SelectedStatusValueChangeHandler(x) )"
-                            ValueExpression="@( () => selectedStatus )"
-                            Value="@selectedStatus">
+                         ValueChanged="@( (string x) => SelectedStatusValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedStatus )"
+                         Value="@selectedStatus">
                 <option value="Open">Open</option>
                 <option value="Needs Invoice">Needs Invoice</option>
                 <option value="Merged">Merged</option>
@@ -77,6 +77,22 @@
         </div>
     </div>
 
+    <hr />
+
+    <div class="form-group">
+        <label for="project_quickbooks_customerjob" class="col-sm-3 control-label">QuickBooks Customer:Job</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="project_quickbooks_customerjob" @bind-Value="project.QuickBooksCustomerJob" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="project_quickbooks_class" class="col-sm-3 control-label">QuickBooks Class</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="project_quickbooks_class" @bind-Value="project.QuickBooksClass" disabled="@(working || loading)" />
+        </div>
+    </div>
+
     @if (project.Id == 0 && taskTemplates.Any())
     {
         <hr />
@@ -85,9 +101,9 @@
             <label for="project_task_template_id" class="col-sm-3 control-label">Task Template</label>
             <div class="col-sm-9">
                 <InputSelect id="project_task_template_id" class="form-control" disabled="@(working || loading)"
-                            ValueChanged="@( (int x) => SelectedTaskTemplateIdValueChangeHandler(x) )"
-                            ValueExpression="@( () => selectedTaskTemplateId )"
-                            Value="@selectedTaskTemplateId">
+                             ValueChanged="@( (int x) => SelectedTaskTemplateIdValueChangeHandler(x) )"
+                             ValueExpression="@( () => selectedTaskTemplateId )"
+                             Value="@selectedTaskTemplateId">
                     @foreach (var template in taskTemplates)
                     {
                         <option value="@template.Id">@template.Name</option>

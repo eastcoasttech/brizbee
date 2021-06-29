@@ -112,7 +112,9 @@ namespace Brizbee.Dashboard.Services
                     { "CustomerWorkOrder", job.CustomerWorkOrder },
                     { "CustomerPurchaseOrder", job.CustomerPurchaseOrder },
                     { "InvoiceNumber", job.InvoiceNumber },
-                    { "QuoteNumber", job.QuoteNumber }
+                    { "QuoteNumber", job.QuoteNumber },
+                    { "QuickBooksCustomerJob", job.QuickBooksCustomerJob },
+                    { "QuickBooksClass", job.QuickBooksClass }
                 };
 
                 // Can only be configured at creation.
