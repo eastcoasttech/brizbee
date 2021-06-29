@@ -97,6 +97,7 @@ namespace Brizbee.Web.Controllers
                         J.Number,
                         J.Description,
                         J.QuickBooksCustomerJob,
+                        J.QuoteNumber,
                         J.CustomerId,
 
                         C.Id,
