@@ -458,8 +458,28 @@ namespace Brizbee.Web.Controllers
             // Inventory site is determined by the hostname.
             var sites = new Dictionary<string, string>()
             {
-                { "RR01", "Site 01" },
-                { "MARTIN-01", "Site 01" }
+                { "MARTIN-01", "" },
+                { "RR01", "" },
+                { "RR08", "" },
+                { "RR09", "" },
+                { "RR11", "" },
+                { "RR12", "" },
+                { "RR23", "" },
+                { "RR24", "" },
+                { "RR25", "" },
+                { "RR26", "" },
+                { "RR27", "" },
+                { "RR28", "" },
+                { "RR17", "" },
+                { "RR16", "" },
+                { "RR18", "" },
+                { "RR19", "" },
+                { "RR02", "" },
+                { "RR03", "" },
+                { "RR05", "" },
+                { "RR06", "" },
+                { "RR04", "" },
+                { "RR15", "" }
             };
             var siteForHostname = sites[hostname];
 
