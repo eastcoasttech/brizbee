@@ -455,11 +455,35 @@ namespace Brizbee.Web.Controllers
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
 
+            if (currentPunch == null)
+                return BadRequest("Cannot consume inventory without being punched in.");
+
             // Inventory site is determined by the hostname.
             var sites = new Dictionary<string, string>()
             {
-                { "RR01", "Site 01" },
-                { "MARTIN-01", "Site 01" }
+                { "MARTIN-01", "" },
+                { "RR01", "" },
+                { "RR08", "" },
+                { "RR09", "" },
+                { "RR11", "" },
+                { "RR12", "" },
+                { "RR23", "" },
+                { "RR24", "" },
+                { "RR25", "" },
+                { "RR26", "" },
+                { "RR27", "" },
+                { "RR28", "" },
+                { "RR17", "" },
+                { "RR16", "" },
+                { "RR18", "" },
+                { "RR19", "" },
+                { "RR02", "" },
+                { "RR03", "" },
+                { "RR05", "" },
+                { "RR06", "" },
+                { "RR04", "" },
+                { "RR15", "" },
+                { "Pocket_PC", "" }
             };
             var siteForHostname = sites[hostname];
 
@@ -489,6 +513,78 @@ namespace Brizbee.Web.Controllers
             _context.SaveChanges();
 
             return Ok();
+        }
+
+        // GET: api/QBDInventoryConsumptions/5
+        public IHttpActionResult GetQBDInventoryConsumption(long id)
+        {
+            var currentUser = CurrentUser();
+
+            var consumption = _context.QBDInventoryConsumptions
+                .Include("CreatedByUser")
+                .Include("QBDInventoryItem")
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == id)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.CreatedByUserId,
+                    c.CreatedAt,
+                    c.Hostname,
+                    c.OrganizationId,
+                    c.QBDInventoryConsumptionSyncId,
+                    c.QBDInventoryItemId,
+                    c.QBDInventorySiteId,
+                    c.QBDUnitOfMeasureSetId,
+                    c.Quantity,
+                    c.TaskId,
+                    c.UnitOfMeasure,
+                    CreatedByUser = new
+                    {
+                        c.CreatedByUser.Id,
+                        c.CreatedByUser.Name
+                    },
+                    QBDInventoryItem = new
+                    {
+                        c.QBDInventoryItem.FullName,
+                        c.QBDInventoryItem.Name,
+                        c.QBDInventoryItem.Id,
+                        c.QBDInventoryItem.ListId,
+                        c.QBDInventoryItem.ManufacturerPartNumber,
+                        c.QBDInventoryItem.OffsetItemFullName,
+                        c.QBDInventoryItem.BarCodeValue,
+                        c.QBDInventoryItem.PurchaseCost,
+                        c.QBDInventoryItem.PurchaseDescription,
+                        c.QBDInventoryItem.SalesPrice,
+                        c.QBDInventoryItem.SalesDescription,
+                        c.QBDInventoryItem.QBDCOGSAccountFullName
+                    }
+                })
+                .FirstOrDefault();
+
+            if (consumption == null)
+                return NotFound();
+
+            return Ok(consumption);
+        }
+
+        // DELETE: api/QBDInventoryConsumptions/5
+        public IHttpActionResult DeleteQBDInventoryConsumption(long id)
+        {
+            var currentUser = CurrentUser();
+
+            var consumption = _context.QBDInventoryConsumptions
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == id)
+                .FirstOrDefault();
+
+            if (consumption == null)
+                return NotFound();
+
+            _context.QBDInventoryConsumptions.Remove(consumption);
+            _context.SaveChanges();
+
+            return StatusCode(HttpStatusCode.NoContent);
         }
 
         private User CurrentUser()

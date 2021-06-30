@@ -47,5 +47,27 @@ namespace Brizbee.Dashboard.Services
             var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
             return (value, total);
         }
+
+        public async Task<QBDInventoryConsumption> GetQBDInventoryConsumptionByIdAsync(long id)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"api/QBDInventoryConsumptions/{id}");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<QBDInventoryConsumption>(responseContent);
+        }
+
+        public async Task<bool> DeleteQBDInventoryConsumptionAsync(long id)
+        {
+            var response = await _apiService.GetHttpClient().DeleteAsync($"api/QBDInventoryConsumptions/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

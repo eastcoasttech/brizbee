@@ -12,9 +12,9 @@
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Lock" disabled="@working">Perform Lock</button>
-<button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
 <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="Lock" disabled="@working" style="margin-left: 2px;">Perform Lock</button>
 
 @code {
     private bool working = false;

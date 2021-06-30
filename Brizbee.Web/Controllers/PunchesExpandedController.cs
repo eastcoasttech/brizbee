@@ -144,43 +144,37 @@ namespace Brizbee.Web.Controllers
                 // Clause for job ids.
                 if (jobIds != null && jobIds.Any())
                 {
-                    whereClause += "AND J.[Id] IN (@JobIds)";
-                    parameters.Add("@JobIds", jobIds);
+                    whereClause += $" AND J.[Id] IN ({string.Join(",", jobIds)})";
                 }
 
                 // Clause for job names.
                 if (jobNames != null && jobNames.Any())
                 {
-                    whereClause += "AND J.[Name] IN (@JobNames)";
-                    parameters.Add("@JobNames", jobNames);
+                    whereClause += $" AND J.[Name] IN ({string.Join(",", jobNames.Select(x => string.Format("'{0}'", x)))})";
                 }
 
                 // Clause for task ids.
                 if (taskIds != null && taskIds.Any())
                 {
-                    whereClause += "AND T.[Id] IN (@TaskIds)";
-                    parameters.Add("@TaskIds", taskIds);
+                    whereClause += $" AND T.[Id] IN ({string.Join(",", taskIds)})";
                 }
 
                 // Clause for task names.
                 if (taskNames != null && taskNames.Any())
                 {
-                    whereClause += "AND T.[Name] IN (@TaskNames)";
-                    parameters.Add("@TaskNames", taskNames);
+                    whereClause += $" AND T.[Name] IN ({string.Join(",", taskNames.Select(x => string.Format("'{0}'", x)))})";
                 }
 
                 // Clause for customer ids.
                 if (customerIds != null && customerIds.Any())
                 {
-                    whereClause += "AND C.[Id] IN (@CustomerIds)";
-                    parameters.Add("@CustomerIds", customerIds);
+                    whereClause += $" AND C.[Id] IN ({string.Join(",", customerIds)})";
                 }
 
                 // Clause for customer names.
                 if (customerNames != null && customerNames.Any())
                 {
-                    whereClause += "AND C.[Name] IN (@CustomerNames)";
-                    parameters.Add("@CustomerNames", customerNames);
+                    whereClause += $" AND C.[Name] IN ({string.Join(",", customerNames.Select(x => string.Format("'{0}'", x)))})";
                 }
 
                 // Get the count.

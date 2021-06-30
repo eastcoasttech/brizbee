@@ -129,9 +129,12 @@
                             </NavLink>
                         }
 
-                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/timecard/task">
-                            Time Card
-                        </NavLink>
+                        @if (currentUser.UsesTimesheets)
+                        {
+                            <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/timecard/task">
+                                Time Card
+                            </NavLink>
+                        }
 
                         <button type="button" class="btn btn-block btn-lg btn-default" @onclick="SignOutClicked">Logout</button>
                     }

@@ -31,7 +31,10 @@
     <div class="form-group">
         <label for="user_role" class="col-sm-3 control-label">Role</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="user_role" disabled="@(working || loading)" @bind-Value="user.Role">
+            <InputSelect class="form-control" id="user_role" disabled="@(working || loading)"
+                         ValueChanged="@( (string x) => SelectedRoleValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedRole )"
+                         Value="@selectedRole">
                 <option value="Standard">Standard</option>
                 <option value="Administrator">Administrator</option>
             </InputSelect>
@@ -107,6 +110,16 @@
         </div>
     </div>
 
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.RequiresLocation" disabled="@(working || loading)" /> Require Location?
+                </label>
+            </div>
+        </div>
+    </div>
+
     <hr />
 
     <div class="form-group">
@@ -151,13 +164,13 @@
 
     <hr />
 
-    <button class="btn btn-primary" type="submit" disabled="@(working || loading)">OK</button>
-    <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
-    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
     @if (user.Id != 0)
     {
-        <button class="btn btn-danger pull-right" type="button" @onclick="DeleteUser" disabled="@(working || loading)">Delete</button>
+        <button class="btn btn-danger" type="button" @onclick="DeleteUser" disabled="@(working || loading)">Delete</button>
     }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
 </EditForm>
 
 @code {
@@ -171,6 +184,7 @@
     private User user = new User();
     private string selectedCountryCode = "";
     private string selectedTimeZone = "";
+    private string selectedRole = "";
     private bool showPassword = false;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
@@ -232,6 +246,9 @@
         selectedTimeZone = "America/New_York";
         selectedTimeZoneValueChangeHandler(selectedTimeZone);
 
+        selectedRole = "Standard";
+        SelectedRoleValueChangeHandler(selectedRole);
+
 
         // --------------------------------------------------------------------
         // Attempt to load the user, if necessary.
@@ -247,6 +264,10 @@
             selectedCountryCodeValueChangeHandler(selectedCountryCode);
             selectedTimeZone = timeZone.Id;
             selectedTimeZoneValueChangeHandler(selectedTimeZone);
+
+            // Set the role.
+            selectedRole = user.Role;
+            SelectedRoleValueChangeHandler(selectedRole);
         }
 
         loading = false;
@@ -292,11 +313,19 @@
         working = true;
 
         // Delete the user on the server and close the dialog.
-        //var result = await punchService.DeletePunchAsync(user.Id);
-        //if (result)
-        //    dialogService.Close(false);
-        //else
-        //    working = false;
+        var result = await userService.DeleteUserAsync(user.Id);
+        if (result)
+            dialogService.Close(false);
+        else
+            working = false;
+    }
+
+    private void SelectedRoleValueChangeHandler(string role)
+    {
+        selectedRole = role;
+
+        // Update the user.
+        user.Role = selectedRole;
     }
 
     private void CloseDialog(MouseEventArgs e)

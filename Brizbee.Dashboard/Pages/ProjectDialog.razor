@@ -29,9 +29,9 @@
         <label for="project_status" class="col-sm-3 control-label">Status</label>
         <div class="col-sm-9">
             <InputSelect id="project_status" class="form-control" disabled="@(working || loading)"
-                            ValueChanged="@( (string x) => SelectedStatusValueChangeHandler(x) )"
-                            ValueExpression="@( () => selectedStatus )"
-                            Value="@selectedStatus">
+                         ValueChanged="@( (string x) => SelectedStatusValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedStatus )"
+                         Value="@selectedStatus">
                 <option value="Open">Open</option>
                 <option value="Needs Invoice">Needs Invoice</option>
                 <option value="Merged">Merged</option>
@@ -77,6 +77,22 @@
         </div>
     </div>
 
+    <hr />
+
+    <div class="form-group">
+        <label for="project_quickbooks_customerjob" class="col-sm-3 control-label">QuickBooks Customer:Job</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="project_quickbooks_customerjob" @bind-Value="project.QuickBooksCustomerJob" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="project_quickbooks_class" class="col-sm-3 control-label">QuickBooks Class</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="project_quickbooks_class" @bind-Value="project.QuickBooksClass" disabled="@(working || loading)" />
+        </div>
+    </div>
+
     @if (project.Id == 0 && taskTemplates.Any())
     {
         <hr />
@@ -85,9 +101,9 @@
             <label for="project_task_template_id" class="col-sm-3 control-label">Task Template</label>
             <div class="col-sm-9">
                 <InputSelect id="project_task_template_id" class="form-control" disabled="@(working || loading)"
-                            ValueChanged="@( (int x) => SelectedTaskTemplateIdValueChangeHandler(x) )"
-                            ValueExpression="@( () => selectedTaskTemplateId )"
-                            Value="@selectedTaskTemplateId">
+                             ValueChanged="@( (int x) => SelectedTaskTemplateIdValueChangeHandler(x) )"
+                             ValueExpression="@( () => selectedTaskTemplateId )"
+                             Value="@selectedTaskTemplateId">
                     @foreach (var template in taskTemplates)
                     {
                         <option value="@template.Id">@template.Name</option>
@@ -99,13 +115,13 @@
 
     <hr />
 
-    <button class="btn btn-primary" type="submit" disabled="@(working || loading)">OK</button>
-    <button class="btn btn-default" type="button" @onclick="CloseDialog" disabled="@(working)">Cancel</button>
-    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
     @if (project.Id != 0)
     {
-        <button class="btn btn-danger pull-right" type="button" @onclick="DeleteProject" disabled="@(working || loading)">Delete</button>
+        <button class="btn btn-danger" type="button" @onclick="DeleteProject" disabled="@(working || loading)">Delete</button>
     }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
 </EditForm>
 
 @code {
@@ -121,6 +137,10 @@
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
+        // Set the defaults.
+        selectedStatus = "Open";
+        SelectedStatusValueChangeHandler(selectedStatus);
+
         // --------------------------------------------------------------------
         // Attempt to load the project, if necessary.
         // --------------------------------------------------------------------
@@ -128,20 +148,21 @@
         if (Id.HasValue)
         {
             project = await projectService.GetJobByIdAsync(Id.Value);
+
+            // Set the status.
+            selectedStatus = project.Status;
+            SelectedStatusValueChangeHandler(selectedStatus);
         }
         else
         {
             project.Number = await projectService.GetNextNumberAsync();
+
+            await RefreshTaskTemplates();
+
+            // Select the default task template if there are any.
+            if (taskTemplates.Any())
+                SelectedTaskTemplateIdValueChangeHandler(taskTemplates.FirstOrDefault().Id);
         }
-
-        await RefreshTaskTemplates();
-
-        // Set the defaults.
-        SelectedStatusValueChangeHandler("Open");
-
-        // Select the default task template if there are any.
-        if (taskTemplates.Any())
-            SelectedTaskTemplateIdValueChangeHandler(taskTemplates.FirstOrDefault().Id);
 
         loading = false;
     }

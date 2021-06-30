@@ -198,6 +198,7 @@ namespace Brizbee.Web.Controllers
 
                 return Ok(new
                 {
+                    item.Id,
                     item.FullName,
                     item.BarCodeValue,
                     item.ListId,
@@ -220,6 +221,7 @@ namespace Brizbee.Web.Controllers
             {
                 return Ok(new
                 {
+                    item.Id,
                     item.FullName,
                     item.BarCodeValue,
                     item.ListId,

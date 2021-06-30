@@ -203,6 +203,9 @@
 
             // Configure shared service
             sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
+            sharedService.AuthUserId = int.Parse(credential.AuthUserId);
+            sharedService.AuthToken = credential.AuthToken;
+            sharedService.AuthExpiration = credential.AuthExpiration;
 
             NavigationManager.NavigateTo("kiosk/status");
         }
