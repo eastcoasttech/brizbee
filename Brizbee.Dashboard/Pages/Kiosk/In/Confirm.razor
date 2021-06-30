@@ -200,8 +200,11 @@
         }
 
         // Store the successfully collected coordinates.
-        latitude = currentPositionResult.Position.Coords.Latitude.ToString();
-        longitude = currentPositionResult.Position.Coords.Longitude.ToString();
+        if (currentPositionResult.IsSuccess)
+        {
+            latitude = currentPositionResult.Position.Coords.Latitude.ToString();
+            longitude = currentPositionResult.Position.Coords.Longitude.ToString();
+        }
 
         // Collection platform details.
         var details = await JSRuntime.InvokeAsync<Dictionary<string, string>>("getPlatformDetails");
