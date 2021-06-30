@@ -255,7 +255,7 @@
         <tbody>
             @foreach (var consumption in consumptions)
             {
-                <tr class="fadeIn selectable">
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyConsumptionDialog(consumption))">
                     <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(consumption.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
                     <td><a href="javascript:void(0)">@consumption.QBDInventoryItem.Name</a></td>
                     <td><a href="javascript:void(0)">@consumption.Quantity</a></td>
@@ -391,5 +391,12 @@
         }
 
         await RefreshConsumptions();
+    }
+
+    private void OpenModifyConsumptionDialog(QBDInventoryConsumption consumption)
+    {
+        dialogService.Open<ConsumptionDialog>("Edit Consumption",
+                                new Dictionary<string, object>() { { "Id", consumption.Id } },
+                                new DialogOptions() { Width = "600px" });
     }
 }
