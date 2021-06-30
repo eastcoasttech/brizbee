@@ -145,9 +145,9 @@
 
 <hr />
 
-<button class="btn btn-primary" type="button" @onclick="Populate" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates)">Perform Populate</button>
-<button class="btn btn-default" type="button" @onclick="CloseDialog">Cancel</button>
 <i class="@((working || loadingBasePayrollRates || loadingBaseServiceRates) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="Populate" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates)" style="margin-left: 2px;">Perform Populate</button>
 
 @code {
     private bool working = false;
@@ -256,7 +256,7 @@
         {
             case "Punches Before":
                 option = new Dictionary<string, object>()
-            {
+    {
                     { "Type", exception.CalculatedType },
                     { "RangeDirection", exception.CalculatedRangeDirection },
                     { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
@@ -264,7 +264,7 @@
                 break;
             case "Punches After":
                 option = new Dictionary<string, object>()
-            {
+    {
                     { "Type", exception.CalculatedType },
                     { "RangeDirection", exception.CalculatedRangeDirection },
                     { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
@@ -272,7 +272,7 @@
                 break;
             case "After Hours/Minutes Per Day":
                 option = new Dictionary<string, object>()
-            {
+    {
                     { "Type", exception.CalculatedType },
                     { "CountScope", exception.CalculatedCountScope },
                     { "CountMinute", exception.CalculatedCountMinutes }
@@ -280,7 +280,7 @@
                 break;
             case "After Hours/Minutes in Range":
                 option = new Dictionary<string, object>()
-            {
+    {
                     { "Type", exception.CalculatedType },
                     { "CountScope", exception.CalculatedCountScope },
                     { "CountMinute", exception.CalculatedCountMinutes }
@@ -288,7 +288,7 @@
                 break;
             case "Punches on Specific Date":
                 option = new Dictionary<string, object>()
-            {
+    {
                     { "Type", exception.CalculatedType },
                     { "CountMinute", exception.Date.ToString("yyyy-MM-dd") }
                 };
