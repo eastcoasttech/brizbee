@@ -196,7 +196,8 @@ namespace Brizbee.Dashboard.Services
                     { "UsesWebClock", user.UsesWebClock },
                     { "AllowedPhoneNumbers", user.AllowedPhoneNumbers },
                     { "Pin", user.Pin },
-                    { "QuickBooksEmployee", user.QuickBooksEmployee }
+                    { "QuickBooksEmployee", user.QuickBooksEmployee },
+                    { "RequiresLocation", user.RequiresLocation }
                 };
 
                 if (user.Id == 0)
