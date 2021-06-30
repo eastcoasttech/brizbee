@@ -77,11 +77,6 @@ namespace Brizbee.Web.Services
                 // Open the document to enable you to write to the document
                 document.Open();
                 
-                // Build table of punches
-                PdfPTable table = new PdfPTable(9);
-                table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 7, 4, 7, 4, 22, 22, 22, 6, 6 });
-                
                 // Get the users depending on the filtered scope
                 List<User> users;
                 if (userScope == "specific")
@@ -100,6 +95,11 @@ namespace Brizbee.Web.Services
                 }
                 foreach (var user in users)
                 {
+                    // Build table of punches
+                    PdfPTable table = new PdfPTable(9);
+                    table.WidthPercentage = 100;
+                    table.SetWidths(new float[] { 7, 4, 7, 4, 22, 22, 22, 6, 6 });
+
                     // User Name and Spacer
                     var nameCell = new PdfPCell(new Phrase(string.Format("User {0}", user.Name), fontH1))
                     {
@@ -430,8 +430,10 @@ namespace Brizbee.Web.Services
                     };
                     table.AddCell(totalSpacerCell);
 
+                    document.Add(table);
+
                     // Page break
-                    if (users.Last() == user)
+                    if (users.Last() != user)
                     {
                         document.NewPage();
                     }
@@ -446,8 +448,6 @@ namespace Brizbee.Web.Services
                             max.ToShortDateString()),
                         fontP));
                 }
-
-                document.Add(table);
 
                 // Make sure data has been written
                 writer.Flush();
@@ -1164,11 +1164,6 @@ namespace Brizbee.Web.Services
                 // Open the document to enable you to write to the document
                 document.Open();
 
-                // Build table of punches
-                PdfPTable table = new PdfPTable(5);
-                table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 15, 15, 15, 50, 5 });
-
                 // Get the users depending on the filtered scope
                 List<User> users;
                 if (userScope == "specific")
@@ -1188,6 +1183,11 @@ namespace Brizbee.Web.Services
                 }
                 foreach (var user in users)
                 {
+                    // Build table of punches
+                    PdfPTable table = new PdfPTable(5);
+                    table.WidthPercentage = 100;
+                    table.SetWidths(new float[] { 15, 15, 15, 50, 5 });
+
                     // User Name and Spacer
                     var nameCell = new PdfPCell(new Phrase(string.Format("User {0}", user.Name), fontH1))
                     {
@@ -1435,8 +1435,10 @@ namespace Brizbee.Web.Services
                     };
                     table.AddCell(totalSpacerCell);
 
+                    document.Add(table);
+
                     // Page break
-                    if (users.Last() == user)
+                    if (users.Last() != user)
                     {
                         document.NewPage();
                     }
@@ -1451,8 +1453,6 @@ namespace Brizbee.Web.Services
                             max.ToShortDateString()),
                         fontP));
                 }
-
-                document.Add(table);
 
                 // Make sure data has been written
                 writer.Flush();
