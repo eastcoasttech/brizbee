@@ -455,6 +455,9 @@ namespace Brizbee.Web.Controllers
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
 
+            if (currentPunch == null)
+                return BadRequest("Cannot consume inventory without being punched in.");
+
             // Inventory site is determined by the hostname.
             var sites = new Dictionary<string, string>()
             {
@@ -479,7 +482,8 @@ namespace Brizbee.Web.Controllers
                 { "RR05", "" },
                 { "RR06", "" },
                 { "RR04", "" },
-                { "RR15", "" }
+                { "RR15", "" },
+                { "Pocket_PC", "" }
             };
             var siteForHostname = sites[hostname];
 
