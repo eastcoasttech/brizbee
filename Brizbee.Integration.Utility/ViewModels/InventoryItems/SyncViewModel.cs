@@ -80,11 +80,15 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             {
                 try
                 {
+                    Trace.TraceInformation($"Opening offset mapping file at {offsetFileName}");
+
                     using (var reader = new StreamReader(offsetFileName))
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
                         offsetMappings = csv.GetRecords<OffsetMapping>().ToList();
                     }
+
+                    Trace.TraceInformation($"There are {offsetMappings.Count} mappings");
                 }
                 catch (Exception ex)
                 {
@@ -152,10 +156,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                         .FirstOrDefault();
 
                     if (found != null)
-                    {
                         item.OffsetItemFullName = found.OffsetItemFullName;
-                        Trace.TraceInformation($"Setting offset as {item.OffsetItemFullName} for {item.FullName}");
-                    }
                 }
 
                 // ------------------------------------------------------------

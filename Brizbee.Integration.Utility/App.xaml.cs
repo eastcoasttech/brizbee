@@ -103,6 +103,7 @@ namespace Brizbee.Integration.Utility
 
         void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
         {
+            // Ensure icon is removed.
             icon.Dispose();
         }
 
@@ -124,6 +125,10 @@ namespace Brizbee.Integration.Utility
         {
             if (_instanceMutex != null)
                 _instanceMutex.ReleaseMutex();
+
+            // Ensure icon is removed.
+            icon.Dispose();
+
             base.OnExit(e);
         }
     }
