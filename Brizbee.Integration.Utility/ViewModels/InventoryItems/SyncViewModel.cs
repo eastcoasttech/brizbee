@@ -152,7 +152,10 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                         .FirstOrDefault();
 
                     if (found != null)
+                    {
                         item.OffsetItemFullName = found.OffsetItemFullName;
+                        Trace.TraceInformation($"Setting offset as {item.OffsetItemFullName} for {item.FullName}");
+                    }
                 }
 
                 // ------------------------------------------------------------
