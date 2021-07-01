@@ -5,6 +5,7 @@
 
 @inject DialogService dialogService
 @inject JobService projectService
+@inject CustomerService customerService
 @inject TaskTemplateService taskTemplateService
 
 <EditForm Model="@project" OnValidSubmit="SaveProject" class="form-horizontal" autocomplete="off">
@@ -21,7 +22,7 @@
     <div class="form-group">
         <label for="project_name" class="col-sm-3 control-label">Name</label>
         <div class="col-sm-9">
-            <InputText class="form-control" id="project_name" @bind-Value="project.Name" disabled="@(working || loading)" />
+            <InputText class="form-control" id="project_name" @bind-Value="project.Name" @oninput="(EventArgs) => { RefreshQuickBooksCustomerJob(EventArgs.Value.ToString()); }" disabled="@(working || loading)" />
         </div>
     </div>
 
@@ -131,6 +132,7 @@
     private bool working = false;
     private bool loading = true;
     private Job project = new Job();
+    private Customer customer = new Customer();
     private string selectedStatus;
     private int selectedTaskTemplateId;
     private List<TaskTemplate> taskTemplates = new List<TaskTemplate>(0);
@@ -140,6 +142,12 @@
         // Set the defaults.
         selectedStatus = "Open";
         SelectedStatusValueChangeHandler(selectedStatus);
+
+        // --------------------------------------------------------------------
+        // Load the parent customer.
+        // --------------------------------------------------------------------
+
+        customer = await customerService.GetCustomerByIdAsync(CustomerId.Value);
 
         // --------------------------------------------------------------------
         // Attempt to load the project, if necessary.
@@ -236,5 +244,13 @@
 
         // Update the project.
         project.TaskTemplateId = selectedTaskTemplateId;
+    }
+
+    private void RefreshQuickBooksCustomerJob(string name)
+    {
+        if (Id.HasValue)
+            return;
+
+        project.QuickBooksCustomerJob = $"{customer.Name}:{project.Number} - {name}";
     }
 }
