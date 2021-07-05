@@ -22,6 +22,7 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
+using Brizbee.Web.Serialization.Expanded;
 using Dapper;
 using Newtonsoft.Json;
 using System;
@@ -610,83 +611,5 @@ namespace Brizbee.Web.Controllers
             }
             base.Dispose(disposing);
         }
-    }
-
-    public class QBDInventoryConsumptionExpanded
-    {
-        // Consumption Details
-
-        public long Consumption_Id { get; set; }
-
-        public int Consumption_Quantity { get; set; }
-
-        public string Consumption_UnitOfMeasure { get; set; }
-
-        public DateTime Consumption_CreatedAt { get; set; }
-
-        public int Consumption_CreatedByUserId { get; set; }
-
-        public string Consumption_Hostname { get; set; }
-
-        public long Consumption_QBDInventoryItemId { get; set; }
-
-        public long Consumption_QBDInventorySiteId { get; set; }
-
-        public int Consumption_OrganizationId { get; set; }
-
-        public long? Consumption_QBDInventoryConsumptionSyncId { get; set; }
-
-
-        // Items Details
-
-        public long Item_Id { get; set; }
-
-        public string Item_Name { get; set; }
-
-        public string Item_FullName { get; set; }
-
-        public string Item_ManufacturerPartNumber { get; set; }
-
-        public string Item_BarCodeValue { get; set; }
-
-        public string Item_ListId { get; set; }
-
-        public string Item_PurchaseDescription { get; set; }
-
-        public string Item_SalesDescription { get; set; }
-
-        public long Item_QBDInventoryItemSyncId { get; set; }
-
-        public decimal Item_PurchaseCost { get; set; }
-
-        public decimal Item_SalesPrice { get; set; }
-
-
-        // Task Details
-
-        public string Task_Number { get; set; }
-
-        public string Task_Name { get; set; }
-
-
-        // Job Details
-
-        public string Job_Number { get; set; }
-
-        public string Job_Name { get; set; }
-
-
-        // Customer Details
-
-        public string Customer_Number { get; set; }
-
-        public string Customer_Name { get; set; }
-
-
-        // User Details
-
-        public int User_Id { get; set; }
-
-        public string User_Name { get; set; }
     }
 }

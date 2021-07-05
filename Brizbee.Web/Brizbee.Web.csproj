@@ -441,6 +441,7 @@
     <Compile Include="Controllers\OrganizationsController.cs" />
     <Compile Include="Controllers\PunchesController.cs" />
     <Compile Include="Controllers\RatesController.cs" />
+    <Compile Include="Controllers\RecentController.cs" />
     <Compile Include="Controllers\ReportsController.cs" />
     <Compile Include="Controllers\TasksController.cs" />
     <Compile Include="Controllers\TaskTemplatesController.cs" />
@@ -518,6 +519,8 @@
     <Compile Include="Repositories\TimesheetEntryRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
+    <Compile Include="Serialization\Expanded\PunchExpanded.cs" />
+    <Compile Include="Serialization\Expanded\QBDInventoryConsumptionExpanded.cs" />
     <Compile Include="Serialization\PopulateRateOption.cs" />
     <Compile Include="Serialization\PopulateRateOptions.cs" />
     <Compile Include="Serialization\PseudoCommit.cs" />
