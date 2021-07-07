@@ -70,8 +70,7 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != commit.OrganizationId)
+            if (currentUser.Role != "Administrator")
                 return BadRequest();
 
             using (var transaction = db.Database.BeginTransaction())
