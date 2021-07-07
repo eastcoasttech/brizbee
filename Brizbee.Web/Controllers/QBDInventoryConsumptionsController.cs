@@ -55,7 +55,8 @@ namespace Brizbee.Web.Controllers
         [Route("api/QBDInventoryConsumptions")]
         public HttpResponseMessage GetQBDInventoryConsumptions(
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
-            [FromUri] string orderBy = "QBDINVENTORYCONSUMPTIONS/CREATEDAT", [FromUri] string orderByDirection = "ASC")
+            [FromUri] string orderBy = "QBDINVENTORYCONSUMPTIONS/CREATEDAT", [FromUri] string orderByDirection = "ASC",
+            [FromUri] int[] jobIds = null)
         {
             if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
@@ -125,10 +126,17 @@ namespace Brizbee.Web.Controllers
                         break;
                 }
 
+                var whereClause = "";
                 var parameters = new DynamicParameters();
 
                 // Common clause.
                 parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+                // Clause for job ids.
+                if (jobIds != null && jobIds.Any())
+                {
+                    whereClause += $" AND J.[Id] IN ({string.Join(",", jobIds)})";
+                }
 
                 // Get the count.
                 var countSql = $@"
@@ -136,8 +144,12 @@ namespace Brizbee.Web.Controllers
                         COUNT(*)
                     FROM
                         [QBDInventoryConsumptions] AS C
+                    INNER JOIN
+                        [Tasks] AS T ON C.[TaskId] = T.[Id]
+                    INNER JOIN
+                        [Jobs] AS J ON T.[JobId] = J.[Id]
                     WHERE
-                        C.[OrganizationId] = @OrganizationId;";
+                        C.[OrganizationId] = @OrganizationId {whereClause};";
 
                 total = connection.QuerySingle<int>(countSql, parameters);
 
@@ -195,7 +207,7 @@ namespace Brizbee.Web.Controllers
                     INNER JOIN
                         [Users] AS U ON C.[CreatedByUserId] = U.[Id]
                     WHERE
-                        C.[OrganizationId] = @OrganizationId
+                        C.[OrganizationId] = @OrganizationId {whereClause}
                     ORDER BY
                         {orderByFormatted} {orderByDirectionFormatted}
                     OFFSET @Skip ROWS
