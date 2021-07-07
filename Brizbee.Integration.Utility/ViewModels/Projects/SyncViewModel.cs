@@ -210,7 +210,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                 StatusText += string.Format("{0} - Got projects from server.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
-                return response.Data.Value.Select(j => j.Name).ToList();
+                return response.Data.Value.Select(j => j.QuickBooksCustomerJob).ToList();
             }
             else
             {

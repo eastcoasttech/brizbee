@@ -110,7 +110,9 @@ namespace Brizbee.Dashboard.Services
                 var payload = new Dictionary<string, object>() {
                     { "Name", task.Name },
                     { "Number", task.Number },
-                    { "Group", task.Group }
+                    { "Group", task.Group },
+                    { "BaseServiceRateId", task.BaseServiceRateId },
+                    { "BasePayrollRateId", task.BasePayrollRateId },
                 };
 
                 // Can only be configured at creation.

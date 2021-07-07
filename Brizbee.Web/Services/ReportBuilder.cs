@@ -52,6 +52,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -72,7 +73,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: PUNCHES BY USER {0} thru {1}",
                         min.ToShortDateString(),
                         max.ToShortDateString()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
                 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -472,6 +474,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -492,7 +495,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: PUNCHES BY JOB AND TASK {0} thru {1}",
                         min.ToShortDateString(),
                         max.ToShortDateString()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -803,6 +807,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -823,7 +828,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: PUNCHES BY DAY {0} thru {1}",
                         min.ToShortDateString(),
                         max.ToShortDateString()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -1139,6 +1145,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -1159,7 +1166,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: TIME ENTRIES BY USER {0} thru {1}",
                         min.ToShortDateString(),
                         max.ToShortDateString()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -1477,6 +1485,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -1497,7 +1506,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: TIME ENTRIES BY JOB AND TASK {0} thru {1}",
                         min.ToShortDateString(),
                         max.ToShortDateString()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -1709,6 +1719,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
             // Create an instance of document which represents the PDF document itself
             using (var document = new Document(PageSize.LETTER.Rotate(), 30, 30, 60, 60))
@@ -1729,7 +1740,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: TIME ENTRIES BY DAY {0} thru {1}",
                         min.ToShortDateString(),
                         max.ToShortDateString()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -1946,6 +1958,7 @@ namespace Brizbee.Web.Services
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
             var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
             var job = db.Jobs.Where(j => j.Id == jobId).FirstOrDefault();
 
             // Create an instance of document which represents the PDF document itself
@@ -1967,7 +1980,8 @@ namespace Brizbee.Web.Services
                     string.Format("REPORT: TASKS BY JOB FOR {0} - {1}",
                         job.Number,
                         job.Name.ToUpper()),
-                    nowDateTime);
+                    nowDateTime,
+                    organization.Name);
 
                 // Open the document to enable you to write to the document
                 document.Open();
@@ -2067,18 +2081,14 @@ namespace Brizbee.Web.Services
 
         private void AddPageNumbers(byte[] buffer)
         {
-            Trace.TraceInformation("Adding page numbers");
             using (MemoryStream stream = new MemoryStream())
             {
                 PdfReader reader = new PdfReader(buffer);
                 using (PdfStamper stamper = new PdfStamper(reader, stream))
                 {
-                    Trace.TraceInformation(reader.NumberOfPages.ToString());
                     int pages = reader.NumberOfPages;
                     for (int i = 1; i <= pages; i++)
                     {
-                        Trace.TraceInformation("Looping page");
-                        Trace.TraceInformation(pageWidth.ToString());
                         var text = string.Format("Page {0} of {1}", i, pages);
                         ColumnText.ShowTextAligned(stamper.GetOverContent(i), Element.ALIGN_RIGHT, new Phrase(text, fontFooter), pageWidth - 30f, 30f, 0);
                     }
@@ -2101,11 +2111,13 @@ namespace Brizbee.Web.Services
         
         public string Title { get; set; }
         public DateTime PrintTime { get; set; }
+        public string OrganizationName { get; set; }
 
-        public Header(string title, DateTime printTime)
+        public Header(string title, DateTime printTime, string organizationName)
         {
             Title = title;
             PrintTime = printTime;
+            OrganizationName = organizationName;
         }
 
         public override void OnOpenDocument(PdfWriter writer, Document document)
@@ -2140,7 +2152,7 @@ namespace Brizbee.Web.Services
             PdfPTable tableHeader = new PdfPTable(2);
             
             PdfPCell headerCell1 = new PdfPCell(new Paragraph(Title, baseFontNormal));
-            PdfPCell headerCell2 = new PdfPCell(new Paragraph(string.Format("Generated {0}", PrintTime.ToString("F")), baseFontNormal));
+            PdfPCell headerCell2 = new PdfPCell(new Paragraph(string.Format("Generated {0}", PrintTime.ToString("ddd, MMM d, yyyy h:mm:ss tt")).ToUpper(), baseFontNormal));
             
             // Set cell styling
             headerCell1.HorizontalAlignment = Element.ALIGN_LEFT;
@@ -2164,12 +2176,16 @@ namespace Brizbee.Web.Services
             tableHeader.WriteSelectedRows(0, -1, document.LeftMargin, document.PageSize.Height - 30, writer.DirectContent);
 
 
+            PdfPTable tableFooter = new PdfPTable(2);
 
-            PdfPTable tableFooter = new PdfPTable(1);
+            tableFooter.WidthPercentage = 100;
+            tableFooter.SetWidths(new float[] { 20, 80 });
 
+            // Gather logo and configure scaling.
             string contentPath = HostingEnvironment.MapPath("~/Content");
             Image logo = Image.GetInstance(contentPath + "/logo.png");
             logo.ScaleAbsolute(61f, 10f);
+
             PdfPCell footerCell1 = new PdfPCell(logo);
 
             // Set cell styling
@@ -2179,6 +2195,16 @@ namespace Brizbee.Web.Services
 
             // Add cells to table
             tableFooter.AddCell(footerCell1);
+
+            PdfPCell footerCell2 = new PdfPCell(new Paragraph(OrganizationName.ToUpper(), baseFontNormal));
+
+            // Set cell styling
+            footerCell2.HorizontalAlignment = Element.ALIGN_RIGHT;
+            footerCell2.VerticalAlignment = Element.ALIGN_MIDDLE;
+            footerCell2.Border = 0;
+
+            // Add cells to table
+            tableFooter.AddCell(footerCell2);
 
             // Table is full width
             tableFooter.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;

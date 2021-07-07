@@ -73,7 +73,7 @@ namespace Brizbee.Common.Models
         /// Product name collected from QuickBooks host details.
         /// </summary>
         [Required]
-        [StringLength(40)]
+        [StringLength(100)]
         public string QBProductName { get; set; }
 
         /// <summary>

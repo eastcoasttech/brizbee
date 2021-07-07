@@ -26,6 +26,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
@@ -38,6 +39,7 @@ namespace Brizbee.Integration.Utility
     public partial class App : System.Windows.Application
     {
         private NotifyIcon icon = new NotifyIcon();
+        private Mutex _instanceMutex = null;
 
         public App()
         {
@@ -45,8 +47,7 @@ namespace Brizbee.Integration.Utility
             Action<Action> uiThreadMarshaller =
                 action => Dispatcher.Invoke(DispatcherPriority.Normal, action);
 
-            System.Windows.Application.Current.Properties["EventSource"] = "BRIZBEE Integration Utility";
-            System.Windows.Application.Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             // Configure the tray icon.
             Assembly a = Assembly.GetExecutingAssembly();
@@ -54,7 +55,7 @@ namespace Brizbee.Integration.Utility
             
             icon.Icon = new Icon(st);
             icon.Visible = true;
-            //icon.ShowBalloonTip(2000, "BRIZBEE Integration Utility", "Started", ToolTipIcon.Info);
+            icon.ShowBalloonTip(2000, "BRIZBEE Integration Utility", "Started", ToolTipIcon.Info);
             icon.MouseClick += icon_MouseClick;
 
             var strip = new ContextMenuStrip();
@@ -96,13 +97,39 @@ namespace Brizbee.Integration.Utility
             }
             else if (item.Text == "Exit")
             {
-                System.Windows.Application.Current.Shutdown();
+                Current.Shutdown();
             }
         }
 
         void App_SessionEnding(object sender, SessionEndingCancelEventArgs e)
         {
+            // Ensure icon is removed.
             icon.Dispose();
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            bool createdNew;
+            _instanceMutex = new Mutex(true, "BRIZBEE Integration Utility", out createdNew);
+            if (!createdNew)
+            {
+                _instanceMutex = null;
+                Current.Shutdown();
+                return;
+            }
+
+            base.OnStartup(e);
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            if (_instanceMutex != null)
+                _instanceMutex.ReleaseMutex();
+
+            // Ensure icon is removed.
+            icon.Dispose();
+
+            base.OnExit(e);
         }
     }
 }

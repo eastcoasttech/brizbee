@@ -160,8 +160,12 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                         BuildTimeTrackingAddRq(punchDocument, punchElement, punch);
                     }
 
+                    Trace.TraceInformation(punchDocument.OuterXml);
+
                     // Make the request.
                     var punchResponse = req.ProcessRequest(ticket, punchDocument.OuterXml);
+
+                    Trace.TraceInformation(punchResponse);
 
                     // Then walk the response.
                     var walkReponse = WalkTimeTrackingAddRs(punchResponse);
@@ -344,7 +348,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
 
         private string ReplaceCharacters(string value = "")
         {
-            var replaced = value;
+            var replaced = string.IsNullOrEmpty(value) ? "" : value;
 
             // < less than character should be changed to &lt;
             replaced = replaced.Replace("<", "&lt;");

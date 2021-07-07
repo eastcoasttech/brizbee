@@ -116,7 +116,7 @@ CREATE TABLE [dbo].[QuickBooksDesktopExports] (
     [CreatedAt] datetime2(7) NOT NULL,
     [InAt] datetime2(7) NULL,
     [OutAt] datetime2(7) NULL,
-    [QBProductName] nvarchar(40) NULL,
+    [QBProductName] nvarchar(100) NULL,
     [QBMajorVersion] nvarchar(10) NULL,
     [QBMinorVersion] nvarchar(10) NULL,
     [QBCountry] nvarchar(10) NULL,

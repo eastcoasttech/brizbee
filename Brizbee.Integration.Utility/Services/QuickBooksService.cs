@@ -41,7 +41,7 @@ namespace Brizbee.Integration.Utility.Services
             // ItemInventoryQueryRq > MaxReturned
             // ------------------------------------------------------------
 
-            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "500"));
+            request.AppendChild(MakeSimpleElement(doc, "MaxReturned", "5000"));
 
             // ------------------------------------------------------------
             // ItemInventoryQueryRq > IncludeRetElement

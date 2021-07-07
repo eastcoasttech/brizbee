@@ -276,5 +276,46 @@ namespace Brizbee.Dashboard.Services
                 }
             }
         }
+
+        public async Task<bool> RegisterAsync(Registration registration)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Post, $"odata/Users/Default.Register"))
+            {
+                var payload = new {
+                    Organization = new {
+                        Name = registration.Organization.Name,
+                        PlanId = registration.Organization.PlanId
+                    },
+                    User = new {
+                        Name = registration.User.Name,
+                        EmailAddress = registration.User.EmailAddress,
+                        Password = registration.User.Password,
+                        TimeZone = registration.User.TimeZone
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

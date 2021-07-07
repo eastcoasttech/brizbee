@@ -1,0 +1,66 @@
+﻿@page "/registration/code"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
+@using Brizbee.Common.Security
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject CommitService commitService
+@inject PunchService punchService
+@inject CustomerService customerService
+@inject TaskService taskService
+@inject TaskTemplateService taskTemplateService
+@inject JobService jobService
+@inject RateService rateService
+@inject OrganizationService organizationService
+@inject TimesheetEntryService timesheetEntryService
+@inject QBDInventoryItemService qbdInventoryItemService
+@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
+@inject ExportService exportService
+
+<div class="container-fluid fadeIn" style="min-height: 50vh;">
+    <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
+        <div class="col-md-6 col-md-offset-3 col-sm-12 col-xs-12">
+            <div class="panel panel-default" style="margin-bottom: 5px;">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-md-9">
+                            Set Your Organization Code and PIN
+                        </div>
+                        <div class="col-md-3 text-right">
+                            Step 2 of 3
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body" style="padding: 35px;">
+                    <!-- Step - Pin -->
+                    <form name="pinForm" ng-submit="savePin()" ng-show="step.name == 'pin'" class="fadeIn" autocomplete="off" novalidate>
+                        <p style="padding-bottom: 20px;">Now, we just need to set your <strong>Organization Code</strong> and <strong>User PIN</strong> so that you can easily punch in and out on the Web, mobile app, or BRIZBEE hotline.</p>
+                        <div class="form-group">
+                            <label>Your Organization's Code</label>
+                            <input type="text" id="organization_code" name="organization_code" class="form-control form-control-number" style="width: 50%;" ng-model="organization.Code" minlength="4" maxlength="8" ng-disabled="working.pin" required />
+                            <p class="help-block">This 4+ digit code is public and shared throughout your organization.</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Your PIN Number</label>
+                            <input type="text" name="user_pin" class="form-control form-control-number" style="width: 50%;" ng-model="user.Pin" minlength="4" maxlength="9" ng-disabled="working.pin" required />
+                            <p class="help-block">This 4+ digit code is private and unique to each employee.</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary" ng-disabled="working.pin || pinForm.$invalid">Save and Continue<i class="fa fa-spinner fa-spin fa-fw" ng-show="working.pin"></i></button>
+                    </form>
+                </div>
+            </div>
+            <p class="text-muted" style="margin-top: 10px;">Need help? Email us at <a href="mailto:sales@brizbee.com">sales@brizbee.com</a> and we'll help you get started.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool loading = true;
+    private bool working = false;
+}

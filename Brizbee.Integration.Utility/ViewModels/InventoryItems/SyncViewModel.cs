@@ -80,11 +80,15 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             {
                 try
                 {
+                    Trace.TraceInformation($"Opening offset mapping file at {offsetFileName}");
+
                     using (var reader = new StreamReader(offsetFileName))
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
                         offsetMappings = csv.GetRecords<OffsetMapping>().ToList();
                     }
+
+                    Trace.TraceInformation($"There are {offsetMappings.Count} mappings");
                 }
                 catch (Exception ex)
                 {

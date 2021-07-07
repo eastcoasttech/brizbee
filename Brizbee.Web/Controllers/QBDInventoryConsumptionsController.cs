@@ -22,6 +22,7 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
+using Brizbee.Web.Serialization.Expanded;
 using Dapper;
 using Newtonsoft.Json;
 using System;
@@ -54,7 +55,8 @@ namespace Brizbee.Web.Controllers
         [Route("api/QBDInventoryConsumptions")]
         public HttpResponseMessage GetQBDInventoryConsumptions(
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
-            [FromUri] string orderBy = "QBDINVENTORYCONSUMPTIONS/CREATEDAT", [FromUri] string orderByDirection = "ASC")
+            [FromUri] string orderBy = "QBDINVENTORYCONSUMPTIONS/CREATEDAT", [FromUri] string orderByDirection = "ASC",
+            [FromUri] int[] jobIds = null)
         {
             if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
@@ -124,10 +126,17 @@ namespace Brizbee.Web.Controllers
                         break;
                 }
 
+                var whereClause = "";
                 var parameters = new DynamicParameters();
 
                 // Common clause.
                 parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+                // Clause for job ids.
+                if (jobIds != null && jobIds.Any())
+                {
+                    whereClause += $" AND J.[Id] IN ({string.Join(",", jobIds)})";
+                }
 
                 // Get the count.
                 var countSql = $@"
@@ -135,8 +144,12 @@ namespace Brizbee.Web.Controllers
                         COUNT(*)
                     FROM
                         [QBDInventoryConsumptions] AS C
+                    INNER JOIN
+                        [Tasks] AS T ON C.[TaskId] = T.[Id]
+                    INNER JOIN
+                        [Jobs] AS J ON T.[JobId] = J.[Id]
                     WHERE
-                        C.[OrganizationId] = @OrganizationId;";
+                        C.[OrganizationId] = @OrganizationId {whereClause};";
 
                 total = connection.QuerySingle<int>(countSql, parameters);
 
@@ -194,7 +207,7 @@ namespace Brizbee.Web.Controllers
                     INNER JOIN
                         [Users] AS U ON C.[CreatedByUserId] = U.[Id]
                     WHERE
-                        C.[OrganizationId] = @OrganizationId
+                        C.[OrganizationId] = @OrganizationId {whereClause}
                     ORDER BY
                         {orderByFormatted} {orderByDirectionFormatted}
                     OFFSET @Skip ROWS
@@ -610,83 +623,5 @@ namespace Brizbee.Web.Controllers
             }
             base.Dispose(disposing);
         }
-    }
-
-    public class QBDInventoryConsumptionExpanded
-    {
-        // Consumption Details
-
-        public long Consumption_Id { get; set; }
-
-        public int Consumption_Quantity { get; set; }
-
-        public string Consumption_UnitOfMeasure { get; set; }
-
-        public DateTime Consumption_CreatedAt { get; set; }
-
-        public int Consumption_CreatedByUserId { get; set; }
-
-        public string Consumption_Hostname { get; set; }
-
-        public long Consumption_QBDInventoryItemId { get; set; }
-
-        public long Consumption_QBDInventorySiteId { get; set; }
-
-        public int Consumption_OrganizationId { get; set; }
-
-        public long? Consumption_QBDInventoryConsumptionSyncId { get; set; }
-
-
-        // Items Details
-
-        public long Item_Id { get; set; }
-
-        public string Item_Name { get; set; }
-
-        public string Item_FullName { get; set; }
-
-        public string Item_ManufacturerPartNumber { get; set; }
-
-        public string Item_BarCodeValue { get; set; }
-
-        public string Item_ListId { get; set; }
-
-        public string Item_PurchaseDescription { get; set; }
-
-        public string Item_SalesDescription { get; set; }
-
-        public long Item_QBDInventoryItemSyncId { get; set; }
-
-        public decimal Item_PurchaseCost { get; set; }
-
-        public decimal Item_SalesPrice { get; set; }
-
-
-        // Task Details
-
-        public string Task_Number { get; set; }
-
-        public string Task_Name { get; set; }
-
-
-        // Job Details
-
-        public string Job_Number { get; set; }
-
-        public string Job_Name { get; set; }
-
-
-        // Customer Details
-
-        public string Customer_Number { get; set; }
-
-        public string Customer_Name { get; set; }
-
-
-        // User Details
-
-        public int User_Id { get; set; }
-
-        public string User_Name { get; set; }
     }
 }
