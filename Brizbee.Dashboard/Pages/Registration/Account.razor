@@ -1,6 +1,7 @@
 ﻿@page "/registration/account"
 
 @using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
 @using Brizbee.Common.Security
 @using Brizbee.Common.Models
 @using Brizbee.Common.Serialization
@@ -9,9 +10,23 @@
 @using NodaTime.TimeZones
 
 @inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject UserService userService
+@inject CommitService commitService
+@inject PunchService punchService
+@inject CustomerService customerService
+@inject TaskService taskService
+@inject TaskTemplateService taskTemplateService
+@inject JobService jobService
+@inject RateService rateService
 @inject OrganizationService organizationService
+@inject TimesheetEntryService timesheetEntryService
+@inject QBDInventoryItemService qbdInventoryItemService
+@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
+@inject ExportService exportService
 
 <div class="container-fluid fadeIn" style="min-height: 50vh;">
     <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
@@ -90,7 +105,7 @@
                             </p>
                         </div>
                         <div class="text-center" style="margin-top: 30px; margin-bottom: 30px;">
-                            <button type="submit" class="btn btn-primary" disabled="@working">Continue <i class="@((working == false) ? "fa fa-arrow-circle-o-right" : "hidden")" aria-hidden="true"></i><i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
+                            <button type="submit" class="btn btn-primary btn-lg" disabled="@working">Continue <i class="@((working == false) ? "fa fa-arrow-circle-o-right" : "hidden")" aria-hidden="true"></i><i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
                         </div>
                         <p class="text-center text-muted">No credit card required. Cancel anytime.</p>
                     </EditForm>
@@ -183,6 +198,49 @@
     private async void RegisterAsync()
     {
         working = true;
+
+        // Register the user.
+        var success = await userService.RegisterAsync(registration);
+
+        if (!success)
+            working = true;
+
+        // Authenticate the user.
+        var credential = await userService.AuthenticateWithEmailAsync(new EmailSession()
+        {
+            EmailAddress = registration.User.EmailAddress,
+            EmailPassword = registration.User.Password
+        });
+
+        // Save credential to local storage.
+        await localStorageService.SetLocalStorage("AuthUserId", credential.AuthUserId);
+        await localStorageService.SetLocalStorage("AuthToken", credential.AuthToken);
+        await localStorageService.SetLocalStorage("AuthExpiration", credential.AuthExpiration);
+
+        // Update headers on services.
+        userService.ConfigureHeadersWithCredentials(credential);
+        punchService.ConfigureHeadersWithCredentials(credential);
+        commitService.ConfigureHeadersWithCredentials(credential);
+        customerService.ConfigureHeadersWithCredentials(credential);
+        taskService.ConfigureHeadersWithCredentials(credential);
+        taskTemplateService.ConfigureHeadersWithCredentials(credential);
+        jobService.ConfigureHeadersWithCredentials(credential);
+        rateService.ConfigureHeadersWithCredentials(credential);
+        organizationService.ConfigureHeadersWithCredentials(credential);
+        timesheetEntryService.ConfigureHeadersWithCredentials(credential);
+        qbdInventoryItemService.ConfigureHeadersWithCredentials(credential);
+        qbdInventoryItemSyncService.ConfigureHeadersWithCredentials(credential);
+        qbdInventoryConsumptionService.ConfigureHeadersWithCredentials(credential);
+        qbdInventoryConsumptionSyncService.ConfigureHeadersWithCredentials(credential);
+        exportService.ConfigureHeadersWithCredentials(credential);
+
+        // Configure shared service.
+        sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
+        sharedService.AuthUserId = int.Parse(credential.AuthUserId);
+        sharedService.AuthToken = credential.AuthToken;
+        sharedService.AuthExpiration = credential.AuthExpiration;
+
+        NavigationManager.NavigateTo("kiosk/status");
     }
 
     private void SelectedPlanIdValueChangeHandler(int planId)
