@@ -21,7 +21,7 @@
     <div class="form-group">
         <label for="selected_user_id" class="col-sm-3 control-label">User</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_user_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" autofocus
+            <InputSelect class="form-control" id="selected_user_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" autofocus
                          ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedUserId )"
                          Value="@selectedUserId">
@@ -36,7 +36,7 @@
     <div class="form-group">
         <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedCustomerId )"
                          Value="@selectedCustomerId">
@@ -51,7 +51,7 @@
     <div class="form-group">
         <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedJobId )"
                          Value="@selectedJobId">
@@ -66,7 +66,7 @@
     <div class="form-group">
         <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedTaskId )"
                          Value="@selectedTaskId">
@@ -85,10 +85,10 @@
         <div class="col-sm-9">
             <div class="row" style="margin-right: 0;">
                 <div class="col-md-6" style="padding-right: 0;">
-                    <InputDate @bind-Value="punch.InAt" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" />
+                    <InputDate @bind-Value="punch.InAt" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
                 </div>
                 <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">
+                    <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                         @for (int i = 1; i <= 12; i++)
                         {
                             <option value="@i">@i</option>
@@ -96,7 +96,7 @@
                     </InputSelect>
                 </div>
                 <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">
+                    <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                         @for (int i = 0; i <= 59; i++)
                         {
                             <option value="@i.ToString("D2")">@i.ToString("D2")</option>
@@ -104,7 +104,7 @@
                     </InputSelect>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">@inAtMeridian</button>
+                    <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@inAtMeridian</button>
                 </div>
             </div>
         </div>
@@ -113,7 +113,7 @@
     <div class="form-group">
         <label for="selected_in_at_country_code" class="col-sm-3 control-label">Country</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_in_at_country_code" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_in_at_country_code" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (string x) => selectedInAtCountryCodeValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedInAtCountryCode )"
                          Value="@selectedInAtCountryCode">
@@ -128,7 +128,7 @@
     <div class="form-group">
         <label for="selected_in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_in_at_time_zone" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_in_at_time_zone" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (string x) => selectedInAtTimeZoneValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedInAtTimeZone )"
                          Value="@selectedInAtTimeZone">
@@ -146,7 +146,7 @@
         <div class="col-sm-offset-3 col-sm-9">
             <div class="checkbox">
                 <label>
-                    <InputCheckbox @bind-Value="hasPunchOut" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" /> Has Punch Out?
+                    <InputCheckbox @bind-Value="hasPunchOut" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" /> Has Punch Out?
                 </label>
             </div>
         </div>
@@ -157,10 +157,10 @@
         <div class="col-sm-9">
             <div class="row" style="margin-right: 0;">
                 <div class="col-md-6" style="padding-right: 0;">
-                    <InputDate @bind-Value="punch.OutAt" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" />
+                    <InputDate @bind-Value="punch.OutAt" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
                 </div>
                 <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">
+                    <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                         @for (int i = 1; i <= 12; i++)
                         {
                             <option value="@i">@i</option>
@@ -168,7 +168,7 @@
                     </InputSelect>
                 </div>
                 <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">
+                    <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                         @for (int i = 0; i <= 59; i++)
                         {
                             <option value="@i.ToString("D2")">@i.ToString("D2")</option>
@@ -176,7 +176,7 @@
                     </InputSelect>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">@outAtMeridian</button>
+                    <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@outAtMeridian</button>
                 </div>
             </div>
         </div>
@@ -185,7 +185,7 @@
     <div class="form-group">
         <label for="selected_out_at_country_code" class="col-sm-3 control-label">Country</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_out_at_country_code" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_out_at_country_code" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (string x) => selectedOutAtCountryCodeValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedOutAtCountryCode )"
                          Value="@selectedOutAtCountryCode">
@@ -200,7 +200,7 @@
     <div class="form-group">
         <label for="selected_out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
         <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_out_at_time_zone" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+            <InputSelect class="form-control" id="selected_out_at_time_zone" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
                          ValueChanged="@( (string x) => selectedOutAtTimeZoneValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedOutAtTimeZone )"
                          Value="@selectedOutAtTimeZone">
@@ -215,6 +215,7 @@
     @if (punch.CommitId.HasValue)
     {
         <p class="text-danger">
+            This punch is locked.
         </p>
     }
 
@@ -222,7 +223,7 @@
 
     @if (punch.Id != 0)
     {
-        <button class="btn btn-danger" type="button" @onclick="DeletePunch" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">Delete</button>
+        <button class="btn btn-danger" type="button" @onclick="DeletePunch" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">Delete</button>
     }
     <i class="@((working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
     <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
