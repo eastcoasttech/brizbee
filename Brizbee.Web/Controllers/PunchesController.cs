@@ -69,6 +69,12 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
+            var currentUser = CurrentUser();
+
+            // Ensure user is an administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
             // Get the public address and hostname for the punch
             var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
             var sourceHostname = HttpContext.Current.Request.UserHostName;
@@ -96,7 +102,42 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            var punch = repo.Update(key, patch, CurrentUser());
+            var currentUser = CurrentUser();
+
+            // Ensure user is an administrator.
+            if (currentUser.Role != "Administrator")
+                return BadRequest();
+
+            var punch = db.Punches
+                .Include("User")
+                .Where(p => p.User.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.Id == key)
+                .FirstOrDefault();
+
+            if (punch == null)
+                return NotFound();
+
+            // Cannot modify locked punches.
+            if (punch.CommitId.HasValue)
+                return BadRequest();
+
+            // Do not allow modifying some properties.
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
+            {
+                return BadRequest("Cannont modify OrganizationId");
+            }
+
+            // Peform the update
+            patch.Patch(punch);
+
+            // Ensure InAt is at bottom of hour and OutAt is at top of the hour
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
+            }
+
+            db.SaveChanges();
 
             return Updated(punch);
         }

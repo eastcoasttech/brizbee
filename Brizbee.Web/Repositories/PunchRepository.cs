@@ -123,58 +123,6 @@ namespace Brizbee.Web.Repositories
         }
 
         /// <summary>
-        /// Updates the given punch with the given delta of changes.
-        /// </summary>
-        /// <param name="id">The id of the punch</param>
-        /// <param name="patch">The changes that should be made to the punch</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The updated punch</returns>
-        public Punch Update(int id, Delta<Punch> patch, User currentUser)
-        {
-            var punch = db.Punches.Find(id);
-
-            //// Ensure that object was found
-            //ValidateFound(group, id);
-
-            //// Ensure that user is authorized
-            //if (!GroupPolicy.CanUpdate(currentUser, group))
-            //{
-            //    var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
-            //    {
-            //        Content = new StringContent("No permission to modify the group"),
-            //        ReasonPhrase = "Permission Denied"
-            //    };
-            //    throw new HttpResponseException(resp);
-            //}
-
-            // Do not allow modifying some properties
-            if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
-            {
-                //var resp = new HttpResponseMessage(HttpStatusCode.Forbidden)
-                //{
-                //    Content = new StringContent("Cannot modify OrganizationId"),
-                //    ReasonPhrase = "Permission Denied"
-                //};
-                //throw new HttpResponseException(resp);
-                throw new Exception("Cannot modify OrganizationId");
-            }
-
-            // Peform the update
-            patch.Patch(punch);
-
-            // Ensure InAt is at bottom of hour and OutAt is at top of the hour
-            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
-            if (punch.OutAt.HasValue)
-            {
-                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
-            }
-
-            db.SaveChanges();
-
-            return punch;
-        }
-
-        /// <summary>
         /// Creates a punch in the database for the given user with the
         /// given task and current timestamp.
         /// </summary>
