@@ -38,7 +38,7 @@ namespace Brizbee.Web.Controllers
         private UserRepository repo = new UserRepository();
 
         // GET: odata/Users
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<User> GetUsers()
         {
             var currentUser = CurrentUser();

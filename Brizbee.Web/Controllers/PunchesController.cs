@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Azure.Storage.Blobs;
 using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Brizbee.Web.Serialization;
@@ -322,37 +323,33 @@ namespace Brizbee.Web.Controllers
 
             db.Punches.AddRange(splitPunches);
             db.SaveChanges();
-            
-            //try
-            //{
-            //    // Attempt to save the backup of the punches on Azure.
-            //    var backup = new
-            //    {
-            //        Before = before,
-            //        After = after
-            //    };
-            //    var json = JsonConvert.SerializeObject(backup);
 
-            //    // Create reference to Azure Storage account.
-            //    var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
-            //    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
-            //    CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            try
+            {
+                // Attempt to save the backup of the punches on Azure.
+                var backup = new
+                {
+                    Before = before,
+                    After = after
+                };
+                var json = JsonConvert.SerializeObject(backup);
 
-            //    // Get the container or create if it doesn't exist already.
-            //    CloudBlobContainer azureContainer = blobClient.GetContainerReference("split-punch-backups");
-            //    await azureContainer.CreateIfNotExistsAsync();
+                // Prepare to upload the backup.
+                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+                BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("split-punch-backups");
+                BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
 
-            //    // Upload the data to the blob.
-            //    CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
-            //    using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
-            //    {
-            //        await blockBlob.UploadFromStreamAsync(stream);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Trace.TraceWarning(ex.ToString());
-            //}
+                // Perform the upload.
+                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                {
+                    blobClient.Upload(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.ToString());
+            }
 
             return Ok();
         }
@@ -395,36 +392,32 @@ namespace Brizbee.Web.Controllers
             db.Punches.AddRange(populatedPunches);
             db.SaveChanges();
 
-            //try
-            //{
-            //    // Attempt to save the backup of the punches on Azure.
-            //    var backup = new
-            //    {
-            //        Before = before,
-            //        After = after
-            //    };
-            //    var json = JsonConvert.SerializeObject(backup);
+            try
+            {
+                // Attempt to save the backup of the punches on Azure.
+                var backup = new
+                {
+                    Before = before,
+                    After = after
+                };
+                var json = JsonConvert.SerializeObject(backup);
 
-            //    // Create reference to Azure Storage account.
-            //    var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
-            //    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(azureConnectionString);
-            //    CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+                // Prepare to upload the backup.
+                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+                BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("populate-punch-backups");
+                BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
 
-            //    // Get the container or create if it doesn't exist already.
-            //    CloudBlobContainer azureContainer = blobClient.GetContainerReference("populate-punch-backups");
-            //    await azureContainer.CreateIfNotExistsAsync();
-
-            //    // Upload the data to the blob.
-            //    CloudBlockBlob blockBlob = azureContainer.GetBlockBlobReference($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
-            //    using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
-            //    {
-            //        await blockBlob.UploadFromStreamAsync(stream);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Trace.TraceWarning(ex.ToString());
-            //}
+                // Perform the upload.
+                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                {
+                    blobClient.Upload(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.ToString());
+            }
 
             return Ok();
         }
