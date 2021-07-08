@@ -129,6 +129,12 @@
 
     public void AddException()
     {
+        if (BaseRates == null || BaseRates.Count == 0)
+            return;
+
+        if (AlternateRates == null || AlternateRates.Count == 0)
+            return;
+
         Exceptions.Add(new PopulateRateException()
         {
             Option = "Punches Before",
