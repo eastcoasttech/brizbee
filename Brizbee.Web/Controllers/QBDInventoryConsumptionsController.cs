@@ -56,7 +56,7 @@ namespace Brizbee.Web.Controllers
         public HttpResponseMessage GetQBDInventoryConsumptions(
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
             [FromUri] string orderBy = "QBDINVENTORYCONSUMPTIONS/CREATEDAT", [FromUri] string orderByDirection = "ASC",
-            [FromUri] int[] jobIds = null)
+            [FromUri] int[] jobIds = null, [FromUri] string synced = "ALL")
         {
             if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
@@ -136,6 +136,16 @@ namespace Brizbee.Web.Controllers
                 if (jobIds != null && jobIds.Any())
                 {
                     whereClause += $" AND J.[Id] IN ({string.Join(",", jobIds)})";
+                }
+
+                // Clause for sync status.
+                if (synced.ToUpperInvariant() == "SYNCED")
+                {
+                    whereClause += " AND C.QBDInventoryConsumptionSyncId IS NOT NULL";
+                }
+                else if (synced.ToUpperInvariant() == "UNSYNCED")
+                {
+                    whereClause += " AND C.QBDInventoryConsumptionSyncId IS NULL";
                 }
 
                 // Get the count.
