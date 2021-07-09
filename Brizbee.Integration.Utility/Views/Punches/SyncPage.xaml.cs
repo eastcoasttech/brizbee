@@ -70,7 +70,7 @@ namespace Brizbee.Integration.Utility.Views.Punches
 
         private void StartOverButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/LoginPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
         }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)

@@ -49,6 +49,7 @@ namespace Brizbee.Integration.Utility.Views.Reverse
         {
             Application.Current.Properties["SelectedSync"] =
                 (DataContext as ConfirmReverseConsumptionsViewModel).SelectedSync;
+            Application.Current.Properties["ReverseTransactionType"] = "Consumption";
 
             NavigationService.Navigate(new Uri("Views/Reverse/ReversePage.xaml", UriKind.Relative));
         }

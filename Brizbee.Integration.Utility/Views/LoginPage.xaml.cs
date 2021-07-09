@@ -65,33 +65,5 @@ namespace Brizbee.Integration.Utility.Views
                 MessageBox.Show(ex.Message, "Could Not Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
-
-        private async Task CheckLatestVersion()
-        {
-            try
-            {
-                string sRunningVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                var sLatestVersion = await (DataContext as LoginPageViewModel).CheckLatestVersion();
-                if (!string.IsNullOrEmpty(sRunningVersion) && !string.IsNullOrEmpty(sLatestVersion))
-                {
-                    var latestVersion = new Version(sLatestVersion);
-                    var runningVersion = new Version(sRunningVersion);
-
-                    if (latestVersion > runningVersion)
-                    {
-                        MessageBox.Show("You are not running the latest version! Please download the latest version at https://www.brizbee.com/", "Oops!", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-            }
-            catch
-            {
-                // Do not need to warn the user
-            }
-        }
-
-        private async void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            await CheckLatestVersion();
-        }
     }
 }

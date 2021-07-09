@@ -24,6 +24,7 @@
 using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
+using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -90,6 +91,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
+
                 // ------------------------------------------------------------
                 // Collect the QuickBooks host details.
                 // ------------------------------------------------------------
@@ -107,6 +109,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
                 var hostDetails = hostWalkResponse.Item3;
 
+
                 // ------------------------------------------------------------
                 // Collect the punches to be synced.
                 // ------------------------------------------------------------
@@ -116,6 +119,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
 
                 StatusText += string.Format("{0} - Preparing sync of {1} punches.\r\n", DateTime.Now.ToString(), punches.Count);
                 OnPropertyChanged("StatusText");
+
 
                 // ------------------------------------------------------------
                 // Validate the metadata.
@@ -149,27 +153,25 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     // Record the punches.
                     // ------------------------------------------------------------
 
-                    // Prepare a new QBXML document.
-                    var punchQBXML = service.MakeQBXMLDocument();
-                    var punchDocument = punchQBXML.Item1;
-                    var punchElement = punchQBXML.Item2;
-
                     // Add an element for each punch to be synced
                     foreach (var punch in punches)
                     {
+                        // Prepare a new QBXML document.
+                        var punchQBXML = service.MakeQBXMLDocument();
+                        var punchDocument = punchQBXML.Item1;
+                        var punchElement = punchQBXML.Item2;
+
                         BuildTimeTrackingAddRq(punchDocument, punchElement, punch);
+
+                        // Make the request.
+                        Trace.TraceInformation(punchDocument.OuterXml);
+                        var punchResponse = req.ProcessRequest(ticket, punchDocument.OuterXml);
+                        Trace.TraceInformation(punchResponse);
+
+                        // Then walk the response.
+                        var walkReponse = WalkTimeTrackingAddRs(punchResponse);
+                        ids = ids.Concat(walkReponse.Item3).ToList();
                     }
-
-                    Trace.TraceInformation(punchDocument.OuterXml);
-
-                    // Make the request.
-                    var punchResponse = req.ProcessRequest(ticket, punchDocument.OuterXml);
-
-                    Trace.TraceInformation(punchResponse);
-
-                    // Then walk the response.
-                    var walkReponse = WalkTimeTrackingAddRs(punchResponse);
-                    ids = walkReponse.Item3;
 
                     if (SaveErrorCount > 0)
                     {
@@ -186,25 +188,18 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     }
                     else
                     {
-                        StatusText += string.Format("{0} - Finishing Up.\r\n", DateTime.Now.ToString());
+                        StatusText += string.Format("{0} - Finishing up.\r\n", DateTime.Now.ToString());
                         OnPropertyChanged("StatusText");
-
-                        StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
-                        OnPropertyChanged("StatusText");
-
-                        // Enable the buttons.
-                        IsExitEnabled = true;
-                        IsStartOverEnabled = true;
-                        OnPropertyChanged("IsExitEnabled");
-                        OnPropertyChanged("IsStartOverEnabled");
                     }
                 }
 
+
                 // ------------------------------------------------------------
-                // Save the sync.
+                // Save the sync details.
                 // ------------------------------------------------------------
 
-                var export = new QuickBooksDesktopExport()
+                // Build the payload.
+                var payload = new
                 {
                     QBProductName = hostDetails.QBProductName,
                     QBCountry = hostDetails.QBCountry,
@@ -212,7 +207,6 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     QBMinorVersion = hostDetails.QBMinorVersion,
                     QBSupportedQBXMLVersions = hostDetails.QBSupportedQBXMLVersions,
                     CreatedAt = DateTime.UtcNow,
-                    UserId = int.Parse(Application.Current.Properties["AuthUserId"] as string),
                     CommitId = commit.Id,
                     InAt = commit.InAt,
                     OutAt = commit.OutAt,
@@ -220,21 +214,50 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     TxnIDs = string.Join(",", ids)
                 };
 
-                // Build the request.
+                // Build the request to send the export details.
                 var syncHttpRequest = new RestRequest("odata/QuickBooksDesktopExports", Method.POST);
-                syncHttpRequest.AddJsonBody(export);
+                syncHttpRequest.AddJsonBody(payload);
 
                 // Execute request.
                 var syncHttpResponse = client.Execute(syncHttpRequest);
                 if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
                         (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.Created))
                 {
-                    StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
+                    StatusText += string.Format("{0} - Synced successfully.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
                 }
                 else
                 {
-                    Trace.TraceWarning(syncHttpResponse.Content);
+                    StatusText += string.Format("{0} - {1}\r\n", DateTime.Now.ToString(), syncHttpResponse.Content);
+                    OnPropertyChanged("StatusText");
+
+                    StatusText += string.Format("{0} - Could not save sync details, reversing.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
+
+
+                    // ------------------------------------------------------------
+                    // Reverse the transaction.
+                    // ------------------------------------------------------------
+
+                    foreach (var txnId in ids)
+                    {
+                        // Prepare a new QBXML document.
+                        var delQBXML = service.MakeQBXMLDocument();
+                        var delDocument = delQBXML.Item1;
+                        var delElement = delQBXML.Item2;
+                        service.BuildTxnDelRq(delDocument, delElement, "TimeTracking", txnId);
+
+                        // Make the request.
+                        Trace.TraceInformation(delDocument.OuterXml);
+                        var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
+                        Trace.TraceInformation(delResponse);
+
+                        // Then walk the response.
+                        var delWalkResponse = service.WalkTxnDelRs(delResponse);
+                    }
+
+                    StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
                 }
 
                 // Close the QuickBooks connection.

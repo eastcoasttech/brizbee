@@ -8,8 +8,7 @@
     d:DesignHeight="480" d:DesignWidth="640"
     WindowTitle="BRIZBEE Integration Utility"
     ShowsNavigationUI="False"
-    FocusManager.FocusedElement="{Binding ElementName=EmailAddress}"
-    Loaded="Page_Loaded">
+    FocusManager.FocusedElement="{Binding ElementName=EmailAddress}">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Background="White">
             <DockPanel>

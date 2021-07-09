@@ -27,6 +27,7 @@ using Brizbee.Integration.Utility.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
+using RestSharp.Serializers.NewtonsoftJson;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -41,35 +42,24 @@ namespace Brizbee.Integration.Utility.ViewModels
         public string Password { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
         private RestClient client;
+        private JsonSerializerSettings settings = new JsonSerializerSettings()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        };
 
         public async System.Threading.Tasks.Task Login()
         {
             // Reintialize the HTTP client
             client = new RestClient("https://app-brizbee-prod.azurewebsites.net/");
+
+            // Configure JSON serializer.
+            client.UseNewtonsoftJson(settings);
+
             Application.Current.Properties["Client"] = client;
 
             await LoadCredentials();
-        }
-
-        public async System.Threading.Tasks.Task<string> CheckLatestVersion()
-        {
-            // Build request to check latest version of software
-            var versionClient = new RestClient("https://ects1.blob.core.windows.net/");
-            var versionRequest = new RestRequest("brizbee-public/latest.json", Method.GET);
-
-            // Execute request to check the latest version
-            var versionResponse = await versionClient.ExecuteAsync(versionRequest);
-            if ((versionResponse.ResponseStatus == ResponseStatus.Completed) &&
-                    (versionResponse.StatusCode == System.Net.HttpStatusCode.OK))
-            {
-                var versionResult = JsonConvert.DeserializeObject<JObject>(versionResponse.Content); // Deserialize manually
-                return versionResult["QuickBooksDesktopExportUtility"].ToString();
-            }
-            else
-            {
-                Trace.TraceWarning(versionResponse.Content);
-                return "";
-            }
         }
 
         private async System.Threading.Tasks.Task LoadCredentials()

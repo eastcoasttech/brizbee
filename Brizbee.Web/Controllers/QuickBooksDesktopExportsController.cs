@@ -24,6 +24,8 @@ using Brizbee.Common.Models;
 using Microsoft.AspNet.OData;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Validation;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
@@ -69,10 +71,40 @@ namespace Brizbee.Web.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.QuickBooksDesktopExports.Add(quickBooksDesktopExport);
-            db.SaveChanges();
+            var currentUser = CurrentUser();
 
-            return Created(quickBooksDesktopExport);
+            // Set defaults.
+            quickBooksDesktopExport.UserId = currentUser.Id;
+
+            try
+            {
+                db.QuickBooksDesktopExports.Add(quickBooksDesktopExport);
+                db.SaveChanges();
+
+                return Created(quickBooksDesktopExport);
+            }
+            catch (DbEntityValidationException ex)
+            {
+                string message = "";
+
+                foreach (var eve in ex.EntityValidationErrors)
+                {
+                    foreach (var ve in eve.ValidationErrors)
+                    {
+                        message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                    }
+                }
+
+                return BadRequest(message);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest(ex.ToString());
+            }
         }
 
         protected override void Dispose(bool disposing)

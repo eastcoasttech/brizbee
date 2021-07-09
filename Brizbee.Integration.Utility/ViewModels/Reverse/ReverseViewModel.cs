@@ -48,7 +48,6 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
 
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
-        private QBDInventoryConsumptionSync selectedSync = Application.Current.Properties["SelectedSync"] as QBDInventoryConsumptionSync;
         #endregion
 
         public void Reverse()
@@ -84,6 +83,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                 StatusText += string.Format("{0} - Reversing.\r\n", DateTime.Now.ToString());
                 OnPropertyChanged("StatusText");
 
+
                 // ------------------------------------------------------------
                 // Collect the QuickBooks host details.
                 // ------------------------------------------------------------
@@ -101,22 +101,48 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                 var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
                 var hostDetails = hostWalkResponse.Item3;
 
-                if (Path.GetFileName(companyFileName) != selectedSync.HostCompanyFileName)
-                    throw new Exception("The open company file in QuickBooks is not the same as the one that was synced.");
+
+                // ------------------------------------------------------------
+                // Prepare the reverse request.
+                // ------------------------------------------------------------
+
+                string reverseTransactionType = Application.Current.Properties["ReverseTransactionType"] as string;
+                string transactionType = "";
+                string[] selectedTxnIds = new string[] { };
+                string syncId = "";
+
+                if (reverseTransactionType == "Punches")
+                {
+                    var selectedSync = Application.Current.Properties["SelectedSync"] as QuickBooksDesktopExport;
+
+                    selectedTxnIds = selectedSync.TxnIDs.Split(',');
+                    transactionType = "TimeTracking";
+                    syncId = selectedSync.Id.ToString();
+                }
+                else if (reverseTransactionType == "Consumption")
+                {
+                    var selectedSync = Application.Current.Properties["SelectedSync"] as QBDInventoryConsumptionSync;
+
+                    if (Path.GetFileName(companyFileName) != selectedSync.HostCompanyFileName)
+                        throw new Exception("The open company file in QuickBooks is not the same as the one that was synced.");
+
+                    selectedTxnIds = selectedSync.TxnIDs.Split(',');
+                    transactionType = selectedSync.RecordingMethod; // InventoryAdjustment, SalesReceipt, or Bill
+                    syncId = selectedSync.Id.ToString();
+                }
+
 
                 // ------------------------------------------------------------
                 // Reverse the transaction.
                 // ------------------------------------------------------------
 
-                var txnIds = selectedSync.TxnIDs.Split(',');
-
-                foreach (var txnId in txnIds)
+                foreach (var txnId in selectedTxnIds)
                 {
                     // Prepare a new QBXML document.
                     var delQBXML = service.MakeQBXMLDocument();
                     var delDocument = delQBXML.Item1;
                     var delElement = delQBXML.Item2;
-                    service.BuildTxnDelRq(delDocument, delElement, selectedSync.RecordingMethod, txnId); // InventoryAdjustment, SalesReceipt, TimeTracking, or Bill
+                    service.BuildTxnDelRq(delDocument, delElement, transactionType, txnId); // InventoryAdjustment, SalesReceipt, TimeTracking, or Bill
 
                     // Make the request.
                     Trace.TraceInformation(delDocument.OuterXml);
@@ -132,21 +158,29 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                 // ------------------------------------------------------------
 
                 // Build the request.
-                var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptionSyncs/Reverse", Method.POST);
-                syncHttpRequest.AddQueryParameter("id", selectedSync.Id.ToString());
-
-                // Execute request.
-                var syncHttpResponse = client.Execute(syncHttpRequest);
-                if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
-                        (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+                if (reverseTransactionType == "Consumption")
                 {
-                    StatusText += string.Format("{0} - Reversed Successfully.\r\n", DateTime.Now.ToString());
-                    OnPropertyChanged("StatusText");
+                    var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptionSyncs/Reverse", Method.POST);
+                    syncHttpRequest.AddQueryParameter("id", syncId);
+
+                    // Execute request.
+                    var syncHttpResponse = client.Execute(syncHttpRequest);
+                    if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
+                            (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+                    {
+                        StatusText += string.Format("{0} - Reversed Successfully.\r\n", DateTime.Now.ToString());
+                        OnPropertyChanged("StatusText");
+                    }
+                    else
+                    {
+                        StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
+                        StatusText += string.Format("{0} - Reverse failed.\r\n", DateTime.Now.ToString());
+                        OnPropertyChanged("StatusText");
+                    }
                 }
                 else
                 {
-                    StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
-                    StatusText += string.Format("{0} - Reverse failed.\r\n", DateTime.Now.ToString());
+                    StatusText += string.Format("{0} - Reversed Successfully.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
                 }
 

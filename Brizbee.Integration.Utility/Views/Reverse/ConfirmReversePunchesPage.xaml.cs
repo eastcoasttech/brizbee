@@ -49,6 +49,7 @@ namespace Brizbee.Integration.Utility.Views.Reverse
         {
             Application.Current.Properties["SelectedSync"] =
                 (DataContext as ConfirmReversePunchesViewModel).SelectedSync;
+            Application.Current.Properties["ReverseTransactionType"] = "Punches";
 
             NavigationService.Navigate(new Uri("Views/Reverse/ReversePage.xaml", UriKind.Relative));
         }
