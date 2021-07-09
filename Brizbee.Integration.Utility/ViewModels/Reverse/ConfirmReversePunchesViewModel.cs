@@ -55,7 +55,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
             OnPropertyChanged("IsContinueEnabled");
 
             // Build request to get syncs.
-            var request = new RestRequest("odata/QuickBooksDesktopExports?$count=true&$top=20&$skip=0&$orderby=CreatedAt ASC", Method.GET);
+            var request = new RestRequest("odata/QuickBooksDesktopExports?$count=true&$top=20&$skip=0&$orderby=CreatedAt DESC", Method.GET);
 
             // Execute request.
             var response = await client.ExecuteAsync<ODataResponse<QuickBooksDesktopExport>>(request);

@@ -126,7 +126,9 @@ namespace Brizbee.Common.Models
         {
             get
             {
-                return $"{CreatedAt.ToShortDateString()} - Export # {Id} - Lock # {CommitId}";
+                TimeZoneInfo systemTimeZone = TimeZoneInfo.Local;
+                DateTime CreatedAtLocal = TimeZoneInfo.ConvertTimeFromUtc(CreatedAt, systemTimeZone);
+                return $"{CreatedAtLocal.ToString("M/d/yyyy h:mm tt")} - Export # {Id} - Lock # {CommitId}";
             }
         }
     }

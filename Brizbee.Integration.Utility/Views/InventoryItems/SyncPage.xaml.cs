@@ -74,7 +74,7 @@ namespace Brizbee.Integration.Utility.Views.InventoryItems
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            Application.Current.MainWindow.Close();
         }
     }
 }

@@ -34,7 +34,7 @@
                         Margin="5 8 15 11"
                         Height="24"
                         IsEnabled="{Binding IsStartOverEnabled}" />
-                    <Button Content="Exit" Width="85"
+                    <Button Content="Close" Width="85"
                         Name="ExitButton"
                         Click="ExitButton_Click"
                         Margin="5 8 15 11"
