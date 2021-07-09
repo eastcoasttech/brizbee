@@ -90,19 +90,19 @@
                         <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => ToggleMethod())">Login with PIN Number Instead</a></p>
                     }
 
-                    <p class="text-center" style="margin-top: 4em;">
+                    <p class="text-center" style="margin-top: 4em; font-size: 1.5em;">
                         Don't have an account?
                     </p>
                     <p class="text-center">
-                        <NavLink class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" href="registration/account" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
+                        <NavLink class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" href="register" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
                             Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
                         </NavLink>
-                        <NavLink class="btn btn-sm btn-block btn-primary visible-xs visible-sm" href="registration/account" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
+                        <NavLink class="btn btn-sm btn-block btn-primary visible-xs visible-sm" href="register" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
                             Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
                         </NavLink>
                     </p>
-                    <p class="text-center text-muted">
-                        No Credit Card Required. Cancel Anytime.
+                    <p class="text-center text-muted" style="font-size: 1em;">
+                        No credit card required. Free 30 day trial. Cancel anytime.
                     </p>
                 </div>
             </div>
@@ -227,8 +227,12 @@
     private void ToggleMethod()
     {
         if (method == "email")
+        {
             method = "pin";
+        }
         else if (method == "pin")
+        {
             method = "email";
+        }
     }
 } 
