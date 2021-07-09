@@ -105,6 +105,24 @@
 
     <div class="row">
         <div class="col-md-6 col-md-offset-3 col-sm-12">
+            <p style="font-weight: bold;">Current Plan</p>
+            @switch (organization.PlanId)
+            {
+                case 1:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Contractor - Up to 3 Users</p>
+                    break;
+                case 2:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Micro Business - Up to 10 Users</p>
+                    break;
+                case 3:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Small Business - Up to 20 Users</p>
+                    break;
+                case 4:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Midsize Business - Up to 50 Users</p>
+                    break;
+            }
+            <p class="alert alert-info" style="margin-bottom: 2em;">Please contact us at <a href="mailto:support@brizbee.com">support@brizbee.com</a> to upgrade your plan for more users.</p>
+
             <form id="payment-form" autocomplete="off">
                 @if (!string.IsNullOrEmpty(organization.StripeSourceId))
                 {
@@ -134,64 +152,64 @@
 </div>
 
 @code {
-    [CascadingParameter]
-    public EventCallback SignOutClicked { get; set; }
+                    [CascadingParameter]
+                    public EventCallback SignOutClicked { get; set; }
 
     private bool working = false;
-    private User currentUser;
-    private Organization organization = new Organization();
+                private User currentUser;
+                private Organization organization = new Organization();
 
-    private static Action<string> action;
+                private static Action<string> action;
 
-    protected override async System.Threading.Tasks.Task OnInitializedAsync()
-    {
-        // Subscribe to the events
-        sharedService.OnChange += StateHasChanged;
+                protected override async System.Threading.Tasks.Task OnInitializedAsync()
+                {
+                    // Subscribe to the events
+                    sharedService.OnChange += StateHasChanged;
 
-        currentUser = sharedService.CurrentUser;
+                    currentUser = sharedService.CurrentUser;
 
-        organization = await organizationService.GetOrganizationByIdAsync(currentUser.OrganizationId);
+                    organization = await organizationService.GetOrganizationByIdAsync(currentUser.OrganizationId);
 
-        action = UpdateSourceId;
+                    action = UpdateSourceId;
 
-        dialogService.OnOpen += Open;
-        dialogService.OnClose += Close;
-    }
+                    dialogService.OnOpen += Open;
+                    dialogService.OnClose += Close;
+                }
 
-    public void Dispose()
-    {
-        // Unsubscribe to the events
-        sharedService.OnChange -= StateHasChanged;
-    }
+                public void Dispose()
+                {
+                    // Unsubscribe to the events
+                    sharedService.OnChange -= StateHasChanged;
+                }
 
-    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            // Prepare Stripe form
-            await JSRuntime.InvokeVoidAsync("setupStripe");
-        }
-    }
+                protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+                {
+                    if (firstRender)
+                    {
+                        // Prepare Stripe form
+                        await JSRuntime.InvokeVoidAsync("setupStripe");
+                    }
+                }
 
-    private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
-    {
-        Console.WriteLine("Dialog opened");
-    }
+                private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
+                {
+                    Console.WriteLine("Dialog opened");
+                }
 
-    private async void Close(dynamic result)
-    {
-        Console.WriteLine($"Dialog closed with result: {result}");
-    }
+                private async void Close(dynamic result)
+                {
+                    Console.WriteLine($"Dialog closed with result: {result}");
+                }
 
-    [JSInvokable]
-    public static void InvokeUpdateSourceId(string sourceId)
-    {
-        action.Invoke(sourceId);
-    }
+                [JSInvokable]
+                public static void InvokeUpdateSourceId(string sourceId)
+                {
+                    action.Invoke(sourceId);
+                }
 
-    public async void UpdateSourceId(string sourceId)
-    {
-        await organizationService.SaveSourceIdAsync(currentUser.OrganizationId, sourceId);
-        StateHasChanged();
-    }
-}
+                public async void UpdateSourceId(string sourceId)
+                {
+                    await organizationService.SaveSourceIdAsync(currentUser.OrganizationId, sourceId);
+                    StateHasChanged();
+                }
+            }
