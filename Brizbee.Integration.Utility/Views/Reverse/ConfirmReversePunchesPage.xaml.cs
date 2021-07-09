@@ -21,6 +21,7 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Integration.Utility.ViewModels.Reverse;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -36,12 +37,18 @@ namespace Brizbee.Integration.Utility.Views.Reverse
         public ConfirmReversePunchesPage()
         {
             InitializeComponent();
+
+            DataContext = new ConfirmReversePunchesViewModel()
+            {
+                IsRefreshEnabled = false,
+                IsContinueEnabled = false
+            };
         }
 
         private void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Properties["TransactionType"] = "TimeTracking";
-            Application.Current.Properties["TransactionId"] = "the transaction id";
+            Application.Current.Properties["SelectedSync"] =
+                (DataContext as ConfirmReversePunchesViewModel).SelectedSync;
 
             NavigationService.Navigate(new Uri("Views/Reverse/ReversePage.xaml", UriKind.Relative));
         }
@@ -51,9 +58,28 @@ namespace Brizbee.Integration.Utility.Views.Reverse
             NavigationService.Navigate(new Uri("Views/DashboardPage.xaml", UriKind.Relative));
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                await (DataContext as ConfirmReversePunchesViewModel).RefreshSyncs();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Refresh Syncs", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
 
+        private async void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await(DataContext as ConfirmReversePunchesViewModel).RefreshSyncs();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Refresh Syncs", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

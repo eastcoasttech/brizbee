@@ -120,5 +120,14 @@ namespace Brizbee.Common.Models
         /// Comma-separated list of TxnIDs from the added transactions in QuickBooks.
         /// </summary>
         public string TxnIDs { get; set; }
+
+        [NotMapped]
+        public string Name
+        {
+            get
+            {
+                return $"{CreatedAt.ToShortDateString()} - Export # {Id} - Lock # {CommitId}";
+            }
+        }
     }
 }

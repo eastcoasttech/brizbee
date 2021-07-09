@@ -127,7 +127,7 @@ namespace Brizbee.Common.Models
         {
             get
             {
-                return $"{CreatedAt.ToShortDateString()} - {Id} - {RecordingMethod} - {ValueMethod} - {HostCompanyFileName}";
+                return $"{CreatedAt.ToShortDateString()} - Sync # {Id} - {RecordingMethod} - {ValueMethod} - {HostCompanyFileName}";
             }
         }
 

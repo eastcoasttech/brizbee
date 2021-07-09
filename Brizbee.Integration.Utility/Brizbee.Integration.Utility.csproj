@@ -169,6 +169,7 @@
     <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
     <Compile Include="ViewModels\Projects\SyncViewModel.cs" />
     <Compile Include="ViewModels\Reverse\ConfirmReverseConsumptionsViewModel.cs" />
+    <Compile Include="ViewModels\Reverse\ConfirmReversePunchesViewModel.cs" />
     <Compile Include="ViewModels\Reverse\ReverseViewModel.cs" />
     <Compile Include="Views\InventoryConsumptions\ConfirmPage.xaml.cs">
       <DependentUpon>ConfirmPage.xaml</DependentUpon>

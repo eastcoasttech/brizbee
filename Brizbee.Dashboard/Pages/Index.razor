@@ -54,16 +54,17 @@
                                     <ValidationSummary />
 
                                     <div class="form-group form-group-lg">
-                                        <InputText @bind-Value="pinSession.OrganizationCode" class="form-control" placeholder="Organization Code" disabled="@(working ? true : false)" />
+                                        <InputText @bind-Value="pinSession.OrganizationCode" class="form-control" placeholder="Organization Code" disabled="@working" />
                                     </div>
                                     <div class="form-group form-group-lg">
-                                        <InputText @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@(working ? true : false)" />
+                                        <InputText @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@working" />
                                     </div>
-                                    <button type="submit" class="btn btn-lg btn-primary" disabled="@(working ? true : false)">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
+                                    <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
                                 </EditForm>
                             </div>
                         </div>
-                        <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => { method = "email"; })">Login with Email Address Instead</a></p>
+                        <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => ToggleMethod())">Login with Email Address Instead</a></p>
                     }
 
                     @if (method == "email")
@@ -76,28 +77,28 @@
                                     <ValidationSummary />
 
                                     <div class="form-group form-group-lg">
-                                        <InputText @bind-Value="emailSession.EmailAddress" class="form-control" type="email" placeholder="Email Address" disabled="@(working ? true : false)" />
+                                        <InputText @bind-Value="emailSession.EmailAddress" class="form-control" type="email" placeholder="Email Address" disabled="@working" />
                                     </div>
                                     <div class="form-group form-group-lg">
-                                        <InputText @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@(working ? true : false)" />
+                                        <InputText @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@working" />
                                     </div>
-                                    <button type="submit" class="btn btn-lg btn-primary" disabled="@(working ? true : false)">Login <i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
-                                    <a href="#!/reset" class="btn btn-lg btn-default" disabled="@(working ? true : false)">Reset Password</a>
+                                    <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
                                 </EditForm>
                             </div>
                         </div>
-                        <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => { method = "pin"; })">Login with PIN Number Instead</a></p>
+                        <p class="text-right"><a href="javascript:void(0)" @onclick="@(e => ToggleMethod())">Login with PIN Number Instead</a></p>
                     }
 
                     <p class="text-center" style="margin-top: 4em;">
                         Don't have an account?
                     </p>
                     <p class="text-center">
-                        <NavLink class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" href="registration/account" style="padding-left: 2em; padding-right: 2em;">
-                            Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                        <NavLink class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" href="registration/account" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
+                            Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
                         </NavLink>
-                        <NavLink class="btn btn-sm btn-block btn-primary visible-xs visible-sm" href="registration/account" style="padding-left: 2em; padding-right: 2em;">
-                            Start Tracking Time for FREE <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                        <NavLink class="btn btn-sm btn-block btn-primary visible-xs visible-sm" href="registration/account" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
+                            Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
                         </NavLink>
                     </p>
                     <p class="text-center text-muted">
@@ -221,5 +222,13 @@
         {
             working = false;
         }
+    }
+
+    private void ToggleMethod()
+    {
+        if (method == "email")
+            method = "pin";
+        else if (method == "pin")
+            method = "email";
     }
 } 

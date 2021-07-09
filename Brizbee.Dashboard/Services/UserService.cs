@@ -2,6 +2,7 @@
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Dashboard.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -277,24 +278,26 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<bool> RegisterAsync(Registration registration)
+        public async Task<bool> RegisterAsync(Serialization.Registration registration)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, $"odata/Users/Default.Register"))
             {
                 var payload = new {
                     Organization = new {
-                        Name = registration.Organization.Name,
-                        PlanId = registration.Organization.PlanId
+                        Name = registration.Organization,
+                        PlanId = registration.PlanId
                     },
                     User = new {
-                        Name = registration.User.Name,
-                        EmailAddress = registration.User.EmailAddress,
-                        Password = registration.User.Password,
-                        TimeZone = registration.User.TimeZone
+                        Name = registration.Name,
+                        EmailAddress = registration.EmailAddress,
+                        Password = registration.Password,
+                        TimeZone = "America/New_York"
                     }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);
+
+                Console.WriteLine(json);
 
                 using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
                 {

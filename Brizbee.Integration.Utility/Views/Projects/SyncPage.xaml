@@ -19,26 +19,29 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Bottom" Background="White">
             <Separator />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Try Again" Width="85"
-                    Name="TryButton"
-                    Click="TryButton_Click"
-                    Margin="5 8 3 11"
-                    Height="24"
-                    IsEnabled="{Binding IsTryEnabled}" />
-                <Button Content="Start Over" Width="85"
-                    Name="StartOverButton"
-                    Click="StartOverButton_Click"
-                    Margin="5 8 15 11"
-                    Height="24"
-                    IsEnabled="{Binding IsStartOverEnabled}" />
-                <Button Content="Exit" Width="85"
-                    Name="ExitButton"
-                    Click="ExitButton_Click"
-                    Margin="5 8 15 11"
-                    Height="24"
-                    IsEnabled="{Binding IsExitEnabled}" />
-            </StackPanel>
+            <Grid>
+                <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="10">© 2021, East Coast Technology Services, LLC</TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Try Again" Width="85"
+                        Name="TryButton"
+                        Click="TryButton_Click"
+                        Margin="5 8 3 11"
+                        Height="24"
+                        IsEnabled="{Binding IsTryEnabled}" />
+                    <Button Content="Start Over" Width="85"
+                        Name="StartOverButton"
+                        Click="StartOverButton_Click"
+                        Margin="5 8 15 11"
+                        Height="24"
+                        IsEnabled="{Binding IsStartOverEnabled}" />
+                    <Button Content="Exit" Width="85"
+                        Name="ExitButton"
+                        Click="ExitButton_Click"
+                        Margin="5 8 15 11"
+                        Height="24"
+                        IsEnabled="{Binding IsExitEnabled}" />
+                </StackPanel>
+            </Grid>
         </StackPanel>
         <Grid Margin="40">
             <Grid.ColumnDefinitions>

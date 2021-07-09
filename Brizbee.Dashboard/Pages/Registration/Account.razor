@@ -2,8 +2,6 @@
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
-@using Brizbee.Common.Security
-@using Brizbee.Common.Models
 @using Brizbee.Common.Serialization
 @using System.Globalization
 @using NodaTime
@@ -30,17 +28,20 @@
 
 <div class="container-fluid fadeIn" style="min-height: 50vh;">
     <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
-        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
+        <div class="col-md-4 col-md-offset-2" style="padding: 2em;">
+            <p class="text-center" style="margin-top: 4em; margin-bottom: 4em;">
+                <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
+            </p>
+            <p class="text-center text-muted" style="font-size: 2em;">Let us help you get started with a free consultation and guided setup.</p>
+            <p class="text-center text-muted" style="font-size: 3em; font-weight: bold;"><a href="mailto:sales@brizbee.com" style="text-decoration: none;">sales@brizbee.com</a></p>
+            <p class="text-center" style="margin-top: 2em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> No credit card required.</p>
+            <p class="text-center" style="margin-top: 1em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> Free 30 day trial.</p>
+            <p class="text-center" style="margin-top: 1em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> Cancel anytime.</p>
+        </div>
+        <div class="col-md-4 col-sm-12 col-xs-12">
             <div class="panel panel-default" style="margin-bottom: 5px;">
                 <div class="panel-heading">
-                    <div class="row">
-                        <div class="col-md-9">
-                            Sign Up for BRIZBEE
-                        </div>
-                        <div class="col-md-3 text-right">
-                            Step 1 of 3
-                        </div>
-                    </div>
+                    Sign Up for BRIZBEE
                 </div>
                 <div class="panel-body" style="padding: 35px;">
                     <EditForm Model="@registration" OnValidSubmit="RegisterAsync" autocomplete="off">
@@ -49,7 +50,7 @@
 
                         <div class="form-group">
                             <label id="registration_organization_plan_id">Plan</label>
-                            <InputSelect id="registration_organization_plan_id" class="form-control" disabled="@working"
+                            <InputSelect id="registration_organization_plan_id" class="form-control input-lg" disabled="@working"
                                          ValueChanged="@( (int x) => SelectedPlanIdValueChangeHandler(x) )"
                                          ValueExpression="@( () => selectedPlanId )"
                                          Value="@selectedPlanId">
@@ -61,57 +62,65 @@
                         </div>
                         <div class="form-group">
                             <label for="registration_user_email_address">Email Address</label>
-                            <InputText @bind-Value="registration.User.EmailAddress" class="form-control" id="registration_user_email_address" type="email" disabled="@working" autofocus />
+                            <InputText @bind-Value="registration.EmailAddress" class="form-control input-lg" id="registration_user_email_address" type="email" disabled="@working" autofocus />
                         </div>
                         <div class="form-group">
                             <label id="registration_user_name">Your Name</label>
-                            <InputText @bind-Value="registration.User.Name" class="form-control" id="registration_user_name" disabled="@working" />
+                            <InputText @bind-Value="registration.Name" class="form-control input-lg" id="registration_user_name" disabled="@working" />
                         </div>
                         <div class="form-group">
-                            <label id="registration_organization_name">Your Company Name</label>
-                            <InputText @bind-Value="registration.Organization.Name" class="form-control" id="registration_organization_name" disabled="@working" />
-                            <p class="help-block">Ex. Martin Corporation, Bill's Auto Shop, First Baptist Church.</p>
+                            <label id="registration_organization_name">Company Name</label>
+                            <InputText @bind-Value="registration.Organization" class="form-control input-lg" id="registration_organization_name" disabled="@working" />
+                            <p class="help-block">Ex. Matrix Corp, R & D HVAC, Great Lakes Auto Mall</p>
                         </div>
                         <div class="form-group">
                             <label id="registration_user_password">Password</label>
-                            <InputText @bind-Value="registration.User.Password" class="form-control" type="password" disabled="@working" />
-                            <p class="help-block">Must be 8+ characters and include both numbers and letters.</p>
+                            <InputText @bind-Value="registration.Password" class="form-control input-lg" type="password" disabled="@working" />
+                            <p class="help-block">Must be 8+ characters and include both numbers and letters</p>
                         </div>
-                        <div class="form-group">
-                            <label id="registration_country">Your Country</label>
-                            <InputSelect class="form-control" id="registration_country" disabled="@working"
-                                         ValueChanged="@( (string x) => SelectedCountryCodeValueChangeHandler(x) )"
-                                         ValueExpression="@( () => selectedCountryCode )"
-                                         Value="@selectedCountryCode">
-                                @foreach (var country in countries)
-                                {
-                                    <option value="@country.CountryCode">@country.Name</option>
-                                }
-                            </InputSelect>
+
+                        @if (false)
+                        {
+                            <div class="form-group">
+                                <label id="registration_country">Your Country</label>
+                                <InputSelect class="form-control input-lg" id="registration_country" disabled="@working"
+                                             ValueChanged="@( (string x) => SelectedCountryCodeValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedCountryCode )"
+                                             Value="@selectedCountryCode">
+                                    @foreach (var country in countries)
+                                    {
+                                        <option value="@country.CountryCode">@country.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="form-group">
+                                <label id="registration_organization_time_zone">Your Time Zone</label>
+                                <InputSelect class="form-control input-lg" id="registration_organization_time_zone" disabled="@working"
+                                             ValueChanged="@( (string x) => SelectedTimeZoneValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedTimeZone )"
+                                             Value="@selectedTimeZone">
+                                    @foreach (var timeZone in filteredTimeZones)
+                                    {
+                                        <option value="@timeZone.Id">@timeZone.Id</option>
+                                    }
+                                </InputSelect>
+                                <p class="help-block">
+                                    Your punches will default to this time zone unless you specify otherwise
+                                </p>
+                            </div>
+                        }
+
+                        <div class="text-center" style="margin-top: 2em; margin-bottom: 2em;">
+                            <button type="submit" class="btn btn-primary btn-lg" style="padding: 1em 2em 1em 2em; background-color: #228B22; border-color: darkgreen;" disabled="@working">Save and Continue <i class="@(!working ? "far fa-arrow-alt-circle-right" : "hidden")" aria-hidden="true"></i><i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
                         </div>
-                        <div class="form-group">
-                            <label id="registration_organization_time_zone">Your Time Zone</label>
-                            <InputSelect class="form-control" id="registration_organization_time_zone" disabled="@working"
-                                         ValueChanged="@( (string x) => SelectedTimeZoneValueChangeHandler(x) )"
-                                         ValueExpression="@( () => selectedTimeZone )"
-                                         Value="@selectedTimeZone">
-                                @foreach (var timeZone in filteredTimeZones)
-                                {
-                                    <option value="@timeZone.Id">@timeZone.Id</option>
-                                }
-                            </InputSelect>
-                            <p class="help-block">
-                                Your punches will default to this time zone unless you specify otherwise.
-                            </p>
-                        </div>
-                        <div class="text-center" style="margin-top: 30px; margin-bottom: 30px;">
-                            <button type="submit" class="btn btn-primary btn-lg" disabled="@working">Continue <i class="@((working == false) ? "fa fa-arrow-circle-o-right" : "hidden")" aria-hidden="true"></i><i class="@((working == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
-                        </div>
-                        <p class="text-center text-muted">No credit card required. Cancel anytime.</p>
+                        <p class="text-center text-muted">By clicking Save and Continue, you agree to our <a href="https://www.brizbee.com/terms.html">Terms of Service</a> and have read our <a href="https://www.brizbee.com/privacy.html">Privacy Policy</a>.</p>
                     </EditForm>
                 </div>
             </div>
-            <p class="text-muted" style="margin-top: 10px;">Need help? Email us at <a href="mailto:sales@brizbee.com">sales@brizbee.com</a> and we'll help you get started.</p>
+            <p class="text-muted" style="padding-top: 0.5em; font-size: 1.25em;">
+                Already have an account?
+                <NavLink href="/">Login Now</NavLink>
+            </p>
         </div>
     </div>
 </div>
@@ -119,7 +128,7 @@
 @code {
     private bool loading = true;
     private bool working = false;
-    private Registration registration = new Registration() { User = new User(), Organization = new Organization() };
+    private Brizbee.Dashboard.Serialization.Registration registration = new Brizbee.Dashboard.Serialization.Registration();
     private int selectedPlanId = 1;
     private string selectedTimeZone = "";
     private string selectedCountryCode = "";
@@ -208,8 +217,8 @@
         // Authenticate the user.
         var credential = await userService.AuthenticateWithEmailAsync(new EmailSession()
         {
-            EmailAddress = registration.User.EmailAddress,
-            EmailPassword = registration.User.Password
+            EmailAddress = registration.EmailAddress,
+            EmailPassword = registration.Password
         });
 
         // Save credential to local storage.
@@ -248,7 +257,7 @@
         selectedPlanId = planId;
 
         // Update the registration.
-        registration.Organization.PlanId = selectedPlanId;
+        registration.PlanId = selectedPlanId;
     }
 
     private void SelectedCountryCodeValueChangeHandler(string country)
@@ -260,6 +269,6 @@
     private void SelectedTimeZoneValueChangeHandler(string timeZone)
     {
         selectedTimeZone = timeZone;
-        registration.User.TimeZone = selectedTimeZone;
+        registration.TimeZone = selectedTimeZone;
     }
 }

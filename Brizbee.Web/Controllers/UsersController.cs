@@ -311,6 +311,24 @@ namespace Brizbee.Web.Controllers
             var organization = parameters["Organization"] as Organization;
             var user = parameters["User"] as User;
 
+            // Generate an organization code if one is not provided.
+            var code = organization.Code;
+            while (string.IsNullOrEmpty(code))
+            {
+                var generated = GetRandomNumber();
+
+                var found = db.Organizations
+                    .Where(o => o.Code == generated);
+
+                if (!found.Any())
+                    code = generated;
+            }
+            organization.Code = code;
+
+            // Generate a user pin if one is not provided.
+            if (string.IsNullOrEmpty(user.Pin))
+                user.Pin = GetRandomNumber();
+
             var registered = repo.Register(user, organization);
 
             return Created(registered);
@@ -332,6 +350,19 @@ namespace Brizbee.Web.Controllers
             credential.AuthUserId = user.Id.ToString();
 
             return credential;
+        }
+
+        private string GetRandomNumber()
+        {
+            var code = "";
+
+            for (int i = 1; i <= 5; i++)
+            {
+                Random rnd = new Random();
+                code += rnd.Next(0, 9).ToString();
+            }
+
+            return code;
         }
 
         /// <summary>

@@ -7,7 +7,8 @@
     mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="640"
     WindowTitle="BRIZBEE Integration Utility"
-    ShowsNavigationUI="False">
+    ShowsNavigationUI="False"
+    Loaded="Page_Loaded">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Background="White">
             <DockPanel>
@@ -18,19 +19,22 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Bottom" Background="White">
             <Separator />
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Next" Width="85"
-                    Name="ConfirmButton"
-                    Click="ConfirmButton_Click"
-                    Margin="5 8 15 11"
-                    Height="24"
-                    IsDefault="True" />
-                <Button Content="Cancel" Width="85"
-                    Name="CancelButton"
-                    Click="CancelButton_Click"
-                    Margin="5 8 15 11"
-                    Height="24" />
-            </StackPanel>
+            <Grid>
+                <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="10">© 2021, East Coast Technology Services, LLC</TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Next" Width="85"
+                        Name="ConfirmButton"
+                        Click="ConfirmButton_Click"
+                        Margin="5 8 15 11"
+                        Height="24"
+                        IsDefault="True" />
+                    <Button Content="Cancel" Width="85"
+                        Name="CancelButton"
+                        Click="CancelButton_Click"
+                        Margin="5 8 15 11"
+                        Height="24" />
+                </StackPanel>
+            </Grid>
         </StackPanel>
         <Grid Margin="10">
             <Grid.ColumnDefinitions>
@@ -46,9 +50,9 @@
 
                 <ComboBox Height="26" IsEnabled="{Binding IsRefreshEnabled}"
                     DisplayMemberPath="Name"
-                    ItemsSource="{Binding Commits}"
-                    SelectedItem="{Binding SelectedCommit}"/>
-                <Label Content="{Binding CommitComboStatus}"
+                    ItemsSource="{Binding Syncs}"
+                    SelectedItem="{Binding SelectedSync}"/>
+                <Label Content="{Binding Status}"
                     Height="22" Padding="0 3 3 3" Foreground="DarkGray"/>
 
                 <Grid Margin="0 15 0 0">
