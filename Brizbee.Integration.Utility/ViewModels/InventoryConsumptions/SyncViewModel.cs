@@ -23,6 +23,7 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
+using Brizbee.Integration.Utility.Exceptions;
 using Interop.QBXMLRP2;
 using RestSharp;
 using System;
@@ -131,144 +132,132 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 // Collect any unsynced consumption.
                 // ------------------------------------------------------------
 
-                // Build the request to get unsynced consumption.
-                var unsyncedHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.GET);
-                unsyncedHttpRequest.AddHeader("X-Paging-PageNumber", "1");
-                unsyncedHttpRequest.AddHeader("X-Paging-PageSize", "1000");
+                var consumptions = GetConsumption();
+                var ids = new List<string>();
 
-                // Execute request.
-                var unsyncedHttpResponse = client.Execute<List<QBDInventoryConsumption>>(unsyncedHttpRequest);
-                if ((unsyncedHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
-                        (unsyncedHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+                if (consumptions.Count == 0)
                 {
-                    var consumptions = unsyncedHttpResponse.Data;
-                    var ids = new List<string>();
+                    StatusText += string.Format("{0} - There is no inventory consumption to sync.\r\n", DateTime.Now.ToString());
+                    OnPropertyChanged("StatusText");
+                }
+                else
+                {
+                    // ------------------------------------------------------------
+                    // Record the unsynced consumptions.
+                    // ------------------------------------------------------------
 
-                    if (consumptions.Count == 0)
+                    // Build the request to store consumptions.
+                    if (selectedMethod == "Sales Receipt")
                     {
-                        StatusText += string.Format("{0} - There is no inventory consumption to sync.\r\n", DateTime.Now.ToString());
+                        // Prepare a new QBXML document.
+                        var consQBXML = service.MakeQBXMLDocument();
+                        var consDocument = consQBXML.Item1;
+                        var consElement = consQBXML.Item2;
+
+                        service.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
+
+                        // Make the request.
+                        Trace.TraceInformation(consDocument.OuterXml);
+                        var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                        Trace.TraceInformation(consResponse);
+
+                        // Then walk the response.
+                        var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
+                        ids = walkReponse.Item3;
+                    }
+                    else if (selectedMethod == "Bill")
+                    {
+                        foreach (var consumption in consumptions)
+                        {
+                            // Prepare a new QBXML document.
+                            var consQBXML = service.MakeQBXMLDocument();
+                            var consDocument = consQBXML.Item1;
+                            var consElement = consQBXML.Item2;
+
+                            service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, refNumber, selectedValue.ToUpperInvariant());
+
+                            // Make the request.
+                            Trace.TraceInformation(consDocument.OuterXml);
+                            var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                            Trace.TraceInformation(consResponse);
+
+                            // Then walk the response.
+                            var walkReponse = service.WalkBillAddRs(consResponse);
+                            ids = ids.Concat(walkReponse.Item3).ToList();
+                        }
+                    }
+                    else if (selectedMethod == "Inventory Adjustment")
+                    {
+                        // Prepare a new QBXML document.
+                        var consQBXML = service.MakeQBXMLDocument();
+                        var consDocument = consQBXML.Item1;
+                        var consElement = consQBXML.Item2;
+
+                        service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
+
+                        // Make the request.
+                        Trace.TraceInformation(consDocument.OuterXml);
+                        var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
+                        Trace.TraceInformation(consResponse);
+
+                        // Then walk the response.
+                        var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
+                        ids = walkReponse.Item3;
+                    }
+
+                    if (SaveErrorCount > 0)
+                    {
+                        StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
                         OnPropertyChanged("StatusText");
                     }
                     else
                     {
-                        // ------------------------------------------------------------
-                        // Record the unsynced consumptions.
-                        // ------------------------------------------------------------
-
-                        // Build the request to store consumptions.
-                        if (selectedMethod == "Sales Receipt")
+                        // Build the payload.
+                        var payload = new
                         {
-                            // Prepare a new QBXML document.
-                            var consQBXML = service.MakeQBXMLDocument();
-                            var consDocument = consQBXML.Item1;
-                            var consElement = consQBXML.Item2;
+                            TxnIDs = ids,
+                            Ids = consumptions.Select(c => c.Id).ToArray()
+                        };
 
-                            service.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
+                        // Build the request to send the sync details.
+                        var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.POST);
+                        syncHttpRequest.AddJsonBody(payload);
+                        syncHttpRequest.AddQueryParameter("recordingMethod", selectedMethod);
+                        syncHttpRequest.AddQueryParameter("valueMethod", selectedValue);
+                        syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
+                        syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);
+                        syncHttpRequest.AddQueryParameter("minorVersion", hostDetails.QBMinorVersion);
+                        syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
+                        syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
+                        syncHttpRequest.AddQueryParameter("hostname", Environment.MachineName);
+                        syncHttpRequest.AddQueryParameter("companyFilePath", companyFileName);
 
-                            // Make the request.
-                            Trace.TraceInformation(consDocument.OuterXml);
-                            var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
-                            Trace.TraceInformation(consResponse);
-
-                            // Then walk the response.
-                            var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
-                            ids = walkReponse.Item3;
-                        }
-                        else if (selectedMethod == "Bill")
+                        // Execute request.
+                        var syncHttpResponse = client.Execute(syncHttpRequest);
+                        if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
+                                (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                         {
-                            foreach (var consumption in consumptions)
-                            {
-                                // Prepare a new QBXML document.
-                                var consQBXML = service.MakeQBXMLDocument();
-                                var consDocument = consQBXML.Item1;
-                                var consElement = consQBXML.Item2;
-
-                                service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, refNumber, selectedValue.ToUpperInvariant());
-
-                                // Make the request.
-                                Trace.TraceInformation(consDocument.OuterXml);
-                                var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
-                                Trace.TraceInformation(consResponse);
-
-                                // Then walk the response.
-                                var walkReponse = service.WalkBillAddRs(consResponse);
-                                ids = ids.Concat(walkReponse.Item3).ToList();
-                            }
-                        }
-                        else if (selectedMethod == "Inventory Adjustment")
-                        {
-                            // Prepare a new QBXML document.
-                            var consQBXML = service.MakeQBXMLDocument();
-                            var consDocument = consQBXML.Item1;
-                            var consElement = consQBXML.Item2;
-
-                            service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
-
-                            // Make the request.
-                            Trace.TraceInformation(consDocument.OuterXml);
-                            var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
-                            Trace.TraceInformation(consResponse);
-
-                            // Then walk the response.
-                            var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
-                            ids = walkReponse.Item3;
-                        }
-
-                        if (SaveErrorCount > 0)
-                        {
-                            StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                            StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
                             OnPropertyChanged("StatusText");
                         }
                         else
                         {
-                            // Build the payload.
-                            var payload = new
-                            {
-                                TxnIDs = ids,
-                                Ids = consumptions.Select(c => c.Id).ToArray()
-                            };
-
-                            // Build the request to send the sync details.
-                            var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.POST);
-                            syncHttpRequest.AddJsonBody(payload);
-                            syncHttpRequest.AddQueryParameter("recordingMethod", selectedMethod);
-                            syncHttpRequest.AddQueryParameter("valueMethod", selectedValue);
-                            syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
-                            syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);
-                            syncHttpRequest.AddQueryParameter("minorVersion", hostDetails.QBMinorVersion);
-                            syncHttpRequest.AddQueryParameter("country", hostDetails.QBCountry);
-                            syncHttpRequest.AddQueryParameter("supportedQBXMLVersion", hostDetails.QBSupportedQBXMLVersions);
-                            syncHttpRequest.AddQueryParameter("hostname", Environment.MachineName);
-                            syncHttpRequest.AddQueryParameter("companyFilePath", companyFileName);
-
-                            // Execute request.
-                            var syncHttpResponse = client.Execute(syncHttpRequest);
-                            if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
-                                    (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
-                            {
-                                StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
-                                OnPropertyChanged("StatusText");
-                            }
-                            else
-                            {
-                                StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
-                                StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
-                                OnPropertyChanged("StatusText");
-                            }
+                            StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
+                            StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
+                            OnPropertyChanged("StatusText");
                         }
                     }
-                }
-                else
-                {
-                    StatusText += $"{DateTime.Now} - {unsyncedHttpResponse.Content}";
-                    StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
-                    OnPropertyChanged("StatusText");
                 }
 
                 // Close the QuickBooks connection.
                 req.EndSession(ticket);
                 req.CloseConnection();
                 req = null;
+            }
+            catch (DownloadFailedException)
+            {
+                StatusText += string.Format("{0} - Sync failed. Could not download consumption from the server.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
             }
             catch (COMException cex)
             {
@@ -308,6 +297,30 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     req.CloseConnection();
                     req = null;
                 }
+            }
+        }
+
+        private List<QBDInventoryConsumption> GetConsumption()
+        {
+            StatusText += string.Format("{0} - Getting unsynced consumption.\r\n", DateTime.Now.ToString());
+            OnPropertyChanged("StatusText");
+
+            // Build the request to get unsynced consumption.
+            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynce", Method.GET);
+            request.AddHeader("X-Paging-PageNumber", "1");
+            request.AddHeader("X-Paging-PageSize", "1000");
+
+            // Execute request.
+            var response = client.Execute<List<QBDInventoryConsumption>>(request);
+            if ((response.ResponseStatus == ResponseStatus.Completed) &&
+                    (response.StatusCode == System.Net.HttpStatusCode.OK))
+            {
+                return response.Data;
+            }
+            else
+            {
+                Trace.TraceWarning(response.Content);
+                throw new DownloadFailedException();
             }
         }
 

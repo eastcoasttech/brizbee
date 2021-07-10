@@ -23,6 +23,7 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
+using Brizbee.Integration.Utility.Exceptions;
 using Interop.QBXMLRP2;
 using Newtonsoft.Json;
 using RestSharp;
@@ -265,6 +266,11 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 req.CloseConnection();
                 req = null;
             }
+            catch (DownloadFailedException)
+            {
+                StatusText += string.Format("{0} - Sync failed. Could not download punches from the server.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
+            }
             catch (COMException cex)
             {
                 Trace.TraceError(cex.ToString());
@@ -321,21 +327,12 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
-                StatusText += string.Format("{0} - Got punches from server.\r\n", DateTime.Now.ToString());
-                OnPropertyChanged("StatusText");
-
                 return response.Data;
             }
             else
             {
-                // Enable the buttons
-                IsExitEnabled = true;
-                IsTryEnabled = true;
-                IsStartOverEnabled = true;
-                OnPropertyChanged("IsExitEnabled");
-                OnPropertyChanged("IsTryEnabled");
-                OnPropertyChanged("IsStartOverEnabled");
-                throw new Exception(response.Content);
+                Trace.TraceWarning(response.Content);
+                throw new DownloadFailedException();
             }
         }
 
