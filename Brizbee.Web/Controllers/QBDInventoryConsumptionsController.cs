@@ -481,43 +481,47 @@ namespace Brizbee.Web.Controllers
             if (currentPunch == null)
                 return BadRequest("Cannot consume inventory without being punched in.");
 
-            // Inventory site is determined by the hostname.
-            var sites = new Dictionary<string, string>()
+            long? siteId = null;
+            if (inventorySiteEnabled)
             {
-                { "MARTIN-01", "" },
-                { "RR01", "" },
-                { "RR08", "" },
-                { "RR09", "" },
-                { "RR11", "" },
-                { "RR12", "" },
-                { "RR23", "" },
-                { "RR24", "" },
-                { "RR25", "" },
-                { "RR26", "" },
-                { "RR27", "" },
-                { "RR28", "" },
-                { "RR17", "" },
-                { "RR16", "" },
-                { "RR18", "" },
-                { "RR19", "" },
-                { "RR02", "" },
-                { "RR03", "" },
-                { "RR05", "" },
-                { "RR06", "" },
-                { "RR04", "" },
-                { "RR15", "" },
-                { "Pocket_PC", "" }
-            };
-            var siteForHostname = sites[hostname];
+                // Inventory site is determined by the hostname.
+                var sites = new Dictionary<string, string>()
+                {
+                    { "MARTIN-01", "" },
+                    { "RR01", "" },
+                    { "RR08", "" },
+                    { "RR09", "" },
+                    { "RR11", "" },
+                    { "RR12", "" },
+                    { "RR23", "" },
+                    { "RR24", "" },
+                    { "RR25", "" },
+                    { "RR26", "" },
+                    { "RR27", "" },
+                    { "RR28", "" },
+                    { "RR17", "" },
+                    { "RR16", "" },
+                    { "RR18", "" },
+                    { "RR19", "" },
+                    { "RR02", "" },
+                    { "RR03", "" },
+                    { "RR05", "" },
+                    { "RR06", "" },
+                    { "RR04", "" },
+                    { "RR15", "" },
+                    { "Pocket_PC", "" }
+                };
+                var siteForHostname = sites[hostname];
 
-            // Ensure there is an inventory site for the given hostname, if necessary.
-            if (string.IsNullOrEmpty(siteForHostname) && inventorySiteEnabled)
-                return BadRequest($"No inventory site for hostname {hostname} specified");
+                // Ensure there is an inventory site for the given hostname, if necessary.
+                if (string.IsNullOrEmpty(siteForHostname))
+                    return BadRequest($"No inventory site for hostname {hostname} specified");
 
-            long? siteId = _context.QBDInventorySites
-                .Where(s => s.FullName == siteForHostname)
-                .Select(s => s.Id)
-                .FirstOrDefault();
+                siteId = _context.QBDInventorySites
+                    .Where(s => s.FullName == siteForHostname)
+                    .Select(s => s.Id)
+                    .FirstOrDefault();
+            }
 
             var consumption = new QBDInventoryConsumption()
             {
