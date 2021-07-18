@@ -34,92 +34,11 @@ namespace Brizbee.Web.Repositories
         private SqlContext db = new SqlContext();
 
         /// <summary>
-        /// Creates the given punch in the database.
-        /// </summary>
-        /// <param name="punch">The punch to create</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The created punch</returns>
-        public Punch Create(Punch punch, User currentUser)
-        {
-            var now = DateTime.UtcNow;
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-
-            // Auto-generated
-            punch.CreatedAt = now;
-            punch.Guid = Guid.NewGuid();
-
-            // Ensure InAt is at bottom of hour and OutAt is at top of the hour
-            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
-            if (punch.OutAt.HasValue)
-            {
-                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
-            }
-
-            db.Punches.Add(punch);
-
-            db.SaveChanges();
-
-            return punch;
-        }
-
-        /// <summary>
-        /// Deletes the punch with the given id.
-        /// </summary>
-        /// <param name="id">The id of the punch</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        public void Delete(int id, User currentUser)
-        {
-            var punch = db.Punches
-                .Include("User")
-                .Where(p => p.Id == id)
-                .FirstOrDefault();
-
-            // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != punch.User.OrganizationId)
-                throw new Exception("Not authorized to delete the object");
-
-            // Delete the object itself.
-            db.Punches.Remove(punch);
-
-            db.SaveChanges();
-        }
-
-        /// <summary>
         /// Disposes of the database connection.
         /// </summary>
         public void Dispose()
         {
             db.Dispose();
-        }
-
-        /// <summary>
-        /// Returns the punch with the given id.
-        /// </summary>
-        /// <param name="id">The id of the punch</param>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The punch with the given id</returns>
-        public IQueryable<Punch> Get(int id, User currentUser)
-        {
-            var userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id);
-            return db.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.Id == id);
-        }
-
-        /// <summary>
-        /// Returns a queryable collection of punches.
-        /// </summary>
-        /// <param name="currentUser">The user to check for permissions</param>
-        /// <returns>The queryable collection of punches</returns>
-        public IQueryable<Punch> GetAll(User currentUser)
-        {
-            var userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id);
-            return db.Punches.Where(p => userIds.Contains(p.UserId));
         }
 
         /// <summary>

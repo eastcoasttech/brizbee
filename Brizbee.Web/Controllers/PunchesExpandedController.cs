@@ -55,7 +55,8 @@ namespace Brizbee.Web.Controllers
             [FromUri] string orderBy = "PUNCHES/INAT", [FromUri] string orderByDirection = "ASC",
             [FromUri] int[] jobIds = null, [FromUri] string[] jobNames = null,
             [FromUri] int[] taskIds = null, [FromUri] string[] taskNames = null,
-            [FromUri] int[] customerIds = null, [FromUri] string[] customerNames = null)
+            [FromUri] int[] customerIds = null, [FromUri] string[] customerNames = null,
+            [FromUri] int[] userIds = null, [FromUri] string[] userNames = null)
         {
             if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
@@ -176,6 +177,18 @@ namespace Brizbee.Web.Controllers
                 if (customerNames != null && customerNames.Any())
                 {
                     whereClause += $" AND C.[Name] IN ({string.Join(",", customerNames.Select(x => string.Format("'{0}'", x)))})";
+                }
+
+                // Clause for user ids.
+                if (userIds != null && userIds.Any())
+                {
+                    whereClause += $" AND U.[Id] IN ({string.Join(",", userIds)})";
+                }
+
+                // Clause for user names.
+                if (userNames != null && userNames.Any())
+                {
+                    whereClause += $" AND U.[Name] IN ({string.Join(",", userNames.Select(x => string.Format("'{0}'", x)))})";
                 }
 
                 // Get the count.

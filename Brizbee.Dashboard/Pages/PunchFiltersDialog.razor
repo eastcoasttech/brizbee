@@ -1,0 +1,73 @@
+﻿@page "/dialogs/filters/punch"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+
+<EditForm Model="@filter" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row">
+        <div class="col-md-4" style="padding-right: 10px;">
+            <InputSelect @bind-Value="filter.Type" id="range_max" class="form-control">
+                <option>User</option>
+                <option>Customer</option>
+                <option>Project</option>
+                <option>Task</option>
+            </InputSelect>
+        </div>
+        <div class="col-md-6" style="padding-left: 0; padding-right: 10px;">
+            <InputText @bind-Value="filter.Id" class="form-control" placeholder="Search" />
+        </div>
+        <div class="col-md-2" style="padding-left: 0;">
+            <button class="btn btn-primary btn-block" type="submit" style="margin-left: 2px;">Add</button>
+        </div>
+    </div>
+</EditForm>
+
+<hr />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Filter</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>User</td>
+            <td>Joshua Shane Martin</td>
+            <td><a href="" @onclick:preventDefault><i class="fas fa-trash-alt"></i></a></td>
+        </tr>
+    </tbody>
+</table>
+
+<hr />
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;">OK</button>
+
+@code {
+    PunchFilters filters = new PunchFilters()
+    {
+        UserIds = new int[] { }
+    };
+    Filter filter = new Filter();
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    class Filter
+    {
+        public string Type { get; set; }
+
+        public string Id { get; set; }
+    }
+}

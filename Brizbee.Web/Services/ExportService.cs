@@ -23,8 +23,10 @@
 using Brizbee.Common.Exceptions;
 using Brizbee.Common.Models;
 using CsvHelper;
+using CsvHelper.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -120,10 +122,13 @@ namespace Brizbee.Web.Services
                     })
                     .ToList();
 
-                using (var writer = new StringWriter())
-                using (var csv = new CsvWriter(writer, System.Globalization.CultureInfo.CurrentCulture))
+                var configuration = new CsvConfiguration(CultureInfo.CurrentCulture)
                 {
-                    csv.Configuration.Delimiter = delimiter;
+                    Delimiter = delimiter
+                };
+                using (var writer = new StringWriter())
+                using (var csv = new CsvWriter(writer, configuration))
+                {
                     csv.WriteRecords(list);
                     return writer.ToString();
                 }

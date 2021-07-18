@@ -52,14 +52,28 @@ namespace Brizbee.Web.Controllers
         [EnableQuery(PageSize = 500, MaxExpansionDepth = 3)]
         public IQueryable<Punch> GetPunches()
         {
-            return repo.GetAll(CurrentUser());
+            var currentUser = CurrentUser();
+
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+
+            return db.Punches.Where(p => userIds.Contains(p.UserId));
         }
 
         // GET: odata/Punches(5)
         [EnableQuery]
         public SingleResult<Punch> GetPunch([FromODataUri] int key)
         {
-            return SingleResult.Create(repo.Get(key, CurrentUser()));
+            var currentUser = CurrentUser();
+
+            var userIds = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Select(u => u.Id);
+
+            return SingleResult.Create(db.Punches
+                .Where(p => userIds.Contains(p.UserId))
+                .Where(p => p.Id == key));
         }
 
         // POST: odata/Punches
@@ -76,7 +90,27 @@ namespace Brizbee.Web.Controllers
             if (currentUser.Role != "Administrator")
                 return BadRequest();
 
-            // Get the public address and hostname for the punch
+            // Ensure user is in same organization.
+            var isValidUserId = db.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.IsDeleted == false)
+                .Where(u => u.Id == punch.UserId)
+                .Any();
+
+            if (!isValidUserId)
+                return BadRequest();
+
+            // Ensure task is in same organization.
+            var isValidTaskId = db.Tasks
+                .Include(t => t.Job.Customer)
+                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Id == punch.TaskId)
+                .Any();
+
+            if (!isValidTaskId)
+                return BadRequest();
+
+            // Get the public address and hostname for the punch.
             var sourceIpAddress = HttpContext.Current.Request.UserHostAddress;
             var sourceHostname = HttpContext.Current.Request.UserHostName;
             punch.InAtSourceHostname = sourceHostname;
@@ -89,7 +123,31 @@ namespace Brizbee.Web.Controllers
                 punch.OutAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
             }
 
-            punch = repo.Create(punch, CurrentUser());
+            // Auto-generated.
+            punch.CreatedAt = DateTime.UtcNow;
+            punch.Guid = Guid.NewGuid();
+
+            // Ensure InAt is at bottom of hour and OutAt is at top of the hour.
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
+            }
+
+            // Ensure punch does not overlap existing punches.
+            var doesOverlap = db.Punches
+                .Include(p => p.Task.Job.Customer)
+                .Where(p => p.Task.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.UserId == punch.UserId)
+                .Where(p => p.InAt >= punch.InAt && p.OutAt <= punch.OutAt)
+                .Any();
+
+            if (doesOverlap)
+                return BadRequest();
+
+            db.Punches.Add(punch);
+
+            db.SaveChanges();
 
             return Created(punch);
         }
@@ -146,7 +204,23 @@ namespace Brizbee.Web.Controllers
         // DELETE: odata/Punches(5)
         public IHttpActionResult Delete([FromODataUri] int key)
         {
-            repo.Delete(key, CurrentUser());
+            var currentUser = CurrentUser();
+
+            var punch = db.Punches
+                .Include("User")
+                .Where(p => p.Id == key)
+                .FirstOrDefault();
+
+            // Ensure user is an administrator in the same organization.
+            if (currentUser.Role != "Administrator" ||
+                currentUser.OrganizationId != punch.User.OrganizationId)
+                return BadRequest();
+
+            // Delete the object itself.
+            db.Punches.Remove(punch);
+
+            db.SaveChanges();
+
             return StatusCode(HttpStatusCode.NoContent);
         }
 

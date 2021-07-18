@@ -1,6 +1,7 @@
 ﻿@page "/punches"
 
 @using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
 @using Brizbee.Common.Models
 
 @inject NavigationManager NavigationManager
@@ -125,6 +126,7 @@
         <div class="col-md-6">
             <div class="btn-toolbar pull-right" role="toolbar">
                 <div class="btn-group" role="group">
+                    @*<button type="button" class="btn btn-default" @onclick="@(e => OpenPunchFiltersDialog())"><i class="fas fa-filter" aria-hidden="true" style="margin-right: 5px;"></i> Filters <span class="badge">@filters.UserIds.Length</span></button>*@
                     <button type="button" class="btn btn-default" @onclick="@(e => OpenRangeDialog())"><i class="far fa-calendar-alt" aria-hidden="true" style="margin-right: 5px;"></i> @sharedService.RangeMin.ToShortDateString() <small>thru</small> @sharedService.RangeMax.ToShortDateString()</button>
                 </div>
             </div>
@@ -350,6 +352,10 @@
     private long punchesCount = 0;
     private int punchesPageStart = 0;
     private string hoursAndMinutes = "0 hours and 0 minutes";
+    private PunchFilters filters = new PunchFilters()
+    {
+        UserIds = new int[] { }
+    };
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -467,6 +473,13 @@
     private void OpenRangeDialog()
     {
         dialogService.Open<RangeDialog>("Change Date Range",
+                                new Dictionary<string, object>() { },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenPunchFiltersDialog()
+    {
+        dialogService.Open<PunchFiltersDialog>("Filter Punches",
                                 new Dictionary<string, object>() { },
                                 new DialogOptions() { Width = "600px" });
     }
