@@ -333,7 +333,7 @@
     {
         working = true;
         timeCards.Clear();
-        var result = await timesheetEntryService.GetTimesheetEntriesAsync(sharedService.RangeMin, new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
+        var result = await timesheetEntryService.GetTimesheetEntriesAsync(new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0), new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
         timeCards = result.Item1;
         timeCardsCount = result.Item2.GetValueOrDefault();
         RefreshHoursAndMinutes();
