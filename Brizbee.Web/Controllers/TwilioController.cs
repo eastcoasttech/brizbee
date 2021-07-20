@@ -88,6 +88,7 @@ namespace Brizbee.Web.Controllers
                 .Include("Organization")
                 .Where(u => u.Pin == Digits)
                 .Where(u => u.Organization.Code == OrganizationCode)
+                .Where(u => u.IsDeleted == false)
                 .FirstOrDefault();
 
             if (user != null)

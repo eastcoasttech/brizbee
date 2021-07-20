@@ -56,6 +56,7 @@ namespace Brizbee.Web.Controllers
 
             var userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.IsDeleted == false)
                 .Select(u => u.Id);
 
             return db.Punches.Where(p => userIds.Contains(p.UserId));
@@ -69,6 +70,7 @@ namespace Brizbee.Web.Controllers
 
             var userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.IsDeleted == false)
                 .Select(u => u.Id);
 
             return SingleResult.Create(db.Punches

@@ -539,7 +539,7 @@ namespace Brizbee.Web.Controllers
             _context.QBDInventoryConsumptions.Add(consumption);
             _context.SaveChanges();
 
-            return Ok();
+            return Ok(consumption);
         }
 
         // GET: api/QBDInventoryConsumptions/5

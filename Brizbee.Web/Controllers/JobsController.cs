@@ -36,7 +36,7 @@ namespace Brizbee.Web.Controllers
         private SqlContext db = new SqlContext();
 
         // GET: odata/Jobs
-        [EnableQuery(PageSize = 20)]
+        [EnableQuery(PageSize = 1000)]
         public IQueryable<Job> GetJobs()
         {
             var currentUser = CurrentUser();

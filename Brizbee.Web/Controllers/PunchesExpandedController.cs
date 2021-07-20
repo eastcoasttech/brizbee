@@ -338,6 +338,7 @@ namespace Brizbee.Web.Controllers
                         [Rates] AS SR ON P.[ServiceRateId] = SR.[Id]
                     WHERE
                         U.[OrganizationId] = @OrganizationId AND
+                        U.[IsDeleted] = 0 AND
                         P.[InAt] >= @Min AND
                         P.[InAt] <= @Max {whereClause}
                     ORDER BY

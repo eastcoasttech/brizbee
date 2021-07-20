@@ -36,7 +36,7 @@ namespace Brizbee.Web.Controllers
         private SqlContext db = new SqlContext();
 
         // GET: odata/Tasks
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
+        [EnableQuery(PageSize = 1000, MaxExpansionDepth = 3)]
         public IQueryable<Task> GetTasks()
         {
             var currentUser = CurrentUser();
