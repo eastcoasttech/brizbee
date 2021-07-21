@@ -272,6 +272,21 @@ namespace Brizbee.Web.Controllers
             var sourceBrowser = (string)parameters["SourceBrowser"];
             var sourceBrowserVersion = (string)parameters["SourceBrowserVersion"];
 
+            var currentUser = CurrentUser();
+
+            var task = db.Tasks
+                .Include(t => t.Job.Customer)
+                .Where(t => t.Id == taskId)
+                .FirstOrDefault();
+
+            // Ensure task belongs to the same organization.
+            if (currentUser.OrganizationId != task.Job.Customer.OrganizationId)
+                return BadRequest();
+
+            // Ensure job is open.
+            if (task.Job.Status != "Open")
+                return BadRequest();
+
             try
             {
                 var punch = repo.PunchIn(
