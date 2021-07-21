@@ -66,8 +66,7 @@ namespace Brizbee.Web.Controllers
             var currentUser = CurrentUser();
 
             // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != customer.OrganizationId)
+            if (currentUser.Role != "Administrator")
                 return BadRequest();
 
             // Auto-generated
