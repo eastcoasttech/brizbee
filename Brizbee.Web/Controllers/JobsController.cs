@@ -147,6 +147,7 @@ namespace Brizbee.Web.Controllers
                         // Find the base payroll rate for the new task.
                         var basePayrollRate = db.Rates
                             .Where(r => r.OrganizationId == currentUser.OrganizationId)
+                            .Where(r => r.Type == "Payroll")
                             .Where(r => r.Name == item.BasePayrollRate)
                             .Where(r => r.IsDeleted == false)
                             .FirstOrDefault();
@@ -154,6 +155,7 @@ namespace Brizbee.Web.Controllers
                         // Find the base service rate for the new task.
                         var baseServiceRate = db.Rates
                             .Where(r => r.OrganizationId == currentUser.OrganizationId)
+                            .Where(r => r.Type == "Service")
                             .Where(r => r.Name == item.BaseServiceRate)
                             .Where(r => r.IsDeleted == false)
                             .FirstOrDefault();
