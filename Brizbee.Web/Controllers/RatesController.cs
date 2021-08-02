@@ -39,7 +39,7 @@ namespace Brizbee.Web.Controllers
         private SqlContext db = new SqlContext();
 
         // GET: odata/Rates
-        [EnableQuery(PageSize = 20, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> GetRates()
         {
             var currentUser = CurrentUser();

@@ -82,7 +82,7 @@ namespace Brizbee.Dashboard.Services
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async Task<(List<Rate>, long?)> GetRatesAsync(int pageSize = 20, int skip = 0, string sortBy = "Name", string sortDirection = "ASC")
+        public async Task<(List<Rate>, long?)> GetRatesAsync(int pageSize = 100, int skip = 0, string sortBy = "Name", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates?$count=true&$expand=ParentRate&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
             response.EnsureSuccessStatusCode();
