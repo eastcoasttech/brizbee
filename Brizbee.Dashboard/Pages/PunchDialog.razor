@@ -370,7 +370,10 @@
             {
                 // Set a default value.
                 punch.OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0);
-                punch.OutAtTimeZone = outAtZones.First().Id;
+                selectedOutAtCountryCode = "US";
+                selectedOutAtCountryCodeValueChangeHandler(selectedOutAtCountryCode);
+                selectedOutAtTimeZone = "America/New_York";
+                selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
             }
 
             // Set the customer, job, and task based on the TaskId for this punch.
@@ -482,7 +485,7 @@
     {
         loadingCustomers = true;
 
-        var result = await customerService.GetCustomersAsync();
+        var result = await customerService.GetCustomersAsync(pageSize: 1000);
         customers = result.Item1;
 
         if (customerId.HasValue)
@@ -510,7 +513,7 @@
     {
         loadingJobs = true;
 
-        var result = await jobService.GetJobsAsync(selectedCustomerId);
+        var result = await jobService.GetJobsAsync(selectedCustomerId, pageSize: 1000);
         jobs = result.Item1;
 
         if (jobId.HasValue)
@@ -538,7 +541,7 @@
     {
         loadingTasks = true;
 
-        var result = await taskService.GetTasksAsync(selectedJobId);
+        var result = await taskService.GetTasksAsync(selectedJobId, pageSize: 1000);
         tasks = result.Item1;
 
         if (taskId.HasValue)

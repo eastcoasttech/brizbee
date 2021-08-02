@@ -152,6 +152,11 @@ namespace Brizbee.Dashboard.Services
                         payload.Add("OutAtSourceBrowserVersion", browserVersion);
                     }
                 }
+                else
+                {
+                    payload.Add("OutAt", null);
+                    payload.Add("OutAtTimeZone", null);
+                }
 
                 var json = JsonSerializer.Serialize(payload, options);
 

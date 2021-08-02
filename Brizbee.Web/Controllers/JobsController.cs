@@ -21,9 +21,11 @@
 //
 
 using Brizbee.Common.Models;
+using Dapper;
 using Microsoft.AspNet.OData;
 using System;
 using System.Data.Entity;
+using System.Data.Entity.SqlServer;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -130,14 +132,21 @@ namespace Brizbee.Web.Controllers
                     foreach (var item in items)
                     {
                         // Get the next task number.
-                        var max = db.Tasks
-                            .Include(t => t.Job.Customer)
-                            .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
-                            .Select(t => t.Number)
-                            .Max();
+                        var maxSql = @"
+                            SELECT
+	                            MAX(CAST([T].[Number] AS INT))
+                            FROM
+                                [Tasks] AS [T]
+                            JOIN
+	                            [Jobs] AS [J] ON [J].[Id] = [T].[JobId]
+                            JOIN
+	                            [Customers] AS [C] ON [C].[Id] = [J].[CustomerId]
+                            WHERE
+	                            [C].[OrganizationId] = @OrganizationId;";
+                        var max = db.Database.Connection.QuerySingle<int?>(maxSql, new { OrganizationId = currentUser.OrganizationId });
 
                         // Either start at the default or increment.
-                        var number = string.IsNullOrEmpty(max) ? "1000" : service.NxtKeyCode(max);
+                        var number = !max.HasValue ? "1000" : (max.Value + 1).ToString(); //service.NxtKeyCode(max);
 
                         // Find the base payroll rate for the new task.
                         var basePayrollRate = db.Rates
