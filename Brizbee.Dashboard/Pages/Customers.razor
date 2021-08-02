@@ -501,14 +501,14 @@
     {
         tasksPageStart = tasksPageStart + pageSize;
         tasksSkip = tasksPageStart;
-        await RefreshProjects();
+        await RefreshTasks();
     }
 
     private async void PreviousTaskPage(MouseEventArgs e)
     {
         tasksPageStart = tasksPageStart - pageSize;
         tasksSkip = tasksPageStart;
-        await RefreshProjects();
+        await RefreshTasks();
     }
 
     private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)

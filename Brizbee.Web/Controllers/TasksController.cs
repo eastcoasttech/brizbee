@@ -21,7 +21,6 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
 using System.Data.Entity;

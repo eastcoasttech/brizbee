@@ -21,9 +21,9 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -130,14 +130,9 @@ namespace Brizbee.Web.Controllers
                     foreach (var item in items)
                     {
                         // Get the next task number.
-                        var customers = db.Customers
-                            .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                            .Select(c => c.Id);
-                        var jobs = db.Jobs
-                            .Where(j => customers.Contains(j.CustomerId))
-                            .Select(j => j.Id);
                         var max = db.Tasks
-                            .Where(t => jobs.Contains(t.JobId))
+                            .Include(t => t.Job.Customer)
+                            .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
                             .Select(t => t.Number)
                             .Max();
 
@@ -258,14 +253,14 @@ namespace Brizbee.Web.Controllers
         // POST: odata/Jobs/Default.NextNumber
         public IHttpActionResult NextNumber()
         {
-            var organizationId = CurrentUser().OrganizationId;
-            var customers = db.Customers
-                .Where(c => c.OrganizationId == organizationId)
-                .Select(c => c.Id);
+            var currentUser = CurrentUser();
+
             var max = db.Jobs
-                .Where(j => customers.Contains(j.CustomerId))
+                .Include(j => j.Customer)
+                .Where(j => j.Customer.OrganizationId == currentUser.OrganizationId)
                 .Select(j => j.Number)
                 .Max();
+
             if (max == null)
             {
                 return Ok("1000");
