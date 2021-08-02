@@ -14,37 +14,37 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Name of the inventory item.
         /// </summary>
-        [MaxLength(31)]
+        [StringLength(31)]
         public string Name { get; set; }
 
         /// <summary>
         /// Full name of the inventory item.
         /// </summary>
-        [MaxLength(159)]
+        [StringLength(159)]
         public string FullName { get; set; }
 
         /// <summary>
         /// Manufacturer part number.
         /// </summary>
-        [MaxLength(31)]
+        [StringLength(31)]
         public string ManufacturerPartNumber { get; set; }
 
         /// <summary>
         /// Bar code value of the item in QuickBooks Desktop.
         /// </summary>
-        [MaxLength(50)]
+        [StringLength(50)]
         public string BarCodeValue { get; set; }
 
         /// <summary>
         /// ListID of the inventory item in QuickBooks Desktop.
         /// </summary>
-        [MaxLength(20)]
+        [StringLength(20)]
         public string ListId { get; set; }
 
         /// <summary>
         /// Purchase description.
         /// </summary>
-        [MaxLength(256)]
+        [StringLength(256)]
         public string PurchaseDescription { get; set; }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Brizbee.Common.Models
         /// <summary>
         /// Sales description.
         /// </summary>
-        [MaxLength(256)]
+        [StringLength(256)]
         public string SalesDescription { get; set; }
 
         /// <summary>

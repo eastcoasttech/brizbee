@@ -113,5 +113,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0004 Adding Inventory.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\0005 Decreasing Column Sizes.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

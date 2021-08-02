@@ -62,7 +62,7 @@ namespace Brizbee.Common.Models
         public bool IsDeleted { get; set; }
 
         [Required]
-        [MaxLength(40)]
+        [StringLength(40)]
         public string Name { get; set; }
 
         [Required]
@@ -76,15 +76,19 @@ namespace Brizbee.Common.Models
         [ForeignKey("ParentRateId")]
         public virtual Rate ParentRate { get; set; } // Base Rates have Alternate Rates (Regular can have Over-time and Double-time)
 
+        [StringLength(31)]
         public string QBDPayrollItem { get; set; }
 
+        [StringLength(31)]
         public string QBDServiceItem { get; set; }
 
+        [StringLength(31)]
         public string QBOPayrollItem { get; set; }
 
+        [StringLength(31)]
         public string QBOServiceItem { get; set; }
 
-        [MaxLength(20)]
+        [StringLength(20)]
         public string Type { get; set; } // Payroll or Service
     }
 }

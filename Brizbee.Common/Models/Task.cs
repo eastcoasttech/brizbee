@@ -42,9 +42,11 @@ namespace Brizbee.Common.Models
         public virtual Job Job { get; set; }
 
         [Required]
+        [StringLength(100)]
         public string Name { get; set; }
 
         [Required]
+        [StringLength(10)]
         public string Number { get; set; }
 
         [Required]

@@ -34,15 +34,18 @@ namespace Brizbee.Common.Models
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
+        [StringLength(3000)]
         public string Description { get; set; }
 
         [Key]
         public int Id { get; set; }
 
         [Required]
+        [StringLength(100)]
         public string Name { get; set; }
 
         [Required]
+        [StringLength(10)]
         public string Number { get; set; }
 
         [Required]

@@ -38,17 +38,21 @@ namespace Brizbee.Common.Models
         [ForeignKey("CustomerId")]
         public virtual Customer Customer { get; set; }
 
+        [StringLength(3000)]
         public string Description { get; set; }
 
         [Key]
         public int Id { get; set; }
 
         [Required]
+        [StringLength(100)]
         public string Name { get; set; }
 
         [Required]
+        [StringLength(10)]
         public string Number { get; set; }
 
+        [StringLength(159)]
         public string QuickBooksCustomerJob { get; set; }
 
         [StringLength(159)]

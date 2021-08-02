@@ -35,13 +35,15 @@ namespace Brizbee.Common.Models
         [Key]
         public int Id { get; set; }
 
+        [StringLength(7)]
         public string MinutesFormat { get; set; }
 
         [Required]
+        [StringLength(100)]
         public string Name { get; set; }
 
         [Required]
-        [MaxLength(8)]
+        [StringLength(8)]
         public string Code { get; set; }
 
         public int PlanId { get; set; } // 1, 2, 3, or 4

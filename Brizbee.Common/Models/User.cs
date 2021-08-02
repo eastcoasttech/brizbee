@@ -34,7 +34,7 @@ namespace Brizbee.Common.Models
         public DateTime CreatedAt { get; set; }
 
         [EmailAddress]
-        [MaxLength(254)]
+        [StringLength(254)]
         public string EmailAddress { get; set; }
 
         [Key]
@@ -44,7 +44,7 @@ namespace Brizbee.Common.Models
         public bool IsDeleted { get; set; }
 
         [Required]
-        [MaxLength(128)]
+        [StringLength(128)]
         public string Name { get; set; }
 
         [Required]
@@ -78,7 +78,7 @@ namespace Brizbee.Common.Models
         public bool RequiresPhoto { get; set; }
 
         [Required]
-        [MaxLength(128)]
+        [StringLength(128)]
         public string Role { get; set; }
 
         [Required]
