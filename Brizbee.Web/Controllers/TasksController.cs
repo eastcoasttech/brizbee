@@ -89,14 +89,25 @@ namespace Brizbee.Web.Controllers
                 job.Customer.OrganizationId != currentUser.OrganizationId)
                 return BadRequest();
 
-            var max = db.Tasks
+            // Check for duplicate task numbers in the organization.
+            var isNumberDuplicated = db.Tasks
+                .Include(t => t.Job.Customer)
+                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Number == task.Number)
+                .Any();
+
+            if (isNumberDuplicated)
+                return BadRequest();
+
+            // Determine the order of this task.
+            var lastOrder = db.Tasks
                 .Where(t => t.JobId == job.Id)
                 .Max(t => (int?)t.Order);
 
             // Auto-generated
             task.CreatedAt = DateTime.UtcNow;
             task.JobId = job.Id;
-            task.Order = max.HasValue ? max.Value + 10 : 0;
+            task.Order = lastOrder.HasValue ? lastOrder.Value + 10 : 0;
 
             db.Tasks.Add(task);
 

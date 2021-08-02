@@ -116,5 +116,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0005 Decreasing Column Sizes.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\0006 Adding Taxability.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

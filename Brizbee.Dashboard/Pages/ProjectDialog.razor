@@ -51,6 +51,20 @@
     <hr />
 
     <div class="form-group">
+        <label for="project_taxability" class="col-sm-3 control-label">Taxability</label>
+        <div class="col-sm-9">
+            <InputSelect id="project_taxability" class="form-control" disabled="@(working || loading)"
+                         ValueChanged="@( (string x) => SelectedTaxabilityValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedTaxability )"
+                         Value="@selectedTaxability">
+                <option value="None">None</option>
+                <option value="Use Tax">Use Tax</option>
+                <option value="Sales Tax">Sales Tax</option>
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
         <label for="project_quote_number" class="col-sm-3 control-label">Quote Number</label>
         <div class="col-sm-9">
             <InputText class="form-control" id="project_quote_number" @bind-Value="project.QuoteNumber" disabled="@(working || loading)" />
@@ -134,6 +148,7 @@
     private Job project = new Job();
     private Customer customer = new Customer();
     private string selectedStatus;
+    private string selectedTaxability;
     private int selectedTaskTemplateId;
     private List<TaskTemplate> taskTemplates = new List<TaskTemplate>(0);
 
@@ -160,10 +175,18 @@
             // Set the status.
             selectedStatus = project.Status;
             SelectedStatusValueChangeHandler(selectedStatus);
+
+            // Set the taxability.
+            selectedTaxability = project.Taxability;
+            SelectedTaxabilityValueChangeHandler(selectedTaxability);
         }
         else
         {
             project.Number = await projectService.GetNextNumberAsync();
+
+            // Set the taxability.
+            selectedTaxability = "None";
+            SelectedTaxabilityValueChangeHandler(selectedTaxability);
 
             await RefreshTaskTemplates();
 
@@ -236,6 +259,14 @@
 
         // Update the project.
         project.Status = selectedStatus;
+    }
+
+    private void SelectedTaxabilityValueChangeHandler(string taxability)
+    {
+        selectedTaxability = taxability;
+
+        // Update the project.
+        project.Taxability = selectedTaxability;
     }
 
     private void SelectedTaskTemplateIdValueChangeHandler(int taskTemplateId)

@@ -74,5 +74,8 @@ namespace Brizbee.Common.Models
         public string QuoteNumber { get; set; }
 
         public int? TaskTemplateId { get; set; }
+
+        [StringLength(9)]
+        public string Taxability { get; set; }
     }
 }
