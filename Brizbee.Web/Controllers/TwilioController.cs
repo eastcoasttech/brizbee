@@ -123,13 +123,13 @@ namespace Brizbee.Web.Controllers
                 if (punch != null)
                 {
                     message = string.Format("Hello {0}! You are currently punched <emphasis>in</emphasis> to task, {1} - {2}, for the job, {3} - {4}, and customer, {5} - {6}. Please press 1 to punch in on another task or job. Or, press 2 to punch out.",
-                        user.Name,
+                        StripBadCharacters(user.Name),
                         punch.Task.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
-                        punch.Task.Name,
+                        StripBadCharacters(punch.Task.Name),
                         punch.Task.Job.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
-                        punch.Task.Job.Name,
+                        StripBadCharacters(punch.Task.Job.Name),
                         punch.Task.Job.Customer.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
-                        punch.Task.Job.Customer.Name);
+                        StripBadCharacters(punch.Task.Job.Customer.Name));
                 }
                 else
                 {
@@ -263,11 +263,11 @@ namespace Brizbee.Web.Controllers
                 template += "<Say voice='Polly.Matthew'>";
                 template += string.Format("Are you sure you want to punch <emphasis>in</emphasis> to task, {0} - {1}, for the job, {2} - {3}, and customer, {4} - {5}? Press 1 if yes. Press 2 to punch in to another task.",
                     task.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
-                    task.Name,
+                    StripBadCharacters(task.Name),
                     task.Job.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
-                    task.Job.Name,
+                    StripBadCharacters(task.Job.Name),
                     task.Job.Customer.Number.ToString().Aggregate(string.Empty, (c, i) => c + i + ' '),
-                    task.Job.Customer.Name);
+                    StripBadCharacters(task.Job.Customer.Name));
                 template += "</Say>";
                 template += "</Gather>";
                 template += "</Response>";
@@ -372,6 +372,11 @@ namespace Brizbee.Web.Controllers
             var response = this.Request.CreateResponse(HttpStatusCode.OK);
             response.Content = new StringContent(template, System.Text.Encoding.UTF8, "application/xml");
             return response;
+        }
+
+        private string StripBadCharacters(string dirty)
+        {
+            return dirty.Replace("&", " and ");
         }
     }
 }
