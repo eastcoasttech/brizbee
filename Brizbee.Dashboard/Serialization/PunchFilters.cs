@@ -1,14 +1,25 @@
 ﻿
+using Brizbee.Common.Models;
+using System.Collections.Generic;
+
 namespace Brizbee.Dashboard.Serialization
 {
     public class PunchFilters
     {
-        public int[] UserIds { get; set; }
+        public HashSet<User> Users { get; set; }
 
-        public int[] TaskIds { get; set; }
+        public HashSet<Task> Tasks { get; set; }
 
-        public int[] ProjectIds { get; set; }
+        public HashSet<Job> Projects { get; set; }
 
-        public int[] CustomerIds { get; set; }
+        public HashSet<Customer> Customers { get; set; }
+
+        public int Count
+        {
+            get
+            {
+                return Users.Count + Tasks.Count + Projects.Count + Customers.Count;
+            }
+        }
     }
 }

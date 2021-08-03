@@ -1,5 +1,7 @@
 ﻿using Brizbee.Common.Models;
+using Brizbee.Dashboard.Serialization;
 using System;
+using System.Collections.Generic;
 
 namespace Brizbee.Dashboard.Services
 {
@@ -11,6 +13,7 @@ namespace Brizbee.Dashboard.Services
         private string _authToken;
         private DateTime _rangeMin;
         private DateTime _rangeMax;
+        private PunchFilters _punchFilters;
 
         public User CurrentUser
         {
@@ -90,6 +93,32 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
+        public PunchFilters PunchFilters
+        {
+            get
+            {
+                if (_punchFilters == null)
+                {
+                    _punchFilters = new PunchFilters()
+                    {
+                        Users = new HashSet<User>(),
+                        Tasks = new HashSet<Task>(),
+                        Projects = new HashSet<Job>(),
+                        Customers = new HashSet<Customer>()
+                    };
+                    NotifyDataChanged();
+                    return _punchFilters;
+                }
+                else
+                    return _punchFilters;
+            }
+            set
+            {
+                _punchFilters = value;
+                NotifyDataChanged();
+            }
+        }
+
         public Task AttemptedTask { get; set; }
 
         public event Action OnChange;
@@ -105,6 +134,7 @@ namespace Brizbee.Dashboard.Services
             _rangeMin = DateTime.Now;
             _rangeMax = DateTime.Now;
             _currentUser = null;
+            _punchFilters = null;
         }
     }
 }

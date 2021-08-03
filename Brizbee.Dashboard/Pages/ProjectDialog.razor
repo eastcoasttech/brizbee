@@ -57,6 +57,7 @@
                          ValueChanged="@( (string x) => SelectedTaxabilityValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedTaxability )"
                          Value="@selectedTaxability">
+                <option value=""></option>
                 <option value="None">None</option>
                 <option value="Use Tax">Use Tax</option>
                 <option value="Sales Tax">Sales Tax</option>
@@ -185,7 +186,7 @@
             project.Number = await projectService.GetNextNumberAsync();
 
             // Set the taxability.
-            selectedTaxability = "None";
+            selectedTaxability = "";
             SelectedTaxabilityValueChangeHandler(selectedTaxability);
 
             await RefreshTaskTemplates();

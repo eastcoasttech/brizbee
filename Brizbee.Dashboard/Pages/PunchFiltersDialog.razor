@@ -6,7 +6,7 @@
 @inject DialogService dialogService
 @inject SharedService sharedService
 
-<EditForm Model="@filter" autocomplete="off">
+<EditForm Model="@filter" OnValidSubmit="SaveFilter" autocomplete="off">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -20,7 +20,9 @@
             </InputSelect>
         </div>
         <div class="col-md-6" style="padding-left: 0; padding-right: 10px;">
-            <InputText @bind-Value="filter.Id" class="form-control" placeholder="Search" />
+            @*<RadzenAutoComplete Data=@customCustomersData TextProperty="CompanyName" Placeholder="Search"
+                                LoadData=@OnLoadData class="form-control"
+                                Change=@(args => OnChange(args, "AutoComplete with custom filtering")) />*@
         </div>
         <div class="col-md-2" style="padding-left: 0;">
             <button class="btn btn-primary btn-block" type="submit" style="margin-left: 2px;">Add</button>
@@ -33,17 +35,47 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Type</th>
-            <th>Filter</th>
-            <th></th>
+            <th class="col-md-3">Type</th>
+            <th class="col-md-8">Filter</th>
+            <th class="col-md-1"></th>
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>User</td>
-            <td>Joshua Shane Martin</td>
-            <td><a href="" @onclick:preventDefault><i class="fas fa-trash-alt"></i></a></td>
-        </tr>
+        @foreach (var user in filters.Users)
+        {
+            <tr>
+                <td>User</td>
+                <td>@user.Name</td>
+                <td><a href="" @onclick:preventDefault><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var task in filters.Tasks)
+        {
+            <tr>
+                <td>Task</td>
+                <td>@task.Name</td>
+                <td><a href="" @onclick:preventDefault><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var project in filters.Projects)
+        {
+            <tr>
+                <td>Project</td>
+                <td>@project.Name</td>
+                <td><a href="" @onclick:preventDefault><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var customer in filters.Customers)
+        {
+            <tr>
+                <td>Customer</td>
+                <td>@customer.Name</td>
+                <td><a href="" @onclick:preventDefault><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
     </tbody>
 </table>
 
@@ -53,16 +85,50 @@
 <button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;">OK</button>
 
 @code {
-    PunchFilters filters = new PunchFilters()
+    PunchFilters filters = new PunchFilters();
+    Filter filter = new Filter() { Type = "User" };
+
+    protected override void OnInitialized()
     {
-        UserIds = new int[] { }
-    };
-    Filter filter = new Filter();
+        filters = sharedService.PunchFilters;
+    }
 
     private void CloseDialog(MouseEventArgs e)
     {
         dialogService.Close(false);
     }
+
+    private void SaveFilter()
+    {
+        //switch (filter.Type)
+        //{
+        //    case "User":
+        //        sharedService.PunchFilters.Users.Add(0);
+        //        break;
+        //    case "Task":
+        //        sharedService.PunchFilters.Tasks.Add(0);
+        //        break;
+        //    case "Project":
+        //        sharedService.PunchFilters.Projects.Add(0);
+        //        break;
+        //    case "Customer":
+        //        sharedService.PunchFilters.Customers.Add(0);
+        //        break;
+        //}
+        //filter = new Filter() { Type = "User" };
+    }
+
+    private void OnChange(object value, string name)
+    {
+
+    }
+
+    //private void OnLoadData(LoadDataArgs args)
+    //{
+    //    customCustomersData = dbContext.Customers.Where(c => c.CustomerID.Contains(args.Filter) || c.ContactName.Contains(args.Filter)).ToList();
+
+    //    InvokeAsync(StateHasChanged);
+    //}
 
     class Filter
     {
