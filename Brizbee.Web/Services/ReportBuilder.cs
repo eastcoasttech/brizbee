@@ -84,7 +84,9 @@ namespace Brizbee.Web.Services
                 if (userScope == "specific")
                 {
                     users = db.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
                         .Where(u => userIds.Contains(u.Id))
+                        .Where(u => u.IsDeleted == false)
                         .OrderBy(u => u.Name)
                         .ToList();
                 }
@@ -92,6 +94,7 @@ namespace Brizbee.Web.Services
                 {
                     users = db.Users
                         .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Where(u => u.IsDeleted == false)
                         .OrderBy(u => u.Name)
                         .ToList();
                 }
@@ -129,6 +132,8 @@ namespace Brizbee.Web.Services
                     // either for any job or a specific job
                     IQueryable<Punch> punchesQueryable = db.Punches
                         .Include("Task")
+                        .Include("User")
+                        .Where(p => p.User.IsDeleted == false)
                         .Where(p => p.OutAt.HasValue == true)
                         .Where(p => p.InAt >= min && p.OutAt.Value <= max)
                         .Where(p => p.UserId == user.Id);
@@ -524,6 +529,8 @@ namespace Brizbee.Web.Services
                 IQueryable<Punch> punchesQueryable = db.Punches
                     .Include("Task")
                     .Include("Task.Job")
+                    .Include("User")
+                    .Where(p => p.User.IsDeleted == false)
                     .Where(p => p.OutAt.HasValue == true)
                     .Where(p => p.InAt >= min && p.OutAt.Value <= max)
                     .Where(p => jobIds.Contains(p.Task.JobId));
@@ -857,6 +864,8 @@ namespace Brizbee.Web.Services
                 IQueryable<Punch> punchesQueryable = db.Punches
                     .Include("Task")
                     .Include("Task.Job")
+                    .Include("User")
+                    .Where(p => p.User.IsDeleted == false)
                     .Where(p => p.OutAt.HasValue == true)
                     .Where(p => p.InAt >= min && p.OutAt.Value <= max)
                     .Where(p => jobIds.Contains(p.Task.JobId));
@@ -1179,6 +1188,7 @@ namespace Brizbee.Web.Services
                     users = db.Users
                         .Where(u => u.OrganizationId == currentUser.OrganizationId)
                         .Where(u => userIds.Contains(u.Id))
+                        .Where(u => u.IsDeleted == false)
                         .OrderBy(u => u.Name)
                         .ToList();
                 }
@@ -1186,6 +1196,7 @@ namespace Brizbee.Web.Services
                 {
                     users = db.Users
                         .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Where(u => u.IsDeleted == false)
                         .OrderBy(u => u.Name)
                         .ToList();
                 }
@@ -1534,6 +1545,8 @@ namespace Brizbee.Web.Services
                 // either for any job or a specific job
                 IQueryable<TimesheetEntry> timeEntriesQueryable = db.TimesheetEntries
                     .Include("Task")
+                    .Include("User")
+                    .Where(t => t.User.IsDeleted == false)
                     .Where(t => t.EnteredAt >= min && t.EnteredAt <= max)
                     .Where(t => jobIds.Contains(t.Task.JobId));
 
@@ -1769,6 +1782,8 @@ namespace Brizbee.Web.Services
                 IQueryable<TimesheetEntry> timeEntriesQueryable = db.TimesheetEntries
                     .Include("Task")
                     .Include("Task.Job")
+                    .Include("User")
+                    .Where(t => t.User.IsDeleted == false)
                     .Where(t => t.EnteredAt >= min && t.EnteredAt <= max)
                     .Where(t => jobIds.Contains(t.Task.JobId));
 
