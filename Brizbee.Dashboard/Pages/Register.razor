@@ -6,6 +6,8 @@
 @using System.Globalization
 @using NodaTime
 @using NodaTime.TimeZones
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
 
 @inject NavigationManager NavigationManager
 @inject LocalStorageService localStorageService
@@ -202,6 +204,19 @@
 
         selectedPlanId = 1;
         SelectedPlanIdValueChangeHandler(selectedPlanId);
+
+
+        // --------------------------------------------------------------------
+        // Set plan from optional query parameter.
+        // --------------------------------------------------------------------
+
+        StringValues planIdQueryParameter;
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("PlanId", out planIdQueryParameter))
+        {
+            selectedPlanId = Convert.ToInt32(planIdQueryParameter);
+            SelectedPlanIdValueChangeHandler(selectedPlanId);
+        }
     }
 
     private async void RegisterAsync()
