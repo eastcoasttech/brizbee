@@ -1,0 +1,78 @@
+﻿@page "/dialogs/search/users"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject UserService userService
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="col-md-2"></th>
+            <th class="col-md-10">Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in users)
+        {
+            bool isChecked = false;
+            if (selectedUsers.Where(x => x.Id == user.Id).Any())
+            {
+                isChecked = true;
+            }
+
+            <tr>
+                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(user, args.Value); }" /></td>
+                <td>@user.Name</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogAdded" style="margin-left: 2px;">Add</button>
+
+@code {
+    [Parameter] public HashSet<User> ExistingFilters { get; set; }
+
+    private List<User> users = new List<User>(0);
+    private HashSet<User> selectedUsers = new HashSet<User>(0);
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        selectedUsers = ExistingFilters;
+
+        var result = await userService.GetUsersAsync();
+        users = result.Item1;
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogAdded(MouseEventArgs e)
+    {
+        dialogService.Close(selectedUsers);
+    }
+
+    private void CheckboxClicked(User selected, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!selectedUsers.Contains(selected))
+            {
+                selectedUsers.Add(selected);
+            }
+        }
+        else
+        {
+            if (selectedUsers.Contains(selected))
+            {
+                selectedUsers.Remove(selected);
+            }
+        }
+        StateHasChanged();
+    }
+}

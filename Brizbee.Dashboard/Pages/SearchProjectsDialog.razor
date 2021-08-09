@@ -1,0 +1,78 @@
+﻿@page "/dialogs/search/projects"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject JobService jobService
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="col-md-2"></th>
+            <th class="col-md-10">Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var project in projects)
+        {
+            bool isChecked = false;
+            if (selectedProjects.Where(x => x.Id == project.Id).Any())
+            {
+                isChecked = true;
+            }
+
+            <tr>
+                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(project, args.Value); }" /></td>
+                <td>@project.Name</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogAdded" style="margin-left: 2px;">Add</button>
+
+@code {
+    [Parameter] public HashSet<Job> ExistingFilters { get; set; }
+
+    private List<Job> projects = new List<Job>(0);
+    private HashSet<Job> selectedProjects = new HashSet<Job>(0);
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        selectedProjects = ExistingFilters;
+
+        var result = await jobService.GetJobsAsync(0);
+        projects = result.Item1;
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogAdded(MouseEventArgs e)
+    {
+        dialogService.Close(selectedProjects);
+    }
+
+    private void CheckboxClicked(Job selected, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!selectedProjects.Contains(selected))
+            {
+                selectedProjects.Add(selected);
+            }
+        }
+        else
+        {
+            if (selectedProjects.Contains(selected))
+            {
+                selectedProjects.Remove(selected);
+            }
+        }
+        StateHasChanged();
+    }
+}

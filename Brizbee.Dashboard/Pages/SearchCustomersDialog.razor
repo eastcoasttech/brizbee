@@ -1,0 +1,78 @@
+﻿@page "/dialogs/search/customers"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject CustomerService customerService
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="col-md-2"></th>
+            <th class="col-md-10">Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var customer in customers)
+        {
+            bool isChecked = false;
+            if (selectedCustomers.Where(x => x.Id == customer.Id).Any())
+            {
+                isChecked = true;
+            }
+
+            <tr>
+                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(customer, args.Value); }" /></td>
+                <td>@customer.Name</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogAdded" style="margin-left: 2px;">Add</button>
+
+@code {
+    [Parameter] public HashSet<Customer> ExistingFilters { get; set; }
+
+    private List<Customer> customers = new List<Customer>(0);
+    private HashSet<Customer> selectedCustomers = new HashSet<Customer>(0);
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        selectedCustomers = ExistingFilters;
+
+        var result = await customerService.GetCustomersAsync();
+        customers = result.Item1;
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogAdded(MouseEventArgs e)
+    {
+        dialogService.Close(selectedCustomers);
+    }
+
+    private void CheckboxClicked(Customer selected, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!selectedCustomers.Contains(selected))
+            {
+                selectedCustomers.Add(selected);
+            }
+        }
+        else
+        {
+            if (selectedCustomers.Contains(selected))
+            {
+                selectedCustomers.Remove(selected);
+            }
+        }
+        StateHasChanged();
+    }
+}
