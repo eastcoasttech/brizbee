@@ -26,8 +26,8 @@
 <table class="table">
     <thead>
         <tr>
-            <th class="col-md-3">Type</th>
-            <th class="col-md-8">Filter</th>
+            <th class="col-md-2">Type</th>
+            <th class="col-md-9" colspan="4">Filter</th>
             <th class="col-md-1"></th>
         </tr>
     </thead>
@@ -36,26 +36,8 @@
         {
             <tr>
                 <td>User</td>
-                <td>@user.Name</td>
+                <td colspan="4">@user.Name</td>
                 <td><a href="javascript:void(0)" @onclick="@(e => filters.Users.Remove(user))"><i class="fas fa-trash-alt"></i></a></td>
-            </tr>
-        }
-
-        @foreach (var task in filters.Tasks)
-        {
-            <tr>
-                <td>Task</td>
-                <td>@task.Name</td>
-                <td><a href="javascript:void(0)" @onclick="@(e => filters.Tasks.Remove(task))"><i class="fas fa-trash-alt"></i></a></td>
-            </tr>
-        }
-
-        @foreach (var project in filters.Projects)
-        {
-            <tr>
-                <td>Project</td>
-                <td>@project.Name</td>
-                <td><a href="javascript:void(0)" @onclick="@(e => filters.Projects.Remove(project))"><i class="fas fa-trash-alt"></i></a></td>
             </tr>
         }
 
@@ -63,8 +45,30 @@
         {
             <tr>
                 <td>Customer</td>
-                <td>@customer.Name</td>
+                <td colspan="2">@customer.Number</td>
+                <td colspan="2">@customer.Name</td>
                 <td><a href="javascript:void(0)" @onclick="@(e => filters.Customers.Remove(customer))"><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var project in filters.Projects)
+        {
+            <tr>
+                <td>Project</td>
+                <td>@project.Customer.Number</td>
+                <td>@project.Customer.Name</td>
+                <td>@project.Number</td>
+                <td>@project.Name</td>
+                <td><a href="javascript:void(0)" @onclick="@(e => filters.Projects.Remove(project))"><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var task in filters.Tasks)
+        {
+            <tr>
+                <td>Task</td>
+                <td colspan="4">@task.Name</td>
+                <td><a href="javascript:void(0)" @onclick="@(e => filters.Tasks.Remove(task))"><i class="fas fa-trash-alt"></i></a></td>
             </tr>
         }
     </tbody>
@@ -72,6 +76,7 @@
 
 <hr />
 
+<button class="btn btn-default" type="button" @onclick="Clear">Clear Filters</button>
 <button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
 <button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">OK</button>
 
@@ -124,27 +129,35 @@
     {
         dialogService.Open<SearchUsersDialog>("Search Users",
                                 new Dictionary<string, object>() { { "ExistingFilters", filters.Users } },
-                                new DialogOptions() { Width = "400px" });
+                                new DialogOptions() { Width = "600px" });
     }
 
     private void OpenSearchTasksDialog()
     {
-        dialogService.Open<SearchUsersDialog>("Search Tasks",
+        dialogService.Open<SearchTasksDialog>("Search Tasks",
                                 new Dictionary<string, object>() { { "ExistingFilters", filters.Tasks } },
-                                new DialogOptions() { Width = "400px" });
+                                new DialogOptions() { Width = "600px" });
     }
 
     private void OpenSearchProjectsDialog()
     {
-        dialogService.Open<SearchUsersDialog>("Search Projects",
+        dialogService.Open<SearchProjectsDialog>("Search Projects",
                                 new Dictionary<string, object>() { { "ExistingFilters", filters.Projects } },
-                                new DialogOptions() { Width = "400px" });
+                                new DialogOptions() { Width = "600px" });
     }
 
     private void OpenSearchCustomersDialog()
     {
         dialogService.Open<SearchCustomersDialog>("Search Customers",
                                 new Dictionary<string, object>() { { "ExistingFilters", filters.Customers } },
-                                new DialogOptions() { Width = "400px" });
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void Clear()
+    {
+        filters.Users = new HashSet<User>();
+        filters.Customers = new HashSet<Customer>();
+        filters.Projects = new HashSet<Job>();
+        filters.Tasks = new HashSet<Brizbee.Common.Models.Task>();
     }
 }

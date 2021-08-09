@@ -41,12 +41,25 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
+        public async Task<(List<Job>, long?)> GetExpandedJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"api/JobsExpanded?pageSize={pageSize}&skip={skip}&orderBy={sortBy}&orderByDirection={sortDirection}");
+
+            if (!response.IsSuccessStatusCode)
+                return (new List<Job>(0), 0);
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var value = await JsonSerializer.DeserializeAsync<List<Job>>(responseContent, options);
+            var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
+            return (value, total);
+        }
+
         public async Task<(List<Job>, long?)> GetJobsAsync(int customerId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}&$filter=CustomerId eq {customerId}");
 
             if (!response.IsSuccessStatusCode)
-                return (new List<Job>(), 0);
+                return (new List<Job>(0), 0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Job>>(responseContent, options);

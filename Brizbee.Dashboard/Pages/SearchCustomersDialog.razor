@@ -6,11 +6,12 @@
 @inject DialogService dialogService
 @inject CustomerService customerService
 
-<table class="table">
+<table class="table table-condensed">
     <thead>
         <tr>
             <th class="col-md-2"></th>
-            <th class="col-md-10">Name</th>
+            <th class="col-md-2">Number</th>
+            <th class="col-md-8">Name</th>
         </tr>
     </thead>
     <tbody>
@@ -22,8 +23,9 @@
                 isChecked = true;
             }
 
-            <tr>
-                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(customer, args.Value); }" /></td>
+            <tr class="fadeIn selectable">
+                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(customer, args.Value); }" /></td
+                <td>@customer.Number</td>
                 <td>@customer.Name</td>
             </tr>
         }

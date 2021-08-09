@@ -6,7 +6,7 @@
 @inject DialogService dialogService
 @inject UserService userService
 
-<table class="table">
+<table class="table table-condensed">
     <thead>
         <tr>
             <th class="col-md-2"></th>
@@ -22,7 +22,7 @@
                 isChecked = true;
             }
 
-            <tr>
+            <tr class="fadeIn selectable">
                 <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(user, args.Value); }" /></td>
                 <td>@user.Name</td>
             </tr>
