@@ -55,7 +55,7 @@
         sharedService.RangeMin = range.Min;
         sharedService.RangeMax = range.Max;
 
-        dialogService.Close(false);
+        dialogService.Close("range.updated");
     }
 
     private void CloseDialog(MouseEventArgs e)

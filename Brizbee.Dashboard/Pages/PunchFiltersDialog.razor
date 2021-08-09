@@ -72,8 +72,8 @@
 
 <hr />
 
-<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
-<button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;">OK</button>
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">OK</button>
 
 @code {
     private PunchFilters filters = new PunchFilters();
@@ -89,20 +89,35 @@
     {
         if (result is HashSet<User>)
         {
-            Console.WriteLine("Result is a hashset of users");
             filters.Users = result as HashSet<User>;
             StateHasChanged();
-        } else if (result is HashSet<Customer>)
+        }
+        else if (result is HashSet<Customer>)
         {
-            Console.WriteLine("Result is a hashset of customers");
             filters.Customers = result as HashSet<Customer>;
+            StateHasChanged();
+        }
+        else if (result is HashSet<Job>)
+        {
+            filters.Projects = result as HashSet<Job>;
+            StateHasChanged();
+        }
+        else if (result is HashSet<Brizbee.Common.Models.Task>)
+        {
+            filters.Tasks = result as HashSet<Brizbee.Common.Models.Task>;
             StateHasChanged();
         }
     }
 
-    private void CloseDialog(MouseEventArgs e)
+    private void CloseDialogCancelled(MouseEventArgs e)
     {
         dialogService.Close(false);
+    }
+
+    private void CloseDialogSuccess(MouseEventArgs e)
+    {
+        sharedService.PunchFilters = filters;
+        dialogService.Close("filter.updated");
     }
 
     private void OpenSearchUsersDialog()

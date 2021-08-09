@@ -589,7 +589,7 @@
 
         // Save the punch on the server and close the dialog.
         await punchService.SavePunchAsync(punch);
-        dialogService.Close(false);
+        dialogService.Close("punch.created");
     }
 
     private void ToggleInAtMerdian()
@@ -617,7 +617,7 @@
         // Delete the punch on the server and close the dialog.
         var result = await punchService.DeletePunchAsync(punch.Id);
         if (result)
-            dialogService.Close(false);
+            dialogService.Close("punch.deleted");
         else
             working = false;
     }

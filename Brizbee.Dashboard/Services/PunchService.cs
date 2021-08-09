@@ -1,6 +1,7 @@
 ﻿using Brizbee.Blazor;
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Brizbee.Dashboard.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,10 +63,29 @@ namespace Brizbee.Dashboard.Services
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async Task<(List<Punch>, long?)> GetExpandedPunchesAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Punches/InAt", string sortDirection = "ASC")
+        public async Task<(List<Punch>, long?)> GetExpandedPunchesAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Punches/InAt", string sortDirection = "ASC", PunchFilters filters = null)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"api/PunchesExpanded?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}");
-            response.EnsureSuccessStatusCode();
+            var filterParameters = new StringBuilder();
+
+            if (filters != null)
+            {
+                if (filters.Users != null)
+                    filterParameters.Append(string.Join("", filters.Users.Select(x => $"&userIds={x.Id}")));
+
+                if (filters.Customers != null)
+                    filterParameters.Append(string.Join("", filters.Customers.Select(x => $"&customerIds={x.Id}")));
+
+                if (filters.Projects != null)
+                    filterParameters.Append(string.Join("", filters.Projects.Select(x => $"&jobIds={x.Id}")));
+                
+                if (filters.Tasks != null)
+                    filterParameters.Append(string.Join("", filters.Tasks.Select(x => $"&taskIds={x.Id}")));
+            }
+
+            var response = await _apiService.GetHttpClient().GetAsync($"api/PunchesExpanded?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}");
+
+            if (!response.IsSuccessStatusCode)
+                return (new List<Punch>(0), 0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var value = await JsonSerializer.DeserializeAsync<List<Punch>>(responseContent, options);

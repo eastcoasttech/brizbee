@@ -126,7 +126,7 @@
         <div class="col-md-6">
             <div class="btn-toolbar pull-right" role="toolbar">
                 <div class="btn-group" role="group">
-                    @*<button type="button" class="btn btn-default" @onclick="@(e => OpenPunchFiltersDialog())"><i class="fas fa-filter" aria-hidden="true" style="margin-right: 5px;"></i> Filters <span class="badge">@sharedService.PunchFilters.Count</span></button>*@
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenPunchFiltersDialog())"><i class="fas fa-filter" aria-hidden="true" style="margin-right: 5px;"></i> Filters <span class="badge">@sharedService.PunchFilters.Count</span></button>
                     <button type="button" class="btn btn-default" @onclick="@(e => OpenRangeDialog())"><i class="far fa-calendar-alt" aria-hidden="true" style="margin-right: 5px;"></i> @sharedService.RangeMin.ToShortDateString() <small>thru</small> @sharedService.RangeMax.ToShortDateString()</button>
                 </div>
             </div>
@@ -393,15 +393,41 @@
 
     private async void Close(dynamic result)
     {
-        Console.WriteLine($"Dialog closed with result: {result}");
-        await RefreshPunches();
+        if ((result as string) == "range.updated")
+        {
+            await RefreshPunches();
+        }
+        else if ((result as string) == "filter.updated")
+        {
+            await RefreshPunches();
+        }
+        else if ((result as string) == "punch.locked")
+        {
+            await RefreshPunches();
+        }
+        else if ((result as string) == "punch.created")
+        {
+            await RefreshPunches();
+        }
+        else if ((result as string) == "punch.deleted")
+        {
+            await RefreshPunches();
+        }
+        else if ((result as string) == "punch.populated")
+        {
+            await RefreshPunches();
+        }
+        else if ((result as string) == "punch.split")
+        {
+            await RefreshPunches();
+        }
     }
 
     private async System.Threading.Tasks.Task RefreshPunches()
     {
         working = true;
         punches.Clear();
-        var result = await punchService.GetExpandedPunchesAsync(new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0), new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection);
+        var result = await punchService.GetExpandedPunchesAsync(new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0), new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection, sharedService.PunchFilters);
         punches = result.Item1;
         punchesCount = result.Item2.GetValueOrDefault();
         RefreshHoursAndMinutes();

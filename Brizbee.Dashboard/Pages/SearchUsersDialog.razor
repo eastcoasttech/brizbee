@@ -31,7 +31,7 @@
 </table>
 
 <button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
-<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogAdded" style="margin-left: 2px;">Add</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">Add</button>
 
 @code {
     [Parameter] public HashSet<User> ExistingFilters { get; set; }
@@ -52,7 +52,7 @@
         dialogService.Close(false);
     }
 
-    private void CloseDialogAdded(MouseEventArgs e)
+    private void CloseDialogSuccess(MouseEventArgs e)
     {
         dialogService.Close(selectedUsers);
     }
