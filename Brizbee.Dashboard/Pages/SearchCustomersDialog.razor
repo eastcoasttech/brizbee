@@ -23,8 +23,8 @@
                 isChecked = true;
             }
 
-            <tr class="fadeIn selectable">
-                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(customer, args.Value); }" /></td
+            <tr class="fadeIn">
+                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(customer, args.Value); }" /></td>
                 <td>@customer.Number</td>
                 <td>@customer.Name</td>
             </tr>
