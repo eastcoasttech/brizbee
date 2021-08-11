@@ -1,4 +1,4 @@
-﻿@page "/dialogs/download"
+﻿@page "/dialogs/download-open-projects"
 
 @using Brizbee.Dashboard.Services
 
@@ -8,7 +8,7 @@
 @inject LocalStorageService localStorageService
 
 <p>
-    Click below to download the filtered punches:
+    Click below to download the open projects:
 </p>
 <p>
     <a href="@downloadUrl" class="btn btn-primary">
@@ -32,10 +32,8 @@
         var authUserId = await localStorageService.GetFromLocalStorage("AuthUserId");
         var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
         var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
-        var rangeMin = sharedService.RangeMin.ToString("yyyy-MM-dd");
-        var rangeMax = sharedService.RangeMax.ToString("yyyy-MM-dd");
 
-        downloadUrl = $"{apiService.GetBaseUrl()}/api/Exports/Csv?InAt={rangeMin}&OutAt={rangeMax}&Delimiter=,&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
+        downloadUrl = $"{apiService.GetBaseUrl()}api/JobsExpanded/Export?AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
     }
 
     private void CloseDialog(MouseEventArgs e)

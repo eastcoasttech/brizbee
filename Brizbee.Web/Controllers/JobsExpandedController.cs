@@ -1,4 +1,6 @@
 ﻿using Brizbee.Common.Models;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Dapper;
 using Newtonsoft.Json;
 using System;
@@ -6,10 +8,13 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Web.Http;
+using static Brizbee.Web.Controllers.ReportsController;
 
 namespace Brizbee.Web.Controllers
 {
@@ -153,6 +158,48 @@ namespace Brizbee.Web.Controllers
             response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
 
             return response;
+        }
+
+        // GET: api/JobsExpanded/Export
+        [HttpGet]
+        [Route("api/JobsExpanded/Export")]
+        public IHttpActionResult Export()
+        {
+            var currentUser = CurrentUser();
+
+            var jobs = _context.Jobs
+                .Include("Customer")
+                .Where(j => j.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(j => j.Status != "Closed")
+                .Where(j => j.Status != "Merged")
+                .Select(j => new
+                {
+                    CustomerNumber = j.Customer.Number,
+                    CustomerName = j.Customer.Name,
+                    ProjectNumber = j.Number,
+                    ProjectName = j.Name,
+                    j.Status,
+                    j.QuoteNumber,
+                    j.CustomerWorkOrder,
+                    j.CustomerPurchaseOrder,
+                    j.InvoiceNumber
+                })
+                .ToList();
+
+            var configuration = new CsvConfiguration(CultureInfo.CurrentCulture)
+            {
+                Delimiter = ","
+            };
+            using (var writer = new StringWriter())
+            using (var csv = new CsvWriter(writer, configuration))
+            {
+                csv.WriteRecords(jobs);
+
+                var bytes = Encoding.UTF8.GetBytes(writer.ToString());
+                return new FileActionResult(bytes, "text/csv",
+                    "Open Projects.csv",
+                    Request);
+            }
         }
 
         protected override void Dispose(bool disposing)

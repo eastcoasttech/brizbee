@@ -1,0 +1,45 @@
+﻿@page "/dialogs/download-punches"
+
+@using Brizbee.Dashboard.Services
+
+@inject ApiService apiService
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject LocalStorageService localStorageService
+
+<p>
+    Click below to download the filtered punches:
+</p>
+<p>
+    <a href="@downloadUrl" class="btn btn-primary">
+        CSV File (Comma Separated Values)
+    </a>
+    <br />
+    <small>
+        This file can be opened in Microsoft Excel, LibreOffice, Google Docs, Office 365, etc.
+    </small>
+</p>
+
+<hr />
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+
+@code {
+    private string downloadUrl = "";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var authUserId = await localStorageService.GetFromLocalStorage("AuthUserId");
+        var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
+        var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
+        var rangeMin = sharedService.RangeMin.ToString("yyyy-MM-dd");
+        var rangeMax = sharedService.RangeMax.ToString("yyyy-MM-dd");
+
+        downloadUrl = $"{apiService.GetBaseUrl()}api/Exports/Csv?InAt={rangeMin}&OutAt={rangeMax}&Delimiter=,&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

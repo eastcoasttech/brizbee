@@ -54,7 +54,7 @@ namespace Brizbee.Web.Controllers
 
                 string csv = exportService.BuildCsv(Delimiter);
                 var bytes = Encoding.UTF8.GetBytes(csv);
-                return new FileActionResult(bytes, "text/plain",
+                return new FileActionResult(bytes, "text/csv",
                     string.Format(
                         "Locked Punches {0} thru {1}.csv",
                         commit.InAt.ToShortDateString(),
@@ -68,7 +68,7 @@ namespace Brizbee.Web.Controllers
 
                 string csv = exportService.BuildCsv(Delimiter);
                 var bytes = Encoding.UTF8.GetBytes(csv);
-                return new FileActionResult(bytes, "text/plain",
+                return new FileActionResult(bytes, "text/csv",
                     string.Format(
                         "All Punches {0} thru {1}.csv",
                         InAt.Value.ToShortDateString(),

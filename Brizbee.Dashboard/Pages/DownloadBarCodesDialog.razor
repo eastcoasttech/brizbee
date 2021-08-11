@@ -52,7 +52,7 @@
         var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
         var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
 
-        downloadUrl = $"{apiService.GetBaseUrl()}/api/Reports/TasksByJob?JobId={Id}&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
+        downloadUrl = $"{apiService.GetBaseUrl()}api/Reports/TasksByJob?JobId={Id}&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
     }
 
     private void CloseDialog(MouseEventArgs e)
