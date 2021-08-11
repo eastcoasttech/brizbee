@@ -6,13 +6,13 @@ namespace Brizbee.Dashboard.Serialization
     {
         public string Option { get; set; }
 
-        public int BasePayrollRateId { get; set; }
+        public string BasePayrollRateId { get; set; }
 
-        public int AlternatePayrollRateId { get; set; }
+        public string AlternatePayrollRateId { get; set; }
 
-        public int BaseServiceRateId { get; set; }
+        public string BaseServiceRateId { get; set; }
 
-        public int AlternateServiceRateId { get; set; }
+        public string AlternateServiceRateId { get; set; }
 
         public string RangeHour { get; set; }
 

@@ -89,24 +89,49 @@
                     </td>
                 }
 
-                <td>
-                    <label class="text-muted">Select Rate</label>
-                    <select class="form-control input-sm" @bind="@exception.BasePayrollRateId">
-                        @foreach (var rate in BaseRates)
-                        {
-                            <option value="@rate.Id">@rate.Name</option>
-                        }
-                    </select>
-                </td>
-                <td>
-                    <label class="text-muted">Select Rate</label>
-                    <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
-                        @foreach (var rate in AlternateRates)
-                        {
-                            <option value="@rate.Id">@rate.Name</option>
-                        }
-                    </select>
-                </td>
+                @if (Type.ToUpperInvariant() == "PAYROLL")
+                {
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.BasePayrollRateId">
+                            @foreach (var rate in BaseRates)
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
+                            @foreach (var rate in AlternateRates)
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                }
+                else if (Type.ToUpperInvariant() == "SERVICE")
+                {
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.BaseServiceRateId">
+                            @foreach (var rate in BaseRates)
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
+                            @foreach (var rate in AlternateRates)
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                }
+
                 <td class="text-center" style="vertical-align: middle; font-size: 1em;">
                     <a href="javascript:void(0)" @onclick="@(e => Exceptions.Remove(exception))" title="Remove Exception"><i class="fas fa-trash-alt" aria-hidden="true"></i></a>
                 </td>
@@ -126,6 +151,7 @@
     [Parameter] public List<PopulateRateException> Exceptions { get; set; }
     [Parameter] public List<Rate> BaseRates { get; set; }
     [Parameter] public List<Rate> AlternateRates { get; set; }
+    [Parameter] public string Type { get; set; }
 
     public void AddException()
     {
@@ -135,20 +161,36 @@
         if (AlternateRates == null || AlternateRates.Count == 0)
             return;
 
-        Exceptions.Add(new PopulateRateException()
+        if (Type.ToUpperInvariant() == "PAYROLL")
         {
-            Option = "Punches Before",
-            BasePayrollRateId = BaseRates.First().Id,
-            AlternatePayrollRateId = AlternateRates.First().Id,
-            BaseServiceRateId = BaseRates.First().Id,
-            AlternateServiceRateId = AlternateRates.First().Id,
-            RangeHour = "1",
-            RangeMinute = "00",
-            RangeMerdian = "AM",
-            CountHours = "0",
-            CountMinutes = "0",
-            Date = DateTime.Today
-        });
+            Exceptions.Add(new PopulateRateException()
+            {
+                Option = "Punches Before",
+                BasePayrollRateId = BaseRates.First().Id.ToString(),
+                AlternatePayrollRateId = AlternateRates.First().Id.ToString(),
+                RangeHour = "1",
+                RangeMinute = "00",
+                RangeMerdian = "AM",
+                CountHours = "0",
+                CountMinutes = "0",
+                Date = DateTime.Today
+            });
+        }
+        else if (Type.ToUpperInvariant() == "SERVICE")
+        {
+            Exceptions.Add(new PopulateRateException()
+            {
+                Option = "Punches Before",
+                BaseServiceRateId = BaseRates.First().Id.ToString(),
+                AlternateServiceRateId = AlternateRates.First().Id.ToString(),
+                RangeHour = "1",
+                RangeMinute = "00",
+                RangeMerdian = "AM",
+                CountHours = "0",
+                CountMinutes = "0",
+                Date = DateTime.Today
+            });
+        }
     }
 
     public void MoveException(PopulateRateException exception, string direction)

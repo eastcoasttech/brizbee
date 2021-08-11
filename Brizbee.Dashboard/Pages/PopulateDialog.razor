@@ -77,7 +77,7 @@
 
             <p><strong>Exceptions</strong></p>
 
-            <ExceptionsFragment @ref="payrollExceptionsFragment" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
+            <ExceptionsFragment @ref="payrollExceptionsFragment" Type="Payroll" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
 
             <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</a></p>
         </RadzenTabsItem>
@@ -136,7 +136,7 @@
 
             <p><strong>Exceptions</strong></p>
 
-            <ExceptionsFragment @ref="serviceExceptionsFragment" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
+            <ExceptionsFragment @ref="serviceExceptionsFragment" Type="Service" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
 
             <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</a></p>
         </RadzenTabsItem>

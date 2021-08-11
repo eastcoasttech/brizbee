@@ -178,8 +178,8 @@
         exceptions.Add(new PopulateRateException()
         {
             Option = "Punches Before",
-            BasePayrollRateId = basePayrollRates.First().Id,
-            AlternatePayrollRateId = alternatePayrollRates.First().Id,
+            BasePayrollRateId = basePayrollRates.First().Id.ToString(),
+            AlternatePayrollRateId = alternatePayrollRates.First().Id.ToString(),
             RangeHour = "1",
             RangeMinute = "00",
             RangeMerdian = "AM",
