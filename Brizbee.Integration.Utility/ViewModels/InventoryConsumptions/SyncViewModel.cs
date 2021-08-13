@@ -33,6 +33,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Configuration;
 
 namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 {
@@ -53,7 +54,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private string selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
         private string selectedValue = Application.Current.Properties["SelectedValue"] as string;
-        private string vendorFullName = "BRIZBEE Materials Vendor";
+        private string vendorFullName = ConfigurationManager.AppSettings["InventoryConsumptionVendorName"].ToString();
         private string refNumber = "Materials";
         #endregion
 
@@ -73,6 +74,32 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
             StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
+
+
+            // ------------------------------------------------------------
+            // Ensure the vendor name is specified.
+            // ------------------------------------------------------------
+
+            if (string.IsNullOrEmpty(vendorFullName))
+            {
+                StatusText = string.Format("{0} - Must specify the InventoryConsumptionVendorName in the configuration.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
+
+                // Enable the buttons.
+                IsExitEnabled = true;
+                IsTryEnabled = true;
+                IsStartOverEnabled = true;
+                OnPropertyChanged("IsExitEnabled");
+                OnPropertyChanged("IsTryEnabled");
+                OnPropertyChanged("IsStartOverEnabled");
+
+                return;
+            }
+
+
+            // ------------------------------------------------------------
+            // Prepare the QuickBooks connection.
+            // ------------------------------------------------------------
 
             var service = new QuickBooksService();
 
@@ -109,6 +136,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     OnPropertyChanged("StatusText");
                 }
 
+
                 // ------------------------------------------------------------
                 // Collect the QuickBooks host details.
                 // ------------------------------------------------------------
@@ -127,6 +155,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 // Then walk the response.
                 var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
                 var hostDetails = hostWalkResponse.Item3;
+
 
                 // ------------------------------------------------------------
                 // Collect any unsynced consumption.
