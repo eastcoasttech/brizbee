@@ -159,7 +159,7 @@
 
         working = true;
         currentUser = sharedService.CurrentUser;
-        currentPunch = await punchService.GetCurrentAsync();
+        currentPunch = await punchService.GetExpandedCurrentPunchAsync();
         working = false;
     }
 

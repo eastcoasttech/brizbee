@@ -93,6 +93,18 @@ namespace Brizbee.Dashboard.Services
             return (value, total);
         }
 
+        public async Task<Punch> GetExpandedCurrentPunchAsync()
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"api/PunchesExpanded/Current");
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var value = await JsonSerializer.DeserializeAsync<Punch>(responseContent, options);
+            return value;
+        }
+
         public async Task<Punch> GetPunchByIdAsync(int id)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches({id})?$expand=Task($expand=Job)");
