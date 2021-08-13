@@ -94,7 +94,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.BasePayrollRateId">
-                            @foreach (var rate in BaseRates)
+                            @foreach (var rate in BaseRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -103,7 +103,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
-                            @foreach (var rate in AlternateRates)
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -115,7 +115,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.BaseServiceRateId">
-                            @foreach (var rate in BaseRates)
+                            @foreach (var rate in BaseRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -124,7 +124,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
-                            @foreach (var rate in AlternateRates)
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
