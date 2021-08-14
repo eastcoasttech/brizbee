@@ -112,7 +112,7 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th class="col-md-3">
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("User/Name"))">
                         Name
                         @if (sortBy == "User/Name" && sortDirection == "ASC")
@@ -120,6 +120,19 @@
                             <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "User/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Customer/Number"))">
+                        Customer #
+                        @if (sortBy == "Task/Job/Customer/Number" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Task/Job/Customer/Number" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
@@ -139,8 +152,21 @@
                     </a>
                 </th>
                 <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Number"))">
+                        Project #
+                        @if (sortBy == "Task/Job/Number" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Task/Job/Number" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Name"))">
-                        Job
+                        Project
                         @if (sortBy == "Task/Job/Name" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
@@ -184,7 +210,9 @@
             {
                 <tr class="fadeIn selectable">
                     <td><a href="javascript:void(0)">@punch.User.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number</a></td>
                     <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Number</a></td>
                     <td><a href="javascript:void(0)">@punch.Task.Job.Name</a></td>
                     <td><a href="javascript:void(0)">@punch.Task.Name</a></td>
                     <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
@@ -193,7 +221,7 @@
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && punches.Count == 0)
