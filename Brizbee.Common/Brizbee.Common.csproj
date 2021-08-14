@@ -84,6 +84,7 @@
     <Compile Include="Security\Credential.cs" />
     <Compile Include="Security\Registration.cs" />
     <Compile Include="Security\Session.cs" />
+    <Compile Include="Serialization\Alerts\Alert.cs" />
     <Compile Include="Serialization\Country.cs" />
     <Compile Include="Serialization\IanaTimeZone.cs" />
     <Compile Include="Serialization\QBDConsumptionSyncDetails.cs" />
