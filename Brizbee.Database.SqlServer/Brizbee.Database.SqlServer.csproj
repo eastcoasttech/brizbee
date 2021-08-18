@@ -120,7 +120,8 @@
     <EmbeddedResource Include="Migrations\0006 Adding Taxability.sql" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Migrations\0007 Removing NULL.sql" />
+    <EmbeddedResource Include="Migrations\0007 Adding Notification Columns.sql" />
+    <Content Include="Migrations\0008 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

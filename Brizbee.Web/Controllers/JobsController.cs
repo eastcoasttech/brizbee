@@ -24,12 +24,17 @@ using Brizbee.Common.Models;
 using Dapper;
 using Microsoft.AspNet.OData;
 using System;
+using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.SqlServer;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Web.Http;
+using Twilio;
+using Twilio.Clients;
+using Twilio.Rest.Api.V2010.Account;
 
 namespace Brizbee.Web.Controllers
 {
@@ -184,6 +189,36 @@ namespace Brizbee.Web.Controllers
                         order = order + 10;
                     }
                 }
+            }
+
+            // Attempt to send notifications.
+            try
+            {
+                var mobileNumbers = db.Users
+                    .Where(u => u.IsDeleted == false)
+                    .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                    .Where(u => !string.IsNullOrEmpty(u.NotificationMobileNumbers))
+                    .Select(u => u.NotificationMobileNumbers)
+                    .ToArray();
+
+                var accountSid = ConfigurationManager.AppSettings["TwilioNotificationsAccountSid"].ToString();
+                var authToken = ConfigurationManager.AppSettings["TwilioNotificationsAccountToken"].ToString();
+                var fromMobileNumber = ConfigurationManager.AppSettings["TwilioNotificationsMobileNumber"].ToString();
+
+                TwilioClient.Init(accountSid, authToken);
+
+                foreach (var mobileNumber in mobileNumbers)
+                {
+                    var message = MessageResource.Create(
+                        body: $"Project Added {job.Number} - {job.Name} for Customer {job.Customer.Name}",
+                        from: new Twilio.Types.PhoneNumber(fromMobileNumber),
+                        to: new Twilio.Types.PhoneNumber(mobileNumber)
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.ToString());
             }
 
             return Created(job);

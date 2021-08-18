@@ -98,5 +98,12 @@ namespace Brizbee.Common.Models
         /// </summary>
         [StringLength(260)]
         public string AllowedPhoneNumbers { get; set; }
+
+        /// <summary>
+        /// Comma-separated list of phone numbers to send
+        /// SMS notifications.
+        /// </summary>
+        [StringLength(260)]
+        public string NotificationMobileNumbers { get; set; }
     }
 }

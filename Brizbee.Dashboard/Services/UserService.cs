@@ -196,6 +196,7 @@ namespace Brizbee.Dashboard.Services
                     { "UsesTouchToneClock", user.UsesTouchToneClock },
                     { "UsesWebClock", user.UsesWebClock },
                     { "AllowedPhoneNumbers", user.AllowedPhoneNumbers },
+                    { "NotificationMobileNumbers", user.NotificationMobileNumbers },
                     { "Pin", user.Pin },
                     { "QuickBooksEmployee", user.QuickBooksEmployee },
                     { "RequiresLocation", user.RequiresLocation }
