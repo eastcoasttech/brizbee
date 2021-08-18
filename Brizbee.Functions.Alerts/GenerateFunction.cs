@@ -1,10 +1,15 @@
+using Azure.Storage.Blobs;
 using Brizbee.Functions.Alerts.Serialization;
 using Dapper;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 
 namespace Brizbee.Functions.Alerts
 {
@@ -13,7 +18,7 @@ namespace Brizbee.Functions.Alerts
         private ILogger logger;
 
         [FunctionName("GenerateFunction")]
-        public void Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
+        public void Run([TimerTrigger("0 */30 * * * *", RunOnStartup = true)]TimerInfo myTimer, ILogger log)
         {
             logger = log;
             log.LogInformation($"GenerateFunction executed at: {DateTime.Now}");
@@ -33,9 +38,8 @@ namespace Brizbee.Functions.Alerts
                 var monday = localDateTime.Previous(IsoDayOfWeek.Monday);
                 var sunday = localDateTime.Next(IsoDayOfWeek.Sunday);
 
-                logger.LogInformation(monday.ToDateTimeUnspecified().ToShortDateString());
-                logger.LogInformation(sunday.ToDateTimeUnspecified().ToShortDateString());
-
+                logger.LogInformation($"{monday.ToDateTimeUnspecified().ToShortDateString()} thru {sunday.ToDateTimeUnspecified().ToShortDateString()}");
+                
                 var connectionString = Environment.GetEnvironmentVariable("SqlContext").ToString();
 
                 logger.LogInformation("Connecting to database");
@@ -44,56 +48,140 @@ namespace Brizbee.Functions.Alerts
                 {
                     connection.Open();
 
-                    var usersSql = @"
+                    var alerts = new List<Alert>(0);
+
+                    var organizationsSql = @"
                         SELECT
-                            [U].[Id],
-                            [U].[Name]
+                            [O].[Id]
                         FROM
-                            [Users] AS [U]
-                        WHERE
-                            [U].[IsDeleted] = 0 AND
-                            [U].[OrganizationId] = 26;";
-                    var users = connection.Query<User>(usersSql);
+                            [Organizations] AS [O];";
+                    var organizations = connection.Query<Organization>(organizationsSql);
 
-                    foreach (var user in users)
+                    foreach (var organization in organizations)
                     {
-                        // --------------------------------------------------------
-                        // Determine if user has reached 2100 minutes this week.
-                        // --------------------------------------------------------
-
-                        var minutes = 2100;
-                        var exceededSql = $@"
-                            DROP TABLE IF EXISTS #cumulative_minutes_{user.Id};
-
+                        var usersSql = @"
                             SELECT
-                                DATEDIFF (MINUTE, [P].[InAt], [P].[OutAt]) AS [Punch_Minutes],
-                                SUM (
-		                            DATEDIFF (MINUTE, [P].[InAt], [P].[OutAt])
-	                            ) OVER (
-		                            PARTITION BY [P].[UserId]
-		                            ORDER BY [P].[InAt] ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-	                            ) AS [Punch_CumulativeMinutes]
-                            INTO
-	                            #cumulative_minutes_{user.Id}
+                                [U].[Id],
+                                [U].[Name]
                             FROM
-                                [Punches] AS [P]
+                                [Users] AS [U]
                             WHERE
-                                [P].[InAt] >= @Min AND
-                                [P].[InAt] <= @Max AND
-	                            [P].[OutAt] IS NOT NULL AND
-                                [P].[UserId] = @UserId;
+                                [U].[IsDeleted] = 0 AND
+                                [U].[OrganizationId] = @OrganizationId;";
+                        var users = connection.Query<User>(usersSql, new
+                        {
+                            OrganizationId = organization.Id
+                        });
 
-                            SELECT
-	                            MAX ([Punch_CumulativeMinutes])
-                            FROM
-	                            #cumulative_minutes_{user.Id}
-                            WHERE
-	                            [Punch_CumulativeMinutes] > @ExceededMinutes;";
+                        foreach (var user in users)
+                        {
+                            // ----------------------------------------------------
+                            // Check for a total that exceeds the threshold.
+                            // ----------------------------------------------------
 
-                        var exceeded = connection.QuerySingle<long?>(exceededSql, new { Min = monday.ToDateTimeUnspecified(), Max = sunday.ToDateTimeUnspecified(), UserId = user.Id, ExceededMinutes = minutes });
+                            var totalThreshold = 2100; // Minutes
+                            var totalSql = $@"
+                                SELECT
+	                                MAX ([X].[Punch_CumulativeMinutes])
+                                FROM
+	                                (
+		                                SELECT
+			                                DATEDIFF (MINUTE, [P].[InAt], [P].[OutAt]) AS [Punch_Minutes],
+			                                SUM (
+				                                DATEDIFF (MINUTE, [P].[InAt], [P].[OutAt])
+			                                ) OVER (
+				                                PARTITION BY [P].[UserId]
+				                                ORDER BY [P].[InAt] ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+			                                ) AS [Punch_CumulativeMinutes]
+		                                FROM
+			                                [Punches] AS [P]
+		                                WHERE
+			                                [P].[InAt] >= @Min AND
+			                                [P].[InAt] <= @Max AND
+			                                [P].[OutAt] IS NOT NULL AND
+			                                [P].[UserId] = @UserId
+	                                ) AS [X]
+                                WHERE
+	                                [X].[Punch_CumulativeMinutes] > @ExceededMinutes;";
 
-                        if (exceeded.HasValue)
-                            logger.LogInformation($"User {user.Name} has exceeded minutes at {exceeded}");
+                            var total = connection.QuerySingle<long?>(totalSql, new
+                            {
+                                Min = monday.ToDateTimeUnspecified(),
+                                Max = sunday.ToDateTimeUnspecified(),
+                                UserId = user.Id,
+                                ExceededMinutes = totalThreshold
+                            });
+
+                            if (total.HasValue)
+                                alerts.Add(new Alert()
+                                {
+                                    Type = "total.exceeded",
+                                    Value = total.Value,
+                                    User = user
+                                });
+
+                            // ----------------------------------------------------
+                            // Check for any punch that exceeds the threshold.
+                            // ----------------------------------------------------
+
+                            var punchesThreshold = 600; // Minutes
+                            var punchesSql = $@"
+                                SELECT
+                                    [X].[Id],
+	                                [X].[Punch_Minutes]
+                                FROM
+	                                (
+		                                SELECT
+                                            [P].[Id],
+			                                DATEDIFF (MINUTE, [P].[InAt], [P].[OutAt]) AS [Punch_Minutes]
+		                                FROM
+			                                [Punches] AS [P]
+		                                WHERE
+			                                [P].[InAt] >= @Min AND
+			                                [P].[InAt] <= @Max AND
+			                                [P].[OutAt] IS NOT NULL AND
+			                                [P].[UserId] = @UserId
+	                                ) AS [X]
+                                WHERE
+	                                [X].[Punch_Minutes] > @ExceededMinutes;";
+
+                            var punches = connection.Query<Exceeded>(punchesSql, new
+                            {
+                                Min = monday.ToDateTimeUnspecified(),
+                                Max = sunday.ToDateTimeUnspecified(),
+                                UserId = user.Id,
+                                ExceededMinutes = punchesThreshold
+                            });
+
+                            foreach (var punch in punches)
+                                alerts.Add(new Alert()
+                                {
+                                    Type = "punch.exceeded",
+                                    Value = punch.Punch_Minutes,
+                                    User = user
+                                });
+                        }
+
+                        try
+                        {
+                            var json = JsonSerializer.Serialize(alerts);
+
+                            // Prepare to upload the json.
+                            var azureConnectionString = Environment.GetEnvironmentVariable("AlertsAzureStorageConnectionString").ToString();
+                            BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("alerts");
+                            BlobClient blobClient = containerClient.GetBlobClient($"{organization.Id}.json");
+
+                            // Perform the upload.
+                            using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                            {
+                                blobClient.Upload(stream, overwrite: true);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex.ToString());
+                        }
                     }
 
                     connection.Close();

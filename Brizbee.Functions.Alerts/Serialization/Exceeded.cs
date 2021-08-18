@@ -6,6 +6,6 @@
 
         public long Punch_CumulativeMinutes { get; set; }
 
-        public long UserId { get; set; }
+        public long Id { get; set; }
     }
 }
