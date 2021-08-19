@@ -23,11 +23,13 @@
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Common.Serialization;
+using Brizbee.Common.Serialization.Alerts;
 using Brizbee.Web.Filters;
 using Brizbee.Web.Serialization;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Cors;
@@ -116,13 +118,13 @@ namespace Brizbee
                 .Collection
                 .Action("NextNumber");
 
-            // Collection Action - Organizations/Countries
+            // Collection Function - Organizations/Countries
             var countries = builder.EntityType<Organization>()
                 .Collection
                 .Function("Countries");
             countries.ReturnsCollection<Country>();
 
-            // Collection Action - Organizations/TimeZones
+            // Collection Function - Organizations/TimeZones
             var timeZones = builder.EntityType<Organization>()
                 .Collection
                 .Function("TimeZones");

@@ -1,7 +1,7 @@
 ﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Brizbee.Common.Serialization.Alerts;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -113,6 +113,17 @@ namespace Brizbee.Dashboard.Services
                     }
                 }
             }
+        }
+
+        public async Task<List<Alert>> GetAlerts(int organizationId)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"api/OrganizationsExpanded/{organizationId}/Alerts");
+
+            if (!response.IsSuccessStatusCode)
+                return new List<Alert>();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<List<Alert>>(responseContent, options);
         }
     }
 }

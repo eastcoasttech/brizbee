@@ -577,67 +577,68 @@ namespace Brizbee.Web.Controllers
 
                 var result = connection.QuerySingle<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
 
-                currentPunch = new Punch()
-                {
-                    Id = result.Punch_Id,
-                    CommitId = result.Punch_CommitId,
-                    CreatedAt = result.Punch_CreatedAt,
-                    Guid = result.Punch_Guid,
-                    InAt = result.Punch_InAt.ToUniversalTime(),
-                    InAtTimeZone = result.Punch_InAtTimeZone,
-                    LatitudeForInAt = result.Punch_LatitudeForInAt,
-                    LongitudeForInAt = result.Punch_LongitudeForInAt,
-                    LatitudeForOutAt = result.Punch_LatitudeForOutAt,
-                    LongitudeForOutAt = result.Punch_LongitudeForOutAt,
-                    OutAt = result.Punch_OutAt.HasValue ? result.Punch_OutAt.Value.ToUniversalTime() : default(DateTime?),
-                    OutAtTimeZone = result.Punch_OutAtTimeZone,
-                    SourceForInAt = result.Punch_SourceForInAt,
-                    SourceForOutAt = result.Punch_SourceForOutAt,
-                    TaskId = result.Punch_TaskId,
-                    UserId = result.Punch_UserId,
-                    InAtSourceHardware = result.Punch_InAtSourceHardware,
-                    InAtSourceHostname = result.Punch_InAtSourceHostname,
-                    InAtSourceIpAddress = result.Punch_InAtSourceIpAddress,
-                    InAtSourceOperatingSystem = result.Punch_InAtSourceOperatingSystem,
-                    InAtSourceOperatingSystemVersion = result.Punch_InAtSourceOperatingSystemVersion,
-                    InAtSourceBrowser = result.Punch_InAtSourceBrowser,
-                    InAtSourceBrowserVersion = result.Punch_InAtSourceBrowserVersion,
-                    InAtSourcePhoneNumber = result.Punch_InAtSourcePhoneNumber,
-                    OutAtSourceHardware = result.Punch_OutAtSourceHardware,
-                    OutAtSourceHostname = result.Punch_OutAtSourceHostname,
-                    OutAtSourceIpAddress = result.Punch_OutAtSourceIpAddress,
-                    OutAtSourceOperatingSystem = result.Punch_OutAtSourceOperatingSystem,
-                    OutAtSourceOperatingSystemVersion = result.Punch_OutAtSourceOperatingSystemVersion,
-                    OutAtSourceBrowser = result.Punch_OutAtSourceBrowser,
-                    OutAtSourceBrowserVersion = result.Punch_OutAtSourceBrowserVersion,
-                    OutAtSourcePhoneNumber = result.Punch_OutAtSourcePhoneNumber,
-                    Task = new Task()
+                if (result != null)
+                    currentPunch = new Punch()
                     {
-                        Id = result.Task_Id,
-                        CreatedAt = result.Task_CreatedAt,
-                        JobId = result.Task_JobId,
-                        Name = result.Task_Name,
-                        Number = result.Task_Number,
-                        Job = new Job()
+                        Id = result.Punch_Id,
+                        CommitId = result.Punch_CommitId,
+                        CreatedAt = result.Punch_CreatedAt,
+                        Guid = result.Punch_Guid,
+                        InAt = result.Punch_InAt.ToUniversalTime(),
+                        InAtTimeZone = result.Punch_InAtTimeZone,
+                        LatitudeForInAt = result.Punch_LatitudeForInAt,
+                        LongitudeForInAt = result.Punch_LongitudeForInAt,
+                        LatitudeForOutAt = result.Punch_LatitudeForOutAt,
+                        LongitudeForOutAt = result.Punch_LongitudeForOutAt,
+                        OutAt = result.Punch_OutAt.HasValue ? result.Punch_OutAt.Value.ToUniversalTime() : default(DateTime?),
+                        OutAtTimeZone = result.Punch_OutAtTimeZone,
+                        SourceForInAt = result.Punch_SourceForInAt,
+                        SourceForOutAt = result.Punch_SourceForOutAt,
+                        TaskId = result.Punch_TaskId,
+                        UserId = result.Punch_UserId,
+                        InAtSourceHardware = result.Punch_InAtSourceHardware,
+                        InAtSourceHostname = result.Punch_InAtSourceHostname,
+                        InAtSourceIpAddress = result.Punch_InAtSourceIpAddress,
+                        InAtSourceOperatingSystem = result.Punch_InAtSourceOperatingSystem,
+                        InAtSourceOperatingSystemVersion = result.Punch_InAtSourceOperatingSystemVersion,
+                        InAtSourceBrowser = result.Punch_InAtSourceBrowser,
+                        InAtSourceBrowserVersion = result.Punch_InAtSourceBrowserVersion,
+                        InAtSourcePhoneNumber = result.Punch_InAtSourcePhoneNumber,
+                        OutAtSourceHardware = result.Punch_OutAtSourceHardware,
+                        OutAtSourceHostname = result.Punch_OutAtSourceHostname,
+                        OutAtSourceIpAddress = result.Punch_OutAtSourceIpAddress,
+                        OutAtSourceOperatingSystem = result.Punch_OutAtSourceOperatingSystem,
+                        OutAtSourceOperatingSystemVersion = result.Punch_OutAtSourceOperatingSystemVersion,
+                        OutAtSourceBrowser = result.Punch_OutAtSourceBrowser,
+                        OutAtSourceBrowserVersion = result.Punch_OutAtSourceBrowserVersion,
+                        OutAtSourcePhoneNumber = result.Punch_OutAtSourcePhoneNumber,
+                        Task = new Task()
                         {
-                            Id = result.Job_Id,
-                            CreatedAt = result.Job_CreatedAt,
-                            CustomerId = result.Job_CustomerId,
-                            Description = result.Job_Description,
-                            Name = result.Job_Name,
-                            Number = result.Job_Number,
-                            Customer = new Customer()
+                            Id = result.Task_Id,
+                            CreatedAt = result.Task_CreatedAt,
+                            JobId = result.Task_JobId,
+                            Name = result.Task_Name,
+                            Number = result.Task_Number,
+                            Job = new Job()
                             {
-                                Id = result.Customer_Id,
-                                CreatedAt = result.Customer_CreatedAt,
-                                Description = result.Customer_Description,
-                                Name = result.Customer_Name,
-                                Number = result.Customer_Number,
-                                OrganizationId = result.Customer_OrganizationId
+                                Id = result.Job_Id,
+                                CreatedAt = result.Job_CreatedAt,
+                                CustomerId = result.Job_CustomerId,
+                                Description = result.Job_Description,
+                                Name = result.Job_Name,
+                                Number = result.Job_Number,
+                                Customer = new Customer()
+                                {
+                                    Id = result.Customer_Id,
+                                    CreatedAt = result.Customer_CreatedAt,
+                                    Description = result.Customer_Description,
+                                    Name = result.Customer_Name,
+                                    Number = result.Customer_Number,
+                                    OrganizationId = result.Customer_OrganizationId
+                                }
                             }
                         }
-                    }
-                };
+                    };
 
                 connection.Close();
             }
