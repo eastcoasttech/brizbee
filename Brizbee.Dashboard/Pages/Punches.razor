@@ -1,12 +1,13 @@
 ﻿@page "/punches"
 
 @using Brizbee.Dashboard.Services
-@using Brizbee.Dashboard.Serialization
+@using Brizbee.Common.Serialization.Alerts
 @using Brizbee.Common.Models
 
 @inject NavigationManager NavigationManager
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
+@inject OrganizationService organizationService
 @inject UserService userService
 @inject PunchService punchService
 @inject DialogService dialogService
@@ -97,7 +98,6 @@
         <li role="presentation"><NavLink href="locks">Locks</NavLink></li>
         <li role="presentation"><NavLink href="exports">Export History</NavLink></li>
         <li role="presentation"><NavLink href="rates">Rates</NavLink></li>
-        <li role="presentation"><NavLink href="alerts">Alerts</NavLink></li>
     </ul>
 
     <hr />
@@ -122,6 +122,13 @@
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => RefreshPunches())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
+
+                @if (alerts.Count != 0)
+                {
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-link" @onclick="@(e => OpenPunchAlertsDialog())"><span class="badge" style="background-color: red;">@(alerts.Count) Alerts</span></button>
+                    </div>
+                }
             </div>
         </div>
         <div class="col-md-6">
@@ -353,6 +360,7 @@
     private long punchesCount = 0;
     private int punchesPageStart = 0;
     private string hoursAndMinutes = "0 hours and 0 minutes";
+    private List<Alert> alerts = new List<Alert>();
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -361,6 +369,7 @@
 
         currentUser = sharedService.CurrentUser;
 
+        alerts = await organizationService.GetAlerts(currentUser.OrganizationId);
         await RefreshPunches();
 
         dialogService.OnOpen += Open;
@@ -504,6 +513,13 @@
     {
         dialogService.Open<PunchFiltersDialog>("Filter Punches",
                                 new Dictionary<string, object>() { },
+                                new DialogOptions() { Width = "800px" });
+    }
+
+    private void OpenPunchAlertsDialog()
+    {
+        dialogService.Open<PunchAlertsDialog>("Alerts this Week",
+                                new Dictionary<string, object>() { { "Alerts", alerts } },
                                 new DialogOptions() { Width = "800px" });
     }
 
