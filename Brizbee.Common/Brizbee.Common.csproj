@@ -92,6 +92,7 @@
     <Compile Include="Serialization\QuickBooksHostDetails.cs" />
     <Compile Include="Serialization\QuickBooksUnitOfMeasure.cs" />
     <Compile Include="Serialization\QuickBooksUnitOfMeasures.cs" />
+    <Compile Include="Validations\FullNameLengthValidationAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

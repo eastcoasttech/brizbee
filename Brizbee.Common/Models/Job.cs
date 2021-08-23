@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Common.Validations;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -52,7 +53,7 @@ namespace Brizbee.Common.Models
         [StringLength(10)]
         public string Number { get; set; }
 
-        [StringLength(159)]
+        [FullNameLengthValidation]
         public string QuickBooksCustomerJob { get; set; }
 
         [StringLength(159)]
