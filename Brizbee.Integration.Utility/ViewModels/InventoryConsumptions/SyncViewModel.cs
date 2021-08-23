@@ -335,7 +335,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             OnPropertyChanged("StatusText");
 
             // Build the request to get unsynced consumption.
-            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynce", Method.GET);
+            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.GET);
             request.AddHeader("X-Paging-PageNumber", "1");
             request.AddHeader("X-Paging-PageSize", "1000");
 
