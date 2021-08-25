@@ -14,17 +14,17 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<string> GetFromLocalStorage(string key)
         {
-            return await _js.InvokeAsync<string>("localStorage.getItem", key);
+            return await _js.InvokeAsync<string>("sessionStorage.getItem", key);
         }
 
         public async Task SetLocalStorage(string key, string value)
         {
-            await _js.InvokeVoidAsync("localStorage.setItem", key, value);
+            await _js.InvokeVoidAsync("sessionStorage.setItem", key, value);
         }
 
         public async Task RemoveFromLocalStorage(string key)
         {
-            await _js.InvokeAsync<string>("localStorage.removeItem", key);
+            await _js.InvokeAsync<string>("sessionStorage.removeItem", key);
         }
     }
 }
