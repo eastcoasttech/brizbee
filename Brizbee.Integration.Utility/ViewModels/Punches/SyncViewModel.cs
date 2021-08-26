@@ -388,29 +388,32 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             // # pound character should be changed to &#35;
             replaced = replaced.Replace("#", "&#35;");
 
-            // ( left parenthesis character should be changed to &#40;
-            replaced = replaced.Replace("(", "&#40;");
-
-            // ) right parenthesis character should be changed to &#41;
-            replaced = replaced.Replace(")", "&#41;");
-
-            // * asterisk character should be changed to &#42;
-            replaced = replaced.Replace("*", "&#42;");
-
             // + plus character should be changed to &#43;
             replaced = replaced.Replace("+", "&#43;");
 
-            // , comma character should be changed to &#44;
-            replaced = replaced.Replace(",", "&#44;");
-
-            // - hyphen character should be changed to &#45;
-            replaced = replaced.Replace("-", "&#45;");
-
-            // . period character should be changed to &#46;
-            replaced = replaced.Replace(".", "&#46;");
-
             // / slash character should be changed to &#47;
             replaced = replaced.Replace("/", "&#47;");
+
+            // NOT escaping the following charaters:
+            // ( ) * , - .
+
+            //// ( left parenthesis character should be changed to &#40;
+            //replaced = replaced.Replace("(", "&#40;");
+
+            //// ) right parenthesis character should be changed to &#41;
+            //replaced = replaced.Replace(")", "&#41;");
+
+            //// * asterisk character should be changed to &#42;
+            //replaced = replaced.Replace("*", "&#42;");
+
+            //// , comma character should be changed to &#44;
+            //replaced = replaced.Replace(",", "&#44;");
+
+            //// - hyphen character should be changed to &#45;
+            //replaced = replaced.Replace("-", "&#45;");
+
+            //// . period character should be changed to &#46;
+            //replaced = replaced.Replace(".", "&#46;");
 
             return replaced;
         }
