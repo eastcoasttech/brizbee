@@ -191,39 +191,39 @@
                     Running
                 </th>
                 <th style="width: 15%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Customers/Name"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Customers/Number"))">
                         Customer
-                        @if (sortBy == "Customers/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Customers/Number" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "Customers/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Customers/Number" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th style="width: 15%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Jobs/Name"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Jobs/Number"))">
                         Job
-                        @if (sortBy == "Jobs/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Jobs/Number" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "Jobs/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Jobs/Number" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th style="width: 12%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Tasks/Name"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Tasks/Number"))">
                         Task
-                        @if (sortBy == "Tasks/Name" && sortDirection == "ASC")
+                        @if (sortBy == "Tasks/Number" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "Tasks/Name" && sortDirection == "DESC")
+                        else if (sortBy == "Tasks/Number" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }

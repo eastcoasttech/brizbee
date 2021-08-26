@@ -408,7 +408,7 @@ namespace Brizbee.Web.Services
         {
             foreach (var punch in punches)
             {
-                if (punch.InAt.Date == date)
+                if (punch.InAt.Date == date.Date)
                 {
                     var task = db.Tasks.Find(punch.TaskId);
 
