@@ -128,7 +128,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-2">
+                <th class="col-md-3">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("EmailAddress"))">
                         Email Address
                         @if (sortBy == "EmailAddress" && sortDirection == "ASC")
@@ -154,20 +154,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Role"))">
-                        Role
-                        @if (sortBy == "Role" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "Role" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th class="col-md-2">
+                <th class="col-md-3">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("TimeZone"))">
                         Default Time Zone
                         @if (sortBy == "TimeZone" && sortDirection == "ASC")
@@ -202,7 +189,6 @@
                     <td><a href="javascript:void(0)">@user.Name</a></td>
                     <td><a href="javascript:void(0)">@user.EmailAddress</a></td>
                     <td><a href="javascript:void(0)">@user.Pin</a></td>
-                    <td><a href="javascript:void(0)">@user.Role</a></td>
                     <td><a href="javascript:void(0)">@user.TimeZone</a></td>
                     <td><a href="javascript:void(0)">@user.CreatedAt.ToString("M/d/yyyy h:mm tt")</a></td>
                 </tr>
@@ -210,13 +196,13 @@
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="6"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && users.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="6">No Users</td>
+                    <td colspan="5">No Users</td>
                 </tr>
             }
         </tbody>
@@ -313,14 +299,14 @@
     {
         dialogService.Open<UserDialog>("New User",
                                 new Dictionary<string, object>() { { "Id", null } },
-                                new DialogOptions() { Width = "600px" });
+                                new DialogOptions() { Width = "800px" });
     }
 
     private void OpenModifyUserDialog(User user)
     {
         dialogService.Open<UserDialog>("Edit User",
                                 new Dictionary<string, object>() { { "Id", user.Id } },
-                                new DialogOptions() { Width = "600px" });
+                                new DialogOptions() { Width = "800px" });
     }
 
     private async void ChangeSortBy(string column)

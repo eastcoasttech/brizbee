@@ -25,7 +25,6 @@ using Brizbee.Common.Security;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -82,9 +81,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure user is authorized
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateUsers)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Formatting
             if (!string.IsNullOrEmpty(user.EmailAddress))
@@ -135,6 +134,10 @@ namespace Brizbee.Web.Controllers
             }
 
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyUsers)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var user = db.Users
                 .Where(u => !u.IsDeleted)
@@ -190,9 +193,9 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Ensure user is authorized
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteUsers)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var user = db.Users
                 .Where(u => !u.IsDeleted)

@@ -28,7 +28,6 @@ using Brizbee.Web.Services;
 using Microsoft.AspNet.OData;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Validation;
@@ -36,7 +35,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Web;
 using System.Web.Http;
@@ -88,9 +86,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure user is an administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreatePunches)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Ensure user is in same organization.
             var isValidUserId = db.Users
@@ -165,9 +163,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure user is an administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyPunches)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var punch = db.Punches
                 .Include("User")
@@ -210,13 +208,16 @@ namespace Brizbee.Web.Controllers
 
             var punch = db.Punches
                 .Include("User")
+                .Where(p => p.User.OrganizationId == currentUser.OrganizationId)
                 .Where(p => p.Id == key)
                 .FirstOrDefault();
 
-            // Ensure user is an administrator in the same organization.
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != punch.User.OrganizationId)
-                return BadRequest();
+            // Ensure that object was found.
+            if (punch == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeletePunches)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Delete the object itself.
             db.Punches.Remove(punch);
@@ -243,6 +244,12 @@ namespace Brizbee.Web.Controllers
         [HttpGet]
         public IHttpActionResult Download([FromODataUri] int CommitId)
         {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewPunches)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var punches = db.Punches
                 .Include(p => p.User)
                 .Include(p => p.Task.Job.Customer)
@@ -384,7 +391,13 @@ namespace Brizbee.Web.Controllers
         {
             var parsedInAt = DateTime.Parse(parameters["InAt"] as string);
             var parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
+
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanSplitAndPopulatePunches)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var nowUtc = DateTime.UtcNow;
             var inAt = new DateTime(parsedInAt.Year, parsedInAt.Month, parsedInAt.Day, 0, 0, 0, 0);
             var outAt = new DateTime(parsedOutAt.Year, parsedOutAt.Month, parsedOutAt.Day, 23, 59, 0, 0);
@@ -450,7 +463,13 @@ namespace Brizbee.Web.Controllers
         public IHttpActionResult PopulateRates(ODataActionParameters parameters)
         {
             var populateOptions = parameters["Options"] as PopulateRateOptions;
+
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanSplitAndPopulatePunches)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var nowUtc = DateTime.UtcNow;
             var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0, DateTimeKind.Unspecified);
             var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0, DateTimeKind.Unspecified);

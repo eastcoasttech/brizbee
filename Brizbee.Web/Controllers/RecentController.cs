@@ -50,10 +50,6 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
-
             List<Punch> punches = new List<Punch>();
             using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
             {
@@ -198,10 +194,6 @@ namespace Brizbee.Web.Controllers
         public IHttpActionResult GetRecentConsumption()
         {
             var currentUser = CurrentUser();
-
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
 
             List<QBDInventoryConsumption> consumptions = new List<QBDInventoryConsumption>();
             using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))

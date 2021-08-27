@@ -71,6 +71,10 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateRates)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             // Auto-generated
             rate.CreatedAt = DateTime.UtcNow;
             rate.OrganizationId = currentUser.OrganizationId;
@@ -93,6 +97,10 @@ namespace Brizbee.Web.Controllers
             }
 
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyRates)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var rate = db.Rates
                 .Where(x => x.OrganizationId == currentUser.OrganizationId)
@@ -133,6 +141,10 @@ namespace Brizbee.Web.Controllers
                 .Where(x => x.IsDeleted == false)
                 .Where(x => x.Id == key)
                 .FirstOrDefault();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteRates)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Mark the object as deleted
             rate.IsDeleted = true;

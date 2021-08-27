@@ -121,7 +121,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0007 Adding Notification Columns.sql" />
-    <Content Include="Migrations\0008 Removing NULL.sql" />
+    <EmbeddedResource Include="Migrations\0008 Adding IsActive and Permissions.sql" />
+    <Content Include="Migrations\0009 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

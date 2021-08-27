@@ -85,6 +85,11 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -106,6 +111,11 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -127,6 +137,11 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -147,6 +162,11 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime Max)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().TimeEntriesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -169,6 +189,11 @@ namespace Brizbee.Web.Controllers
             try
             {
                 var currentUser = CurrentUser();
+
+                // Ensure that user is authorized.
+                if (!currentUser.CanViewReports)
+                    return StatusCode(HttpStatusCode.Forbidden);
+
                 var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
                 return new FileActionResult(bytes, "application/pdf",
                     string.Format(
@@ -194,6 +219,11 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime Max)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
