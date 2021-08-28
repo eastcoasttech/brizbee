@@ -407,3 +407,50 @@ ALTER TABLE [dbo].[Users]
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteTasks]
 	DEFAULT 0 FOR [CanDeleteTasks];
+
+
+-- Migrate the role to the new permissions
+UPDATE [dbo].[Users]
+	SET
+		[CanViewPunches] = 1,
+		[CanCreatePunches] = 1,
+		[CanModifyPunches] = 1,
+		[CanDeletePunches] = 1,
+		[CanSplitAndPopulatePunches] = 1,
+		[CanViewReports] = 1,
+		[CanViewLocks] = 1,
+		[CanCreateLocks] = 1,
+		[CanUndoLocks] = 1,
+		[CanViewTimecards] = 1,
+		[CanCreateTimecards] = 1,
+		[CanModifyTimecards] = 1,
+		[CanDeleteTimecards] = 1,
+		[CanViewUsers] = 1,
+		[CanCreateUsers] = 1,
+		[CanModifyUsers] = 1,
+		[CanDeleteUsers] = 1,
+		[CanViewInventoryItems] = 1,
+		[CanSyncInventoryItems] = 1,
+		[CanViewInventoryConsumptions] = 1,
+		[CanSyncInventoryConsumptions] = 1,
+		[CanDeleteInventoryConsumptions] = 1,
+		[CanViewRates] = 1,
+		[CanCreateRates] = 1,
+		[CanModifyRates] = 1,
+		[CanDeleteRates] = 1,
+		[CanViewOrganizationDetails] = 1,
+		[CanModifyOrganizationDetails] = 1,
+		[CanViewCustomers] = 1,
+		[CanCreateCustomers] = 1,
+		[CanModifyCustomers] = 1,
+		[CanDeleteCustomers] = 1,
+		[CanViewProjects] = 1,
+		[CanCreateProjects] = 1,
+		[CanModifyProjects] = 1,
+		[CanDeleteProjects] = 1,
+		[CanViewTasks] = 1,
+		[CanCreateTasks] = 1,
+		[CanModifyTasks] = 1,
+		[CanDeleteTasks] = 1
+WHERE [Role] = 'Administrator'
+GO

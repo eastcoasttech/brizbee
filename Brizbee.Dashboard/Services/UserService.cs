@@ -189,7 +189,6 @@ namespace Brizbee.Dashboard.Services
             {
                 var payload = new Dictionary<string, object>() {
                     { "Name", user.Name },
-                    { "Role", user.Role },
                     { "TimeZone", user.TimeZone },
                     { "UsesTimesheets", user.UsesTimesheets },
                     { "UsesMobileClock", user.UsesMobileClock },
