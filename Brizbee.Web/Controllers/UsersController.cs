@@ -42,11 +42,9 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to see all users
-            if (currentUser.Role != "Administrator")
-            {
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewUsers)
                 return Enumerable.Empty<User>().AsQueryable();
-            }
 
             return db.Users
                 .Where(u => !u.IsDeleted)
@@ -59,11 +57,9 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only Administrators can see other users in the organization
-            if (currentUser.Role != "Administrator" && currentUser.Id != key)
-            {
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewUsers && currentUser.Id != key)
                 return SingleResult.Create(Enumerable.Empty<User>().AsQueryable());
-            }
 
             return SingleResult.Create(db.Users
                 .Where(u => !u.IsDeleted)

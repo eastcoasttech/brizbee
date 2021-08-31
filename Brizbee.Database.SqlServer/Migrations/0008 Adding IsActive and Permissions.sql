@@ -407,7 +407,6 @@ ALTER TABLE [dbo].[Users]
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteTasks]
 	DEFAULT 0 FOR [CanDeleteTasks];
-
 GO
 
 
@@ -455,6 +454,51 @@ UPDATE [dbo].[Users]
 		[CanModifyTasks] = 1,
 		[CanDeleteTasks] = 1
 WHERE [Role] = 'Administrator'
+GO
+
+UPDATE [dbo].[Users]
+	SET
+		[CanViewPunches] = 0,
+		[CanCreatePunches] = 0,
+		[CanModifyPunches] = 0,
+		[CanDeletePunches] = 0,
+		[CanSplitAndPopulatePunches] = 0,
+		[CanViewReports] = 0,
+		[CanViewLocks] = 0,
+		[CanCreateLocks] = 0,
+		[CanUndoLocks] = 0,
+		[CanViewTimecards] = 0,
+		[CanCreateTimecards] = 0,
+		[CanModifyTimecards] = 0,
+		[CanDeleteTimecards] = 0,
+		[CanViewUsers] = 0,
+		[CanCreateUsers] = 0,
+		[CanModifyUsers] = 0,
+		[CanDeleteUsers] = 0,
+		[CanViewInventoryItems] = 0,
+		[CanSyncInventoryItems] = 0,
+		[CanViewInventoryConsumptions] = 0,
+		[CanSyncInventoryConsumptions] = 0,
+		[CanDeleteInventoryConsumptions] = 0,
+		[CanViewRates] = 0,
+		[CanCreateRates] = 0,
+		[CanModifyRates] = 0,
+		[CanDeleteRates] = 0,
+		[CanViewOrganizationDetails] = 0,
+		[CanModifyOrganizationDetails] = 0,
+		[CanViewCustomers] = 0,
+		[CanCreateCustomers] = 0,
+		[CanModifyCustomers] = 0,
+		[CanDeleteCustomers] = 0,
+		[CanViewProjects] = 0,
+		[CanCreateProjects] = 0,
+		[CanModifyProjects] = 0,
+		[CanDeleteProjects] = 0,
+		[CanViewTasks] = 0,
+		[CanCreateTasks] = 0,
+		[CanModifyTasks] = 0,
+		[CanDeleteTasks] = 0
+WHERE [Role] = 'Standard'
 GO
 
 
