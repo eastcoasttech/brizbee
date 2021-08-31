@@ -86,7 +86,7 @@ namespace Brizbee.Web.Controllers
 
             // Ensure job is open.
             if (task.Job.Status != "Open")
-                return BadRequest();
+                return BadRequest("Cannot punch in on tasks for projects that are not open.");
 
             try
             {
