@@ -484,6 +484,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
     <Compile Include="Controllers\JobsExpandedController.cs" />
@@ -584,6 +585,7 @@
   <ItemGroup>
     <Content Include="ApplicationInsights.config" />
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\app-brizbee-api-test - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\app-brizbee-prod - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\app-brizbee-prod - ReadOnly - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\app-brizbee-prod - Web Deploy.pubxml" />

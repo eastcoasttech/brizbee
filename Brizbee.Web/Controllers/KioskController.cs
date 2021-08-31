@@ -21,10 +21,15 @@
 //
 
 using Brizbee.Common.Models;
+using Brizbee.Common.Serialization;
 using Brizbee.Web.Repositories;
 using Brizbee.Web.Serialization.Expanded;
 using Dapper;
+using Newtonsoft.Json;
+using NodaTime;
+using NodaTime.TimeZones;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Validation;
@@ -192,9 +197,9 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        // GET: api/Kiosk/CurrentPunch
+        // GET: api/Kiosk/Punches/Current
         [HttpGet]
-        [Route("api/Kiosk/CurrentPunch")]
+        [Route("api/Kiosk/Punches/Current")]
         [ResponseType(typeof(Punch))]
         public IHttpActionResult CurrentPunch()
         {
@@ -344,14 +349,17 @@ namespace Brizbee.Web.Controllers
                 connection.Close();
             }
 
-            return Ok(currentPunch);
+            if (currentPunch != null)
+                return Ok(currentPunch);
+            else
+                return Ok(new { });
         }
 
         // POST: api/Kiosk/Timecard
         [HttpPost]
         [Route("api/Kiosk/Timecard")]
         [ResponseType(typeof(TimesheetEntry))]
-        public IHttpActionResult Timecard([FromUri] int taskId, [FromUri] DateTime enteredAt, [FromUri] int minutes, [FromUri] string notes)
+        public IHttpActionResult Timecard([FromUri] int taskId, [FromUri] DateTime enteredAt, [FromUri] int minutes, [FromUri] string notes = "")
         {
             var currentUser = CurrentUser();
 
@@ -366,7 +374,7 @@ namespace Brizbee.Web.Controllers
 
             // Ensure job is open.
             if (task.Job.Status != "Open")
-                return BadRequest();
+                return BadRequest("Cannot add timecards for projects that are not open.");
 
             try
             {
@@ -406,11 +414,354 @@ namespace Brizbee.Web.Controllers
             }
         }
 
+        // GET: api/Kiosk/SearchTasks
+        [HttpGet]
+        [Route("api/Kiosk/SearchTasks")]
+        [ResponseType(typeof(Task))]
+        public IHttpActionResult SearchTasks([FromUri] string taskNumber)
+        {
+            var currentUser = CurrentUser();
+
+            // Search only tasks that belong to customers in the organization.
+            var task = _context.Tasks
+                .Include("Job")
+                .Include("Job.Customer")
+                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Number == taskNumber)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Name,
+                    t.Number,
+                    t.CreatedAt,
+                    t.JobId,
+                    Job = new
+                    {
+                        t.Job.Id,
+                        t.Job.Name,
+                        t.Job.Number,
+                        t.Job.CreatedAt,
+                        t.Job.CustomerId,
+                        Customer = new
+                        {
+                            t.Job.Customer.Id,
+                            t.Job.Customer.Name,
+                            t.Job.Customer.Number,
+                            t.Job.Customer.CreatedAt
+                        }
+                    }
+                })
+                .FirstOrDefault();
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(task);
+        }
+
+        // GET: api/Kiosk/Customers
+        [HttpGet]
+        [Route("api/Kiosk/Customers")]
+        [ResponseType(typeof(IEnumerable<Customer>))]
+        public IHttpActionResult Customers()
+        {
+            var currentUser = CurrentUser();
+
+            var customers = _context.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .OrderBy(c => c.Number)
+                .Select(c => new
+                {
+                    c.CreatedAt,
+                    c.Description,
+                    c.Id,
+                    c.Name,
+                    c.Number,
+                    c.OrganizationId
+                })
+                .ToList();
+
+            return Ok(customers);
+        }
+
+        // GET: api/Kiosk/Projects
+        [HttpGet]
+        [Route("api/Kiosk/Projects")]
+        [ResponseType(typeof(IEnumerable<Job>))]
+        public IHttpActionResult Projects([FromUri] int customerId)
+        {
+            var currentUser = CurrentUser();
+
+            var projects = _context.Jobs
+                .Include(j => j.Customer)
+                .Where(j => j.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(j => j.CustomerId == customerId)
+                .OrderBy(j => j.Number)
+                .Select(j => new
+                {
+                    j.CreatedAt,
+                    j.CustomerId,
+                    j.CustomerPurchaseOrder,
+                    j.CustomerWorkOrder,
+                    j.Description,
+                    j.Id,
+                    j.InvoiceNumber,
+                    j.Name,
+                    j.Number,
+                    j.QuoteNumber,
+                    j.Status,
+                    j.Taxability,
+                    Customer = new
+                    {
+                        j.Customer.CreatedAt,
+                        j.Customer.Description,
+                        j.Customer.Id,
+                        j.Customer.Name,
+                        j.Customer.Number,
+                        j.Customer.OrganizationId
+                    }
+                })
+                .ToList();
+
+            return Ok(projects);
+        }
+
+        // GET: api/Kiosk/Tasks
+        [HttpGet]
+        [Route("api/Kiosk/Tasks")]
+        [ResponseType(typeof(IEnumerable<Task>))]
+        public IHttpActionResult Tasks([FromUri] int projectId)
+        {
+            var currentUser = CurrentUser();
+
+            var projects = _context.Tasks
+                .Include(t => t.Job.Customer)
+                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.JobId == projectId)
+                .OrderBy(t => t.Number)
+                .Select(t => new
+                {
+                    t.CreatedAt,
+                    t.Group,
+                    t.Id,
+                    t.JobId,
+                    t.Name,
+                    t.Number,
+                    t.Order,
+                    Job = new
+                    {
+                        t.Job.CreatedAt,
+                        t.Job.CustomerId,
+                        t.Job.CustomerPurchaseOrder,
+                        t.Job.CustomerWorkOrder,
+                        t.Job.Description,
+                        t.Job.Id,
+                        t.Job.InvoiceNumber,
+                        t.Job.Name,
+                        t.Job.Number,
+                        t.Job.QuoteNumber,
+                        t.Job.Status,
+                        t.Job.Taxability,
+                        Customer = new
+                        {
+                            t.Job.Customer.CreatedAt,
+                            t.Job.Customer.Description,
+                            t.Job.Customer.Id,
+                            t.Job.Customer.Name,
+                            t.Job.Customer.Number,
+                            t.Job.Customer.OrganizationId
+                        }
+                    }
+                })
+                .ToList();
+
+            return Ok(projects);
+        }
+
+        // GET: api/Kiosk/InventoryItems/Search
+        [HttpGet]
+        [Route("api/Kiosk/InventoryItems/Search")]
+        [ResponseType(typeof(QBDInventoryItem))]
+        public IHttpActionResult SearchInventoryItems([FromUri] string barCodeValue)
+        {
+            var currentUser = CurrentUser();
+
+            var inventoryItem = _context.QBDInventoryItems
+                .Where(i => i.OrganizationId == currentUser.OrganizationId)
+                .Where(i => i.BarCodeValue == barCodeValue)
+                .FirstOrDefault();
+
+            if (inventoryItem == null)
+                return NotFound();
+
+            // Return item with units of measure.
+            if (inventoryItem.QBDUnitOfMeasureSetId.HasValue)
+            {
+                inventoryItem.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
+                    .Where(s => s.Id == inventoryItem.QBDUnitOfMeasureSetId)
+                    .FirstOrDefault();
+
+                return Ok(new
+                {
+                    inventoryItem.Id,
+                    inventoryItem.FullName,
+                    inventoryItem.BarCodeValue,
+                    inventoryItem.ListId,
+                    inventoryItem.Name,
+                    inventoryItem.ManufacturerPartNumber,
+                    inventoryItem.PurchaseCost,
+                    inventoryItem.PurchaseDescription,
+                    inventoryItem.SalesPrice,
+                    inventoryItem.SalesDescription,
+                    QBDUnitOfMeasureSet = new
+                    {
+                        inventoryItem.QBDUnitOfMeasureSet.ListId,
+                        inventoryItem.QBDUnitOfMeasureSet.Name,
+                        inventoryItem.QBDUnitOfMeasureSet.UnitOfMeasureType,
+                        UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(inventoryItem.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
+                    }
+                });
+            }
+            else
+            {
+                return Ok(new
+                {
+                    inventoryItem.Id,
+                    inventoryItem.FullName,
+                    inventoryItem.BarCodeValue,
+                    inventoryItem.ListId,
+                    inventoryItem.Name,
+                    inventoryItem.ManufacturerPartNumber,
+                    inventoryItem.PurchaseCost,
+                    inventoryItem.PurchaseDescription,
+                    inventoryItem.SalesPrice,
+                    inventoryItem.SalesDescription
+                });
+            }
+        }
+
+        // GET: api/Kiosk/InventoryItems/Consume
+        [HttpPost]
+        [Route("api/Kiosk/InventoryItems/Consume")]
+        [ResponseType(typeof(QBDInventoryConsumption))]
+        public IHttpActionResult ConsumeInventoryItem([FromUri] long qbdInventoryItemId, [FromUri] int quantity, [FromUri] string hostname, [FromUri] string unitOfMeasure = "")
+        {
+            var currentUser = CurrentUser();
+            var inventorySiteEnabled = false;
+
+            // Find the current punch.
+            var currentPunch = _context.Punches
+                .Where(p => p.UserId == currentUser.Id)
+                .Where(p => p.OutAt == null)
+                .OrderByDescending(p => p.InAt)
+                .FirstOrDefault();
+
+            if (currentPunch == null)
+                return BadRequest("Cannot consume inventory without being punched in.");
+
+            long? siteId = null;
+            if (inventorySiteEnabled)
+            {
+                // Inventory site is determined by the hostname.
+                var sites = new Dictionary<string, string>()
+                {
+                    { "MARTIN-01", "" },
+                    { "RR01", "" },
+                    { "RR08", "" },
+                    { "RR09", "" },
+                    { "RR11", "" },
+                    { "RR12", "" },
+                    { "RR23", "" },
+                    { "RR24", "" },
+                    { "RR25", "" },
+                    { "RR26", "" },
+                    { "RR27", "" },
+                    { "RR28", "" },
+                    { "RR17", "" },
+                    { "RR16", "" },
+                    { "RR18", "" },
+                    { "RR19", "" },
+                    { "RR02", "" },
+                    { "RR03", "" },
+                    { "RR05", "" },
+                    { "RR06", "" },
+                    { "RR04", "" },
+                    { "RR15", "" },
+                    { "Pocket_PC", "" }
+                };
+                var siteForHostname = sites[hostname];
+
+                // Ensure there is an inventory site for the given hostname, if necessary.
+                if (string.IsNullOrEmpty(siteForHostname))
+                    return BadRequest($"No inventory site for hostname {hostname} specified");
+
+                siteId = _context.QBDInventorySites
+                    .Where(s => s.FullName == siteForHostname)
+                    .Select(s => s.Id)
+                    .FirstOrDefault();
+            }
+
+            var consumption = new QBDInventoryConsumption()
+            {
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = currentUser.Id,
+                OrganizationId = currentUser.OrganizationId,
+                Quantity = quantity,
+                TaskId = currentPunch.TaskId,
+                QBDInventoryItemId = qbdInventoryItemId,
+                Hostname = hostname,
+                QBDInventorySiteId = siteId,
+                UnitOfMeasure = unitOfMeasure
+            };
+
+            _context.QBDInventoryConsumptions.Add(consumption);
+            _context.SaveChanges();
+
+            return Ok(consumption);
+        }
+
+        // GET: api/Kiosk/TimeZones
+        [HttpGet]
+        [Route("api/Kiosk/TimeZones")]
+        [ResponseType(typeof(IEnumerable<IanaTimeZone>))]
+        public IHttpActionResult TimeZones()
+        {
+            List<IanaTimeZone> zones = new List<IanaTimeZone>();
+            var now = SystemClock.Instance.GetCurrentInstant();
+            var tzdb = DateTimeZoneProviders.Tzdb;
+            var countryCode = "";
+
+            var list =
+                from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+                where string.IsNullOrEmpty(countryCode) ||
+                      location.CountryCode.Equals(countryCode,
+                        StringComparison.OrdinalIgnoreCase)
+                let zoneId = location.ZoneId
+                let tz = tzdb[zoneId]
+                let offset = tz.GetZoneInterval(now).StandardOffset
+                orderby offset, zoneId
+                select new
+                {
+                    Id = zoneId,
+                    CountryCode = location.CountryCode
+                };
+
+            foreach (var z in list)
+            {
+                zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+            }
+
+            return Ok(zones);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 _context.Dispose();
+                repo.Dispose();
             }
             base.Dispose(disposing);
         }

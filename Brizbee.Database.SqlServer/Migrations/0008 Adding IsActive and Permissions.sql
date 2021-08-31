@@ -2,7 +2,7 @@
 -- IsActive
 
 ALTER TABLE [dbo].[Users]
-	ADD [IsActive] BIT NOT NULL;
+	ADD [IsActive] BIT NULL;
 
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_IsActive]
@@ -12,7 +12,7 @@ ALTER TABLE [dbo].[Users]
 -- View Punches Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewPunches] BIT NOT NULL;
+	ADD [CanViewPunches] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewPunches]
@@ -22,7 +22,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Punches Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreatePunches] BIT NOT NULL;
+	ADD [CanCreatePunches] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreatePunches]
@@ -32,7 +32,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Punches Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyPunches] BIT NOT NULL;
+	ADD [CanModifyPunches] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyPunches]
@@ -42,7 +42,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Punches Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeletePunches] BIT NOT NULL;
+	ADD [CanDeletePunches] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeletePunches]
@@ -52,7 +52,7 @@ ALTER TABLE [dbo].[Users]
 -- Split and Populate Punches Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanSplitAndPopulatePunches] BIT NOT NULL;
+	ADD [CanSplitAndPopulatePunches] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanSplitAndPopulatePunches]
@@ -62,7 +62,7 @@ ALTER TABLE [dbo].[Users]
 -- View Reports Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewReports] BIT NOT NULL;
+	ADD [CanViewReports] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewReports]
@@ -72,7 +72,7 @@ ALTER TABLE [dbo].[Users]
 -- View Locks Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewLocks] BIT NOT NULL;
+	ADD [CanViewLocks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewLocks]
@@ -82,7 +82,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Locks Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateLocks] BIT NOT NULL;
+	ADD [CanCreateLocks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateLocks]
@@ -92,7 +92,7 @@ ALTER TABLE [dbo].[Users]
 -- Undo Locks Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanUndoLocks] BIT NOT NULL;
+	ADD [CanUndoLocks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanUndoLocks]
@@ -102,7 +102,7 @@ ALTER TABLE [dbo].[Users]
 -- View Timecards Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewTimecards] BIT NOT NULL;
+	ADD [CanViewTimecards] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewTimecards]
@@ -112,7 +112,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Timecards Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateTimecards] BIT NOT NULL;
+	ADD [CanCreateTimecards] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateTimecards]
@@ -122,7 +122,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Timecards Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyTimecards] BIT NOT NULL;
+	ADD [CanModifyTimecards] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyTimecards]
@@ -132,7 +132,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Timecards Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteTimecards] BIT NOT NULL;
+	ADD [CanDeleteTimecards] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteTimecards]
@@ -142,7 +142,7 @@ ALTER TABLE [dbo].[Users]
 -- View Users Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewUsers] BIT NOT NULL;
+	ADD [CanViewUsers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewUsers]
@@ -152,7 +152,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Users Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateUsers] BIT NOT NULL;
+	ADD [CanCreateUsers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateUsers]
@@ -162,7 +162,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Users Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyUsers] BIT NOT NULL;
+	ADD [CanModifyUsers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyUsers]
@@ -172,7 +172,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Users Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteUsers] BIT NOT NULL;
+	ADD [CanDeleteUsers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteUsers]
@@ -182,7 +182,7 @@ ALTER TABLE [dbo].[Users]
 -- View Inventory Items Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewInventoryItems] BIT NOT NULL;
+	ADD [CanViewInventoryItems] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewInventoryItems]
@@ -192,7 +192,7 @@ ALTER TABLE [dbo].[Users]
 -- Sync Inventory Items Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanSyncInventoryItems] BIT NOT NULL;
+	ADD [CanSyncInventoryItems] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanSyncInventoryItems]
@@ -202,7 +202,7 @@ ALTER TABLE [dbo].[Users]
 -- View Inventory Consumptions Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewInventoryConsumptions] BIT NOT NULL;
+	ADD [CanViewInventoryConsumptions] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewInventoryConsumptions]
@@ -212,7 +212,7 @@ ALTER TABLE [dbo].[Users]
 -- Sync Inventory Consumptions Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanSyncInventoryConsumptions] BIT NOT NULL;
+	ADD [CanSyncInventoryConsumptions] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanSyncInventoryConsumptions]
@@ -222,7 +222,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Inventory Consumptions Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteInventoryConsumptions] BIT NOT NULL;
+	ADD [CanDeleteInventoryConsumptions] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteInventoryConsumptions]
@@ -232,7 +232,7 @@ ALTER TABLE [dbo].[Users]
 -- View Rates Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewRates] BIT NOT NULL;
+	ADD [CanViewRates] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewRates]
@@ -242,7 +242,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Rates Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateRates] BIT NOT NULL;
+	ADD [CanCreateRates] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateRates]
@@ -252,7 +252,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Rates Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyRates] BIT NOT NULL;
+	ADD [CanModifyRates] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyRates]
@@ -262,7 +262,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Rates Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteRates] BIT NOT NULL;
+	ADD [CanDeleteRates] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteRates]
@@ -272,7 +272,7 @@ ALTER TABLE [dbo].[Users]
 -- View Organization Details Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewOrganizationDetails] BIT NOT NULL;
+	ADD [CanViewOrganizationDetails] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewOrganizationDetails]
@@ -282,7 +282,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Organization Details Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyOrganizationDetails] BIT NOT NULL;
+	ADD [CanModifyOrganizationDetails] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyOrganizationDetails]
@@ -292,7 +292,7 @@ ALTER TABLE [dbo].[Users]
 -- View Customers Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewCustomers] BIT NOT NULL;
+	ADD [CanViewCustomers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewCustomers]
@@ -302,7 +302,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Customers Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateCustomers] BIT NOT NULL;
+	ADD [CanCreateCustomers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateCustomers]
@@ -312,7 +312,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Customers Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyCustomers] BIT NOT NULL;
+	ADD [CanModifyCustomers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyCustomers]
@@ -322,7 +322,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Customers Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteCustomers] BIT NOT NULL;
+	ADD [CanDeleteCustomers] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteCustomers]
@@ -332,7 +332,7 @@ ALTER TABLE [dbo].[Users]
 -- View Projects Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewProjects] BIT NOT NULL;
+	ADD [CanViewProjects] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewProjects]
@@ -342,7 +342,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Projects Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateProjects] BIT NOT NULL;
+	ADD [CanCreateProjects] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateProjects]
@@ -352,7 +352,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Projects Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyProjects] BIT NOT NULL;
+	ADD [CanModifyProjects] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyProjects]
@@ -362,7 +362,7 @@ ALTER TABLE [dbo].[Users]
 -- Delete Projects Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteProjects] BIT NOT NULL;
+	ADD [CanDeleteProjects] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteProjects]
@@ -372,7 +372,7 @@ ALTER TABLE [dbo].[Users]
 -- View Tasks Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanViewTasks] BIT NOT NULL;
+	ADD [CanViewTasks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanViewTasks]
@@ -382,7 +382,7 @@ ALTER TABLE [dbo].[Users]
 -- Create Tasks Permission
 
 ALTER TABLE [dbo].[Users]
-	ADD [CanCreateTasks] BIT NOT NULL;
+	ADD [CanCreateTasks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanCreateTasks]
@@ -392,7 +392,7 @@ ALTER TABLE [dbo].[Users]
 -- Modify Tasks Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanModifyTasks] BIT NOT NULL;
+	ADD [CanModifyTasks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanModifyTasks]
@@ -402,11 +402,13 @@ ALTER TABLE [dbo].[Users]
 -- Delete Tasks Permission
 	
 ALTER TABLE [dbo].[Users]
-	ADD [CanDeleteTasks] BIT NOT NULL;
+	ADD [CanDeleteTasks] BIT NULL;
 	
 ALTER TABLE [dbo].[Users]
 	ADD CONSTRAINT [DF_Users_CanDeleteTasks]
 	DEFAULT 0 FOR [CanDeleteTasks];
+
+GO
 
 
 -- Migrate the role to the new permissions
@@ -453,4 +455,18 @@ UPDATE [dbo].[Users]
 		[CanModifyTasks] = 1,
 		[CanDeleteTasks] = 1
 WHERE [Role] = 'Administrator'
+GO
+
+
+-- Migrate IsActive
+UPDATE [dbo].[Users]
+	SET
+		[IsActive] = 1
+WHERE [IsDeleted] = 0
+GO
+
+UPDATE [dbo].[Users]
+	SET
+		[IsActive] = 0
+WHERE [IsDeleted] = 1
 GO
