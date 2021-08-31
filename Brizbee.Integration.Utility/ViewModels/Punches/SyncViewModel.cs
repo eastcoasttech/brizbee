@@ -370,6 +370,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         {
             var replaced = string.IsNullOrEmpty(value) ? "" : value;
 
+            // & ampersand character should be changed to &amp;
+            replaced = replaced.Replace("&", "&amp;");
+
             // < less than character should be changed to &lt;
             replaced = replaced.Replace("<", "&lt;");
 
@@ -381,9 +384,6 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
 
             // " double quote character should be changed to &quot;
             replaced = replaced.Replace("\"", "&quot;");
-
-            // & ampersand character should be changed to &amp;
-            replaced = replaced.Replace("&", "&amp;");
 
             // # pound character should be changed to &#35;
             replaced = replaced.Replace("#", "&#35;");
