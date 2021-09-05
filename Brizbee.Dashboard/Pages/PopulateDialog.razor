@@ -3,7 +3,6 @@
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
 @using Brizbee.Common.Models
-@using System.Text.Json
 
 @inject TooltipService tooltipService
 @inject DialogService dialogService
@@ -79,7 +78,11 @@
 
             <ExceptionsFragment @ref="payrollExceptionsFragment" Type="Payroll" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
 
-            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</a></p>
+            <p>
+                <button class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</button>
+                <button class="btn btn-default" @onclick="@(e => AddPayrollRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add From Template&hellip;</button>
+                <button class="btn btn-default" @onclick="@(e => ShowSavePayrollRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Save As Template&hellip;</button>
+            </p>
         </RadzenTabsItem>
         <RadzenTabsItem Text="Customer Rates">
             <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
@@ -138,7 +141,11 @@
 
             <ExceptionsFragment @ref="serviceExceptionsFragment" Type="Service" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
 
-            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</a></p>
+            <p>
+                <button class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</button>
+                <button class="btn btn-default" @onclick="@(e => AddServiceRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add From Template&hellip;</button>
+                <button class="btn btn-default" @onclick="@(e => ShowSaveServiceRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Save As Template&hellip;</button>
+            </p>
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -218,7 +225,7 @@
         for (var i = 0; i < serviceExceptions.Count; i++)
         {
             var option = BuildPopulateRateOption(serviceExceptions[i]);
-            option.Add("Order", payrollExceptions.Count + i);
+            option.Add("Order", serviceExceptions.Count + i);
             option.Add("BaseServiceRateId", serviceExceptions[i].BaseServiceRateId);
             option.Add("AlternateServiceRateId", serviceExceptions[i].AlternateServiceRateId);
 
@@ -241,6 +248,26 @@
     private void AddPayrollRateException()
     {
         payrollExceptionsFragment.AddException();
+    }
+
+    private async System.Threading.Tasks.Task AddServiceRateExceptionsFromTemplate()
+    {
+        await serviceExceptionsFragment.AddExceptionFromTemplate();
+    }
+
+    private async System.Threading.Tasks.Task AddPayrollRateExceptionsFromTemplate()
+    {
+        await payrollExceptionsFragment.AddExceptionFromTemplate();
+    }
+
+    private async System.Threading.Tasks.Task ShowSaveServiceRateExceptionsTemplate()
+    {
+        await serviceExceptionsFragment.SaveExceptionsToTemplate();
+    }
+
+    private async System.Threading.Tasks.Task ShowSavePayrollRateExceptionsTemplate()
+    {
+        await payrollExceptionsFragment.SaveExceptionsToTemplate();
     }
 
     private Dictionary<string, object> BuildPopulateRateOption(PopulateRateException exception)

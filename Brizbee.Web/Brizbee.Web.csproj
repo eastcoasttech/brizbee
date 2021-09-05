@@ -488,6 +488,7 @@
     <Compile Include="Controllers\ExportsController.cs" />
     <Compile Include="Controllers\JobsExpandedController.cs" />
     <Compile Include="Controllers\OrganizationsExpandedController.cs" />
+    <Compile Include="Controllers\PopulateTemplatesController.cs" />
     <Compile Include="Controllers\PunchesExpandedController.cs" />
     <Compile Include="Controllers\QBDInventoryConsumptionsController.cs" />
     <Compile Include="Controllers\QBDInventoryConsumptionSyncsController.cs" />

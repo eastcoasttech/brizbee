@@ -1,0 +1,85 @@
+﻿@page "/dialogs/save-populate-template"
+
+@using System.Text.Json
+@using System.ComponentModel.DataAnnotations
+@using Brizbee.Dashboard.Serialization
+@using Brizbee.Dashboard.Services
+@using Brizbee.Common.Models
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject PopulateTemplateService populateTemplateService
+
+<EditForm Model="@saveTemplate" OnValidSubmit="Save" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <label for="save_template_existing_templates">Replace Existing Template</label>
+    <InputRadioGroup @bind-Value="saveTemplate.SaveOrReplaceTemplateId" id="save_template_existing_templates">
+        <ul class="list-group">
+            @foreach (var template in Templates)
+            {
+                <li class="list-group-item"><InputRadio id="@($"template_{template.Id}")" Value="@template.Id" /> <label for="@($"template_{template.Id}")" style="margin-bottom: 0;">@template.Name</label></li>
+            }
+            <li class="list-group-item">
+                <InputRadio id="template_new" Value="0" /> <label for="template_new" style="margin-bottom: 0;">Save New Template</label>
+                <InputText @bind-Value="saveTemplate.NewTemplateName" id="save_template_new_template_name" class="form-control" style="margin-top: 0.5em;" placeholder="New Name of Template" disabled="@(saveTemplate.SaveOrReplaceTemplateId != 0)" />
+            </li>
+        </ul>
+    </InputRadioGroup>
+
+    <hr />
+
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public List<PopulateTemplate> Templates { get; set; }
+    [Parameter] public List<PopulateRateException> Exceptions { get; set; }
+
+    private SaveTemplate saveTemplate = new SaveTemplate();
+
+    private async System.Threading.Tasks.Task Save()
+    {
+        if (saveTemplate.SaveOrReplaceTemplateId == 0)
+        {
+            Console.WriteLine("Saving a new template");
+            var populateTemplate = new PopulateTemplate()
+            {
+                Name = saveTemplate.NewTemplateName,
+                Template = JsonSerializer.Serialize(Exceptions)
+            };
+            await populateTemplateService.SavePopulateTemplateAsync(populateTemplate);
+        }
+        else
+        {
+            Console.WriteLine("Replacing an existing template");
+            var existing = Templates.Where(t => t.Id == saveTemplate.SaveOrReplaceTemplateId).FirstOrDefault();
+            var populateTemplate = new PopulateTemplate()
+            {
+                Name = existing.Name,
+                Template = JsonSerializer.Serialize(Exceptions)
+            };
+            await populateTemplateService.SavePopulateTemplateAsync(populateTemplate);
+        }
+
+        dialogService.Close(new DialogCloseResult()
+        {
+            Type = "template.saved"
+        });
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    class SaveTemplate
+    {
+        public int SaveOrReplaceTemplateId { get; set; }
+
+        [StringLength(30)]
+        public string NewTemplateName { get; set; }
+    }
+}

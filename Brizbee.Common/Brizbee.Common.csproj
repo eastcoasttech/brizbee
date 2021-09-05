@@ -65,6 +65,7 @@
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\Job.cs" />
     <Compile Include="Models\Organization.cs" />
+    <Compile Include="Models\PopulateTemplate.cs" />
     <Compile Include="Models\Punch.cs" />
     <Compile Include="Models\QBDInventoryConsumption.cs" />
     <Compile Include="Models\QBDInventoryConsumptionSync.cs" />
