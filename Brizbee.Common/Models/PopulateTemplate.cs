@@ -50,5 +50,12 @@ namespace Brizbee.Common.Models
         /// </summary>
         [Required]
         public string Template { get; set; }
+
+        /// <summary>
+        ///  Indicates whether the template is for payroll or service rates.
+        /// </summary>
+        [Required]
+        [RegularExpression("PAYROLL|SERVICE", ErrorMessage = "Rate Type must be PAYROLL or SERVICE")]
+        public string RateType { get; set; }
     }
 }

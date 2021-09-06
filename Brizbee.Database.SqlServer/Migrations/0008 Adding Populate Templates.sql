@@ -6,6 +6,7 @@ CREATE TABLE [dbo].[PopulateTemplates] (
     [CreatedAt]         DATETIME2 (7) NOT NULL,
     [OrganizationId]    INT NOT NULL,
     [Name]              NVARCHAR(100) NOT NULL,
-    [Template]          NVARCHAR(MAX) CONSTRAINT [CK_PopulateTemplates_Template] CHECK (ISJSON([Template])=1) NOT NULL
+    [Template]          NVARCHAR(MAX) CONSTRAINT [CK_PopulateTemplates_Template] CHECK (ISJSON([Template])=1) NOT NULL,
+    [RateType]          CHAR (7) NOT NULL
 );
 GO

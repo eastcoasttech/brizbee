@@ -459,14 +459,15 @@
             SelectCustomer(customers.FirstOrDefault());
         StateHasChanged();
 
-        dialogService.OnOpen += Open;
         dialogService.OnClose += Close;
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         // Unsubscribe to the events
         sharedService.OnChange -= StateHasChanged;
+
+        dialogService.OnClose -= Close;
     }
 
     private async void NextCustomerPage(MouseEventArgs e)
@@ -509,11 +510,6 @@
         tasksPageStart = tasksPageStart - pageSize;
         tasksSkip = tasksPageStart;
         await RefreshTasks();
-    }
-
-    private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
-    {
-        Console.WriteLine("Dialog opened");
     }
 
     private async void Close(dynamic result)

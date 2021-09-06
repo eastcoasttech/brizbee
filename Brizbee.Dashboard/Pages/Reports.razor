@@ -389,31 +389,18 @@
     private string authToken = "";
     private string authExpiration = "";
 
-    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         // Subscribe to the events
         sharedService.OnChange += StateHasChanged;
 
         currentUser = sharedService.CurrentUser;
-
-        dialogService.OnOpen += Open;
-        dialogService.OnClose += Close;
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         // Unsubscribe to the events
         sharedService.OnChange -= StateHasChanged;
-    }
-
-    private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
-    {
-        Console.WriteLine("Dialog opened");
-    }
-
-    private async void Close(dynamic result)
-    {
-        Console.WriteLine($"Dialog closed with result: {result}");
     }
 
     private void SearchUsers(KeyboardEventArgs args)

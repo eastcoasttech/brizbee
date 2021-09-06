@@ -1,5 +1,7 @@
 ﻿@page "/dialogs/select-populate-template"
 
+@using System.ComponentModel.DataAnnotations
+
 @using Brizbee.Dashboard.Serialization
 @using Brizbee.Dashboard.Services
 @using Brizbee.Common.Models
@@ -10,6 +12,11 @@
 <EditForm Model="@templateSelection" OnValidSubmit="Select" class="form-horizontal" autocomplete="off">
     <DataAnnotationsValidator />
     <ValidationSummary />
+
+    @if (!Templates.Any())
+    {
+        <p>You do not have any templates.</p>
+    }
 
     <InputRadioGroup @bind-Value="templateSelection.SelectedTemplateId">
         <ul class="list-group">
@@ -23,7 +30,7 @@
     <hr />
 
     <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
-    <button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;">OK</button>
+    <button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;" disabled="@(!context.Validate() || !context.IsModified())">OK</button>
 </EditForm>
 
 @code {
@@ -33,8 +40,6 @@
 
     private void Select()
     {
-        Console.WriteLine("Selecting the template");
-
         dialogService.Close(new DialogCloseResult()
         {
             Type = "template.selected",
@@ -49,6 +54,7 @@
 
     class TemplateSelection
     {
+        [Required]
         public int SelectedTemplateId { get; set; }
     }
 }

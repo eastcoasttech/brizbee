@@ -60,7 +60,8 @@ namespace Brizbee.Dashboard.Services
             {
                 var payload = new Dictionary<string, object>() {
                     { "Name", populateTemplate.Name },
-                    { "Template", populateTemplate.Template }
+                    { "Template", populateTemplate.Template },
+                    { "RateType", populateTemplate.RateType }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);

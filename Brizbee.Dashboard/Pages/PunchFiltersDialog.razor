@@ -8,6 +8,8 @@
 @inject SharedService sharedService
 @inject UserService userService
 
+@implements IDisposable
+
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">
         <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchUsersDialog())"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Users</button>
@@ -88,6 +90,11 @@
         filters = sharedService.PunchFilters;
 
         dialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        dialogService.OnClose -= Close;
     }
 
     private void Close(dynamic result)

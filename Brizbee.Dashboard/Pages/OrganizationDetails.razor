@@ -156,25 +156,12 @@
         currentUser = sharedService.CurrentUser;
 
         organization = await organizationService.GetOrganizationByIdAsync(currentUser.OrganizationId);
-
-        dialogService.OnOpen += Open;
-        dialogService.OnClose += Close;
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         // Unsubscribe to the events
         sharedService.OnChange -= StateHasChanged;
-    }
-
-    private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
-    {
-        Console.WriteLine("Dialog opened");
-    }
-
-    private async void Close(dynamic result)
-    {
-        Console.WriteLine($"Dialog closed with result: {result}");
     }
 
     private async System.Threading.Tasks.Task SaveOrganization()

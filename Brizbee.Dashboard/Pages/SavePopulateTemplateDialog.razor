@@ -37,6 +37,7 @@
 @code {
     [Parameter] public List<PopulateTemplate> Templates { get; set; }
     [Parameter] public List<PopulateRateException> Exceptions { get; set; }
+    [Parameter] public string RateType { get; set; }
 
     private SaveTemplate saveTemplate = new SaveTemplate();
 
@@ -44,22 +45,22 @@
     {
         if (saveTemplate.SaveOrReplaceTemplateId == 0)
         {
-            Console.WriteLine("Saving a new template");
             var populateTemplate = new PopulateTemplate()
             {
                 Name = saveTemplate.NewTemplateName,
-                Template = JsonSerializer.Serialize(Exceptions)
+                Template = JsonSerializer.Serialize(Exceptions),
+                RateType = RateType.ToUpperInvariant()
             };
             await populateTemplateService.SavePopulateTemplateAsync(populateTemplate);
         }
         else
         {
-            Console.WriteLine("Replacing an existing template");
             var existing = Templates.Where(t => t.Id == saveTemplate.SaveOrReplaceTemplateId).FirstOrDefault();
             var populateTemplate = new PopulateTemplate()
             {
                 Name = existing.Name,
-                Template = JsonSerializer.Serialize(Exceptions)
+                Template = JsonSerializer.Serialize(Exceptions),
+                RateType = RateType.ToUpperInvariant()
             };
             await populateTemplateService.SavePopulateTemplateAsync(populateTemplate);
         }

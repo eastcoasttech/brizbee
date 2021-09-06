@@ -7,6 +7,8 @@
 @inject DialogService dialogService
 @inject PopulateTemplateService populateTemplateService
 
+@implements IDisposable
+
 <table class="table table-bordered table-condensed table-supercondensed table-exceptions">
     <thead>
         <tr>
@@ -163,6 +165,11 @@
         dialogService.OnClose += Close;
     }
 
+    void IDisposable.Dispose()
+    {
+        dialogService.OnClose -= Close;
+    }
+
     public void AddException()
     {
         if (BaseRates == null || BaseRates.Count == 0)
@@ -217,7 +224,7 @@
             var templates = result.Item1;
 
             dialogService.Open<SelectPopulateTemplateDialog>("Select a Template",
-                                new Dictionary<string, object>() { { "Templates", templates } },
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "PAYROLL").ToList() } },
                                 new DialogOptions() { Width = "600px" });
         }
         else if (Type.ToUpperInvariant() == "SERVICE")
@@ -226,7 +233,7 @@
             var templates = result.Item1;
 
             dialogService.Open<SelectPopulateTemplateDialog>("Select a Template",
-                                new Dictionary<string, object>() { { "Templates", templates } },
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "SERVICE").ToList() } },
                                 new DialogOptions() { Width = "600px" });
         }
     }
@@ -239,7 +246,7 @@
             var templates = result.Item1;
 
             dialogService.Open<SavePopulateTemplateDialog>("Save As Template",
-                                new Dictionary<string, object>() { { "Templates", templates }, { "Exceptions", Exceptions } },
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "PAYROLL").ToList() }, { "Exceptions", Exceptions }, { "RateType", "PAYROLL" } },
                                 new DialogOptions() { Width = "600px" });
         }
         else if (Type.ToUpperInvariant() == "SERVICE")
@@ -248,7 +255,7 @@
             var templates = result.Item1;
 
             dialogService.Open<SavePopulateTemplateDialog>("Save As Template",
-                                new Dictionary<string, object>() { { "Templates", templates }, { "Exceptions", Exceptions } },
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "SERVICE").ToList() }, { "Exceptions", Exceptions }, { "RateType", "SERVICE" } },
                                 new DialogOptions() { Width = "600px" });
         }
     }
@@ -285,6 +292,8 @@
 
     private void Close(dynamic result)
     {
+        Console.WriteLine("Firing close event");
+
         var dialogCloseResult = (result as DialogCloseResult);
 
         if (dialogCloseResult == null)
@@ -292,6 +301,8 @@
 
         if (dialogCloseResult.Type == "template.selected")
         {
+            Console.WriteLine("Close event is template.selected");
+
             // Cannot continue if there are no rates.
             if (BaseRates == null || BaseRates.Count == 0)
                 return;
@@ -303,13 +314,9 @@
             var template = dialogCloseResult.Value as PopulateTemplate;
 
             var items = JsonSerializer.Deserialize<PopulateRateException[]>(template.Template);
-            Console.WriteLine(items);
 
-            Console.WriteLine($"Count of items is {items.Count()}");
             foreach (var item in items)
             {
-                Console.WriteLine("Adding item");
-
                 if (Type.ToUpperInvariant() == "PAYROLL")
                 {
                     Exceptions.Add(new PopulateRateException()
@@ -340,9 +347,9 @@
                         Date = item.Date
                     });
                 }
-
-                StateHasChanged();
             }
+
+            StateHasChanged();
         }
     }
 }

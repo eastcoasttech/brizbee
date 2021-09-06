@@ -119,7 +119,8 @@ namespace Brizbee.Web.Controllers
                         [T].[CreatedAt],
                         [T].[OrganizationId],
                         [T].[Name],
-                        [T].[Template]
+                        [T].[Template],
+                        [T].[RateType]
                     FROM
                         [PopulateTemplates] AS [T]
                     WHERE
@@ -139,7 +140,8 @@ namespace Brizbee.Web.Controllers
                         CreatedAt = result.CreatedAt,
                         Name = result.Name,
                         OrganizationId = result.OrganizationId,
-                        Template = result.Template
+                        Template = result.Template,
+                        RateType = result.RateType
                     });
                 }
 
@@ -180,6 +182,7 @@ namespace Brizbee.Web.Controllers
                 // Attempt to find an existing template to replace.
                 var existingTemplate = _context.PopulateTemplates
                     .Where(t => t.OrganizationId == currentUser.OrganizationId)
+                    .Where(t => t.RateType == populateTemplate.RateType)
                     .Where(t => t.Name == populateTemplate.Name)
                     .FirstOrDefault();
 
@@ -245,5 +248,7 @@ namespace Brizbee.Web.Controllers
         public string Name { get; set; }
 
         public string Template { get; set; }
+
+        public string RateType { get; set; }
     }
 }
