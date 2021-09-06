@@ -108,7 +108,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
-                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BasePayrollRateId)).OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -129,7 +129,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
-                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BaseServiceRateId)).OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
