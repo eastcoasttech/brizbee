@@ -160,7 +160,9 @@ namespace Brizbee.Web.Controllers
                 .Where(p => p.Task.BaseServiceRateId.HasValue)
                 .Select(p => p.Task.BaseServiceRateId.Value);
 
-            return db.Rates.Where(r => rateIds.Contains(r.Id));
+            return db.Rates
+                .Where(r => rateIds.Contains(r.Id))
+                .Where(r => r.IsDeleted == false);
         }
 
         // GET: odata/Rates/Default.BasePayrollRatesForPunches
@@ -182,7 +184,9 @@ namespace Brizbee.Web.Controllers
                 .Where(p => p.Task.BasePayrollRateId.HasValue)
                 .Select(p => p.Task.BasePayrollRateId.Value);
 
-            return db.Rates.Where(r => baseRateIds.Contains(r.Id));
+            return db.Rates
+                .Where(r => baseRateIds.Contains(r.Id))
+                .Where(r => r.IsDeleted == false);
         }
 
         // GET: odata/Rates/Default.AlternateServiceRatesForPunches
@@ -205,7 +209,9 @@ namespace Brizbee.Web.Controllers
                 .GroupBy(p => p.Task.BaseServiceRateId)
                 .Select(g => g.Key);
 
-            return db.Rates.Where(r => baseRateIds.Contains(r.ParentRateId));
+            return db.Rates
+                .Where(r => baseRateIds.Contains(r.ParentRateId))
+                .Where(r => r.IsDeleted == false);
         }
 
         // GET: odata/Rates/Default.AlternatePayrollRatesForPunches
@@ -228,7 +234,9 @@ namespace Brizbee.Web.Controllers
                 .GroupBy(p => p.Task.BasePayrollRateId)
                 .Select(g => g.Key);
 
-            return db.Rates.Where(r => baseRateIds.Contains(r.ParentRateId));
+            return db.Rates
+                .Where(r => baseRateIds.Contains(r.ParentRateId))
+                .Where(r => r.IsDeleted == false);
         }
 
         /// <summary>
