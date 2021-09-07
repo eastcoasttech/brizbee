@@ -1,6 +1,13 @@
 ﻿
+@using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
-@using Brizbee.Common.Models 
+@using Brizbee.Common.Models
+@using System.Text.Json
+
+@inject DialogService dialogService
+@inject PopulateTemplateService populateTemplateService
+
+@implements IDisposable
 
 <table class="table table-bordered table-condensed table-supercondensed table-exceptions">
     <thead>
@@ -103,7 +110,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
-                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BasePayrollRateId)).OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -124,7 +131,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
-                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BaseServiceRateId)).OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -152,6 +159,16 @@
     [Parameter] public List<Rate> BaseRates { get; set; }
     [Parameter] public List<Rate> AlternateRates { get; set; }
     [Parameter] public string Type { get; set; }
+
+    protected override void OnInitialized()
+    {
+        dialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        dialogService.OnClose -= Close;
+    }
 
     public void AddException()
     {
@@ -193,6 +210,56 @@
         }
     }
 
+    public async System.Threading.Tasks.Task AddExceptionFromTemplate()
+    {
+        if (BaseRates == null || BaseRates.Count == 0)
+            return;
+
+        if (AlternateRates == null || AlternateRates.Count == 0)
+            return;
+
+        if (Type.ToUpperInvariant() == "PAYROLL")
+        {
+            var result = await populateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            dialogService.Open<SelectPopulateTemplateDialog>("Select a Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "PAYROLL").ToList() } },
+                                new DialogOptions() { Width = "600px" });
+        }
+        else if (Type.ToUpperInvariant() == "SERVICE")
+        {
+            var result = await populateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            dialogService.Open<SelectPopulateTemplateDialog>("Select a Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "SERVICE").ToList() } },
+                                new DialogOptions() { Width = "600px" });
+        }
+    }
+
+    public async System.Threading.Tasks.Task SaveExceptionsToTemplate()
+    {
+        if (Type.ToUpperInvariant() == "PAYROLL")
+        {
+            var result = await populateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            dialogService.Open<SavePopulateTemplateDialog>("Save As Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "PAYROLL").ToList() }, { "Exceptions", Exceptions }, { "RateType", "PAYROLL" } },
+                                new DialogOptions() { Width = "600px" });
+        }
+        else if (Type.ToUpperInvariant() == "SERVICE")
+        {
+            var result = await populateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            dialogService.Open<SavePopulateTemplateDialog>("Save As Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "SERVICE").ToList() }, { "Exceptions", Exceptions }, { "RateType", "SERVICE" } },
+                                new DialogOptions() { Width = "600px" });
+        }
+    }
+
     public void MoveException(PopulateRateException exception, string direction)
     {
         var oldIndex = Exceptions.IndexOf(exception);
@@ -221,5 +288,68 @@
         }
 
         Exceptions.Insert(newIndex, exception);
+    }
+
+    private void Close(dynamic result)
+    {
+        Console.WriteLine("Firing close event");
+
+        var dialogCloseResult = (result as DialogCloseResult);
+
+        if (dialogCloseResult == null)
+            return;
+
+        if (dialogCloseResult.Type == "template.selected")
+        {
+            Console.WriteLine("Close event is template.selected");
+
+            // Cannot continue if there are no rates.
+            if (BaseRates == null || BaseRates.Count == 0)
+                return;
+
+            // Cannot continue if there are no rates.
+            if (AlternateRates == null || AlternateRates.Count == 0)
+                return;
+
+            var template = dialogCloseResult.Value as PopulateTemplate;
+
+            var items = JsonSerializer.Deserialize<PopulateRateException[]>(template.Template);
+
+            foreach (var item in items)
+            {
+                if (Type.ToUpperInvariant() == "PAYROLL")
+                {
+                    Exceptions.Add(new PopulateRateException()
+                    {
+                        Option = item.Option,
+                        BasePayrollRateId = item.BasePayrollRateId,
+                        AlternatePayrollRateId = item.AlternatePayrollRateId,
+                        RangeHour = item.RangeHour,
+                        RangeMinute = item.RangeMinute,
+                        RangeMerdian = item.RangeMerdian,
+                        CountHours = item.CountHours,
+                        CountMinutes = item.CountMinutes,
+                        Date = item.Date
+                    });
+                }
+                else if (Type.ToUpperInvariant() == "SERVICE")
+                {
+                    Exceptions.Add(new PopulateRateException()
+                    {
+                        Option = item.Option,
+                        BaseServiceRateId = item.BaseServiceRateId,
+                        AlternateServiceRateId = item.AlternateServiceRateId,
+                        RangeHour = item.RangeHour,
+                        RangeMinute = item.RangeMinute,
+                        RangeMerdian = item.RangeMerdian,
+                        CountHours = item.CountHours,
+                        CountMinutes = item.CountMinutes,
+                        Date = item.Date
+                    });
+                }
+            }
+
+            StateHasChanged();
+        }
     }
 }

@@ -157,6 +157,8 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     // Add an element for each punch to be synced
                     foreach (var punch in punches)
                     {
+                        Trace.TraceInformation(punch.Task.Job.QuickBooksCustomerJob);
+
                         // Prepare a new QBXML document.
                         var punchQBXML = service.MakeQBXMLDocument();
                         var punchDocument = punchQBXML.Item1;
@@ -421,9 +423,15 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
         {
             var date = punch.InAt.ToString("yyyy-MM-dd");
-            var customerName = ReplaceCharacters(punch.Task.Job.QuickBooksCustomerJob);
-            var className = ReplaceCharacters(punch.Task.Job.QuickBooksClass);
-            var employeeName = ReplaceCharacters(punch.User.QuickBooksEmployee);
+
+            // 08/31 Disabling replace characters because it seems to be handled automatically
+            //var customerName = ReplaceCharacters(punch.Task.Job.QuickBooksCustomerJob);
+            //var className = ReplaceCharacters(punch.Task.Job.QuickBooksClass);
+            //var employeeName = ReplaceCharacters(punch.User.QuickBooksEmployee);
+
+            var customerName = punch.Task.Job.QuickBooksCustomerJob;
+            var className = punch.Task.Job.QuickBooksClass;
+            var employeeName = punch.User.QuickBooksEmployee;
             var span = punch.OutAt.Value.Subtract(punch.InAt);
             var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
             var guid = string.Format("{{{0}}}", punch.Guid.ToString());

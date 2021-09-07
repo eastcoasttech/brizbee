@@ -183,14 +183,15 @@
 
         await RefreshTaskTemplates();
 
-        dialogService.OnOpen += Open;
         dialogService.OnClose += Close;
     }
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         // Unsubscribe to the events
         sharedService.OnChange -= StateHasChanged;
+
+        dialogService.OnClose -= Close;
     }
 
     private async System.Threading.Tasks.Task RefreshTaskTemplates()
@@ -212,11 +213,6 @@
 
         working = false;
         StateHasChanged();
-    }
-
-    private void Open(string title, Type type, Dictionary<string, object> parameters, DialogOptions options)
-    {
-        Console.WriteLine("Dialog opened");
     }
 
     private async void Close(dynamic result)

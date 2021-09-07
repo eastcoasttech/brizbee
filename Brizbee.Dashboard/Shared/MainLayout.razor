@@ -20,6 +20,8 @@
 @inject QBDInventoryItemSyncService qbdInventoryItemSyncService
 @inject QBDInventoryConsumptionService qbdInventoryConsumptionService
 @inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
+@inject TaskTemplateService taskTemplateService
+@inject PopulateTemplateService populateTemplateService
 
 <RadzenDialog />
 <RadzenTooltip />
@@ -66,8 +68,10 @@
         qbdInventoryItemSyncService.ResetHeaders();
         qbdInventoryConsumptionService.ResetHeaders();
         qbdInventoryConsumptionSyncService.ResetHeaders();
+        taskTemplateService.ResetHeaders();
+        populateTemplateService.ResetHeaders();
 
-        // Reset shared variables
+// Reset shared variables
         sharedService.Reset();
 
         // Return to login

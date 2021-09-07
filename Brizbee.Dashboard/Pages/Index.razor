@@ -13,6 +13,7 @@
 @inject CustomerService customerService
 @inject TaskService taskService
 @inject TaskTemplateService taskTemplateService
+@inject PopulateTemplateService populateTemplateService
 @inject JobService jobService
 @inject RateService rateService
 @inject OrganizationService organizationService
@@ -139,6 +140,7 @@
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             taskTemplateService.ConfigureHeadersWithCredentials(credential);
+            populateTemplateService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
             organizationService.ConfigureHeadersWithCredentials(credential);
@@ -196,6 +198,7 @@
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             taskTemplateService.ConfigureHeadersWithCredentials(credential);
+            populateTemplateService.ConfigureHeadersWithCredentials(credential);
             jobService.ConfigureHeadersWithCredentials(credential);
             rateService.ConfigureHeadersWithCredentials(credential);
             organizationService.ConfigureHeadersWithCredentials(credential);

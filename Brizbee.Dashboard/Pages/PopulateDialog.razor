@@ -3,7 +3,6 @@
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
 @using Brizbee.Common.Models
-@using System.Text.Json
 
 @inject TooltipService tooltipService
 @inject DialogService dialogService
@@ -20,128 +19,141 @@
     This operation is permanent and cannot be reversed. However, you can run Populate Rates multiple times and the rates will be overwritten.
 </p>
 
-<RadzenTabs>
-    <Tabs>
-        <RadzenTabsItem Text="Payroll Rates">
-            <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="basePayrollRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(basePayrollRatesQuestionIcon))"></i></strong></p>
-            <table class="table table-bordered table-condensed table-supercondensed">
-                <thead>
-                    <tr>
-                        <th>Customer #</th>
-                        <th>Customer</th>
-                        <th>Job #</th>
-                        <th>Job</th>
-                        <th>Task #</th>
-                        <th>Task</th>
-                        <th>Base Payroll Rate</th>
+<ul class="nav nav-tabs">
+    <li role="presentation" class="@(selectedTab == "PAYROLL" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "PAYROLL")" @onclick:preventDefault>Payroll Rates</a></li>
+    <li role="presentation" class="@(selectedTab == "SERVICE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SERVICE")" @onclick:preventDefault>Customer Rates</a></li>
+</ul>
+
+<div style="padding: 0 1.5em 0 1.5em;">
+    @if (selectedTab == "PAYROLL")
+    {
+        <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="basePayrollRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(basePayrollRatesQuestionIcon))"></i></strong></p>
+        <table class="table table-bordered table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th>Customer #</th>
+                    <th>Customer</th>
+                    <th>Job #</th>
+                    <th>Job</th>
+                    <th>Task #</th>
+                    <th>Task</th>
+                    <th>Base Payroll Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in tasks)
+                {
+                    <tr class="fadeIn @(task.BasePayrollRate == null ? "danger" : "")">
+                        <td>@task.Job.Customer.Number</td>
+                        <td>@task.Job.Customer.Name</td>
+                        <td>@task.Job.Number</td>
+                        <td>@task.Job.Name</td>
+                        <td>@task.Number</td>
+                        <td>@task.Name</td>
+                        <td>
+                            @if (task.BasePayrollRate != null)
+                            {
+                                <strong>@task.BasePayrollRate.Name</strong>
+                            }
+                            else
+                            {
+                                <strong class="text-danger">No Base Rate Specified!</strong>
+                            }
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var task in tasks)
-                    {
-                        <tr class="fadeIn @(task.BasePayrollRate == null ? "danger" : "")">
-                            <td>@task.Job.Customer.Number</td>
-                            <td>@task.Job.Customer.Name</td>
-                            <td>@task.Job.Number</td>
-                            <td>@task.Job.Name</td>
-                            <td>@task.Number</td>
-                            <td>@task.Name</td>
-                            <td>
-                                @if (task.BasePayrollRate != null)
-                                {
-                                    <strong>@task.BasePayrollRate.Name</strong>
-                                }
-                                else
-                                {
-                                    <strong class="text-danger">No Base Rate Specified!</strong>
-                                }
-                            </td>
-                        </tr>
-                    }
+                }
 
-                    @if (loadingBasePayrollRates)
-                    {
-                        <tr class="fadeIn">
-                            <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
-                        </tr>
-                    }
-
-                    @if (tasks.Count == 0 && !loadingBasePayrollRates)
-                    {
-                        <tr class="fadeIn">
-                            <td colspan="7">No Base Rates for the Punches</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-
-            <p><strong>Exceptions</strong></p>
-
-            <ExceptionsFragment @ref="payrollExceptionsFragment" Type="Payroll" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
-
-            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</a></p>
-        </RadzenTabsItem>
-        <RadzenTabsItem Text="Customer Rates">
-            <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
-            <table class="table table-bordered table-condensed table-supercondensed">
-                <thead>
-                    <tr>
-                        <th>Customer #</th>
-                        <th>Customer</th>
-                        <th>Job #</th>
-                        <th>Job</th>
-                        <th>Task #</th>
-                        <th>Task</th>
-                        <th>Base Customer Rate</th>
+                @if (loadingBasePayrollRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var task in tasks)
-                    {
-                        <tr class="fadeIn @(task.BaseServiceRate == null ? "danger" : "")">
-                            <td>@task.Job.Customer.Number</td>
-                            <td>@task.Job.Customer.Name</td>
-                            <td>@task.Job.Number</td>
-                            <td>@task.Job.Name</td>
-                            <td>@task.Number</td>
-                            <td>@task.Name</td>
-                            <td>
-                                @if (task.BaseServiceRate != null)
-                                {
-                                    <strong>@task.BaseServiceRate.Name</strong>
-                                }
-                                else
-                                {
-                                    <strong class="text-danger">No Base Rate Specified!</strong>
-                                }
-                            </td>
-                        </tr>
-                    }
+                }
 
-                    @if (loadingBaseServiceRates)
-                    {
-                        <tr class="fadeIn">
-                            <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
-                        </tr>
-                    }
+                @if (tasks.Count == 0 && !loadingBasePayrollRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7">No Base Rates for the Punches</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-                    @if (tasks.Count == 0 && !loadingBaseServiceRates)
-                    {
-                        <tr class="fadeIn">
-                            <td colspan="7">No Base Rates for the Punches</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <p><strong>Exceptions</strong></p>
 
-            <p><strong>Exceptions</strong></p>
+        <ExceptionsFragment @ref="payrollExceptionsFragment" Type="Payroll" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
 
-            <ExceptionsFragment @ref="serviceExceptionsFragment" Type="Service" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
+        <p>
+            <button class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</button>
+            <button class="btn btn-default" @onclick="@(e => AddPayrollRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add From Template&hellip;</button>
+            <button class="btn btn-default" @onclick="@(e => ShowSavePayrollRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any() || !payrollExceptions.Any())">Save As Template&hellip;</button>
+        </p>
+    }
+    else if (selectedTab == "SERVICE")
+    {
+        <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
+        <table class="table table-bordered table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th>Customer #</th>
+                    <th>Customer</th>
+                    <th>Job #</th>
+                    <th>Job</th>
+                    <th>Task #</th>
+                    <th>Task</th>
+                    <th>Base Customer Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in tasks)
+                {
+                    <tr class="fadeIn @(task.BaseServiceRate == null ? "danger" : "")">
+                        <td>@task.Job.Customer.Number</td>
+                        <td>@task.Job.Customer.Name</td>
+                        <td>@task.Job.Number</td>
+                        <td>@task.Job.Name</td>
+                        <td>@task.Number</td>
+                        <td>@task.Name</td>
+                        <td>
+                            @if (task.BaseServiceRate != null)
+                            {
+                                <strong>@task.BaseServiceRate.Name</strong>
+                            }
+                            else
+                            {
+                                <strong class="text-danger">No Base Rate Specified!</strong>
+                            }
+                        </td>
+                    </tr>
+                }
 
-            <p><a href="javascript:void(0)" class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</a></p>
-        </RadzenTabsItem>
-    </Tabs>
-</RadzenTabs>
+                @if (loadingBaseServiceRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    </tr>
+                }
+
+                @if (tasks.Count == 0 && !loadingBaseServiceRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7">No Base Rates for the Punches</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <p><strong>Exceptions</strong></p>
+
+        <ExceptionsFragment @ref="serviceExceptionsFragment" Type="Service" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
+
+        <p>
+            <button class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</button>
+            <button class="btn btn-default" @onclick="@(e => AddServiceRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add From Template&hellip;</button>
+            <button class="btn btn-default" @onclick="@(e => ShowSaveServiceRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any() || !serviceExceptions.Any())">Save As Template&hellip;</button>
+        </p>
+    }
+</div>
 
 <hr />
 
@@ -164,6 +176,7 @@
     private ElementReference baseServiceRatesQuestionIcon;
     private ExceptionsFragment payrollExceptionsFragment;
     private ExceptionsFragment serviceExceptionsFragment;
+    private string selectedTab = "PAYROLL";
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -218,7 +231,7 @@
         for (var i = 0; i < serviceExceptions.Count; i++)
         {
             var option = BuildPopulateRateOption(serviceExceptions[i]);
-            option.Add("Order", payrollExceptions.Count + i);
+            option.Add("Order", serviceExceptions.Count + i);
             option.Add("BaseServiceRateId", serviceExceptions[i].BaseServiceRateId);
             option.Add("AlternateServiceRateId", serviceExceptions[i].AlternateServiceRateId);
 
@@ -243,6 +256,26 @@
         payrollExceptionsFragment.AddException();
     }
 
+    private async System.Threading.Tasks.Task AddServiceRateExceptionsFromTemplate()
+    {
+        await serviceExceptionsFragment.AddExceptionFromTemplate();
+    }
+
+    private async System.Threading.Tasks.Task AddPayrollRateExceptionsFromTemplate()
+    {
+        await payrollExceptionsFragment.AddExceptionFromTemplate();
+    }
+
+    private async System.Threading.Tasks.Task ShowSaveServiceRateExceptionsTemplate()
+    {
+        await serviceExceptionsFragment.SaveExceptionsToTemplate();
+    }
+
+    private async System.Threading.Tasks.Task ShowSavePayrollRateExceptionsTemplate()
+    {
+        await payrollExceptionsFragment.SaveExceptionsToTemplate();
+    }
+
     private Dictionary<string, object> BuildPopulateRateOption(PopulateRateException exception)
     {
         var option = new Dictionary<string, object>();
@@ -256,7 +289,7 @@
         {
             case "Punches Before":
                 option = new Dictionary<string, object>()
-    {
+{
                     { "Type", exception.CalculatedType },
                     { "RangeDirection", exception.CalculatedRangeDirection },
                     { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
@@ -264,7 +297,7 @@
                 break;
             case "Punches After":
                 option = new Dictionary<string, object>()
-    {
+{
                     { "Type", exception.CalculatedType },
                     { "RangeDirection", exception.CalculatedRangeDirection },
                     { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
@@ -272,7 +305,7 @@
                 break;
             case "After Hours/Minutes Per Day":
                 option = new Dictionary<string, object>()
-    {
+{
                     { "Type", exception.CalculatedType },
                     { "CountScope", exception.CalculatedCountScope },
                     { "CountMinute", exception.CalculatedCountMinutes }
@@ -280,7 +313,7 @@
                 break;
             case "After Hours/Minutes in Range":
                 option = new Dictionary<string, object>()
-    {
+{
                     { "Type", exception.CalculatedType },
                     { "CountScope", exception.CalculatedCountScope },
                     { "CountMinute", exception.CalculatedCountMinutes }
@@ -288,7 +321,7 @@
                 break;
             case "Punches on Specific Date":
                 option = new Dictionary<string, object>()
-    {
+{
                     { "Type", exception.CalculatedType },
                     { "Date", exception.Date.ToString("yyyy-MM-dd") }
                 };

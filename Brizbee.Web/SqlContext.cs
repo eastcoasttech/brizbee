@@ -49,6 +49,7 @@ namespace Brizbee.Web
         public DbSet<QBDInventoryItemSync> QBDInventoryItemSyncs { get; set; }
         public DbSet<QBDInventorySite> QBDInventorySites { get; set; }
         public DbSet<QBDUnitOfMeasureSet> QBDUnitOfMeasureSets { get; set; }
+        public DbSet<PopulateTemplate> PopulateTemplates { get; set; }
         public DbSet<Rate> Rates { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<TaskTemplate> TaskTemplates { get; set; }
