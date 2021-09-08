@@ -239,6 +239,18 @@ namespace Brizbee.Web.Services
                             rate);
 
                         break;
+                    case "dayofweek":
+
+                        // Populates for day of week
+                        PopulateForDayOfWeek(
+                            splitPunches,
+                            userIds,
+                            option.DayOfWeek,
+                            baseRateId,
+                            alternateRateId,
+                            rate);
+
+                        break;
                 }
             }
 
@@ -427,6 +439,61 @@ namespace Brizbee.Web.Services
                         {
                             punch.ServiceRateId = alternateRateId;
                         }
+                    }
+                }
+            }
+        }
+
+        private void PopulateForDayOfWeek(List<Punch> punches, int[] userIds, string dayOfWeek, int baseRateId, int alternateRateId, string rate = "payroll")
+        {
+            DayOfWeek? day = null;
+            switch (dayOfWeek)
+            {
+                case "Sunday":
+                    day = DayOfWeek.Sunday;
+                    break;
+                case "Monday":
+                    day = DayOfWeek.Monday;
+                    break;
+                case "Tuesday":
+                    day = DayOfWeek.Tuesday;
+                    break;
+                case "Wednesday":
+                    day = DayOfWeek.Wednesday;
+                    break;
+                case "Thursday":
+                    day = DayOfWeek.Thursday;
+                    break;
+                case "Friday":
+                    day = DayOfWeek.Friday;
+                    break;
+                case "Saturday":
+                    day = DayOfWeek.Saturday;
+                    break;
+            }
+
+            if (day == null)
+                return;
+
+            var filtered = punches.Where(p => p.InAt.DayOfWeek == day).ToList();
+            foreach (var punch in filtered)
+            {
+                var task = db.Tasks.Find(punch.TaskId);
+
+                if (rate == "payroll")
+                {
+                    // Can only set alternate rates for the matching base rate
+                    if (task.BasePayrollRateId == baseRateId)
+                    {
+                        punch.PayrollRateId = alternateRateId;
+                    }
+                }
+                else if (rate == "service")
+                {
+                    // Can only set alternate rates for the matching base rate
+                    if (task.BaseServiceRateId == baseRateId)
+                    {
+                        punch.ServiceRateId = alternateRateId;
                     }
                 }
             }

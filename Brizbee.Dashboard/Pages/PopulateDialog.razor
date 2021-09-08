@@ -326,6 +326,13 @@
                     { "Date", exception.Date.ToString("yyyy-MM-dd") }
                 };
                 break;
+            case "Punches on Day of Week":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "DayOfWeek", exception.DayOfWeek }
+                };
+                break;
         }
 
         return option;
