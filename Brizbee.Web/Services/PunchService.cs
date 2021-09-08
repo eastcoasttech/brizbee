@@ -34,6 +34,7 @@ namespace Brizbee.Web.Services
     public class PunchService : IDisposable
     {
         private SqlContext db = new SqlContext();
+        private DateTime nowUtc = DateTime.UtcNow;
 
         /// <summary>
         /// Disposes of the database connection.
@@ -69,7 +70,7 @@ namespace Brizbee.Web.Services
             //var split = new Split()
             //{
             //    BeforeSplit = beforeSplit,
-            //    CreatedAt = DateTime.UtcNow,
+            //    CreatedAt = nowUtc,
             //    CreatedByUserId = currentUser.Id,
             //    AfterSplit = afterSplit,
             //    OrganizationId = currentUser.OrganizationId
@@ -594,7 +595,7 @@ namespace Brizbee.Web.Services
                                     InAt = adjustedInAt,
                                     OutAt = adjustedOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -628,7 +629,7 @@ namespace Brizbee.Web.Services
                                     InAt = newInAt,
                                     OutAt = newOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -726,7 +727,7 @@ namespace Brizbee.Web.Services
                                     InAt = adjustedInAt,
                                     OutAt = adjustedOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -760,7 +761,7 @@ namespace Brizbee.Web.Services
                                     InAt = newInAt,
                                     OutAt = newOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -851,7 +852,7 @@ namespace Brizbee.Web.Services
                                     InAt = adjustedInAt,
                                     OutAt = adjustedOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -891,7 +892,7 @@ namespace Brizbee.Web.Services
                                     InAt = newInAt,
                                     OutAt = newOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
