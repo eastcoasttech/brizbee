@@ -36,6 +36,7 @@
                         <option>After Hours/Minutes Per Day</option>
                         <option>After Hours/Minutes in Range</option>
                         <option>Punches on Specific Date</option>
+                        <option>Punches on Day of Week</option>
                     </select>
                 </td>
 
@@ -93,6 +94,22 @@
                     <td colspan="3">
                         <label class="text-muted">Date</label>
                         <input type="date" class="form-control input-sm" @bind="exception.Date" />
+                    </td>
+                }
+
+                @if (exception.Option == "Punches on Day of Week")
+                {
+                    <td colspan="3">
+                        <label class="text-muted">Day</label>
+                        <select class="form-control input-sm" @bind="exception.DayOfWeek">
+                            <option value="Sunday">Sunday</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                        </select>
                     </td>
                 }
 
@@ -190,7 +207,8 @@
                 RangeMerdian = "AM",
                 CountHours = "0",
                 CountMinutes = "0",
-                Date = DateTime.Today
+                Date = DateTime.Today,
+                DayOfWeek = "Sunday"
             });
         }
         else if (Type.ToUpperInvariant() == "SERVICE")
@@ -205,7 +223,8 @@
                 RangeMerdian = "AM",
                 CountHours = "0",
                 CountMinutes = "0",
-                Date = DateTime.Today
+                Date = DateTime.Today,
+                DayOfWeek = "Sunday"
             });
         }
     }
@@ -329,7 +348,8 @@
                         RangeMerdian = item.RangeMerdian,
                         CountHours = item.CountHours,
                         CountMinutes = item.CountMinutes,
-                        Date = item.Date
+                        Date = item.Date,
+                        DayOfWeek = item.DayOfWeek
                     });
                 }
                 else if (Type.ToUpperInvariant() == "SERVICE")
@@ -344,7 +364,8 @@
                         RangeMerdian = item.RangeMerdian,
                         CountHours = item.CountHours,
                         CountMinutes = item.CountMinutes,
-                        Date = item.Date
+                        Date = item.Date,
+                        DayOfWeek = item.DayOfWeek
                     });
                 }
             }

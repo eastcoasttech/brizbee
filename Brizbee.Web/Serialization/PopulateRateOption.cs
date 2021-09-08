@@ -49,6 +49,8 @@ namespace Brizbee.Web.Serialization
 
         public DateTime Date { get; set; } // on specific date
 
+        public string DayOfWeek { get; set; } // on day of week
+
         public int Order { get; set; }
 
         // Option 1 - After Hour (Hour=17)

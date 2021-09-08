@@ -26,6 +26,8 @@ namespace Brizbee.Dashboard.Serialization
 
         public DateTime Date { get; set; }
 
+        public string DayOfWeek { get; set; }
+
         public string CalculatedType
         {
             get
@@ -41,6 +43,10 @@ namespace Brizbee.Dashboard.Serialization
                 else if (Option == "Punches on Specific Date")
                 {
                     return "date";
+                }
+                else if (Option == "Punches on Day of Week")
+                {
+                    return "dayofweek";
                 }
                 else
                 {
