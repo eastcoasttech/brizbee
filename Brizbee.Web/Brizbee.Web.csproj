@@ -26,6 +26,7 @@
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ApplicationInsightsResourceId>/subscriptions/59720b0a-f994-493b-82a9-748d4749b7e1/resourceGroups/ects1/providers/microsoft.insights/components/ai-app-brizbee-prod</ApplicationInsightsResourceId>
   </PropertyGroup>
   <PropertyGroup>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
