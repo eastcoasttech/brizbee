@@ -382,135 +382,163 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult SplitAtMidnight(ODataActionParameters parameters)
         {
-            var parsedInAt = DateTime.Parse(parameters["InAt"] as string);
-            var parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
-            var currentUser = CurrentUser();
-            var nowUtc = DateTime.UtcNow;
-            var inAt = new DateTime(parsedInAt.Year, parsedInAt.Month, parsedInAt.Day, 0, 0, 0, 0);
-            var outAt = new DateTime(parsedOutAt.Year, parsedOutAt.Month, parsedOutAt.Day, 23, 59, 0, 0);
-            int[] userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
-            var originalPunchesTracked = db.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                .Where(p => !p.CommitId.HasValue); // Only uncommited punches
-            var originalPunchesNotTracked = originalPunchesTracked
-                .AsNoTracking() // Will be manipulated in memory
-                .ToList();
-
-            // Save what the punches looked like before.
-            var before = originalPunchesNotTracked;
-
-            var splitPunches = new PunchService().SplitAtMidnight(originalPunchesNotTracked, currentUser);
-
-            // Save what the punches look like after.
-            var after = splitPunches;
-
-            // Delete the old punches and save the new ones
-            db.Punches.RemoveRange(originalPunchesTracked);
-            db.SaveChanges();
-
-            db.Punches.AddRange(splitPunches);
-            db.SaveChanges();
-
-            try
+            using (var transaction = db.Database.BeginTransaction())
             {
-                // Attempt to save the backup of the punches on Azure.
-                var backup = new
+                try
                 {
-                    Before = before,
-                    After = after
-                };
-                var json = JsonConvert.SerializeObject(backup);
+                    var parsedInAt = DateTime.Parse(parameters["InAt"] as string);
+                    var parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
+                    var currentUser = CurrentUser();
+                    var nowUtc = DateTime.UtcNow;
+                    var inAt = new DateTime(parsedInAt.Year, parsedInAt.Month, parsedInAt.Day, 0, 0, 0, 0);
+                    var outAt = new DateTime(parsedOutAt.Year, parsedOutAt.Month, parsedOutAt.Day, 23, 59, 0, 0);
+                    int[] userIds = db.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Select(u => u.Id)
+                        .ToArray();
+                    var originalPunchesTracked = db.Punches
+                        .Where(p => userIds.Contains(p.UserId))
+                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                        .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+                    var originalPunchesNotTracked = originalPunchesTracked
+                        .AsNoTracking() // Will be manipulated in memory
+                        .ToList();
 
-                // Prepare to upload the backup.
-                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
-                BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
-                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("split-punch-backups");
-                BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+                    // Save what the punches looked like before.
+                    var before = originalPunchesNotTracked;
 
-                // Perform the upload.
-                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                    var splitPunches = new PunchService().SplitAtMidnight(originalPunchesNotTracked, currentUser);
+
+                    // Save what the punches look like after.
+                    var after = splitPunches;
+
+                    // Delete the old punches and save the new ones
+                    db.Punches.RemoveRange(originalPunchesTracked);
+                    db.SaveChanges();
+
+                    db.Punches.AddRange(splitPunches);
+                    db.SaveChanges();
+
+                    try
+                    {
+                        // Attempt to save the backup of the punches on Azure.
+                        var backup = new
+                        {
+                            Before = before,
+                            After = after
+                        };
+                        var json = JsonConvert.SerializeObject(backup);
+
+                        // Prepare to upload the backup.
+                        var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("split-punch-backups");
+                        BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+
+                        // Perform the upload.
+                        using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                        {
+                            blobClient.Upload(stream);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceWarning(ex.ToString());
+                    }
+
+                    transaction.Commit();
+
+                    return Ok();
+                }
+                catch (Exception ex)
                 {
-                    blobClient.Upload(stream);
+                    transaction.Rollback();
+
+                    return BadRequest(ex.ToString());
                 }
             }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning(ex.ToString());
-            }
-
-            return Ok();
         }
 
         // POST: odata/Punches/Default.PopulateRates
         [HttpPost]
         public IHttpActionResult PopulateRates(ODataActionParameters parameters)
         {
-            var populateOptions = parameters["Options"] as PopulateRateOptions;
-            var currentUser = CurrentUser();
-            var nowUtc = DateTime.UtcNow;
-            var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0, DateTimeKind.Unspecified);
-            var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0, DateTimeKind.Unspecified);
-            populateOptions.InAt = inAt;
-            populateOptions.OutAt = outAt;
-            int[] userIds = db.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
-            var originalPunchesTracked = db.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                .Where(p => !p.CommitId.HasValue); // Only uncommited punches
-            var originalPunchesNotTracked = originalPunchesTracked
-                .AsNoTracking() // Will be manipulated in memory
-                .ToList();
-
-            // Save what the punches looked like before.
-            var before = originalPunchesNotTracked;
-
-            var populatedPunches = new PunchService().Populate(populateOptions, originalPunchesNotTracked, currentUser);
-
-            // Save what the punches look like after.
-            var after = populatedPunches;
-
-            // Delete the old punches and save the new ones.
-            db.Punches.RemoveRange(originalPunchesTracked);
-            db.SaveChanges();
-
-            db.Punches.AddRange(populatedPunches);
-            db.SaveChanges();
-
-            try
+            using (var transaction = db.Database.BeginTransaction())
             {
-                // Attempt to save the backup of the punches on Azure.
-                var backup = new
+                try
                 {
-                    Before = before,
-                    After = after
-                };
-                var json = JsonConvert.SerializeObject(backup);
+                    var populateOptions = parameters["Options"] as PopulateRateOptions;
+                    var currentUser = CurrentUser();
+                    var nowUtc = DateTime.UtcNow;
+                    var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0, DateTimeKind.Unspecified);
+                    var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0, DateTimeKind.Unspecified);
+                    populateOptions.InAt = inAt;
+                    populateOptions.OutAt = outAt;
+                    int[] userIds = db.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Select(u => u.Id)
+                        .ToArray();
+                    var originalPunchesTracked = db.Punches
+                        .Where(p => userIds.Contains(p.UserId))
+                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                        .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+                    var originalPunchesNotTracked = originalPunchesTracked
+                        .AsNoTracking() // Will be manipulated in memory
+                        .ToList();
 
-                // Prepare to upload the backup.
-                var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
-                BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
-                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("populate-punch-backups");
-                BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+                    // Save what the punches looked like before.
+                    var before = originalPunchesNotTracked;
 
-                // Perform the upload.
-                using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                    var populatedPunches = new PunchService().Populate(populateOptions, originalPunchesNotTracked, currentUser);
+
+                    // Save what the punches look like after.
+                    var after = populatedPunches;
+
+                    // Delete the old punches and save the new ones.
+                    db.Punches.RemoveRange(originalPunchesTracked);
+                    db.SaveChanges();
+
+                    db.Punches.AddRange(populatedPunches);
+                    db.SaveChanges();
+
+                    try
+                    {
+                        // Attempt to save the backup of the punches on Azure.
+                        var backup = new
+                        {
+                            Before = before,
+                            After = after
+                        };
+                        var json = JsonConvert.SerializeObject(backup);
+
+                        // Prepare to upload the backup.
+                        var azureConnectionString = ConfigurationManager.AppSettings["PunchBackupsAzureStorageConnectionString"].ToString();
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("populate-punch-backups");
+                        BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+
+                        // Perform the upload.
+                        using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                        {
+                            blobClient.Upload(stream);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceWarning(ex.ToString());
+                    }
+
+                    transaction.Commit();
+
+                    return Ok();
+                }
+                catch (Exception ex)
                 {
-                    blobClient.Upload(stream);
+                    transaction.Rollback();
+
+                    return BadRequest(ex.ToString());
                 }
             }
-            catch (Exception ex)
-            {
-                Trace.TraceWarning(ex.ToString());
-            }
-
-            return Ok();
         }
 
         protected override void Dispose(bool disposing)
