@@ -20,8 +20,11 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Microsoft.ApplicationInsights.Extensibility;
 using Stripe;
+using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.Web.Http;
 
 namespace Brizbee.Web
@@ -30,14 +33,32 @@ namespace Brizbee.Web
     {
         protected void Application_Start()
         {
-            // Set your secret key: remember to change this to your live secret key in production
-            // See your keys here: https://dashboard.stripe.com/account/apikeys
-            StripeConfiguration.SetApiKey(ConfigurationManager.AppSettings["StripeSecretKey"].ToString());
-            
+            // Configure Stripe key
+            StripeConfiguration.ApiKey = ConfigurationManager.AppSettings["StripeSecretKey"].ToString();
+
             GlobalConfiguration.Configuration.Formatters.JsonFormatter.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             GlobalConfiguration.Configuration.Formatters.Remove(GlobalConfiguration.Configuration.Formatters.XmlFormatter);
 
             GlobalConfiguration.Configure(WebApiConfig.Register);
+
+            // Configure Application Insights key
+            try
+            {
+                TelemetryConfiguration.Active.ConnectionString = ConfigurationManager.AppSettings["ApplicationInsightsConnectionString"].ToString();
+                //TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+            }
+            catch (ArgumentNullException ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+            catch (ConfigurationErrorsException ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
         }
     }
 }

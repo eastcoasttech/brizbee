@@ -21,7 +21,7 @@
     },
     "resourceName": {
       "type": "string",
-      "defaultValue": "app-brizbee-prod",
+      "defaultValue": "slot-1",
       "metadata": {
         "description": "Name of the main resource to be created by this template."
       }

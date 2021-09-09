@@ -215,6 +215,7 @@
             return;
 
         working = true;
+        StateHasChanged();
 
         var populateRateOptions = new List<Dictionary<string, object>>();
 
@@ -240,8 +241,6 @@
 
         // Send the request.
         await punchService.PostPopulateRatesAsync(sharedService.RangeMin, sharedService.RangeMax, populateRateOptions);
-
-        working = false;
 
         dialogService.Close("punch.populated");
     }

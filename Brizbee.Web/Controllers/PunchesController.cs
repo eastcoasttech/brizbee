@@ -25,10 +25,13 @@ using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Brizbee.Web.Serialization;
 using Brizbee.Web.Services;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Validation;
@@ -47,6 +50,7 @@ namespace Brizbee.Web.Controllers
     {
         private SqlContext db = new SqlContext();
         private PunchRepository repo = new PunchRepository();
+        private TelemetryClient telemetryClient = new TelemetryClient();
 
         // GET: odata/Punches
         [EnableQuery(PageSize = 500, MaxExpansionDepth = 3)]
@@ -382,6 +386,8 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult SplitAtMidnight(ODataActionParameters parameters)
         {
+            Trace.TraceInformation("Attempting to split at midnight");
+
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
@@ -404,6 +410,8 @@ namespace Brizbee.Web.Controllers
                         .AsNoTracking() // Will be manipulated in memory
                         .ToList();
 
+                    Trace.TraceInformation($"Splitting punches {inAt:G} through {outAt:G} for {currentUser.OrganizationId}");
+
                     // Save what the punches looked like before.
                     var before = originalPunchesNotTracked;
 
@@ -412,9 +420,13 @@ namespace Brizbee.Web.Controllers
                     // Save what the punches look like after.
                     var after = splitPunches;
 
+                    Trace.TraceInformation("Removing original punches");
+
                     // Delete the old punches and save the new ones
                     db.Punches.RemoveRange(originalPunchesTracked);
                     db.SaveChanges();
+
+                    Trace.TraceInformation("Adding split punches");
 
                     db.Punches.AddRange(splitPunches);
                     db.SaveChanges();
@@ -452,6 +464,9 @@ namespace Brizbee.Web.Controllers
                 }
                 catch (Exception ex)
                 {
+                    Trace.TraceError("Population failed");
+                    Trace.TraceError(ex.ToString());
+
                     transaction.Rollback();
 
                     return BadRequest(ex.ToString());
@@ -463,6 +478,8 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult PopulateRates(ODataActionParameters parameters)
         {
+            telemetryClient.TrackEvent("Populate:Requested");
+
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
@@ -485,6 +502,14 @@ namespace Brizbee.Web.Controllers
                     var originalPunchesNotTracked = originalPunchesTracked
                         .AsNoTracking() // Will be manipulated in memory
                         .ToList();
+
+                    telemetryClient.TrackEvent("Populate:Starting", new Dictionary<string, string>()
+                    {
+                        { "InAt", inAt.ToString("G") },
+                        { "OutAt", outAt.ToString("G") },
+                        { "UserId", currentUser.Id.ToString() },
+                        { "OrganizationId", currentUser.OrganizationId.ToString() }
+                    });
 
                     // Save what the punches looked like before.
                     var before = originalPunchesNotTracked;
@@ -525,8 +550,11 @@ namespace Brizbee.Web.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning(ex.ToString());
+                        telemetryClient.TrackException(ex);
                     }
+
+                    telemetryClient.TrackEvent("Populate:Succeeded");
+                    telemetryClient.Flush();
 
                     transaction.Commit();
 
@@ -534,6 +562,10 @@ namespace Brizbee.Web.Controllers
                 }
                 catch (Exception ex)
                 {
+                    telemetryClient.TrackEvent("Populate:Failed");
+                    telemetryClient.TrackException(ex);
+                    telemetryClient.Flush();
+
                     transaction.Rollback();
 
                     return BadRequest(ex.ToString());
@@ -547,6 +579,8 @@ namespace Brizbee.Web.Controllers
             {
                 db.Dispose();
                 repo.Dispose();
+
+                telemetryClient.Flush();
             }
             base.Dispose(disposing);
         }
