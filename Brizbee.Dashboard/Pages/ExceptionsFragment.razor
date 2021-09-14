@@ -311,8 +311,6 @@
 
     private void Close(dynamic result)
     {
-        Console.WriteLine("Firing close event");
-
         var dialogCloseResult = (result as DialogCloseResult);
 
         if (dialogCloseResult == null)
@@ -320,8 +318,6 @@
 
         if (dialogCloseResult.Type == "template.selected")
         {
-            Console.WriteLine("Close event is template.selected");
-
             // Cannot continue if there are no rates.
             if (BaseRates == null || BaseRates.Count == 0)
                 return;
