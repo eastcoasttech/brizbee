@@ -170,7 +170,12 @@
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+            try
+            {
+                await Task.Delay(100);
+                await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+            }
+            catch (Exception) { }
         }
     }
 
@@ -241,14 +246,24 @@
         if (method == "email")
         {
             method = "pin";
-            await Task.Delay(50);
-            await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+
+            try
+            {
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+            }
+            catch (Exception) { }
         }
         else if (method == "pin")
         {
             method = "email";
-            await Task.Delay(50);
-            await JSRuntime.InvokeVoidAsync("focusElement", "inputEmailAddress");
+
+            try
+            {
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("focusElement", "inputEmailAddress");
+            }
+            catch (Exception) { }
         }
     }
 } 

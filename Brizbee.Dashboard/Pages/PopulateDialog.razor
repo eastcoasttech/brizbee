@@ -201,7 +201,11 @@
 
         StateHasChanged();
 
-        await JSRuntime.InvokeVoidAsync("focusElement", "btnAddPayrollRateException");
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("focusElement", "btnAddPayrollRateException");
+        }
+        catch (Exception) { }
     }
 
     private void CloseDialog(MouseEventArgs e)
