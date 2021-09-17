@@ -575,9 +575,11 @@ namespace Brizbee.Web.Controllers
                     ORDER BY
                         [InAt] DESC;";
 
-                var result = connection.QueryFirstOrDefault<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
+                var results = connection.Query<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
 
-                if (result != null)
+                if (results.Any())
+                {
+                    var result = results.FirstOrDefault();
                     currentPunch = new Punch()
                     {
                         Id = result.Punch_Id,
@@ -639,91 +641,13 @@ namespace Brizbee.Web.Controllers
                             }
                         }
                     };
+                }
 
                 connection.Close();
             }
 
             return Ok(currentPunch);
         }
-
-        //// GET: api/PunchesExpanded/5
-        //[ResponseType(typeof(Punch))]
-        //public IHttpActionResult GetPunch(int id)
-        //{
-        //    Punch punch = _context.Punches.Find(id);
-        //    if (punch == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return Ok(punch);
-        //}
-
-        //// PUT: api/PunchesExpanded/5
-        //[ResponseType(typeof(void))]
-        //public IHttpActionResult PutPunch(int id, Punch punch)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    if (id != punch.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    _context.Entry(punch).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        _context.SaveChanges();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!PunchExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return StatusCode(HttpStatusCode.NoContent);
-        //}
-
-        //// POST: api/PunchesExpanded
-        //[ResponseType(typeof(Punch))]
-        //public IHttpActionResult PostPunch(Punch punch)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    _context.Punches.Add(punch);
-        //    _context.SaveChanges();
-
-        //    return CreatedAtRoute("DefaultApi", new { id = punch.Id }, punch);
-        //}
-
-        //// DELETE: api/PunchesExpanded/5
-        //[ResponseType(typeof(Punch))]
-        //public IHttpActionResult DeletePunch(int id)
-        //{
-        //    Punch punch = _context.Punches.Find(id);
-        //    if (punch == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _context.Punches.Remove(punch);
-        //    _context.SaveChanges();
-
-        //    return Ok(punch);
-        //}
 
         protected override void Dispose(bool disposing)
         {
