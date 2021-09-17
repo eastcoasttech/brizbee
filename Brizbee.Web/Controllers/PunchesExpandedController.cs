@@ -658,11 +658,6 @@ namespace Brizbee.Web.Controllers
             base.Dispose(disposing);
         }
 
-        //private bool PunchExists(int id)
-        //{
-        //    return _context.Punches.Count(e => e.Id == id) > 0;
-        //}
-
         public User CurrentUser()
         {
             if (ActionContext.RequestContext.Principal.Identity.Name.Length > 0)
