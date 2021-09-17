@@ -34,6 +34,7 @@ namespace Brizbee.Web.Services
     public class PunchService : IDisposable
     {
         private SqlContext db = new SqlContext();
+        private DateTime nowUtc = DateTime.UtcNow;
 
         /// <summary>
         /// Disposes of the database connection.
@@ -69,7 +70,7 @@ namespace Brizbee.Web.Services
             //var split = new Split()
             //{
             //    BeforeSplit = beforeSplit,
-            //    CreatedAt = DateTime.UtcNow,
+            //    CreatedAt = nowUtc,
             //    CreatedByUserId = currentUser.Id,
             //    AfterSplit = afterSplit,
             //    OrganizationId = currentUser.OrganizationId
@@ -234,6 +235,18 @@ namespace Brizbee.Web.Services
                             splitPunches,
                             userIds,
                             option.Date,
+                            baseRateId,
+                            alternateRateId,
+                            rate);
+
+                        break;
+                    case "dayofweek":
+
+                        // Populates for day of week
+                        PopulateForDayOfWeek(
+                            splitPunches,
+                            userIds,
+                            option.DayOfWeek,
                             baseRateId,
                             alternateRateId,
                             rate);
@@ -432,6 +445,61 @@ namespace Brizbee.Web.Services
             }
         }
 
+        private void PopulateForDayOfWeek(List<Punch> punches, int[] userIds, string dayOfWeek, int baseRateId, int alternateRateId, string rate = "payroll")
+        {
+            DayOfWeek? day = null;
+            switch (dayOfWeek)
+            {
+                case "Sunday":
+                    day = DayOfWeek.Sunday;
+                    break;
+                case "Monday":
+                    day = DayOfWeek.Monday;
+                    break;
+                case "Tuesday":
+                    day = DayOfWeek.Tuesday;
+                    break;
+                case "Wednesday":
+                    day = DayOfWeek.Wednesday;
+                    break;
+                case "Thursday":
+                    day = DayOfWeek.Thursday;
+                    break;
+                case "Friday":
+                    day = DayOfWeek.Friday;
+                    break;
+                case "Saturday":
+                    day = DayOfWeek.Saturday;
+                    break;
+            }
+
+            if (day == null)
+                return;
+
+            var filtered = punches.Where(p => p.InAt.DayOfWeek == day).ToList();
+            foreach (var punch in filtered)
+            {
+                var task = db.Tasks.Find(punch.TaskId);
+
+                if (rate == "payroll")
+                {
+                    // Can only set alternate rates for the matching base rate
+                    if (task.BasePayrollRateId == baseRateId)
+                    {
+                        punch.PayrollRateId = alternateRateId;
+                    }
+                }
+                else if (rate == "service")
+                {
+                    // Can only set alternate rates for the matching base rate
+                    if (task.BaseServiceRateId == baseRateId)
+                    {
+                        punch.ServiceRateId = alternateRateId;
+                    }
+                }
+            }
+        }
+
         public List<Punch> SplitAtMidnight(List<Punch> originalPunches, User currentUser)
         {
             // Clear id to zero
@@ -527,7 +595,7 @@ namespace Brizbee.Web.Services
                                     InAt = adjustedInAt,
                                     OutAt = adjustedOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -561,7 +629,7 @@ namespace Brizbee.Web.Services
                                     InAt = newInAt,
                                     OutAt = newOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -659,7 +727,7 @@ namespace Brizbee.Web.Services
                                     InAt = adjustedInAt,
                                     OutAt = adjustedOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -693,7 +761,7 @@ namespace Brizbee.Web.Services
                                     InAt = newInAt,
                                     OutAt = newOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -784,7 +852,7 @@ namespace Brizbee.Web.Services
                                     InAt = adjustedInAt,
                                     OutAt = adjustedOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,
@@ -824,7 +892,7 @@ namespace Brizbee.Web.Services
                                     InAt = newInAt,
                                     OutAt = newOutAt,
                                     Guid = Guid.NewGuid(),
-                                    CreatedAt = DateTime.UtcNow,
+                                    CreatedAt = nowUtc,
                                     LatitudeForInAt = punch.LatitudeForInAt,
                                     LatitudeForOutAt = punch.LatitudeForOutAt,
                                     LongitudeForInAt = punch.LongitudeForInAt,

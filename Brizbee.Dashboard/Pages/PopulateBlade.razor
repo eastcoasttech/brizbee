@@ -158,7 +158,7 @@
         alternateServiceRates = alternateServiceRatesResult.Item1;
 
         var tasksResults = await taskService.GetTasksForPunchesAsync(sharedService.RangeMin, sharedService.RangeMax);
-        tasks = tasksResults;
+        tasks = tasksResults.Item1;
 
         loadingBasePayrollRates = false;
         loadingBaseServiceRates = false;

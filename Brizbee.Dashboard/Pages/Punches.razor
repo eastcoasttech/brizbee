@@ -242,19 +242,6 @@
                     </a>
                 </th>
                 <th style="width: 10%;">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("PayrollRate/Name"))">
-                        Payroll Rate
-                        @if (sortBy == "PayrollRate/Name" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "PayrollRate/Name" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th style="width: 10%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ServiceRate/Name"))">
                         Customer Rate
                         @if (sortBy == "ServiceRate/Name" && sortDirection == "ASC")
@@ -262,6 +249,19 @@
                             <span class="fa fa-caret-up"></span>
                         }
                         else if (sortBy == "ServiceRate/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("PayrollRate/Name"))">
+                        Payroll Rate
+                        @if (sortBy == "PayrollRate/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "PayrollRate/Name" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
@@ -293,15 +293,15 @@
                     <td><a href="javascript:void(0)">@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</a></td>
                     <td><a href="javascript:void(0)">@punch.Task.Number &ndash; @punch.Task.Name</a></td>
                     <td>
-                        @if (punch.PayrollRate != null)
-                        {
-                            <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
-                        }
-                    </td>
-                    <td>
                         @if (punch.ServiceRate != null)
                         {
                             <a href="javascript:void(0)">@punch.ServiceRate.Name</a>
+                        }
+                    </td>
+                    <td>
+                        @if (punch.PayrollRate != null)
+                        {
+                            <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
                         }
                     </td>
                     <td class="text-center">
@@ -413,10 +413,14 @@
     {
         if ((result as string) == "range.updated")
         {
+            // Reset paging.
+            punchesPageStart = skip = 0;
             await RefreshPunches();
         }
         else if ((result as string) == "filter.updated")
         {
+            // Reset paging.
+            punchesPageStart = skip = 0;
             await RefreshPunches();
         }
         else if ((result as string) == "punch.locked")
@@ -445,6 +449,8 @@
     {
         working = true;
         punches.Clear();
+        StateHasChanged();
+
         var result = await punchService.GetExpandedPunchesAsync(new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0), new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection, sharedService.PunchFilters);
         punches = result.Item1;
         punchesCount = result.Item2.GetValueOrDefault();

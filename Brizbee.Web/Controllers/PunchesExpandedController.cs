@@ -575,6 +575,7 @@ namespace Brizbee.Web.Controllers
                     ORDER BY
                         [InAt] DESC;";
 
+                var result = connection.QueryFirstOrDefault<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
                 var results = connection.Query<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
 
                 if (results.Any())

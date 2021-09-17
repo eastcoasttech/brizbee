@@ -36,6 +36,7 @@
                         <option>After Hours/Minutes Per Day</option>
                         <option>After Hours/Minutes in Range</option>
                         <option>Punches on Specific Date</option>
+                        <option>Punches on Day of Week</option>
                     </select>
                 </td>
 
@@ -96,6 +97,22 @@
                     </td>
                 }
 
+                @if (exception.Option == "Punches on Day of Week")
+                {
+                    <td colspan="3">
+                        <label class="text-muted">Day</label>
+                        <select class="form-control input-sm" @bind="exception.DayOfWeek">
+                            <option value="Sunday">Sunday</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                        </select>
+                    </td>
+                }
+
                 @if (Type.ToUpperInvariant() == "PAYROLL")
                 {
                     <td>
@@ -110,7 +127,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
-                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BasePayrollRateId)).OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -131,7 +148,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
-                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BaseServiceRateId)).OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -184,13 +201,14 @@
             {
                 Option = "Punches Before",
                 BasePayrollRateId = BaseRates.First().Id.ToString(),
-                AlternatePayrollRateId = AlternateRates.First().Id.ToString(),
+                AlternatePayrollRateId = AlternateRates.Where(r => r.ParentRateId == BaseRates.First().Id).First().Id.ToString(),
                 RangeHour = "1",
                 RangeMinute = "00",
                 RangeMerdian = "AM",
                 CountHours = "0",
                 CountMinutes = "0",
-                Date = DateTime.Today
+                Date = DateTime.Today,
+                DayOfWeek = "Sunday"
             });
         }
         else if (Type.ToUpperInvariant() == "SERVICE")
@@ -199,15 +217,18 @@
             {
                 Option = "Punches Before",
                 BaseServiceRateId = BaseRates.First().Id.ToString(),
-                AlternateServiceRateId = AlternateRates.First().Id.ToString(),
+                AlternateServiceRateId = AlternateRates.Where(r => r.ParentRateId == BaseRates.First().Id).First().Id.ToString(),
                 RangeHour = "1",
                 RangeMinute = "00",
                 RangeMerdian = "AM",
                 CountHours = "0",
                 CountMinutes = "0",
-                Date = DateTime.Today
+                Date = DateTime.Today,
+                DayOfWeek = "Sunday"
             });
         }
+
+        StateHasChanged();
     }
 
     public async System.Threading.Tasks.Task AddExceptionFromTemplate()
@@ -292,8 +313,6 @@
 
     private void Close(dynamic result)
     {
-        Console.WriteLine("Firing close event");
-
         var dialogCloseResult = (result as DialogCloseResult);
 
         if (dialogCloseResult == null)
@@ -301,8 +320,6 @@
 
         if (dialogCloseResult.Type == "template.selected")
         {
-            Console.WriteLine("Close event is template.selected");
-
             // Cannot continue if there are no rates.
             if (BaseRates == null || BaseRates.Count == 0)
                 return;
@@ -319,33 +336,41 @@
             {
                 if (Type.ToUpperInvariant() == "PAYROLL")
                 {
-                    Exceptions.Add(new PopulateRateException()
+                    if (BaseRates.Where(r => r.Id.ToString() == item.BasePayrollRateId).Any())
                     {
-                        Option = item.Option,
-                        BasePayrollRateId = item.BasePayrollRateId,
-                        AlternatePayrollRateId = item.AlternatePayrollRateId,
-                        RangeHour = item.RangeHour,
-                        RangeMinute = item.RangeMinute,
-                        RangeMerdian = item.RangeMerdian,
-                        CountHours = item.CountHours,
-                        CountMinutes = item.CountMinutes,
-                        Date = item.Date
-                    });
+                        Exceptions.Add(new PopulateRateException()
+                        {
+                            Option = item.Option,
+                            BasePayrollRateId = item.BasePayrollRateId,
+                            AlternatePayrollRateId = item.AlternatePayrollRateId,
+                            RangeHour = item.RangeHour,
+                            RangeMinute = item.RangeMinute,
+                            RangeMerdian = item.RangeMerdian,
+                            CountHours = item.CountHours,
+                            CountMinutes = item.CountMinutes,
+                            Date = item.Date,
+                            DayOfWeek = item.DayOfWeek
+                        });
+                    }
                 }
                 else if (Type.ToUpperInvariant() == "SERVICE")
                 {
-                    Exceptions.Add(new PopulateRateException()
+                    if (BaseRates.Where(r => r.Id.ToString() == item.BaseServiceRateId).Any())
                     {
-                        Option = item.Option,
-                        BaseServiceRateId = item.BaseServiceRateId,
-                        AlternateServiceRateId = item.AlternateServiceRateId,
-                        RangeHour = item.RangeHour,
-                        RangeMinute = item.RangeMinute,
-                        RangeMerdian = item.RangeMerdian,
-                        CountHours = item.CountHours,
-                        CountMinutes = item.CountMinutes,
-                        Date = item.Date
-                    });
+                        Exceptions.Add(new PopulateRateException()
+                        {
+                            Option = item.Option,
+                            BaseServiceRateId = item.BaseServiceRateId,
+                            AlternateServiceRateId = item.AlternateServiceRateId,
+                            RangeHour = item.RangeHour,
+                            RangeMinute = item.RangeMinute,
+                            RangeMerdian = item.RangeMerdian,
+                            CountHours = item.CountHours,
+                            CountMinutes = item.CountMinutes,
+                            Date = item.Date,
+                            DayOfWeek = item.DayOfWeek
+                        });
+                    }
                 }
             }
 
