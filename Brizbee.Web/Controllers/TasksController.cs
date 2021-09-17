@@ -252,11 +252,11 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Tasks/Default.ForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 2)]
+        [EnableQuery(PageSize = 1000, MaxExpansionDepth = 2)]
         public IQueryable<Task> ForPunches(string InAt, string OutAt)
         {
-            var inAt = DateTime.Parse(InAt);
-            var outAt = DateTime.Parse(OutAt);
+            var min = DateTime.Parse(InAt);
+            var max = DateTime.Parse(OutAt);
             var currentUser = CurrentUser();
             int[] userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
@@ -264,7 +264,7 @@ namespace Brizbee.Web.Controllers
                 .ToArray();
             var taskIds = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= min && DbFunctions.TruncateTime(p.InAt) <= max)
                 .GroupBy(p => p.TaskId)
                 .Select(g => g.Key);
 
