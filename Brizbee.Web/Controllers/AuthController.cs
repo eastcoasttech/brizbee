@@ -22,6 +22,7 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
+using Microsoft.ApplicationInsights;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using Stripe;
@@ -29,7 +30,6 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -39,6 +39,7 @@ namespace Brizbee.Web.Controllers
     public class AuthController : ApiController
     {
         private SqlContext _context = new SqlContext();
+        private TelemetryClient telemetryClient = new TelemetryClient();
 
         // POST: api/Auth/ChangePassword
         [HttpPost]
@@ -117,6 +118,8 @@ namespace Brizbee.Web.Controllers
         [AllowAnonymous]
         public IHttpActionResult Register([FromBody] Registration registration)
         {
+            telemetryClient.TrackEvent("Registration:Requested");
+
             var user = registration.User;
             var organization = registration.Organization;
 
@@ -183,50 +186,55 @@ namespace Brizbee.Web.Controllers
                             break;
                     }
 
-#if !DEBUG
-                    try
+                    if (!string.IsNullOrEmpty(stripePlanId))
                     {
-                        // Create a Stripe customer object and save the customer id.
-                        var customerOptions = new CustomerCreateOptions
+                        try
                         {
-                            Email = user.EmailAddress
-                        };
-                        var customers = new CustomerService();
-                        Stripe.Customer customer = customers.Create(customerOptions);
-                        organization.StripeCustomerId = customer.Id;
+                            telemetryClient.TrackEvent("Registration:Subscribe");
 
-                        // Subscribe the customer to the price and save the subscription id.
-                        var subscriptionOptions = new SubscriptionCreateOptions
-                        {
-                            Customer = customer.Id, // ex. cus_IDjvN9UsoFp2mk
-                            Items = new List<SubscriptionItemOptions>
+                            // Create a Stripe customer object and save the customer id.
+                            var customerOptions = new CustomerCreateOptions
+                            {
+                                Email = user.EmailAddress
+                            };
+                            var customers = new CustomerService();
+                            Stripe.Customer customer = customers.Create(customerOptions);
+                            organization.StripeCustomerId = customer.Id;
+
+                            // Subscribe the customer to the price and save the subscription id.
+                            var subscriptionOptions = new SubscriptionCreateOptions
+                            {
+                                Customer = customer.Id, // ex. cus_IDjvN9UsoFp2mk
+                                Items = new List<SubscriptionItemOptions>
                             {
                                 new SubscriptionItemOptions
                                 {
                                     Price = stripePlanId // ex. price_1Hd5PvLI44a19MHX9w5EGD4r
                                 }
                             },
-                            TrialFromPlan = true
-                        };
-                        var subscriptions = new SubscriptionService();
-                        Subscription subscription = subscriptions.Create(subscriptionOptions);
+                                TrialFromPlan = true
+                            };
+                            var subscriptions = new SubscriptionService();
+                            Subscription subscription = subscriptions.Create(subscriptionOptions);
 
-                        organization.StripeSubscriptionId = subscription.Id;
+                            organization.StripeSubscriptionId = subscription.Id;
 
-                        // Send Welcome Email.
-                        var apiKey = ConfigurationManager.AppSettings["SendGridApiKey"].ToString();
-                        var client = new SendGridClient(apiKey);
-                        var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
-                        var to = new EmailAddress(user.EmailAddress);
-                        var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", null);
-                        var response = client.SendEmailAsync(msg);
+                            // Send Welcome Email.
+                            telemetryClient.TrackEvent("Registration:Email");
+
+                            var apiKey = ConfigurationManager.AppSettings["SendGridApiKey"].ToString();
+                            var client = new SendGridClient(apiKey);
+                            var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
+                            var to = new EmailAddress(user.EmailAddress);
+                            var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", null);
+                            var response = client.SendEmailAsync(msg);
+                        }
+                        catch (Exception ex)
+                        {
+                            telemetryClient.TrackException(ex);
+                            return BadRequest(ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Trace.TraceWarning(ex.ToString());
-                        return BadRequest(ex.Message);
-                    }
-#endif
 
                     // Save the organization and user.
                     _context.Organizations.Add(organization);
@@ -236,6 +244,8 @@ namespace Brizbee.Web.Controllers
 
                     _context.SaveChanges();
 
+                    telemetryClient.TrackEvent("Registration:Succeeded");
+
                     transaction.Commit();
 
                     return Created("auth/me", user);
@@ -243,6 +253,8 @@ namespace Brizbee.Web.Controllers
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+
+                    telemetryClient.TrackException(ex);
 
                     return BadRequest(ex.Message);
                 }
