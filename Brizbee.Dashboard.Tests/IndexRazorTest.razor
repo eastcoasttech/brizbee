@@ -1,0 +1,49 @@
+﻿@using Microsoft.VisualStudio.TestTools.UnitTesting
+@using Microsoft.Extensions.DependencyInjection
+@using Brizbee.Dashboard.Services
+@using Radzen
+
+@attribute [TestClass]
+@code
+{
+    [TestMethod]
+    public void IndexComponentRendersCorrectly()
+    {
+        // Arrange
+        using var ctx = new Bunit.TestContext();
+
+        // Configure additional services.
+        ctx.Services.AddSingleton<ExportService>();
+        ctx.Services.AddSingleton<TimesheetEntryService>();
+        ctx.Services.AddSingleton<CommitService>();
+        ctx.Services.AddSingleton<PunchService>();
+        ctx.Services.AddSingleton<UserService>();
+        ctx.Services.AddSingleton<CustomerService>();
+        ctx.Services.AddSingleton<TaskService>();
+        ctx.Services.AddSingleton<TaskTemplateService>();
+        ctx.Services.AddSingleton<PopulateTemplateService>();
+        ctx.Services.AddSingleton<JobService>();
+        ctx.Services.AddSingleton<RateService>();
+        ctx.Services.AddSingleton<OrganizationService>();
+        ctx.Services.AddSingleton<TimesheetEntryService>();
+        ctx.Services.AddSingleton<QBDInventoryItemService>();
+        ctx.Services.AddSingleton<QBDInventoryItemSyncService>();
+        ctx.Services.AddSingleton<QBDInventoryConsumptionService>();
+        ctx.Services.AddSingleton<QBDInventoryConsumptionSyncService>();
+        ctx.Services.AddSingleton<SharedService>();
+        ctx.Services.AddSingleton<GeolocationService>();
+
+        ctx.Services.AddScoped<LocalStorageService>();
+
+        ctx.Services.AddScoped<DialogService>();
+        ctx.Services.AddScoped<NotificationService>();
+        ctx.Services.AddScoped<TooltipService>();
+        ctx.Services.AddScoped<ContextMenuService>();
+
+        // Act
+        var cut = ctx.Render(@<Brizbee.Dashboard.Pages.Index />);
+
+        // Assert
+        cut.MarkupMatches(@<div class="panel-heading">Login with Your PIN</div>);
+    }
+}
