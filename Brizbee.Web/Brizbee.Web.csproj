@@ -485,9 +485,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\BaseODataController.cs" />
     <Compile Include="Controllers\ExportsController.cs" />
     <Compile Include="Controllers\JobsExpandedController.cs" />
+    <Compile Include="Controllers\KioskController.cs" />
     <Compile Include="Controllers\OrganizationsExpandedController.cs" />
     <Compile Include="Controllers\PopulateTemplatesController.cs" />
     <Compile Include="Controllers\PunchesExpandedController.cs" />

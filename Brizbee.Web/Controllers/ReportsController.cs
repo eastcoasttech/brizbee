@@ -93,6 +93,11 @@ namespace Brizbee.Web.Controllers
 
             telemetryClient.TrackTrace($"Generating PunchesByUser report for {Min:G} through {Max:G}");
 
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -116,6 +121,11 @@ namespace Brizbee.Web.Controllers
             var currentUser = CurrentUser();
             
             Trace.TraceInformation($"Generating PunchesByJob report for {Min:G} through {Max:G}");
+
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
@@ -141,6 +151,11 @@ namespace Brizbee.Web.Controllers
 
             Trace.TraceInformation($"Generating PunchesByDay report for {Min:G} through {Max:G}");
 
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -161,6 +176,11 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime Max)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
 
             Trace.TraceInformation($"Generating TimeEntriesByUser report for {Min:G} through {Max:G}");
 
@@ -189,6 +209,11 @@ namespace Brizbee.Web.Controllers
 
                 Trace.TraceInformation($"Generating TimeEntriesByJob report for {Min:G} through {Max:G}");
 
+
+                // Ensure that user is authorized.
+                if (!currentUser.CanViewReports)
+                    return StatusCode(HttpStatusCode.Forbidden);
+
                 var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
                 return new FileActionResult(bytes, "application/pdf",
                     string.Format(
@@ -216,6 +241,11 @@ namespace Brizbee.Web.Controllers
             var currentUser = CurrentUser();
 
             Trace.TraceInformation($"Generating TimeEntriesByDay report for {Min:G} through {Max:G}");
+
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",

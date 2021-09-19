@@ -99,6 +99,10 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyTimecards)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var timesheetEntry = db.TimesheetEntries.Find(key);
 
             // Peform the update
@@ -120,9 +124,9 @@ namespace Brizbee.Web.Controllers
                 .FirstOrDefault();
 
             // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator" ||
+            if (!currentUser.CanDeleteTimecards ||
                 currentUser.OrganizationId != timesheetEntry.User.OrganizationId)
-                return BadRequest();
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Delete the object itself
             db.TimesheetEntries.Remove(timesheetEntry);

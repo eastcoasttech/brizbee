@@ -62,9 +62,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                Request.CreateResponse(HttpStatusCode.BadRequest);
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewInventoryConsumptions)
+                Request.CreateResponse(HttpStatusCode.Forbidden);
 
             var total = 0;
             List<QBDInventoryConsumption> consumptions = new List<QBDInventoryConsumption>();
@@ -390,6 +390,10 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanSyncInventoryConsumptions)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             // Ensure that the sync is for the same company file.
             var companyFileName = Path.GetFileName(companyFilePath);
             var previous = _context.QBDInventoryConsumptionSyncs
@@ -547,6 +551,10 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewInventoryConsumptions)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var consumption = _context.QBDInventoryConsumptions
                 .Include("CreatedByUser")
                 .Include("QBDInventoryItem")
@@ -600,13 +608,16 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteInventoryConsumptions)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var consumption = _context.QBDInventoryConsumptions
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
                 .Where(c => c.Id == id)
                 .FirstOrDefault();
 
-            if (consumption == null)
-                return NotFound();
+            if (consumption == null) return NotFound();
 
             _context.QBDInventoryConsumptions.Remove(consumption);
             _context.SaveChanges();
