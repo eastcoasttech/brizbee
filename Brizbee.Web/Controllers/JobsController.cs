@@ -26,7 +26,6 @@ using Microsoft.AspNet.OData;
 using System;
 using System.Configuration;
 using System.Data.Entity;
-using System.Data.Entity.SqlServer;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -96,8 +95,8 @@ namespace Brizbee.Web.Controllers
             var currentUser = CurrentUser();
 
             // Ensure user is an administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            if (!currentUser.CanCreateProjects)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var customer = db.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
@@ -235,8 +234,13 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
+            // Only look within the jobs that belong to the organization.
+            var customerIds = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Select(c => c.Id);
             var job = db.Jobs
                 .Include("Customer")
+                .Where(j => customerIds.Contains(j.CustomerId))
                 .Where(j => j.Id == key)
                 .FirstOrDefault();
 
@@ -244,9 +248,8 @@ namespace Brizbee.Web.Controllers
             if (job == null) return NotFound();
 
             // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != job.Customer.OrganizationId)
-                throw new Exception("Not authorized to modify the object");
+            if (!currentUser.CanModifyProjects)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Do not allow modifying some properties.
             if (patch.GetChangedPropertyNames().Contains("CustomerId"))
@@ -267,12 +270,6 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators
-            if (currentUser.Role != "Administrator")
-            {
-                return StatusCode(HttpStatusCode.Forbidden);
-            }
-
             // Only look within the jobs that belong to the organization.
             var customerIds = db.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
@@ -281,6 +278,13 @@ namespace Brizbee.Web.Controllers
                 .Where(j => customerIds.Contains(j.CustomerId))
                 .Where(j => j.Id == key)
                 .FirstOrDefault();
+
+            // Ensure that object was found.
+            if (job == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteProjects)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Remove tasks for the job.
             var tasks = db.Tasks.Where(t => t.JobId == key).ToList();

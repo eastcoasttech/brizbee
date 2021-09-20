@@ -70,8 +70,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateLocks)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             using (var transaction = db.Database.BeginTransaction())
             {
@@ -158,6 +159,10 @@ namespace Brizbee.Web.Controllers
             }
 
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanUndoLocks)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var commit = db.Commits
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)

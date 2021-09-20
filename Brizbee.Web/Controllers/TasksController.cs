@@ -83,10 +83,10 @@ namespace Brizbee.Web.Controllers
                 .Where(j => j.Id == task.JobId)
                 .FirstOrDefault();
 
-            // Only permit administrators of the same organization.
-            if (currentUser.Role != "Administrator" ||
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateTasks ||
                 job.Customer.OrganizationId != currentUser.OrganizationId)
-                return BadRequest();
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Check for duplicate task numbers in the organization.
             var isNumberDuplicated = db.Tasks
@@ -132,22 +132,21 @@ namespace Brizbee.Web.Controllers
                 .Where(t => t.Id == key)
                 .FirstOrDefault();
 
-            // Only permit administrators of the same organization.
-            if (currentUser.Role != "Administrator" ||
+            // Ensure that object was found.
+            if (task == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyTasks ||
                 task.Job.Customer.OrganizationId != currentUser.OrganizationId)
-                return BadRequest();
+                return StatusCode(HttpStatusCode.Forbidden);
 
-            // Ensure that object was found
-            if (task == null)
-                return NotFound();
-
-            // Do not allow modifying some properties
+            // Do not allow modifying some properties.
             if (patch.GetChangedPropertyNames().Contains("JobId"))
             {
                 return BadRequest("Cannot modify the JobId");
             }
 
-            // Peform the update
+            // Peform the update.
             patch.Patch(task);
 
             db.SaveChanges();
@@ -166,12 +165,15 @@ namespace Brizbee.Web.Controllers
                 .Where(t => t.Id == key)
                 .FirstOrDefault();
 
-            // Only permit administrators of the same organization.
-            if (currentUser.Role != "Administrator" ||
+            // Ensure that object was found.
+            if (task == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteTasks ||
                 task.Job.Customer.OrganizationId != currentUser.OrganizationId)
                 return BadRequest();
 
-            // Delete the object itself
+            // Delete the object itself.
             db.Tasks.Remove(task);
 
             db.SaveChanges();
@@ -252,11 +254,11 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Tasks/Default.ForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 2)]
+        [EnableQuery(PageSize = 1000, MaxExpansionDepth = 2)]
         public IQueryable<Task> ForPunches(string InAt, string OutAt)
         {
-            var inAt = DateTime.Parse(InAt);
-            var outAt = DateTime.Parse(OutAt);
+            var min = DateTime.Parse(InAt);
+            var max = DateTime.Parse(OutAt);
             var currentUser = CurrentUser();
             int[] userIds = db.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
@@ -264,7 +266,7 @@ namespace Brizbee.Web.Controllers
                 .ToArray();
             var taskIds = db.Punches
                 .Where(p => userIds.Contains(p.UserId))
-                .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt && DbFunctions.TruncateTime(p.OutAt) <= outAt)
+                .Where(p => DbFunctions.TruncateTime(p.InAt) >= min && DbFunctions.TruncateTime(p.InAt) <= max)
                 .GroupBy(p => p.TaskId)
                 .Select(g => g.Key);
 

@@ -60,9 +60,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                Request.CreateResponse(HttpStatusCode.BadRequest);
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewInventoryItems)
+                Request.CreateResponse(HttpStatusCode.Forbidden);
 
             var total = 0;
             List<QBDInventoryItem> items = new List<QBDInventoryItem>();
@@ -249,6 +249,10 @@ namespace Brizbee.Web.Controllers
             [FromUri] string companyFilePath)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanSyncInventoryItems)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Ensure that the sync is for the same company file.
             var companyFileName = Path.GetFileName(companyFilePath);

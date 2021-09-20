@@ -22,11 +22,15 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Web.Services;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using NodaTime;
 using System;
+using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -75,6 +79,7 @@ namespace Brizbee.Web.Controllers
         }
 
         private SqlContext db = new SqlContext();
+        private TelemetryClient telemetryClient = new TelemetryClient();
 
         // GET: api/Reports/PunchesByUser
         [Route("api/Reports/PunchesByUser")]
@@ -88,6 +93,14 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
+
+            telemetryClient.TrackTrace($"Generating PunchesByUser report for {Min:G} through {Max:G}");
+
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -109,6 +122,14 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
+            
+            Trace.TraceInformation($"Generating PunchesByJob report for {Min:G} through {Max:G}");
+
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -130,6 +151,14 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
+
+            Trace.TraceInformation($"Generating PunchesByDay report for {Min:G} through {Max:G}");
+
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -150,6 +179,14 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime Max)
         {
             var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
+
+            Trace.TraceInformation($"Generating TimeEntriesByUser report for {Min:G} through {Max:G}");
+
             var bytes = new ReportBuilder().TimeEntriesByUserAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -172,6 +209,14 @@ namespace Brizbee.Web.Controllers
             try
             {
                 var currentUser = CurrentUser();
+
+                Trace.TraceInformation($"Generating TimeEntriesByJob report for {Min:G} through {Max:G}");
+
+
+                // Ensure that user is authorized.
+                if (!currentUser.CanViewReports)
+                    return StatusCode(HttpStatusCode.Forbidden);
+
                 var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
                 return new FileActionResult(bytes, "application/pdf",
                     string.Format(
@@ -197,6 +242,14 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime Max)
         {
             var currentUser = CurrentUser();
+
+            Trace.TraceInformation($"Generating TimeEntriesByDay report for {Min:G} through {Max:G}");
+
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
+
             var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
@@ -211,6 +264,9 @@ namespace Brizbee.Web.Controllers
         public IHttpActionResult GetTasksByJob([FromUri] int JobId, [FromUri] string taskGroupScope = "")
         {
             var currentUser = CurrentUser();
+            
+            Trace.TraceInformation($"Generating TasksByJob report for project {JobId}");
+
             var job = db.Jobs.Where(j => j.Id == JobId).FirstOrDefault();
             var bytes = new ReportBuilder().TasksByJobAsPdf(JobId, CurrentUser(), taskGroupScope);
             return new FileActionResult(bytes, "application/pdf",
@@ -412,6 +468,17 @@ namespace Brizbee.Web.Controllers
             {
                 return null;
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+
+                telemetryClient.Flush();
+            }
+            base.Dispose(disposing);
         }
     }
 }

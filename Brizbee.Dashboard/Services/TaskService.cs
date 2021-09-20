@@ -61,14 +61,17 @@ namespace Brizbee.Dashboard.Services
             return await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent);
         }
 
-        public async Task<List<Brizbee.Common.Models.Task>> GetTasksForPunchesAsync(DateTime min, DateTime max)
+        public async Task<(List<Brizbee.Common.Models.Task>, long?)> GetTasksForPunchesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks/Default.ForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true&$expand=BasePayrollRate,BaseServiceRate,Job($expand=Customer)");
-            response.EnsureSuccessStatusCode();
+            var response = await _apiService.GetHttpClient().GetAsync($"api/TasksExpanded/ForPunches?min={min.ToString("yyyy-MM-dd")}&max={max.ToString("yyyy-MM-dd")}");
+
+            if (!response.IsSuccessStatusCode)
+                return (new List<Brizbee.Common.Models.Task>(0), 0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Brizbee.Common.Models.Task>>(responseContent, options);
-            return odataResponse.Value.ToList();
+            var value = await JsonSerializer.DeserializeAsync<List<Brizbee.Common.Models.Task>>(responseContent, options);
+            var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
+            return (value, total);
         }
 
         public async Task<Brizbee.Common.Models.Task> SearchTasksAsync(string number)

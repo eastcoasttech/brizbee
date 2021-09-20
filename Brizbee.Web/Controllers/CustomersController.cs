@@ -21,7 +21,6 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
 using System.Linq;
@@ -66,8 +65,8 @@ namespace Brizbee.Web.Controllers
             var currentUser = CurrentUser();
 
             // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            if (!currentUser.CanCreateCustomers)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Auto-generated
             customer.CreatedAt = DateTime.UtcNow;
@@ -91,15 +90,17 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            var customer = db.Customers.Find(key);
+            var customer = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == key)
+                .FirstOrDefault();
 
             // Ensure that object was found.
             if (customer == null) return NotFound();
 
             // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != customer.OrganizationId)
-                return BadRequest();
+            if (!currentUser.CanModifyCustomers)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Do not allow modifying some properties.
             if (patch.GetChangedPropertyNames().Contains("OrganizationId"))
@@ -120,12 +121,17 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            var customer = db.Customers.Find(key);
+            var customer = db.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == key)
+                .FirstOrDefault();
+
+            // Ensure that object was found.
+            if (customer == null) return NotFound();
 
             // Ensure that user is authorized.
-            if (currentUser.Role != "Administrator" ||
-                currentUser.OrganizationId != customer.OrganizationId)
-                return BadRequest();
+            if (!currentUser.CanDeleteCustomers)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             // Delete the object itself
             db.Customers.Remove(customer);

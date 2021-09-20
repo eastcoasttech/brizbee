@@ -32,28 +32,40 @@
                         <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
                     </NavLink>
                 </li>
-                @if (currentUser.Role == "Administrator")
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
                 {
                     <li>
                         <NavLink class="nav-link" href="punches">
                             <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
                         </NavLink>
                     </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
                     <li>
                         <NavLink class="nav-link" href="customers">
                             <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
                         </NavLink>
                     </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
                     <li>
                         <NavLink class="nav-link" href="inventory/consumption">
                             <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
                         </NavLink>
                     </li>
+                }
+                @if (currentUser.CanViewReports)
+                {
                     <li>
                         <NavLink class="nav-link" href="reports">
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
                     </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
                     <li class="active">
                         <NavLink class="nav-link" href="users">
                             <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users <span class="sr-only">(current)</span>
@@ -71,7 +83,7 @@
                                 Account Details
                             </NavLink>
                         </li>
-                        @if (currentUser.Role == "Administrator")
+                        @if (currentUser.CanViewOrganizationDetails)
                         {
                             <li role="separator" class="divider"></li>
                             <li>
@@ -128,7 +140,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-2">
+                <th class="col-md-3">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("EmailAddress"))">
                         Email Address
                         @if (sortBy == "EmailAddress" && sortDirection == "ASC")
@@ -154,20 +166,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Role"))">
-                        Role
-                        @if (sortBy == "Role" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "Role" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th class="col-md-2">
+                <th class="col-md-3">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("TimeZone"))">
                         Default Time Zone
                         @if (sortBy == "TimeZone" && sortDirection == "ASC")
@@ -202,7 +201,6 @@
                     <td><a href="javascript:void(0)">@user.Name</a></td>
                     <td><a href="javascript:void(0)">@user.EmailAddress</a></td>
                     <td><a href="javascript:void(0)">@user.Pin</a></td>
-                    <td><a href="javascript:void(0)">@user.Role</a></td>
                     <td><a href="javascript:void(0)">@user.TimeZone</a></td>
                     <td><a href="javascript:void(0)">@user.CreatedAt.ToString("M/d/yyyy h:mm tt")</a></td>
                 </tr>
@@ -210,13 +208,13 @@
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="6"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && users.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="6">No Users</td>
+                    <td colspan="5">No Users</td>
                 </tr>
             }
         </tbody>
@@ -308,14 +306,14 @@
     {
         dialogService.Open<UserDialog>("New User",
                                 new Dictionary<string, object>() { { "Id", null } },
-                                new DialogOptions() { Width = "600px" });
+                                new DialogOptions() { Width = "800px" });
     }
 
     private void OpenModifyUserDialog(User user)
     {
         dialogService.Open<UserDialog>("Edit User",
                                 new Dictionary<string, object>() { { "Id", user.Id } },
-                                new DialogOptions() { Width = "600px" });
+                                new DialogOptions() { Width = "800px" });
     }
 
     private async void ChangeSortBy(string column)

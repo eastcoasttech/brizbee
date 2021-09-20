@@ -239,22 +239,23 @@ namespace Brizbee.Web.Tests.Services
                 connection.Execute(jobSql, jobs);
 
                 // Add some tasks
-                tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-                tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4 });
-                tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4 });
+                tasks.Add(new Task() { Id = 1, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Welding", Number = "1000", BasePayrollRateId = 1, BaseServiceRateId = 4, Order = 0 });
+                tasks.Add(new Task() { Id = 2, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Cutting", Number = "1001", BasePayrollRateId = 1, BaseServiceRateId = 4, Order = 10 });
+                tasks.Add(new Task() { Id = 3, CreatedAt = DateTime.UtcNow, JobId = 1, Name = "Assembly", Number = "1002", BasePayrollRateId = 1, BaseServiceRateId = 4, Order = 20 });
 
                 // Insert the tasks
                 var taskSql = @"
                     SET IDENTITY_INSERT dbo.Tasks ON;
 
                     INSERT INTO Tasks (
-                        Id,
-                        CreatedAt,
-                        Name,
-                        JobId,
-                        Number,
-                        BasePayrollRateId,
-                        BaseServiceRateId
+                        [Id],
+                        [CreatedAt],
+                        [Name],
+                        [JobId],
+                        [Number],
+                        [BasePayrollRateId],
+                        [BaseServiceRateId],
+                        [Order]
                     ) VALUES (
                         @Id,
                         @CreatedAt,
@@ -262,7 +263,8 @@ namespace Brizbee.Web.Tests.Services
                         @JobId,
                         @Number,
                         @BasePayrollRateId,
-                        @BaseServiceRateId
+                        @BaseServiceRateId,
+                        @Order
                     );
 
                     SET IDENTITY_INSERT dbo.Tasks OFF;";
@@ -591,6 +593,58 @@ namespace Brizbee.Web.Tests.Services
             foreach (var punch in populatedPunches)
             {
                 if (punch.InAt.Date == new DateTime(2020, 1, 6))
+                {
+                    Assert.IsTrue(punch.PayrollRateId == 2);
+                }
+                else
+                {
+                    Assert.IsTrue(punch.PayrollRateId == 1);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Populate_PayrollDayOfWeekOvertime_Successful()
+        {
+            var db = new SqlContext();
+            var currentUser = db.Users.Find(1);
+
+            var service = new PunchService();
+            var inAt = new DateTime(2020, 1, 1);
+            var outAt = new DateTime(2020, 1, 31);
+
+            var originalPunches = GetPunches()
+                .OrderBy(p => p.UserId)
+                .ThenBy(p => p.InAt)
+                .ToList();
+
+            // Splitting happens automatically during populate below
+
+            var populateOptions = new PopulateRateOptions();
+            populateOptions.InAt = new DateTime(2020, 1, 1);
+            populateOptions.OutAt = new DateTime(2020, 1, 31);
+            populateOptions.Options = new PopulateRateOption[]
+            {
+                // This option should populate anything
+                // on Saturday with the overtime rate
+                new PopulateRateOption()
+                {
+                    Type = "dayofweek",
+                    DayOfWeek = "Saturday",
+                    BasePayrollRateId = 1,
+                    AlternatePayrollRateId = 2,
+                    Order = 0
+                }
+            };
+
+            var populatedPunches = service.Populate(populateOptions, originalPunches, currentUser);
+
+            // Assert the number of punches after automatic split
+            Assert.AreEqual(21, populatedPunches.Count);
+
+            foreach (var punch in populatedPunches)
+            {
+                if (punch.InAt.DayOfWeek == DayOfWeek.Saturday)
                 {
                     Assert.IsTrue(punch.PayrollRateId == 2);
                 }

@@ -10,6 +10,7 @@
 @inject RateService rateService
 @inject TaskService taskService
 @inject PunchService punchService
+@inject IJSRuntime JSRuntime
 
 <p style="margin-bottom: 20px; line-height: 1.75em;">
     This function will populate the Payroll and Customer Rates for the unlocked punches between <strong>@sharedService.RangeMin.ToShortDateString()</strong> and <strong>@sharedService.RangeMax.ToShortDateString()</strong>.
@@ -84,7 +85,7 @@
         <ExceptionsFragment @ref="payrollExceptionsFragment" Type="Payroll" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
 
         <p>
-            <button class="btn btn-default" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</button>
+            <button class="btn btn-default" id="btnAddPayrollRateException" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</button>
             <button class="btn btn-default" @onclick="@(e => AddPayrollRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add From Template&hellip;</button>
             <button class="btn btn-default" @onclick="@(e => ShowSavePayrollRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any() || !payrollExceptions.Any())">Save As Template&hellip;</button>
         </p>
@@ -148,7 +149,7 @@
         <ExceptionsFragment @ref="serviceExceptionsFragment" Type="Service" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
 
         <p>
-            <button class="btn btn-default" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</button>
+            <button class="btn btn-default" id ="btnAddServiceRateException" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</button>
             <button class="btn btn-default" @onclick="@(e => AddServiceRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add From Template&hellip;</button>
             <button class="btn btn-default" @onclick="@(e => ShowSaveServiceRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any() || !serviceExceptions.Any())">Save As Template&hellip;</button>
         </p>
@@ -193,10 +194,18 @@
         alternateServiceRates = alternateServiceRatesResult.Item1;
 
         var tasksResults = await taskService.GetTasksForPunchesAsync(sharedService.RangeMin, sharedService.RangeMax);
-        tasks = tasksResults;
+        tasks = tasksResults.Item1;
 
         loadingBasePayrollRates = false;
         loadingBaseServiceRates = false;
+
+        StateHasChanged();
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("focusElement", "btnAddPayrollRateException");
+        }
+        catch (Exception) { }
     }
 
     private void CloseDialog(MouseEventArgs e)
@@ -215,6 +224,7 @@
             return;
 
         working = true;
+        StateHasChanged();
 
         var populateRateOptions = new List<Dictionary<string, object>>();
 
@@ -240,8 +250,6 @@
 
         // Send the request.
         await punchService.PostPopulateRatesAsync(sharedService.RangeMin, sharedService.RangeMax, populateRateOptions);
-
-        working = false;
 
         dialogService.Close("punch.populated");
     }

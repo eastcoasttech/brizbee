@@ -63,3 +63,12 @@ function getPlatformDetails() {
 		OperatingSystemVersion: operatingSystemVersion
 	};
 }
+
+// ----------------------------------------------------------------------------
+// Any Page
+// ----------------------------------------------------------------------------
+
+function focusElement(id) {
+    var elem = document.getElementById(id);
+    elem.focus();
+}

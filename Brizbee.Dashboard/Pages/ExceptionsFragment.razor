@@ -127,7 +127,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
-                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BasePayrollRateId)).OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -148,7 +148,7 @@
                     <td>
                         <label class="text-muted">Select Rate</label>
                         <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
-                            @foreach (var rate in AlternateRates.Where(r => r.ParentRateId == int.Parse(exception.BaseServiceRateId)).OrderBy(r => r.Name))
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
                             {
                                 <option value="@rate.Id.ToString()">@rate.Name</option>
                             }
@@ -201,7 +201,7 @@
             {
                 Option = "Punches Before",
                 BasePayrollRateId = BaseRates.First().Id.ToString(),
-                AlternatePayrollRateId = AlternateRates.First().Id.ToString(),
+                AlternatePayrollRateId = AlternateRates.Where(r => r.ParentRateId == BaseRates.First().Id).First().Id.ToString(),
                 RangeHour = "1",
                 RangeMinute = "00",
                 RangeMerdian = "AM",
@@ -217,7 +217,7 @@
             {
                 Option = "Punches Before",
                 BaseServiceRateId = BaseRates.First().Id.ToString(),
-                AlternateServiceRateId = AlternateRates.First().Id.ToString(),
+                AlternateServiceRateId = AlternateRates.Where(r => r.ParentRateId == BaseRates.First().Id).First().Id.ToString(),
                 RangeHour = "1",
                 RangeMinute = "00",
                 RangeMerdian = "AM",
@@ -227,6 +227,8 @@
                 DayOfWeek = "Sunday"
             });
         }
+
+        StateHasChanged();
     }
 
     public async System.Threading.Tasks.Task AddExceptionFromTemplate()
@@ -311,8 +313,6 @@
 
     private void Close(dynamic result)
     {
-        Console.WriteLine("Firing close event");
-
         var dialogCloseResult = (result as DialogCloseResult);
 
         if (dialogCloseResult == null)
@@ -320,8 +320,6 @@
 
         if (dialogCloseResult.Type == "template.selected")
         {
-            Console.WriteLine("Close event is template.selected");
-
             // Cannot continue if there are no rates.
             if (BaseRates == null || BaseRates.Count == 0)
                 return;
@@ -338,35 +336,41 @@
             {
                 if (Type.ToUpperInvariant() == "PAYROLL")
                 {
-                    Exceptions.Add(new PopulateRateException()
+                    if (BaseRates.Where(r => r.Id.ToString() == item.BasePayrollRateId).Any())
                     {
-                        Option = item.Option,
-                        BasePayrollRateId = item.BasePayrollRateId,
-                        AlternatePayrollRateId = item.AlternatePayrollRateId,
-                        RangeHour = item.RangeHour,
-                        RangeMinute = item.RangeMinute,
-                        RangeMerdian = item.RangeMerdian,
-                        CountHours = item.CountHours,
-                        CountMinutes = item.CountMinutes,
-                        Date = item.Date,
-                        DayOfWeek = item.DayOfWeek
-                    });
+                        Exceptions.Add(new PopulateRateException()
+                        {
+                            Option = item.Option,
+                            BasePayrollRateId = item.BasePayrollRateId,
+                            AlternatePayrollRateId = item.AlternatePayrollRateId,
+                            RangeHour = item.RangeHour,
+                            RangeMinute = item.RangeMinute,
+                            RangeMerdian = item.RangeMerdian,
+                            CountHours = item.CountHours,
+                            CountMinutes = item.CountMinutes,
+                            Date = item.Date,
+                            DayOfWeek = item.DayOfWeek
+                        });
+                    }
                 }
                 else if (Type.ToUpperInvariant() == "SERVICE")
                 {
-                    Exceptions.Add(new PopulateRateException()
+                    if (BaseRates.Where(r => r.Id.ToString() == item.BaseServiceRateId).Any())
                     {
-                        Option = item.Option,
-                        BaseServiceRateId = item.BaseServiceRateId,
-                        AlternateServiceRateId = item.AlternateServiceRateId,
-                        RangeHour = item.RangeHour,
-                        RangeMinute = item.RangeMinute,
-                        RangeMerdian = item.RangeMerdian,
-                        CountHours = item.CountHours,
-                        CountMinutes = item.CountMinutes,
-                        Date = item.Date,
-                        DayOfWeek = item.DayOfWeek
-                    });
+                        Exceptions.Add(new PopulateRateException()
+                        {
+                            Option = item.Option,
+                            BaseServiceRateId = item.BaseServiceRateId,
+                            AlternateServiceRateId = item.AlternateServiceRateId,
+                            RangeHour = item.RangeHour,
+                            RangeMinute = item.RangeMinute,
+                            RangeMerdian = item.RangeMerdian,
+                            CountHours = item.CountHours,
+                            CountMinutes = item.CountMinutes,
+                            Date = item.Date,
+                            DayOfWeek = item.DayOfWeek
+                        });
+                    }
                 }
             }
 
