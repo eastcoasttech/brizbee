@@ -352,15 +352,17 @@ namespace Brizbee.Web.Controllers
                     .Where(u => u.OrganizationId == 26)
                     .ToList();
 
-                var startRow = (uint)1;
+                var rowIndex = (uint)1;
                 foreach (var user in users)
                 {
+                    var sheetRow = worksheetPart.Worksheet.Elements<Row>().ElementAt((int)rowIndex - 1);
+
                     // Set the value of the cell.
-                    var cellA1 = InsertCellInWorksheet("A", startRow, worksheetPart);
+                    var cellA1 = InsertCellInWorksheet("A", rowIndex, worksheetPart);
                     cellA1.CellValue = new CellValue(user.Name);
                     cellA1.DataType = new EnumValue<CellValues>(CellValues.String);
 
-                    startRow++;
+                    rowIndex++;
                 }
 
 
