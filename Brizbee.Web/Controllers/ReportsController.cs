@@ -37,6 +37,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Web.Http;
+using System.IO;
 
 namespace Brizbee.Web.Controllers
 {
@@ -277,61 +278,90 @@ namespace Brizbee.Web.Controllers
                 Request);
         }
 
-        public IHttpActionResult PunchesForPayroll()
+        // GET: api/Reports/PunchesForPayroll
+        [AllowAnonymous]
+        [Route("api/Reports/PunchesForPayroll")]
+        public IHttpActionResult GetPunchesForPayroll()
         {
-            // Open the document for editing.
-            using (SpreadsheetDocument document = SpreadsheetDocument.Open("document name", true))
+            //var currentUser = CurrentUser();
+
+            //// Ensure that user is authorized.
+            //if (!currentUser.CanViewReports)
+            //    return StatusCode(HttpStatusCode.Forbidden);
+
+            using (var stream = new MemoryStream())
+            using (var document = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
             {
-                //var relationshipId = "rId1";
+                // ------------------------------------------------------------
+                // Add a WorkbookPart to the document.
+                // ------------------------------------------------------------
+
+                var workbookpart = document.AddWorkbookPart();
+                workbookpart.Workbook = new Workbook();
 
 
                 // ------------------------------------------------------------
-                // Build Workbook Part.
+                // Find or create the SharedStringTablePart.
                 // ------------------------------------------------------------
 
-                var workbookPart = document.AddWorkbookPart();
-                var workbook = new Workbook();
-                //var sheets = new Sheets();
-                //var sheet1 = new Sheet() { Name = "First Sheet", SheetId = 1, Id = relationshipId };
-                //sheets.Append(sheet1);
-                //workbook.Append(sheets);
-                workbookPart.Workbook = workbook;
-
-
-                // ------------------------------------------------------------
-                // Insert a new worksheet.
-                // ------------------------------------------------------------
-
-                WorksheetPart worksheetPart = InsertWorksheet(document.WorkbookPart);
+                //SharedStringTablePart sharedStringPart;
+                //if (workbookpart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+                //{
+                //    sharedStringPart = workbookpart.GetPartsOfType<SharedStringTablePart>().First();
+                //}
+                //else
+                //{
+                //    sharedStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
+                //}
 
 
                 // ------------------------------------------------------------
-                // Get the SharedStringTablePart. If it does not exist, create a new one.
+                // Add a WorksheetPart to the WorkbookPart.
                 // ------------------------------------------------------------
 
-                SharedStringTablePart sharedStringPart;
-                if (document.WorkbookPart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
+                var worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+                worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+
+                // ------------------------------------------------------------
+                // Add Sheets to the Workbook.
+                // ------------------------------------------------------------
+
+                var sheets = document.WorkbookPart.Workbook.AppendChild(new Sheets());
+
+
+                // ------------------------------------------------------------
+                // Append a new worksheet and associate it with the workbook.
+                // ------------------------------------------------------------
+
+                var sheet = new Sheet()
                 {
-                    sharedStringPart = document.WorkbookPart.GetPartsOfType<SharedStringTablePart>().First();
-                }
-                else
+                    Id = document.WorkbookPart.
+                    GetIdOfPart(worksheetPart),
+                    SheetId = 1,
+                    Name = "Report"
+                };
+                sheets.Append(sheet);
+
+
+                // ------------------------------------------------------------
+                // Loop each user.
+                // ------------------------------------------------------------
+
+                var users = db.Users
+                    .Where(u => u.OrganizationId == 26)
+                    .ToList();
+
+                var startRow = (uint)1;
+                foreach (var user in users)
                 {
-                    sharedStringPart = document.WorkbookPart.AddNewPart<SharedStringTablePart>();
+                    // Set the value of the cell.
+                    var cellA1 = InsertCellInWorksheet("A", startRow, worksheetPart);
+                    cellA1.CellValue = new CellValue(user.Name);
+                    cellA1.DataType = new EnumValue<CellValues>(CellValues.String);
+
+                    startRow++;
                 }
-
-
-                // ------------------------------------------------------------
-                // Insert the text into the SharedStringTablePart.
-                // ------------------------------------------------------------
-
-                int index = InsertSharedStringItem("my text", sharedStringPart);
-
-                // Insert cell A1 into the new worksheet.
-                Cell cell = InsertCellInWorksheet("A", 1, worksheetPart);
-
-                // Set the value of cell A1.
-                cell.CellValue = new CellValue(index.ToString());
-                cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
 
 
                 // ------------------------------------------------------------
@@ -341,69 +371,57 @@ namespace Brizbee.Web.Controllers
                 document.PackageProperties.Creator = "BRIZBEE";
                 document.PackageProperties.Created = DateTime.UtcNow;
 
-                // Save the new worksheet.
-                worksheetPart.Worksheet.Save();
+                workbookpart.Workbook.Save();
+
+
+
+
+
+
+
+
+
+
+
+
+
+                //// ------------------------------------------------------------
+                //// Insert the text into the SharedStringTablePart.
+                //// ------------------------------------------------------------
+
+                //int index = InsertSharedStringItem("my text", sharedStringPart);
+
+                //// Insert cell A1 into the new worksheet.
+                //Cell cell = InsertCellInWorksheet("A", 1, worksheetPart);
+
+                //// Set the value of cell A1.
+                //cell.CellValue = new CellValue(index.ToString());
+                //cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+
+
+
+                //// Save the new worksheet.
+                //worksheetPart.Worksheet.Save();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                // Close the document.
+                document.Close();
+
+                return new FileActionResult(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report - Punches for Payroll.xlsx", Request);
             }
-
-            return new FileActionResult(new byte[] { }, "application/pdf", "filename.xlsx", Request);
-        }
-
-        // Given text and a SharedStringTablePart, creates a SharedStringItem with the specified text 
-        // and inserts it into the SharedStringTablePart. If the item already exists, returns its index.
-        private static int InsertSharedStringItem(string text, SharedStringTablePart shareStringPart)
-        {
-            // If the part does not contain a SharedStringTable, create one.
-            if (shareStringPart.SharedStringTable == null)
-            {
-                shareStringPart.SharedStringTable = new SharedStringTable();
-            }
-
-            int i = 0;
-
-            // Iterate through all the items in the SharedStringTable. If the text already exists, return its index.
-            foreach (SharedStringItem item in shareStringPart.SharedStringTable.Elements<SharedStringItem>())
-            {
-                if (item.InnerText == text)
-                {
-                    return i;
-                }
-
-                i++;
-            }
-
-            // The text does not exist in the part. Create the SharedStringItem and return its index.
-            shareStringPart.SharedStringTable.AppendChild(new SharedStringItem(new DocumentFormat.OpenXml.Spreadsheet.Text(text)));
-            shareStringPart.SharedStringTable.Save();
-
-            return i;
-        }
-
-        // Given a WorkbookPart, inserts a new worksheet.
-        private static WorksheetPart InsertWorksheet(WorkbookPart workbookPart)
-        {
-            // Add a new worksheet part to the workbook.
-            WorksheetPart newWorksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-            newWorksheetPart.Worksheet = new Worksheet(new SheetData());
-            newWorksheetPart.Worksheet.Save();
-
-            Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
-            string relationshipId = workbookPart.GetIdOfPart(newWorksheetPart);
-
-            // Get a unique ID for the new sheet.
-            uint sheetId = 1;
-            if (sheets.Elements<Sheet>().Count() > 0)
-            {
-                sheetId = sheets.Elements<Sheet>().Select(s => s.SheetId.Value).Max() + 1;
-            }
-
-            string sheetName = "Sheet" + sheetId;
-
-            // Append the new worksheet and associate it with the workbook.
-            Sheet sheet = new Sheet() { Id = relationshipId, SheetId = sheetId, Name = sheetName };
-            sheets.Append(sheet);
-            workbookPart.Workbook.Save();
-
-            return newWorksheetPart;
         }
 
         // Given a column name, a row index, and a WorksheetPart, inserts a cell into the worksheet. 
