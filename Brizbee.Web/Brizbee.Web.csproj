@@ -519,51 +519,6 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201908250351304_Initial.cs" />
-    <Compile Include="Migrations\201908250351304_Initial.Designer.cs">
-      <DependentUpon>201908250351304_Initial.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201908270051538_AddingRequiresForUsers.cs" />
-    <Compile Include="Migrations\201908270051538_AddingRequiresForUsers.Designer.cs">
-      <DependentUpon>201908270051538_AddingRequiresForUsers.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201910271405218_IncreasingLengthForCoordinates.cs" />
-    <Compile Include="Migrations\201910271405218_IncreasingLengthForCoordinates.Designer.cs">
-      <DependentUpon>201910271405218_IncreasingLengthForCoordinates.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.cs" />
-    <Compile Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.Designer.cs">
-      <DependentUpon>201912160513020_AddingQuickBooksDesktopExport.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.cs" />
-    <Compile Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.Designer.cs">
-      <DependentUpon>201912161841508_AddingLogToQuickBooksDesktopExports.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202001091754454_AddingCreatedTimeActivityIdsToExports.cs" />
-    <Compile Include="Migrations\202001091754454_AddingCreatedTimeActivityIdsToExports.Designer.cs">
-      <DependentUpon>202001091754454_AddingCreatedTimeActivityIdsToExports.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202001100437570_EnablingCommitOnQuickBooksOnlineExports.cs" />
-    <Compile Include="Migrations\202001100437570_EnablingCommitOnQuickBooksOnlineExports.Designer.cs">
-      <DependentUpon>202001100437570_EnablingCommitOnQuickBooksOnlineExports.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.cs" />
-    <Compile Include="Migrations\202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.Designer.cs">
-      <DependentUpon>202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202001202125013_AddingSourceDetailsAndRates.cs" />
-    <Compile Include="Migrations\202001202125013_AddingSourceDetailsAndRates.Designer.cs">
-      <DependentUpon>202001202125013_AddingSourceDetailsAndRates.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202003271525077_AddingPlanIdToOrganizations.cs" />
-    <Compile Include="Migrations\202003271525077_AddingPlanIdToOrganizations.designer.cs">
-      <DependentUpon>202003271525077_AddingPlanIdToOrganizations.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202007011825090_AddingQBOColumnsToUsers.cs" />
-    <Compile Include="Migrations\202007011825090_AddingQBOColumnsToUsers.designer.cs">
-      <DependentUpon>202007011825090_AddingQBOColumnsToUsers.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="ODataHandler.cs" />
     <Compile Include="ODataMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -599,41 +554,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201908250351304_Initial.resx">
-      <DependentUpon>201908250351304_Initial.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201908270051538_AddingRequiresForUsers.resx">
-      <DependentUpon>201908270051538_AddingRequiresForUsers.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201910271405218_IncreasingLengthForCoordinates.resx">
-      <DependentUpon>201910271405218_IncreasingLengthForCoordinates.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201912160513020_AddingQuickBooksDesktopExport.resx">
-      <DependentUpon>201912160513020_AddingQuickBooksDesktopExport.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201912161841508_AddingLogToQuickBooksDesktopExports.resx">
-      <DependentUpon>201912161841508_AddingLogToQuickBooksDesktopExports.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202001091754454_AddingCreatedTimeActivityIdsToExports.resx">
-      <DependentUpon>202001091754454_AddingCreatedTimeActivityIdsToExports.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202001100437570_EnablingCommitOnQuickBooksOnlineExports.resx">
-      <DependentUpon>202001100437570_EnablingCommitOnQuickBooksOnlineExports.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.resx">
-      <DependentUpon>202001110248131_RemovingDeprecatedColumnsAndAddingExportDetails.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202001202125013_AddingSourceDetailsAndRates.resx">
-      <DependentUpon>202001202125013_AddingSourceDetailsAndRates.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202003271525077_AddingPlanIdToOrganizations.resx">
-      <DependentUpon>202003271525077_AddingPlanIdToOrganizations.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202007011825090_AddingQBOColumnsToUsers.resx">
-      <DependentUpon>202007011825090_AddingQBOColumnsToUsers.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Brizbee.Common\Brizbee.Common.csproj">
