@@ -74,7 +74,6 @@ namespace Brizbee.Common.Models
         [StringLength(50)]
         public string QuoteNumber { get; set; }
 
-        [NotMapped]
         public int? TaskTemplateId { get; set; }
 
         [StringLength(9)]
