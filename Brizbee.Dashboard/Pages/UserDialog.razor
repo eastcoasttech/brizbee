@@ -179,6 +179,15 @@
                         <td></td>
                     </tr>
                     <tr>
+                        <th>Users</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewUsers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateUsers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyUsers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteUsers" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
                         <th>Organization Details</th>
                         <td class="text-center"><InputCheckbox @bind-Value="user.CanViewOrganizationDetails" disabled="@(working || loading)" /></td>
                         <td></td>
