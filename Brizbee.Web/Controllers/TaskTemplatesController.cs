@@ -40,8 +40,8 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Ensure user is administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateProjects)
                 return new List<TaskTemplate>().AsQueryable();
 
             return db.TaskTemplates
@@ -54,8 +54,8 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            // Ensure user is administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateProjects)
                 return SingleResult.Create(new List<TaskTemplate>().AsQueryable());
 
             return SingleResult.Create(db.TaskTemplates
@@ -73,8 +73,8 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure user is administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateProjects)
                 return BadRequest();
 
             // Auto-generated.
@@ -95,8 +95,8 @@ namespace Brizbee.Web.Controllers
 
             var taskTemplate = db.TaskTemplates.Find(key);
 
-            // Ensure user is administrator of the same organization.
-            if (currentUser.Role != "Administrator" ||
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateProjects ||
                 taskTemplate.OrganizationId != currentUser.OrganizationId)
                 return BadRequest();
 
