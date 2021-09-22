@@ -38,6 +38,9 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Web.Http;
 using System.IO;
+using System.Text;
+using System.Data.Entity.SqlServer;
+using System.Data.Entity;
 
 namespace Brizbee.Web.Controllers
 {
@@ -59,7 +62,7 @@ namespace Brizbee.Web.Controllers
                 this.fileName = fileName;
                 this.request = request;
             }
-            
+
             public System.Threading.Tasks.Task<HttpResponseMessage> ExecuteAsync(CancellationToken cancellationToken)
             {
                 var response = new HttpResponseMessage(HttpStatusCode.OK)
@@ -123,7 +126,7 @@ namespace Brizbee.Web.Controllers
             [FromUri] string CommitStatus)
         {
             var currentUser = CurrentUser();
-            
+
             Trace.TraceInformation($"Generating PunchesByJob report for {Min:G} through {Max:G}");
 
 
@@ -265,7 +268,7 @@ namespace Brizbee.Web.Controllers
         public IHttpActionResult GetTasksByJob([FromUri] int JobId, [FromUri] string taskGroupScope = "")
         {
             var currentUser = CurrentUser();
-            
+
             Trace.TraceInformation($"Generating TasksByJob report for project {JobId}");
 
             var job = db.Jobs.Where(j => j.Id == JobId).FirstOrDefault();
@@ -285,50 +288,82 @@ namespace Brizbee.Web.Controllers
         {
             //var currentUser = CurrentUser();
 
+            var min = new DateTime(2021, 9, 1);
+            var max = new DateTime(2021, 9, 21);
+
+            var reportTitle = $"PUNCHES FOR PAYROLL {min.ToString("M/d/yyyy")} thru {min.ToString("M/d/yyyy")} GENERATED {DateTime.Now.ToString("ddd, MMM d, yyyy h:mm:ss tt").ToUpperInvariant()}";
+            var organizationName = "THOMAS INDUSTRIAL FABRICATION";
+
             //// Ensure that user is authorized.
             //if (!currentUser.CanViewReports)
             //    return StatusCode(HttpStatusCode.Forbidden);
 
             var styleSheet = new Stylesheet(
                 new Fonts(
-                    new Font(                                                               // Index 0 - The default font.
-                        new FontSize() { Val = 11 },
+
+                    // Index 0 - Default font
+                    new Font(
+                        new FontSize() { Val = 9 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "00000000" } },
-                        new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Index 1 - The bold font.
+                        new FontName() { Val = "Arial" }),
+
+                    // Index 1 - Bold font
+                    new Font(
                         new Bold(),
-                        new FontSize() { Val = 11 },
+                        new FontSize() { Val = 9 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "00000000" } },
-                        new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Index 2 - The Italic font.
+                        new FontName() { Val = "Arial" }),
+
+                    // Index 2 - Italic font
+                    new Font(
                         new Italic(),
-                        new FontSize() { Val = 11 },
+                        new FontSize() { Val = 9 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "00000000" } },
-                        new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Index 2 - The Times Roman font. with 16 size
-                        new FontSize() { Val = 16 },
-                        new Color() { Rgb = new HexBinaryValue() { Value = "00000000" } },
-                        new FontName() { Val = "Times New Roman" })
+                        new FontName() { Val = "Arial" }),
+
+                    // Index 3 - White Bold Font
+                    new Font(
+                        new Bold(),
+                        new FontSize() { Val = 9 },
+                        new Color() { Rgb = new HexBinaryValue() { Value = "FFFFFFFF" } },
+                        new FontName() { Val = "Arial" })
                 ),
                 new Fills(
-                    new Fill(                                                           // Index 0 - The default fill.
+
+                    // Index 0 - Dfault fill
+                    new Fill(
                         new PatternFill() { PatternType = PatternValues.None }),
-                    new Fill(                                                           // Index 1 - The default fill of gray 125 (required)
+
+                    // Index 1 - The default fill of gray 125 (required)
+                    new Fill(
                         new PatternFill() { PatternType = PatternValues.Gray125 }),
-                    new Fill(                                                           // Index 2 - The yellow fill.
+
+                    // Index 2 - The yellow fill
+                    new Fill(
                         new PatternFill(
                             new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "FFFFFF00" } }
+                        )
+                        { PatternType = PatternValues.Solid }),
+
+                    // Index 3
+                    new Fill(
+                        new PatternFill(
+                            new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "00000000" } }
                         )
                         { PatternType = PatternValues.Solid })
                 ),
                 new Borders(
-                    new Border(                                                         // Index 0 - The default border.
+
+                    // Index 0 - Default border
+                    new Border(
                         new LeftBorder(),
                         new RightBorder(),
                         new TopBorder(),
                         new BottomBorder(),
                         new DiagonalBorder()),
-                    new Border(                                                         // Index 1 - Applies a Left, Right, Top, Bottom border to a cell
+
+                    // Index 1 - Applies a Left, Right, Top, Bottom border to a cell
+                    new Border(
                         new LeftBorder(
                             new Color() { Auto = true }
                         )
@@ -348,16 +383,88 @@ namespace Brizbee.Web.Controllers
                         new DiagonalBorder())
                 ),
                 new CellFormats(
-                    new CellFormat() { FontId = 0, FillId = 0, BorderId = 0 },                          // Index 0 - The default cell style.  If a cell does not have a style index applied it will use this style combination instead
-                    new CellFormat() { FontId = 1, FillId = 0, BorderId = 0, ApplyFont = true },       // Index 1 - Bold 
-                    new CellFormat() { FontId = 2, FillId = 0, BorderId = 0, ApplyFont = true },       // Index 2 - Italic
-                    new CellFormat() { FontId = 3, FillId = 0, BorderId = 0, ApplyFont = true },       // Index 3 - Times Roman
-                    new CellFormat() { FontId = 0, FillId = 2, BorderId = 0, ApplyFill = true },       // Index 4 - Yellow Fill
-                    new CellFormat(                                                                   // Index 5 - Alignment
-                        new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center }
-                    )
-                    { FontId = 0, FillId = 0, BorderId = 0, ApplyAlignment = true },
-                    new CellFormat() { FontId = 0, FillId = 0, BorderId = 1, ApplyBorder = true }      // Index 6 - Border
+                    // Index 0 - Default cell style
+                    new CellFormat()
+                    {
+                        FontId = 0,
+                        FillId = 0,
+                        BorderId = 0,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Left,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    },
+
+                    // Index 1 - Bold Left Align
+                    new CellFormat()
+                    {
+                        FontId = 1,
+                        FillId = 0,
+                        BorderId = 0,
+                        ApplyFont = true,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Left,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    },
+
+                    // Index 2 - Bold Right Align
+                    new CellFormat()
+                    {
+                        FontId = 1,
+                        FillId = 0,
+                        BorderId = 0,
+                        ApplyFont = true,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Right,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    },
+
+                    // Index 3 - Align Center
+                    new CellFormat()
+                    {
+                        FontId = 0,
+                        FillId = 0,
+                        BorderId = 0,
+                        ApplyFont = true,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Center,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    },
+
+                    // Index 4 - Black Header
+                    new CellFormat()
+                    {
+                        FontId = 3,
+                        FillId = 3,
+                        BorderId = 0,
+                        ApplyFill = true,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Left,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    },
+
+                    // Index 5 - Left Align
+                    new CellFormat()
+                    {
+                        FontId = 0,
+                        FillId = 0,
+                        BorderId = 0,
+                        ApplyFont = true,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Left,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    }
                 )
             );
 
@@ -365,72 +472,352 @@ namespace Brizbee.Web.Controllers
             using (var document = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
             {
                 // ------------------------------------------------------------
+                // Add document properties.
+                // ------------------------------------------------------------
+
+                document.PackageProperties.Creator = "BRIZBEE";
+                document.PackageProperties.Created = DateTime.UtcNow;
+
+
+                // ------------------------------------------------------------
                 // Add a WorkbookPart to the document.
                 // ------------------------------------------------------------
 
-                var workbookpart = document.AddWorkbookPart();
-                workbookpart.Workbook = new Workbook();
+                var workbookPart1 = document.AddWorkbookPart();
+                workbookPart1.Workbook = new Workbook();
 
 
                 // ------------------------------------------------------------
                 // Apply stylesheet.
                 // ------------------------------------------------------------
 
-                var workStylePart = workbookpart.AddNewPart<WorkbookStylesPart>();
-                workStylePart.Stylesheet = styleSheet;
-
-
-                // ------------------------------------------------------------
-                // Find or create the SharedStringTablePart.
-                // ------------------------------------------------------------
-
-                //SharedStringTablePart sharedStringPart;
-                //if (workbookpart.GetPartsOfType<SharedStringTablePart>().Count() > 0)
-                //{
-                //    sharedStringPart = workbookpart.GetPartsOfType<SharedStringTablePart>().First();
-                //}
-                //else
-                //{
-                //    sharedStringPart = workbookpart.AddNewPart<SharedStringTablePart>();
-                //}
+                var workStylePart1 = workbookPart1.AddNewPart<WorkbookStylesPart>();
+                workStylePart1.Stylesheet = styleSheet;
 
 
                 // ------------------------------------------------------------
                 // Add a WorksheetPart to the WorkbookPart.
                 // ------------------------------------------------------------
 
-                var worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
-                var sheetProperties = new SheetProperties(new PageSetupProperties());
-                worksheetPart.Worksheet = new Worksheet(new SheetData());
-                worksheetPart.Worksheet.SheetProperties = sheetProperties;
+                var worksheetPart1 = workbookPart1.AddNewPart<WorksheetPart>();
 
 
+                // ------------------------------------------------------------
+                // Collect the users and punches.
+                // ------------------------------------------------------------
+
+                var users = db.Users
+                    .Where(u => u.OrganizationId == 26)
+                    .Where(u => u.IsDeleted == false)
+                    .OrderBy(u => u.Name)
+                    .ToList();
+
+                var punches = db.Punches
+                    .Include(p => p.Task.Job.Customer)
+                    .Include(p => p.User)
+                    .Where(p => p.User.OrganizationId == 26)
+                    .Where(p => p.User.IsDeleted == false)
+                    .Where(p => p.OutAt.HasValue == true)
+                    .Where(p => DbFunctions.TruncateTime(p.InAt) >= min.Date)
+                    .Where(p => DbFunctions.TruncateTime(p.InAt) <= max.Date)
+                    .ToList();
+
+                var rowIndex = (uint)1;
+                var worksheet1 = new Worksheet();
+                var rowBreaks1 = new RowBreaks() { Count = 0, ManualBreakCount = 0 };
+                var mergeCells1 = new MergeCells() { Count = 0 };
+                var sheetData1 = new SheetData();
+                foreach (var user in users)
+                {
+                    var punchesForUser = punches
+                        .Where(p => p.UserId == user.Id)
+                        .OrderBy(p => p.InAt);
+
+                    // Do not continue adding this user if there are no punches.
+                    if (!punchesForUser.Any())
+                        continue;
+
+                    // ------------------------------------------------------------
+                    // Header for user cell.
+                    // ------------------------------------------------------------
+
+                    var rowUser = new Row() { RowIndex = rowIndex, Height = 32D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
+
+                    var cellUser = new Cell() { CellReference = $"A{rowIndex}", StyleIndex = 4U, DataType = CellValues.String, CellValue = new CellValue($"User {user.Name}") };
+                    rowUser.Append(cellUser);
+
+                    sheetData1.Append(rowUser);
+
+                    // Merge the user name across the row.
+                    var mergeCell0 = new MergeCell() { Reference = $"A{rowIndex}:J{rowIndex}" };
+                    mergeCells1.Append(mergeCell0);
+                    mergeCells1.Count++;
+
+                    rowIndex++;
 
 
-                // Set the FitToPage property to true
-                //worksheetPart.Worksheet.SheetProperties.PageSetupProperties.FitToPage = BooleanValue.FromBoolean(true);
+                    // ------------------------------------------------------------
+                    // Loop each date.
+                    // ------------------------------------------------------------
 
-                var pgOr = new PageSetup();
-                pgOr.Orientation = OrientationValues.Landscape;
-                worksheetPart.Worksheet.AppendChild(pgOr);
+                    var dates = punches
+                        .GroupBy(p => p.InAt.Date)
+                        .Select(g => g.Key)
+                        .ToList();
+                    foreach (var date in dates)
+                    {
+                        var punchesForDate = punchesForUser
+                            .Where(p => p.InAt.Date == date.Date);
+
+                        if (!punchesForDate.Any())
+                            continue;
+
+                        rowIndex++;
+
+                        // ------------------------------------------------------------
+                        // Header for date cell.
+                        // ------------------------------------------------------------
+
+                        var rowDate = new Row() { RowIndex = rowIndex, Height = 32D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
+
+                        var cellDate = new Cell() { CellReference = $"A{rowIndex}", StyleIndex = 4U, DataType = CellValues.String, CellValue = new CellValue(date.ToString("D")) };
+                        rowDate.Append(cellDate);
+
+                        sheetData1.Append(rowDate);
+
+                        // Merge the date across the row.
+                        var mergeCell1 = new MergeCell() { Reference = $"A{rowIndex}:J{rowIndex}" };
+                        mergeCells1.Append(mergeCell1);
+                        mergeCells1.Count++;
+
+                        rowIndex++;
 
 
+                        // ------------------------------------------------------------
+                        // Headers for punch cells.
+                        // ------------------------------------------------------------
+
+                        var rowHeaders = new Row() { RowIndex = rowIndex, Height = 26D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
+
+                        // InAt
+                        var cellInAtHeader = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 1U };
+                        var cellValueForInAtHeader = new CellValue("In");
+
+                        cellInAtHeader.Append(cellValueForInAtHeader);
+                        rowHeaders.Append(cellInAtHeader);
+
+                        // OutAt
+                        var cellOutAtHeader = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String, StyleIndex = 1U };
+                        var cellValueForOutAtHeader = new CellValue("Out");
+
+                        cellOutAtHeader.Append(cellValueForOutAtHeader);
+                        rowHeaders.Append(cellOutAtHeader);
+
+                        // Task Number
+                        var cellTaskNumberHeader = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("#") };
+                        rowHeaders.Append(cellTaskNumberHeader);
+
+                        // Task Name
+                        var cellTaskNameHeader = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Task") };
+                        rowHeaders.Append(cellTaskNameHeader);
+
+                        // Project Number
+                        var cellProjectNumberHeader = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("#") };
+                        rowHeaders.Append(cellProjectNumberHeader);
+
+                        // Project Name
+                        var cellProjectNameHeader = new Cell() { CellReference = $"F{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Project") };
+                        rowHeaders.Append(cellProjectNameHeader);
+
+                        // Customer Number
+                        var cellCustomerNumberHeader = new Cell() { CellReference = $"G{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("#") };
+                        rowHeaders.Append(cellCustomerNumberHeader);
+
+                        // Customer Name
+                        var cellCustomerNameHeader = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Customer") };
+                        rowHeaders.Append(cellCustomerNameHeader);
+
+                        // Locked
+                        var cellLockedHeader = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Locked?") };
+                        rowHeaders.Append(cellLockedHeader);
+
+                        // Total
+                        var cellTotalHeader = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue("Total") };
+                        rowHeaders.Append(cellTotalHeader);
+
+                        sheetData1.Append(rowHeaders);
+
+                        rowIndex++;
 
 
+                        // ------------------------------------------------------------
+                        // Punch cells.
+                        // ------------------------------------------------------------
+
+                        foreach (var punch in punchesForDate)
+                        {
+                            var rowPunch = new Row() { RowIndex = rowIndex, Height = 26D, CustomHeight = true };
+
+                            // InAt
+                            var cellInAt = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String };
+                            var cellValueForInAt = new CellValue();
+                            cellValueForInAt.Text = punch.InAt.ToShortTimeString();
+
+                            cellInAt.Append(cellValueForInAt);
+                            rowPunch.Append(cellInAt);
+
+                            // OutAt
+                            var cellOutAt = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String };
+                            var cellValueForOutAt = new CellValue();
+                            cellValueForOutAt.Text = punch.OutAt.Value.ToShortTimeString();
+
+                            cellOutAt.Append(cellValueForOutAt);
+                            rowPunch.Append(cellOutAt);
+
+                            // Task Number
+                            var cellTaskNumber = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(punch.Task.Number) };
+                            rowPunch.Append(cellTaskNumber);
+
+                            // Task Name
+                            var cellTaskName = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, CellValue = new CellValue(punch.Task.Name) };
+                            rowPunch.Append(cellTaskName);
+
+                            // Project Number
+                            var cellProjectNumber = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(punch.Task.Job.Number) };
+                            rowPunch.Append(cellProjectNumber);
+
+                            // Project Name
+                            var cellProjectName = new Cell() { CellReference = $"F{rowIndex}", DataType = CellValues.String, CellValue = new CellValue(punch.Task.Job.Name) };
+                            rowPunch.Append(cellProjectName);
+
+                            // Customer Number
+                            var cellCustomerNumber = new Cell() { CellReference = $"G{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(punch.Task.Job.Customer.Number) };
+                            rowPunch.Append(cellCustomerNumber);
+
+                            // Customer Name
+                            var cellCustomerName = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.String, CellValue = new CellValue(punch.Task.Job.Customer.Name) };
+                            rowPunch.Append(cellCustomerName);
+
+                            // Locked
+                            var cellLocked = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 3U, CellValue = new CellValue(punch.CommitId.HasValue ? "X" : "") };
+                            rowPunch.Append(cellLocked);
+
+                            // Total
+                            var cellTotal = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.Number, CellValue = new CellValue("0.00") };
+                            rowPunch.Append(cellTotal);
+
+                            sheetData1.Append(rowPunch);
+
+                            rowIndex++;
+                        }
+
+                    }
+
+                    
+                    // ------------------------------------------------------------
+                    // Cells for user total.
+                    // ------------------------------------------------------------
+
+                    rowIndex++;
+
+                    var rowTotal = new Row() { RowIndex = rowIndex, Height = 26D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
+
+                    // User Name
+                    var cellUserName = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue($"Total for User {user.Name}") };
+                    rowTotal.Append(cellUserName);
+
+                    // User Total
+                    var cellUserTotal = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue("0.00") };
+                    rowTotal.Append(cellUserTotal);
+
+                    sheetData1.Append(rowTotal);
+
+                    // Merge the user name across the row.
+                    var mergeCell3 = new MergeCell() { Reference = $"A{rowIndex}:I{rowIndex}" };
+                    mergeCells1.Append(mergeCell3);
+                    mergeCells1.Count++;
+
+                    rowIndex++;
 
 
+                    // ------------------------------------------------------------
+                    // Add a page break.
+                    // ------------------------------------------------------------
+
+                    var rowBreak1 = new Break() { Id = rowIndex, Max = 16383U, ManualPageBreak = true };
+                    rowBreaks1.Append(rowBreak1);
+                    rowBreaks1.ManualBreakCount++;
+                    rowBreaks1.Count++;
+
+                    rowIndex++;
+                }
 
 
+                // ------------------------------------------------------------
+                // Custom column width.
+                // ------------------------------------------------------------
+
+                var columns1 = new Columns();
+
+                var column1 = new Column() { Min = 1U, Max = 1U, Width = 9D, CustomWidth = true };
+                var column2 = new Column() { Min = 2U, Max = 2U, Width = 9D, CustomWidth = true };
+                var column3 = new Column() { Min = 3U, Max = 3U, Width = 8D, CustomWidth = true };
+                var column4 = new Column() { Min = 4U, Max = 4U, Width = 28D, CustomWidth = true };
+                var column5 = new Column() { Min = 5U, Max = 5U, Width = 8D, CustomWidth = true };
+                var column6 = new Column() { Min = 6U, Max = 6U, Width = 28D, CustomWidth = true };
+                var column7 = new Column() { Min = 7U, Max = 7U, Width = 8D, CustomWidth = true };
+                var column8 = new Column() { Min = 8U, Max = 8U, Width = 28D, CustomWidth = true };
+                var column9 = new Column() { Min = 9U, Max = 9U, Width = 7D, CustomWidth = true };
+                var column10 = new Column() { Min = 10U, Max = 10U, Width = 8D, CustomWidth = true };
+
+                columns1.Append(column1);
+                columns1.Append(column2);
+                columns1.Append(column3);
+                columns1.Append(column4);
+                columns1.Append(column5);
+                columns1.Append(column6);
+                columns1.Append(column7);
+                columns1.Append(column8);
+                columns1.Append(column9);
+                columns1.Append(column10);
 
 
+                var sheetFormatProperties1 = new SheetFormatProperties() { DefaultRowHeight = 26D, DyDescent = 0.35D };
 
+                var pageMargins1 = new PageMargins() { Left = 0.5D, Right = 0.5D, Top = 0.5D, Bottom = 0.5D, Header = 0.3D, Footer = 0.3D };
+                var pageSetup1 = new PageSetup() { Orientation = OrientationValues.Landscape };
+
+                var headerFooter1 = new HeaderFooter();
+
+                var oddHeader1 = new OddHeader();
+                oddHeader1.Text = reportTitle;
+
+                var oddFooter1 = new OddFooter();
+                oddFooter1.Text = organizationName;
+
+                headerFooter1.Append(oddHeader1);
+                headerFooter1.Append(oddFooter1);
+
+                //worksheet1.Append(sheetDimension1);
+                //worksheet1.Append(sheetViews1);
+                //worksheet1.Append(sheetFormatProperties1);
+                worksheet1.Append(columns1);
+                worksheet1.Append(sheetData1);
+                worksheet1.Append(mergeCells1);
+                worksheet1.Append(pageMargins1);
+                worksheet1.Append(pageSetup1);
+                worksheet1.Append(headerFooter1);
+
+                worksheet1.Append(rowBreaks1);
+
+                worksheetPart1.Worksheet = worksheet1;
 
 
                 // ------------------------------------------------------------
                 // Add Sheets to the Workbook.
                 // ------------------------------------------------------------
 
-                var sheets = document.WorkbookPart.Workbook.AppendChild(new Sheets());
+                var sheets = workbookPart1.Workbook.AppendChild(new Sheets());
 
 
                 // ------------------------------------------------------------
@@ -439,158 +826,18 @@ namespace Brizbee.Web.Controllers
 
                 var sheet = new Sheet()
                 {
-                    Id = document.WorkbookPart.
-                    GetIdOfPart(worksheetPart),
+                    Id = workbookPart1.GetIdOfPart(worksheetPart1),
                     SheetId = 1,
                     Name = "Report"
                 };
                 sheets.Append(sheet);
 
 
-                // ------------------------------------------------------------
-                // Loop each user.
-                // ------------------------------------------------------------
-
-                var users = db.Users
-                    .Where(u => u.OrganizationId == 26)
-                    .ToList();
-
-                var rowIndex = (uint)1;
-                foreach (var user in users)
-                {
-                    var rowBreak = new Break() { Id = rowIndex, Max = 16383u, ManualPageBreak = true };
-
-                    var rowBreaks = worksheetPart.Worksheet.GetFirstChild<RowBreaks>();
-
-                    if (rowBreaks == null)
-                    {
-                        rowBreaks = new RowBreaks();
-                        rowBreaks.ManualBreakCount = 0u;
-                        rowBreaks.Count = 0u;
-
-                        worksheetPart.Worksheet.Append(rowBreaks);
-                    }
-
-                    rowBreaks.Append(rowBreak);
-                    rowBreaks.ManualBreakCount++;
-                    rowBreaks.Count++;
-
-                    // Set the value of the cell.
-                    var cellA1 = InsertCellInWorksheet("A", rowIndex, worksheetPart);
-                    cellA1.CellValue = new CellValue(user.Name);
-                    cellA1.DataType = new EnumValue<CellValues>(CellValues.String);
-                    cellA1.StyleIndex = 4u;
-
-                    rowIndex++;
-                }
-
-
-                // ------------------------------------------------------------
-                // Add document properties.
-                // ------------------------------------------------------------
-
-                document.PackageProperties.Creator = "BRIZBEE";
-                document.PackageProperties.Created = DateTime.UtcNow;
-
-                workbookpart.Workbook.Save();
-
-
-
-
-
-
-
-
-
-
-
-
-
-                //// ------------------------------------------------------------
-                //// Insert the text into the SharedStringTablePart.
-                //// ------------------------------------------------------------
-
-                //int index = InsertSharedStringItem("my text", sharedStringPart);
-
-                //// Insert cell A1 into the new worksheet.
-                //Cell cell = InsertCellInWorksheet("A", 1, worksheetPart);
-
-                //// Set the value of cell A1.
-                //cell.CellValue = new CellValue(index.ToString());
-                //cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
-
-
-
-                //// Save the new worksheet.
-                //worksheetPart.Worksheet.Save();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                // Close the document.
+                // Save and close the document.
+                workbookPart1.Workbook.Save();
                 document.Close();
 
                 return new FileActionResult(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report - Punches for Payroll.xlsx", Request);
-            }
-        }
-
-        // Given a column name, a row index, and a WorksheetPart, inserts a cell into the worksheet. 
-        // If the cell already exists, returns it. 
-        private static Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
-        {
-            Worksheet worksheet = worksheetPart.Worksheet;
-            SheetData sheetData = worksheet.GetFirstChild<SheetData>();
-            string cellReference = columnName + rowIndex;
-
-            // If the worksheet does not contain a row with the specified row index, insert one.
-            Row row;
-            if (sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).Count() != 0)
-            {
-                row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).First();
-            }
-            else
-            {
-                row = new Row() { RowIndex = rowIndex };
-                sheetData.Append(row);
-            }
-
-            // If there is not a cell with the specified column name, insert one.  
-            if (row.Elements<Cell>().Where(c => c.CellReference.Value == columnName + rowIndex).Count() > 0)
-            {
-                return row.Elements<Cell>().Where(c => c.CellReference.Value == cellReference).First();
-            }
-            else
-            {
-                // Cells must be in sequential order according to CellReference. Determine where to insert the new cell.
-                Cell refCell = null;
-                foreach (Cell cell in row.Elements<Cell>())
-                {
-                    if (cell.CellReference.Value.Length == cellReference.Length)
-                    {
-                        if (string.Compare(cell.CellReference.Value, cellReference, true) > 0)
-                        {
-                            refCell = cell;
-                            break;
-                        }
-                    }
-                }
-
-                Cell newCell = new Cell() { CellReference = cellReference };
-                row.InsertBefore(newCell, refCell);
-
-                worksheet.Save();
-                return newCell;
             }
         }
 
