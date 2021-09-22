@@ -174,18 +174,20 @@
                     </div>
                 </li>
                 <li>
-                    <div class="panel panel-default panel-condensed" style="margin-top: 5%;">
+                    <div class="panel panel-default panel-condensed">
                         <div class="panel-body">
                             <table class="table table-report">
                                 <tr>
                                     <td class="col-md-1">
-                                        <i class="fa fa-question-circle" aria-hidden="true" style="font-size: 40px; color: #444;"></i>
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
                                     </td>
                                     <td class="col-md-11">
-                                        <h4>
-                                            Need a custom report?
-                                        </h4>
-                                        <p><small>We would be happy to build a custom report for your specific business needs. Please reach out to our support team at <a href="mailto:support@brizbee.com">support@brizbee.com</a></small></p>
+                                        <a href="@($"{apiService.GetBaseUrl()}/api/Reports/PunchesForPayroll?min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&AuthUserId={sharedService.AuthUserId}&AuthExpiration={sharedService.AuthExpiration}&AuthToken={sharedService.AuthToken}")">
+                                            <h4>
+                                                Punches for Payroll
+                                            </h4>
+                                            <p><small>Lists the punches by user for each day in the range with rates.</small></p>
+                                        </a>
                                     </td>
                                 </tr>
                             </table>
@@ -255,6 +257,25 @@
                                             </h4>
                                             <p><small>Lists the time cards by day for each day in the range.</small></p>
                                         </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="fa fa-question-circle" aria-hidden="true" style="font-size: 40px; color: #444;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <h4>
+                                            Need a custom report?
+                                        </h4>
+                                        <p><small>We would be happy to build a custom report for your specific business needs. Please reach out to our support team at <a href="mailto:support@brizbee.com">support@brizbee.com</a></small></p>
                                     </td>
                                 </tr>
                             </table>
