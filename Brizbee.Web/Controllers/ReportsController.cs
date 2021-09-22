@@ -282,21 +282,18 @@ namespace Brizbee.Web.Controllers
         }
 
         // GET: api/Reports/PunchesForPayroll
-        [AllowAnonymous]
         [Route("api/Reports/PunchesForPayroll")]
-        public IHttpActionResult GetPunchesForPayroll()
+        public IHttpActionResult GetPunchesForPayroll([FromUri] DateTime min, [FromUri] DateTime max)
         {
-            //var currentUser = CurrentUser();
+            var currentUser = CurrentUser();
+            var organization = db.Organizations.Find(currentUser.OrganizationId);
 
-            var min = new DateTime(2021, 9, 1);
-            var max = new DateTime(2021, 9, 21);
+            var reportTitle = $"PUNCHES FOR PAYROLL {min.ToString("M/d/yyyy")} thru {max.ToString("M/d/yyyy")} GENERATED {DateTime.Now.ToString("ddd, MMM d, yyyy h:mm:ss tt").ToUpperInvariant()}";
+            var organizationName = organization.Name;
 
-            var reportTitle = $"PUNCHES FOR PAYROLL {min.ToString("M/d/yyyy")} thru {min.ToString("M/d/yyyy")} GENERATED {DateTime.Now.ToString("ddd, MMM d, yyyy h:mm:ss tt").ToUpperInvariant()}";
-            var organizationName = "THOMAS INDUSTRIAL FABRICATION";
-
-            //// Ensure that user is authorized.
-            //if (!currentUser.CanViewReports)
-            //    return StatusCode(HttpStatusCode.Forbidden);
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
 
             var styleSheet = new Stylesheet(
                 new Fonts(
@@ -389,6 +386,7 @@ namespace Brizbee.Web.Controllers
                         FontId = 0,
                         FillId = 0,
                         BorderId = 0,
+                        ApplyFont = true,
                         Alignment = new Alignment()
                         {
                             Horizontal = HorizontalAlignmentValues.Left,
@@ -452,7 +450,21 @@ namespace Brizbee.Web.Controllers
                         }
                     },
 
-                    // Index 5 - Left Align
+                    // Index 5 - Right Align
+                    new CellFormat()
+                    {
+                        FontId = 0,
+                        FillId = 0,
+                        BorderId = 0,
+                        ApplyFont = true,
+                        Alignment = new Alignment()
+                        {
+                            Horizontal = HorizontalAlignmentValues.Right,
+                            Vertical = VerticalAlignmentValues.Center
+                        }
+                    },
+
+                    // Index 6 - Left Align
                     new CellFormat()
                     {
                         FontId = 0,
@@ -515,6 +527,8 @@ namespace Brizbee.Web.Controllers
                 var punches = db.Punches
                     .Include(p => p.Task.Job.Customer)
                     .Include(p => p.User)
+                    .Include(p => p.ServiceRate)
+                    .Include(p => p.PayrollRate)
                     .Where(p => p.User.OrganizationId == 26)
                     .Where(p => p.User.IsDeleted == false)
                     .Where(p => p.OutAt.HasValue == true)
@@ -541,7 +555,7 @@ namespace Brizbee.Web.Controllers
                     // Header for user cell.
                     // ------------------------------------------------------------
 
-                    var rowUser = new Row() { RowIndex = rowIndex, Height = 32D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
+                    var rowUser = new Row() { RowIndex = rowIndex, Height = 22D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
 
                     var cellUser = new Cell() { CellReference = $"A{rowIndex}", StyleIndex = 4U, DataType = CellValues.String, CellValue = new CellValue($"User {user.Name}") };
                     rowUser.Append(cellUser);
@@ -549,7 +563,7 @@ namespace Brizbee.Web.Controllers
                     sheetData1.Append(rowUser);
 
                     // Merge the user name across the row.
-                    var mergeCell0 = new MergeCell() { Reference = $"A{rowIndex}:J{rowIndex}" };
+                    var mergeCell0 = new MergeCell() { Reference = $"A{rowIndex}:L{rowIndex}" };
                     mergeCells1.Append(mergeCell0);
                     mergeCells1.Count++;
 
@@ -578,7 +592,7 @@ namespace Brizbee.Web.Controllers
                         // Header for date cell.
                         // ------------------------------------------------------------
 
-                        var rowDate = new Row() { RowIndex = rowIndex, Height = 32D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
+                        var rowDate = new Row() { RowIndex = rowIndex, Height = 22D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
 
                         var cellDate = new Cell() { CellReference = $"A{rowIndex}", StyleIndex = 4U, DataType = CellValues.String, CellValue = new CellValue(date.ToString("D")) };
                         rowDate.Append(cellDate);
@@ -586,7 +600,7 @@ namespace Brizbee.Web.Controllers
                         sheetData1.Append(rowDate);
 
                         // Merge the date across the row.
-                        var mergeCell1 = new MergeCell() { Reference = $"A{rowIndex}:J{rowIndex}" };
+                        var mergeCell1 = new MergeCell() { Reference = $"A{rowIndex}:L{rowIndex}" };
                         mergeCells1.Append(mergeCell1);
                         mergeCells1.Count++;
 
@@ -597,7 +611,7 @@ namespace Brizbee.Web.Controllers
                         // Headers for punch cells.
                         // ------------------------------------------------------------
 
-                        var rowHeaders = new Row() { RowIndex = rowIndex, Height = 26D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
+                        var rowHeaders = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
 
                         // InAt
                         var cellInAtHeader = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 1U };
@@ -637,12 +651,20 @@ namespace Brizbee.Web.Controllers
                         var cellCustomerNameHeader = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Customer") };
                         rowHeaders.Append(cellCustomerNameHeader);
 
+                        // Customer Rate
+                        var cellCustomerRateHeader = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Customer Rate") };
+                        rowHeaders.Append(cellCustomerRateHeader);
+
+                        // Payroll Rate
+                        var cellPayrollRateHeader = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Payroll Rate") };
+                        rowHeaders.Append(cellPayrollRateHeader);
+
                         // Locked
-                        var cellLockedHeader = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Locked?") };
+                        var cellLockedHeader = new Cell() { CellReference = $"K{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Locked?") };
                         rowHeaders.Append(cellLockedHeader);
 
                         // Total
-                        var cellTotalHeader = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue("Total") };
+                        var cellTotalHeader = new Cell() { CellReference = $"L{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue("Total") };
                         rowHeaders.Append(cellTotalHeader);
 
                         sheetData1.Append(rowHeaders);
@@ -656,54 +678,57 @@ namespace Brizbee.Web.Controllers
 
                         foreach (var punch in punchesForDate)
                         {
-                            var rowPunch = new Row() { RowIndex = rowIndex, Height = 26D, CustomHeight = true };
+                            var rowPunch = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true };
 
                             // InAt
-                            var cellInAt = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String };
-                            var cellValueForInAt = new CellValue();
-                            cellValueForInAt.Text = punch.InAt.ToShortTimeString();
-
-                            cellInAt.Append(cellValueForInAt);
+                            var cellInAt = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.InAt.ToShortTimeString()) };
                             rowPunch.Append(cellInAt);
 
                             // OutAt
-                            var cellOutAt = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String };
-                            var cellValueForOutAt = new CellValue();
-                            cellValueForOutAt.Text = punch.OutAt.Value.ToShortTimeString();
-
-                            cellOutAt.Append(cellValueForOutAt);
+                            var cellOutAt = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.OutAt.Value.ToShortTimeString()) };
                             rowPunch.Append(cellOutAt);
 
                             // Task Number
-                            var cellTaskNumber = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(punch.Task.Number) };
+                            var cellTaskNumber = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.Number, StyleIndex = 6U, CellValue = new CellValue(punch.Task.Number) };
                             rowPunch.Append(cellTaskNumber);
 
                             // Task Name
-                            var cellTaskName = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, CellValue = new CellValue(punch.Task.Name) };
+                            var cellTaskName = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.Task.Name) };
                             rowPunch.Append(cellTaskName);
 
                             // Project Number
-                            var cellProjectNumber = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(punch.Task.Job.Number) };
+                            var cellProjectNumber = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 6U, CellValue = new CellValue(punch.Task.Job.Number) };
                             rowPunch.Append(cellProjectNumber);
 
                             // Project Name
-                            var cellProjectName = new Cell() { CellReference = $"F{rowIndex}", DataType = CellValues.String, CellValue = new CellValue(punch.Task.Job.Name) };
+                            var cellProjectName = new Cell() { CellReference = $"F{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.Task.Job.Name) };
                             rowPunch.Append(cellProjectName);
 
                             // Customer Number
-                            var cellCustomerNumber = new Cell() { CellReference = $"G{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(punch.Task.Job.Customer.Number) };
+                            var cellCustomerNumber = new Cell() { CellReference = $"G{rowIndex}", DataType = CellValues.Number, StyleIndex = 6U, CellValue = new CellValue(punch.Task.Job.Customer.Number) };
                             rowPunch.Append(cellCustomerNumber);
 
                             // Customer Name
-                            var cellCustomerName = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.String, CellValue = new CellValue(punch.Task.Job.Customer.Name) };
+                            var cellCustomerName = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.Task.Job.Customer.Name) };
                             rowPunch.Append(cellCustomerName);
 
+                            // Customer Rate
+                            var cellCustomerRate = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.ServiceRate.Name) };
+                            rowPunch.Append(cellCustomerRate);
+
+                            // Payroll Rate
+                            var cellPayrollRate = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.PayrollRate.Name) };
+                            rowPunch.Append(cellPayrollRate);
+
                             // Locked
-                            var cellLocked = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 3U, CellValue = new CellValue(punch.CommitId.HasValue ? "X" : "") };
+                            var cellLocked = new Cell() { CellReference = $"K{rowIndex}", DataType = CellValues.String, StyleIndex = 3U, CellValue = new CellValue(punch.CommitId.HasValue ? "X" : "") };
                             rowPunch.Append(cellLocked);
 
+                            // Calculate the total
+                            var total = Math.Round((punch.OutAt.Value - punch.InAt).TotalMinutes / 60, 2).ToString("0.00");
+
                             // Total
-                            var cellTotal = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.Number, CellValue = new CellValue("0.00") };
+                            var cellTotal = new Cell() { CellReference = $"L{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(total) };
                             rowPunch.Append(cellTotal);
 
                             sheetData1.Append(rowPunch);
@@ -711,6 +736,36 @@ namespace Brizbee.Web.Controllers
                             rowIndex++;
                         }
 
+                        // ------------------------------------------------------------
+                        // Cells for date total.
+                        // ------------------------------------------------------------
+
+                        var rowDateTotal = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
+
+                        // Header Cell
+                        var cellDateFormatted = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue("Daily Total") };
+                        rowDateTotal.Append(cellDateFormatted);
+
+                        // Calculate the total
+                        double dailyTotalMinutes = 0;
+                        foreach (var punch in punchesForDate)
+                        {
+                            dailyTotalMinutes += (punch.OutAt.Value - punch.InAt).TotalMinutes;
+                        }
+                        var dailyTotal = Math.Round(dailyTotalMinutes / 60, 2).ToString("0.00");
+
+                        // Total Cell
+                        var cellDateTotal = new Cell() { CellReference = $"L{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue(dailyTotal) };
+                        rowDateTotal.Append(cellDateTotal);
+
+                        sheetData1.Append(rowDateTotal);
+
+                        // Merge the date across the row.
+                        var mergeCell3 = new MergeCell() { Reference = $"A{rowIndex}:K{rowIndex}" };
+                        mergeCells1.Append(mergeCell3);
+                        mergeCells1.Count++;
+
+                        rowIndex++;
                     }
 
                     
@@ -718,23 +773,29 @@ namespace Brizbee.Web.Controllers
                     // Cells for user total.
                     // ------------------------------------------------------------
 
-                    rowIndex++;
+                    var rowTotal = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
 
-                    var rowTotal = new Row() { RowIndex = rowIndex, Height = 26D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
-
-                    // User Name
+                    // Header Cell
                     var cellUserName = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue($"Total for User {user.Name}") };
                     rowTotal.Append(cellUserName);
 
-                    // User Total
-                    var cellUserTotal = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue("0.00") };
+                    // Calculate the total
+                    double userTotalMinutes = 0;
+                    foreach (var punch in punchesForUser)
+                    {
+                        userTotalMinutes += (punch.OutAt.Value - punch.InAt).TotalMinutes;
+                    }
+                    var userTotal = Math.Round(userTotalMinutes / 60, 2).ToString("0.00");
+
+                    // Total Cell
+                    var cellUserTotal = new Cell() { CellReference = $"L{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue(userTotal) };
                     rowTotal.Append(cellUserTotal);
 
                     sheetData1.Append(rowTotal);
 
                     // Merge the user name across the row.
-                    var mergeCell3 = new MergeCell() { Reference = $"A{rowIndex}:I{rowIndex}" };
-                    mergeCells1.Append(mergeCell3);
+                    var mergeCell4 = new MergeCell() { Reference = $"A{rowIndex}:K{rowIndex}" };
+                    mergeCells1.Append(mergeCell4);
                     mergeCells1.Count++;
 
                     rowIndex++;
@@ -767,8 +828,10 @@ namespace Brizbee.Web.Controllers
                 var column6 = new Column() { Min = 6U, Max = 6U, Width = 28D, CustomWidth = true };
                 var column7 = new Column() { Min = 7U, Max = 7U, Width = 8D, CustomWidth = true };
                 var column8 = new Column() { Min = 8U, Max = 8U, Width = 28D, CustomWidth = true };
-                var column9 = new Column() { Min = 9U, Max = 9U, Width = 7D, CustomWidth = true };
-                var column10 = new Column() { Min = 10U, Max = 10U, Width = 8D, CustomWidth = true };
+                var column9 = new Column() { Min = 9U, Max = 9U, Width = 15D, CustomWidth = true };
+                var column10 = new Column() { Min = 10U, Max = 10U, Width = 15D, CustomWidth = true };
+                var column11 = new Column() { Min = 11U, Max = 11U, Width = 8D, CustomWidth = true };
+                var column12 = new Column() { Min = 12U, Max = 12U, Width = 8D, CustomWidth = true };
 
                 columns1.Append(column1);
                 columns1.Append(column2);
@@ -780,12 +843,41 @@ namespace Brizbee.Web.Controllers
                 columns1.Append(column8);
                 columns1.Append(column9);
                 columns1.Append(column10);
+                columns1.Append(column11);
+                columns1.Append(column12);
 
 
-                var sheetFormatProperties1 = new SheetFormatProperties() { DefaultRowHeight = 26D, DyDescent = 0.35D };
+                // ------------------------------------------------------------
+                // Sheet Views.
+                // ------------------------------------------------------------
+
+                var sheetViews1 = new SheetViews();
+
+                var sheetView1 = new SheetView() { ShowGridLines = true, TabSelected = true, ZoomScaleNormal = 100U, WorkbookViewId = 0U };
+                var selection1 = new Selection() { ActiveCell = "A1", SequenceOfReferences = new ListValue<StringValue>() { InnerText = "A1" } };
+
+                sheetView1.Append(selection1);
+                sheetViews1.Append(sheetView1);
+
+
+                // ------------------------------------------------------------
+                // Sheet Format.
+                // ------------------------------------------------------------
+
+                var sheetFormatProperties1 = new SheetFormatProperties() { DefaultRowHeight = 16D, DyDescent = 0.35D };
+
+
+                // ------------------------------------------------------------
+                // Page Setup.
+                // ------------------------------------------------------------
 
                 var pageMargins1 = new PageMargins() { Left = 0.5D, Right = 0.5D, Top = 0.5D, Bottom = 0.5D, Header = 0.3D, Footer = 0.3D };
                 var pageSetup1 = new PageSetup() { Orientation = OrientationValues.Landscape };
+
+
+                // ------------------------------------------------------------
+                // Header and Footer.
+                // ------------------------------------------------------------
 
                 var headerFooter1 = new HeaderFooter();
 
@@ -798,9 +890,12 @@ namespace Brizbee.Web.Controllers
                 headerFooter1.Append(oddHeader1);
                 headerFooter1.Append(oddFooter1);
 
-                //worksheet1.Append(sheetDimension1);
-                //worksheet1.Append(sheetViews1);
-                //worksheet1.Append(sheetFormatProperties1);
+
+                // ------------------------------------------------------------
+                // Build the worksheet.
+                // ------------------------------------------------------------
+
+                worksheet1.Append(sheetViews1);
                 worksheet1.Append(columns1);
                 worksheet1.Append(sheetData1);
                 worksheet1.Append(mergeCells1);
@@ -837,7 +932,11 @@ namespace Brizbee.Web.Controllers
                 workbookPart1.Workbook.Save();
                 document.Close();
 
-                return new FileActionResult(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report - Punches for Payroll.xlsx", Request);
+                return new FileActionResult(
+                    stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Report - Punches for Payroll {min.ToString("yyyy_MM_dd")} thru {max.ToString("yyyy_MM_dd")}.xlsx",
+                    Request);
             }
         }
 
