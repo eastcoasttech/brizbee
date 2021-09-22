@@ -22,6 +22,7 @@
 
 using Brizbee.Web.Repositories;
 using System;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -32,7 +33,7 @@ namespace Brizbee.Web.Controllers
     public class TwilioController : ApiController
     {
         private SqlContext db = new SqlContext();
-        private string brizbeeAuth = "78BcpK23z";
+        private string brizbeeAuth = ConfigurationManager.AppSettings["TwilioAuthKeyForBrizbeeApi"].ToString();
 
         // GET: api/Twilio/Code
         [HttpGet]
