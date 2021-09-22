@@ -18,6 +18,7 @@ namespace Brizbee.Dashboard
             builder.Services.AddHttpClient<ApiService>(client =>
             {
                 client.BaseAddress = new Uri("https://app-brizbee-prod.azurewebsites.net");
+                client.Timeout = TimeSpan.FromMinutes(10);
             });
 
             // Configure additional services.
