@@ -320,7 +320,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<bool> RegisterAsync(Serialization.Registration registration)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, $"odata/Users/Default.Register"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, $"api/Auth/Register"))
             {
                 var payload = new {
                     Organization = new {
