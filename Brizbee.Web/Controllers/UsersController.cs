@@ -89,6 +89,7 @@ namespace Brizbee.Web.Controllers
             user.CreatedAt = DateTime.UtcNow;
             user.OrganizationId = currentUser.OrganizationId;
             user.AllowedPhoneNumbers = "*";
+            user.Role = "Standard";
 
             // Ensure that Pin is unique in the organization
             if (db.Users
