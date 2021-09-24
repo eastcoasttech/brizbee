@@ -77,7 +77,6 @@ namespace Brizbee.Common.Models
 
         public bool RequiresPhoto { get; set; }
 
-        [Required]
         [StringLength(128)]
         public string Role { get; set; }
 
