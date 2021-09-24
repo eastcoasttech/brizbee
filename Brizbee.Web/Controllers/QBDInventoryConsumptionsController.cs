@@ -327,8 +327,8 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewInventoryConsumptions)
                 Request.CreateResponse(HttpStatusCode.BadRequest);
 
             var consumptions = _context.QBDInventoryConsumptions

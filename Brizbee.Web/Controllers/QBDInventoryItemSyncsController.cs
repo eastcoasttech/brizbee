@@ -27,7 +27,7 @@ namespace Brizbee.Web.Controllers
         // GET: api/QBDInventoryItemSyncs
         [HttpGet]
         [Route("api/QBDInventoryItemSyncs")]
-        public HttpResponseMessage GetQBDInventoryConsumptions(
+        public HttpResponseMessage GetQBDInventoryItemSyncs(
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
             [FromUri] string orderBy = "QBDINVENTORYITEMSYNCS/CREATEDAT", [FromUri] string orderByDirection = "ASC")
         {
@@ -35,8 +35,8 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanSyncInventoryItems)
                 Request.CreateResponse(HttpStatusCode.BadRequest);
 
             var total = 0;

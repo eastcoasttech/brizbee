@@ -63,9 +63,9 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                Request.CreateResponse(HttpStatusCode.BadRequest);
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewPunches)
+                Request.CreateResponse(HttpStatusCode.Forbidden);
 
             // Determine the number of records to skip.
             //int skip = (pageNumber - 1) * pageSize;

@@ -57,8 +57,8 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanSplitAndPopulatePunches)
                 Request.CreateResponse(HttpStatusCode.BadRequest);
 
             var total = 0;

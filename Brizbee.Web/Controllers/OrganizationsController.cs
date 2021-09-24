@@ -73,7 +73,7 @@ namespace Brizbee.Web.Controllers
             if (organization == null) return NotFound();
 
             // Ensure that user is authorized
-            if (currentUser.Role != "Administrator" ||
+            if (!currentUser.CanModifyOrganizationDetails ||
                 currentUser.OrganizationId != key)
                 return BadRequest();
 
