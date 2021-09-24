@@ -26,6 +26,7 @@ using iTextSharp.text.pdf;
 using NodaTime;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -135,7 +136,8 @@ namespace Brizbee.Web.Services
                         .Include("User")
                         .Where(p => p.User.IsDeleted == false)
                         .Where(p => p.OutAt.HasValue == true)
-                        .Where(p => p.InAt >= min && p.OutAt.Value <= max)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) >= min.Date)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) <= max.Date)
                         .Where(p => p.UserId == user.Id);
                     
                     // Filter by job
@@ -532,7 +534,8 @@ namespace Brizbee.Web.Services
                     .Include("User")
                     .Where(p => p.User.IsDeleted == false)
                     .Where(p => p.OutAt.HasValue == true)
-                    .Where(p => p.InAt >= min && p.OutAt.Value <= max)
+                    .Where(p => DbFunctions.TruncateTime(p.InAt) >= min.Date)
+                    .Where(p => DbFunctions.TruncateTime(p.InAt) <= max.Date)
                     .Where(p => jobIds.Contains(p.Task.JobId));
 
                 // Filter by user
@@ -867,7 +870,8 @@ namespace Brizbee.Web.Services
                     .Include("User")
                     .Where(p => p.User.IsDeleted == false)
                     .Where(p => p.OutAt.HasValue == true)
-                    .Where(p => p.InAt >= min && p.OutAt.Value <= max)
+                    .Where(p => DbFunctions.TruncateTime(p.InAt) >= min.Date)
+                    .Where(p => DbFunctions.TruncateTime(p.InAt) <= max.Date)
                     .Where(p => jobIds.Contains(p.Task.JobId));
 
                 // Filter by user

@@ -519,7 +519,7 @@ namespace Brizbee.Web.Controllers
                 // ------------------------------------------------------------
 
                 var users = db.Users
-                    .Where(u => u.OrganizationId == 26)
+                    .Where(u => u.OrganizationId == currentUser.OrganizationId)
                     .Where(u => u.IsDeleted == false)
                     .OrderBy(u => u.Name)
                     .ToList();
@@ -529,7 +529,7 @@ namespace Brizbee.Web.Controllers
                     .Include(p => p.User)
                     .Include(p => p.ServiceRate)
                     .Include(p => p.PayrollRate)
-                    .Where(p => p.User.OrganizationId == 26)
+                    .Where(p => p.User.OrganizationId == currentUser.OrganizationId)
                     .Where(p => p.User.IsDeleted == false)
                     .Where(p => p.OutAt.HasValue == true)
                     .Where(p => DbFunctions.TruncateTime(p.InAt) >= min.Date)
