@@ -74,6 +74,12 @@ namespace Brizbee.Web.Repositories
                     user.AllowedPhoneNumbers = "*";
                     organization.CreatedAt = DateTime.UtcNow;
                     organization.MinutesFormat = "minutes";
+                    organization.ShowCustomerNumber = true;
+                    organization.ShowProjectNumber = true;
+                    organization.ShowTaskNumber = true;
+                    organization.SortCustomersByColumn = "Number";
+                    organization.SortProjectsByColumn = "Number";
+                    organization.SortTasksByColumn = "Number";
 
 #if DEBUG
                     organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());

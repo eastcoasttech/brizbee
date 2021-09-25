@@ -56,7 +56,13 @@ namespace Brizbee.Dashboard.Services
                     { "Name", organization.Name },
                     { "MinutesFormat", organization.MinutesFormat },
                     { "Code", organization.Code },
-                    { "Groups", organization.Groups }
+                    { "Groups", organization.Groups },
+                    { "ShowCustomerNumber", organization.ShowCustomerNumber },
+                    { "ShowProjectNumber", organization.ShowProjectNumber },
+                    { "ShowTaskNumber", organization.ShowTaskNumber },
+                    { "SortCustomersByColumn", organization.SortCustomersByColumn },
+                    { "SortProjectsByColumn", organization.SortProjectsByColumn },
+                    { "SortTasksByColumn", organization.SortTasksByColumn }
                 };
 
                 var json = JsonSerializer.Serialize(payload, options);

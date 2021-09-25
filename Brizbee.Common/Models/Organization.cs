@@ -66,5 +66,47 @@ namespace Brizbee.Common.Models
 
         [StringLength(200)]
         public string Groups { get; set; }
+
+        /// <summary>
+        /// Indicates whether to show customer number on dashboard.
+        /// </summary>
+        [Required]
+        public bool ShowCustomerNumber { get; set; }
+
+        /// <summary>
+        /// Indicates which column, Name or Number, is used to
+        /// sort customers in drop downs.
+        /// </summary>
+        [Required]
+        [StringLength(6)]
+        public string SortCustomersByColumn { get; set; }
+
+        /// <summary>
+        /// Indicates whether to show project number on dashboard.
+        /// </summary>
+        [Required]
+        public bool ShowProjectNumber { get; set; }
+
+        /// <summary>
+        /// Indicates which column, Name or Number, is used to
+        /// sort projects in drop downs.
+        /// </summary>
+        [Required]
+        [StringLength(6)]
+        public string SortProjectsByColumn { get; set; }
+
+        /// <summary>
+        /// Indicates whether to show task number on dashboard.
+        /// </summary>
+        [Required]
+        public bool ShowTaskNumber { get; set; }
+
+        /// <summary>
+        /// Indicates which column, Name or Number, is used to
+        /// sort tasks in drop downs.
+        /// </summary>
+        [Required]
+        [StringLength(6)]
+        public string SortTasksByColumn { get; set; }
     }
 }

@@ -166,7 +166,7 @@
                         }
                     </a>
                 </th>
-                <th class="col-md-3">
+                <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("TimeZone"))">
                         Default Time Zone
                         @if (sortBy == "TimeZone" && sortDirection == "ASC")
@@ -178,6 +178,9 @@
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
+                </th>
+                <th class="col-md-1">
+                    Active?
                 </th>
                 <th class="col-md-2">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CreatedAt"))">
@@ -202,19 +205,25 @@
                     <td><a href="javascript:void(0)">@user.EmailAddress</a></td>
                     <td><a href="javascript:void(0)">@user.Pin</a></td>
                     <td><a href="javascript:void(0)">@user.TimeZone</a></td>
+                    <td class="text-center">
+                        @if (user.IsActive == true)
+                        {
+                            <i class="fas fa-check"></i>
+                        }
+                    </td>
                     <td><a href="javascript:void(0)">@user.CreatedAt.ToString("M/d/yyyy h:mm tt")</a></td>
                 </tr>
             }
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="6"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && users.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="5">No Users</td>
+                    <td colspan="6">No Users</td>
                 </tr>
             }
         </tbody>

@@ -233,6 +233,7 @@ namespace Brizbee.Web.Controllers
                     user = db.Users
                         .Where(u => u.EmailAddress == session.EmailAddress)
                         .Where(u => u.IsDeleted == false)
+                        .Where(u => u.IsActive == true)
                         .FirstOrDefault();
 
                     // Attempt to authenticate
@@ -256,6 +257,7 @@ namespace Brizbee.Web.Controllers
                         .Where(u => u.Pin == session.PinUserPin.ToUpper())
                         .Where(u => u.Organization.Code == session.PinOrganizationCode.ToUpper())
                         .Where(u => u.IsDeleted == false)
+                        .Where(u => u.IsActive == true)
                         .FirstOrDefault();
 
                     // Attempt to authenticate

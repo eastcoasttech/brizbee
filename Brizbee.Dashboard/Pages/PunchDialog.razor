@@ -13,6 +13,7 @@
 @inject JobService jobService
 @inject TaskService taskService
 @inject PunchService punchService
+@inject SharedService sharedService
 
 <EditForm Model="@punch" OnValidSubmit="SavePunch" class="form-horizontal" autocomplete="off">
     <DataAnnotationsValidator />
@@ -42,7 +43,7 @@
                          Value="@selectedCustomerId">
                 @foreach (var customer in customers)
                 {
-                    <option value="@customer.Id">@customer.Number &ndash; @customer.Name</option>
+                    <option value="@customer.Id">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{customer.Number} - {customer.Name}" : customer.Name)</option>
                 }
             </InputSelect>
         </div>
@@ -55,9 +56,9 @@
                          ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
                          ValueExpression="@( () => selectedJobId )"
                          Value="@selectedJobId">
-                @foreach (var job in jobs)
+                @foreach (var project in jobs)
                 {
-                    <option value="@job.Id">@job.Number &ndash; @job.Name </option>
+                    <option value="@project.Id">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{project.Number} - {project.Name}" : project.Name)</option>
                 }
             </InputSelect>
         </div>
@@ -72,7 +73,7 @@
                          Value="@selectedTaskId">
                 @foreach (var task in tasks)
                 {
-                    <option value="@task.Id">@task.Number &ndash; @task.Name </option>
+                    <option value="@task.Id">@(sharedService.CurrentUser.Organization.ShowTaskNumber ? $"{task.Number} - {task.Name}" : task.Name)</option>
                 }
             </InputSelect>
         </div>
@@ -485,7 +486,7 @@
     {
         loadingCustomers = true;
 
-        var result = await customerService.GetCustomersAsync(pageSize: 1000);
+        var result = await customerService.GetCustomersAsync(pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortCustomersByColumn);
         customers = result.Item1;
 
         if (customerId.HasValue)
@@ -513,7 +514,7 @@
     {
         loadingJobs = true;
 
-        var result = await jobService.GetJobsAsync(selectedCustomerId, pageSize: 1000);
+        var result = await jobService.GetJobsAsync(selectedCustomerId, pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortProjectsByColumn);
         jobs = result.Item1;
 
         if (jobId.HasValue)
@@ -541,7 +542,7 @@
     {
         loadingTasks = true;
 
-        var result = await taskService.GetTasksAsync(selectedJobId, pageSize: 1000);
+        var result = await taskService.GetTasksAsync(selectedJobId, pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortTasksByColumn);
         tasks = result.Item1;
 
         if (taskId.HasValue)

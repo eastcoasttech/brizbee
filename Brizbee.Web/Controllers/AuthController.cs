@@ -49,6 +49,7 @@ namespace Brizbee.Web.Controllers
         {
             var user = _context.Users
                 .Where(u => !u.IsDeleted)
+                .Where(u => u.IsActive == true)
                 .Where(u => u.EmailAddress == emailAddress)
                 .FirstOrDefault();
 
@@ -83,6 +84,7 @@ namespace Brizbee.Web.Controllers
                     user = _context.Users
                         .Where(u => u.EmailAddress == session.EmailAddress)
                         .Where(u => u.IsDeleted == false)
+                        .Where(u => u.IsActive == true)
                         .FirstOrDefault();
 
                     // Attempt to authenticate.
@@ -99,6 +101,7 @@ namespace Brizbee.Web.Controllers
                         .Where(u => u.Pin == session.PinUserPin.ToUpper())
                         .Where(u => u.Organization.Code == session.PinOrganizationCode.ToUpper())
                         .Where(u => u.IsDeleted == false)
+                        .Where(u => u.IsActive == true)
                         .FirstOrDefault();
 
                     // Attempt to authenticate.
@@ -208,6 +211,12 @@ namespace Brizbee.Web.Controllers
                     organization.MinutesFormat = "minutes";
                     organization.StripeCustomerId = "UNSPECIFIED";
                     organization.StripeSubscriptionId = "UNSPECIFIED";
+                    organization.ShowCustomerNumber = true;
+                    organization.ShowProjectNumber = true;
+                    organization.ShowTaskNumber = true;
+                    organization.SortCustomersByColumn = "Number";
+                    organization.SortProjectsByColumn = "Number";
+                    organization.SortTasksByColumn = "Number";
 
                     // Determine the actual Stripe Plan Id based on the PlanId.
                     var stripePlanId = ConfigurationManager.AppSettings["StripePlanId1"].ToString(); // Default plan is the contractor plan
