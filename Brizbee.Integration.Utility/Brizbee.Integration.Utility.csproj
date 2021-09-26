@@ -180,6 +180,7 @@
     <Compile Include="Exceptions\DownloadFailedException.cs" />
     <Compile Include="Exceptions\InvalidLoginException.cs" />
     <Compile Include="ODataResponse.cs" />
+    <Compile Include="Serialization\QuickBooksCustomer.cs" />
     <Compile Include="Services\QuickBooksService.cs" />
     <Compile Include="ViewModels\InventoryConsumptions\OptionsViewModel.cs" />
     <Compile Include="ViewModels\InventoryConsumptions\SyncViewModel.cs" />

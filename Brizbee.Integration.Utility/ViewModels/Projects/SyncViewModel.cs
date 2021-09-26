@@ -2,7 +2,7 @@
 //  SyncViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -22,6 +22,7 @@
 //
 
 using Brizbee.Common.Models;
+using Brizbee.Integration.Utility.Serialization;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
 using RestSharp;
@@ -103,27 +104,67 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                         name = split[1];
                         parentName = split[0];
 
-                        // Prepare a new QBXML document to create the parent.
-                        var custQBXML = service.MakeQBXMLDocument();
-                        var custDocument = custQBXML.Item1;
-                        var custElement = custQBXML.Item2;
+                        // Prepare a new QBXML document to find the parent and its details.
+                        var findQBXML = service.MakeQBXMLDocument();
+                        var findDocument = findQBXML.Item1;
+                        var findElement = findQBXML.Item2;
 
-                        // Build the request to create the parent.
-                        service.BuildCustomerAddRq(custDocument, custElement, parentName);
-
-                        // Make the request.
-                        var custResponse = req.ProcessRequest(ticket, custDocument.OuterXml);
-
-                        // Prepare a new QBXML document to create the job.
-                        var jobQBXML = service.MakeQBXMLDocument();
-                        var jobDocument = jobQBXML.Item1;
-                        var jobElement = jobQBXML.Item2;
-
-                        // Build the request to create the job.
-                        service.BuildCustomerAddRq(jobDocument, jobElement, name, parentName);
+                        // Build the request to find the parent.
+                        service.BuildCustomerQueryRq(findDocument, findElement, parentName);
 
                         // Make the request.
-                        var jobResponse = req.ProcessRequest(ticket, jobDocument.OuterXml);
+                        var findResponse = req.ProcessRequest(ticket, findDocument.OuterXml);
+
+                        // Then walk the response.
+                        var findWalkResponse = service.WalkCustomerQueryRs(findResponse);
+
+                        var found = findWalkResponse.Item3;
+                        var parent = found.FirstOrDefault();
+
+                        if (parent != null)
+                        {
+                            // Prepare a new QBXML document to create the job with customer details.
+                            var jobQBXML = service.MakeQBXMLDocument();
+                            var jobDocument = jobQBXML.Item1;
+                            var jobElement = jobQBXML.Item2;
+
+                            var newJob = parent;
+                            newJob.Name = name;
+                            newJob.ListId = "";
+
+                            // Build the request to create the job.
+                            service.BuildCustomerAddRqForJob(jobDocument, jobElement, newJob, parentName);
+
+                            // Make the request.
+                            var jobResponse = req.ProcessRequest(ticket, jobDocument.OuterXml);
+                        }
+                        else
+                        {
+                            // Prepare a new QBXML document to create the parent.
+                            var custQBXML = service.MakeQBXMLDocument();
+                            var custDocument = custQBXML.Item1;
+                            var custElement = custQBXML.Item2;
+
+                            // Build the request to create the parent.
+                            service.BuildCustomerAddRqForCustomer(custDocument, custElement, parentName);
+
+                            // Make the request.
+                            var custResponse = req.ProcessRequest(ticket, custDocument.OuterXml);
+
+                            // Prepare a new QBXML document to create the job.
+                            var jobQBXML = service.MakeQBXMLDocument();
+                            var jobDocument = jobQBXML.Item1;
+                            var jobElement = jobQBXML.Item2;
+
+                            // Build the request to create the job.
+                            service.BuildCustomerAddRqForJob(jobDocument, jobElement, new QuickBooksCustomer()
+                            {
+                                Name = name
+                            }, parentName);
+
+                            // Make the request.
+                            var jobResponse = req.ProcessRequest(ticket, jobDocument.OuterXml);
+                        }
                     }
 
                     // Customer Only
@@ -135,7 +176,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                         var custElement = custQBXML.Item2;
 
                         // Build the request to create the customer.
-                        service.BuildCustomerAddRq(custDocument, custElement, name);
+                        service.BuildCustomerAddRqForCustomer(custDocument, custElement, name);
 
                         // Make the request.
                         var custResponse = req.ProcessRequest(ticket, custDocument.OuterXml);

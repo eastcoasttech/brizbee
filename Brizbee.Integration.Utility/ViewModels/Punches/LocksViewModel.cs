@@ -2,7 +2,7 @@
 //  LocksViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //

@@ -2,7 +2,7 @@
 //  QuickBooksService.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -23,6 +23,7 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Common.Serialization;
+using Brizbee.Integration.Utility.Serialization;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -72,7 +73,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -298,7 +299,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -453,7 +454,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -685,7 +686,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -753,7 +754,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -886,7 +887,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -936,7 +937,251 @@ namespace Brizbee.Integration.Utility.Services
             }
         }
 
-        public void BuildCustomerAddRq(XmlDocument doc, XmlElement parent, string name, string parentName = "")
+        public void BuildCustomerAddRqForJob(XmlDocument doc, XmlElement parent, QuickBooksCustomer quickBooksCustomer, string parentName)
+        {
+            XmlElement request = doc.CreateElement("CustomerAddRq");
+            parent.AppendChild(request);
+
+            // ------------------------------------------------------------
+            // CustomerAddRq > CustomerAdd
+            // ------------------------------------------------------------
+
+            XmlElement customer = doc.CreateElement("CustomerAdd");
+            request.AppendChild(customer);
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Name
+            // ------------------------------------------------------------
+
+            customer.AppendChild(MakeSimpleElement(doc, "Name", quickBooksCustomer.Name));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > IsActive
+            // ------------------------------------------------------------
+
+            if (!quickBooksCustomer.IsActive)
+                customer.AppendChild(MakeSimpleElement(doc, "IsActive", "false"));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > ParentRef
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(parentName))
+            {
+                XmlElement customerRef = doc.CreateElement("ParentRef");
+                customer.AppendChild(customerRef);
+
+                customerRef.AppendChild(MakeSimpleElement(doc, "FullName", parentName));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAdd > CompanyName
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.CompanyName))
+                customer.AppendChild(MakeSimpleElement(doc, "CompanyName", quickBooksCustomer.CompanyName));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Salutation
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.Salutation))
+                customer.AppendChild(MakeSimpleElement(doc, "Salutation", quickBooksCustomer.Salutation));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > FirstName
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.FirstName))
+                customer.AppendChild(MakeSimpleElement(doc, "FirstName", quickBooksCustomer.FirstName));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > MiddleName
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.MiddleName))
+                customer.AppendChild(MakeSimpleElement(doc, "MiddleName", quickBooksCustomer.MiddleName));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > LastName
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.LastName))
+                customer.AppendChild(MakeSimpleElement(doc, "LastName", quickBooksCustomer.LastName));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > JobTitle
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.JobTitle))
+                customer.AppendChild(MakeSimpleElement(doc, "JobTitle", quickBooksCustomer.JobTitle));
+
+
+            // ------------------------------------------------------------
+            // CustomerAdd > BillAddress
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.BillAddressAddr1) ||
+                !string.IsNullOrEmpty(quickBooksCustomer.BillAddressCity) ||
+                !string.IsNullOrEmpty(quickBooksCustomer.BillAddressState) ||
+                !string.IsNullOrEmpty(quickBooksCustomer.BillAddressPostalCode))
+            {
+                XmlElement billAddress = doc.CreateElement("BillAddress");
+                customer.AppendChild(billAddress);
+
+                billAddress.AppendChild(MakeSimpleElement(doc, "Addr1", quickBooksCustomer.BillAddressAddr1));
+
+                if (!string.IsNullOrEmpty(quickBooksCustomer.BillAddressAddr2))
+                    billAddress.AppendChild(MakeSimpleElement(doc, "Addr2", quickBooksCustomer.BillAddressAddr2));
+
+                if (!string.IsNullOrEmpty(quickBooksCustomer.BillAddressAddr3))
+                    billAddress.AppendChild(MakeSimpleElement(doc, "Addr3", quickBooksCustomer.BillAddressAddr3));
+
+                billAddress.AppendChild(MakeSimpleElement(doc, "City", quickBooksCustomer.BillAddressCity));
+                billAddress.AppendChild(MakeSimpleElement(doc, "State", quickBooksCustomer.BillAddressState));
+                billAddress.AppendChild(MakeSimpleElement(doc, "PostalCode", quickBooksCustomer.BillAddressPostalCode));
+
+                if (!string.IsNullOrEmpty(quickBooksCustomer.BillAddressCountry))
+                    billAddress.AppendChild(MakeSimpleElement(doc, "Country", quickBooksCustomer.BillAddressCountry));
+
+                if (!string.IsNullOrEmpty(quickBooksCustomer.BillAddressNote))
+                    billAddress.AppendChild(MakeSimpleElement(doc, "Note", quickBooksCustomer.BillAddressNote));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAdd > ShipToAddress
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.ShipToAddressName))
+            {
+                XmlElement shipToAddress = doc.CreateElement("ShipToAddress");
+                customer.AppendChild(shipToAddress);
+
+                shipToAddress.AppendChild(MakeSimpleElement(doc, "Name", quickBooksCustomer.ShipToAddressName));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Phone
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.Phone))
+                customer.AppendChild(MakeSimpleElement(doc, "Phone", quickBooksCustomer.Phone));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > AltPhone
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.AltPhone))
+                customer.AppendChild(MakeSimpleElement(doc, "AltPhone", quickBooksCustomer.AltPhone));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Fax
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.Fax))
+                customer.AppendChild(MakeSimpleElement(doc, "Fax", quickBooksCustomer.Fax));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Email
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.Email))
+                customer.AppendChild(MakeSimpleElement(doc, "Email", quickBooksCustomer.Email));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Cc
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.Cc))
+                customer.AppendChild(MakeSimpleElement(doc, "Cc", quickBooksCustomer.Cc));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > Contact
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.Contact))
+                customer.AppendChild(MakeSimpleElement(doc, "Contact", quickBooksCustomer.Contact));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > AltContact
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.AltContact))
+                customer.AppendChild(MakeSimpleElement(doc, "AltContact", quickBooksCustomer.AltContact));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > SalesTaxCountry
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.SalesTaxCountry))
+                customer.AppendChild(MakeSimpleElement(doc, "SalesTaxCountry", quickBooksCustomer.SalesTaxCountry));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > ResaleNumber
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.ResaleNumber))
+                customer.AppendChild(MakeSimpleElement(doc, "ResaleNumber", quickBooksCustomer.ResaleNumber));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > AccountNumber
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.AccountNumber))
+                customer.AppendChild(MakeSimpleElement(doc, "AccountNumber", quickBooksCustomer.AccountNumber));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > CreditLimit
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.CreditLimit))
+                customer.AppendChild(MakeSimpleElement(doc, "CreditLimit", quickBooksCustomer.CreditLimit));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > SalesTaxCodeRefListId
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.SalesTaxCodeRefListId))
+            {
+                XmlElement salesTaxCodeRef = doc.CreateElement("SalesTaxCodeRef");
+                customer.AppendChild(salesTaxCodeRef);
+
+                salesTaxCodeRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.SalesTaxCodeRefListId));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAdd > ItemSalesTaxRefListId
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.ItemSalesTaxRefListId))
+            {
+                XmlElement itemSalesTaxRef = doc.CreateElement("ItemSalesTaxRef");
+                customer.AppendChild(itemSalesTaxRef);
+
+                itemSalesTaxRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.ItemSalesTaxRefListId));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAdd > PreferredPaymentMethodRefListId
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.PreferredPaymentMethodRefListId))
+            {
+                XmlElement preferredPaymentMethodRef = doc.CreateElement("PreferredPaymentMethodRef");
+                customer.AppendChild(preferredPaymentMethodRef);
+
+                preferredPaymentMethodRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.PreferredPaymentMethodRefListId));
+            }
+
+            // ------------------------------------------------------------
+            // CustomerAddRq > IncludeRetElement
+            // ------------------------------------------------------------
+
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "FullName"));
+        }
+
+        public void BuildCustomerAddRqForCustomer(XmlDocument doc, XmlElement parent, string name)
         {
             XmlElement request = doc.CreateElement("CustomerAddRq");
             parent.AppendChild(request);
@@ -953,18 +1198,6 @@ namespace Brizbee.Integration.Utility.Services
             // ------------------------------------------------------------
 
             customer.AppendChild(MakeSimpleElement(doc, "Name", name));
-
-            // ------------------------------------------------------------
-            // CustomerAdd > ParentRef
-            // ------------------------------------------------------------
-
-            if (!string.IsNullOrEmpty(parentName))
-            {
-                XmlElement customerRef = doc.CreateElement("ParentRef");
-                customer.AppendChild(customerRef);
-
-                customerRef.AppendChild(MakeSimpleElement(doc, "FullName", parentName));
-            }
 
             // ------------------------------------------------------------
             // CustomerAddRq > IncludeRetElement
@@ -986,7 +1219,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -1028,6 +1261,274 @@ namespace Brizbee.Integration.Utility.Services
                 return (false, statusMessage, null);
         }
 
+        public void BuildCustomerQueryRq(XmlDocument doc, XmlElement parent, string name)
+        {
+            // Create CustomerQueryRq.
+            XmlElement request = doc.CreateElement("CustomerQueryRq");
+            parent.AppendChild(request);
+
+            // Only include certain fields.
+            request.AppendChild(MakeSimpleElement(doc, "FullName", name));
+
+            // Only include certain fields.
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ListID"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Name"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "FullName"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "IsActive"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "CompanyName"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Salutation"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "FirstName"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "MiddleName"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "LastName"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "JobTitle"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Phone"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "AltPhone"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Fax"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Email"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Cc"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "Contact"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "AltContact"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "SalesTaxCountry"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ResaleNumber"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "AccountNumber"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "CreditLimit"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "SalesTaxCodeRef"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ItemSalesTaxRef"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "PreferredPaymentMethodRef"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "BillAddress"));
+            request.AppendChild(MakeSimpleElement(doc, "IncludeRetElement", "ShipToAddress"));
+        }
+
+        public (bool, string, List<QuickBooksCustomer>) WalkCustomerQueryRs(string response)
+        {
+            // Parse the response XML string into an XmlDocument.
+            XmlDocument responseXmlDoc = new XmlDocument();
+            responseXmlDoc.LoadXml(response);
+
+            // Get the response for our request.
+            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("CustomerQueryRs");
+            XmlNode firstQueryResult = queryResults.Item(0);
+
+            if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
+
+            // Check the return status.
+            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
+            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+
+            int iStatusCode = Convert.ToInt32(statusCode);
+
+            if (iStatusCode == 0)
+            {
+                var customers = new List<QuickBooksCustomer>(0);
+
+                foreach (XmlNode queryResult in firstQueryResult.ChildNodes)
+                {
+                    var customer = new QuickBooksCustomer();
+
+                    foreach (var node in queryResult.ChildNodes)
+                    {
+                        XmlNode xmlNode = node as XmlNode;
+
+                        switch (xmlNode.Name)
+                        {
+                            case "Name":
+                                customer.Name = xmlNode.InnerText;
+                                break;
+                            case "ListID":
+                                customer.ListId = xmlNode.InnerText;
+                                break;
+                            case "IsActive":
+                                customer.IsActive = bool.Parse(xmlNode.InnerText);
+                                break;
+                            case "CompanyName":
+                                customer.CompanyName = xmlNode.InnerText;
+                                break;
+                            case "Salutation":
+                                customer.Salutation = xmlNode.InnerText;
+                                break;
+                            case "FirstName":
+                                customer.FirstName = xmlNode.InnerText;
+                                break;
+                            case "MiddleName":
+                                customer.MiddleName = xmlNode.InnerText;
+                                break;
+                            case "LastName":
+                                customer.LastName = xmlNode.InnerText;
+                                break;
+                            case "JobTitle":
+                                customer.JobTitle = xmlNode.InnerText;
+                                break;
+                            case "Phone":
+                                customer.Phone = xmlNode.InnerText;
+                                break;
+                            case "AltPhone":
+                                customer.AltPhone = xmlNode.InnerText;
+                                break;
+                            case "Fax":
+                                customer.Fax = xmlNode.InnerText;
+                                break;
+                            case "Email":
+                                customer.Email = xmlNode.InnerText;
+                                break;
+                            case "Cc":
+                                customer.Cc = xmlNode.InnerText;
+                                break;
+                            case "Contact":
+                                customer.Contact = xmlNode.InnerText;
+                                break;
+                            case "AltContact":
+                                customer.AltContact = xmlNode.InnerText;
+                                break;
+                            case "SalesTaxCountry":
+                                customer.SalesTaxCountry = xmlNode.InnerText;
+                                break;
+                            case "ResaleNumber":
+                                customer.ResaleNumber = xmlNode.InnerText;
+                                break;
+                            case "AccountNumber":
+                                customer.AccountNumber = xmlNode.InnerText;
+                                break;
+                            case "CreditLimit":
+                                customer.CreditLimit = xmlNode.InnerText;
+                                break;
+                            case "SalesTaxCodeRef":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "ListID")
+                                    {
+                                        customer.SalesTaxCodeRefListId = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
+                            case "ItemSalesTaxRef":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "ListID")
+                                    {
+                                        customer.ItemSalesTaxRefListId = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
+                            case "PreferredPaymentMethodRef":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "ListID")
+                                    {
+                                        customer.PreferredPaymentMethodRefListId = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
+                            case "BillAddress":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "Addr1")
+                                    {
+                                        customer.BillAddressAddr1 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr2")
+                                    {
+                                        customer.BillAddressAddr2 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr3")
+                                    {
+                                        customer.BillAddressAddr3 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr4")
+                                    {
+                                        customer.BillAddressAddr4 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr5")
+                                    {
+                                        customer.BillAddressAddr5 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "City")
+                                    {
+                                        customer.BillAddressCity = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "State")
+                                    {
+                                        customer.BillAddressState = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "PostalCode")
+                                    {
+                                        customer.BillAddressPostalCode = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Country")
+                                    {
+                                        customer.BillAddressCountry = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Note")
+                                    {
+                                        customer.BillAddressNote = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
+                            case "ShipToAddress":
+                                foreach (var innerNode in xmlNode.ChildNodes)
+                                {
+                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    if (xmlInnerNode.Name == "Name")
+                                    {
+                                        customer.ShipToAddressName = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr1")
+                                    {
+                                        customer.ShipToAddressAddr1 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr2")
+                                    {
+                                        customer.ShipToAddressAddr2 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr3")
+                                    {
+                                        customer.ShipToAddressAddr3 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr4")
+                                    {
+                                        customer.ShipToAddressAddr4 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Addr5")
+                                    {
+                                        customer.ShipToAddressAddr5 = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "City")
+                                    {
+                                        customer.ShipToAddressCity = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "State")
+                                    {
+                                        customer.ShipToAddressState = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "PostalCode")
+                                    {
+                                        customer.ShipToAddressPostalCode = xmlInnerNode.InnerText;
+                                    }
+                                    else if (xmlInnerNode.Name == "Country")
+                                    {
+                                        customer.ShipToAddressCountry = xmlInnerNode.InnerText;
+                                    }
+                                }
+                                break;
+                        }
+                    }
+
+                    customers.Add(customer);
+                }
+
+                return (true, "", customers);
+            }
+            else
+            {
+                return (false, statusMessage, null);
+            }
+        }
+
         public void BuildHostQueryRq(XmlDocument doc, XmlElement parent)
         {
             XmlElement HostQuery = doc.CreateElement("HostQueryRq");
@@ -1049,17 +1550,17 @@ namespace Brizbee.Integration.Utility.Services
             var supportedQBXMLVersions = new List<string>();
             var quickBooksExport = new QuickBooksHostDetails();
 
-            //Parse the response XML string into an XmlDocument
+            // Parse the response XML string into an XmlDocument.
             XmlDocument responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
-            //Get the response for our request
+            // Get the response for our request.
             XmlNodeList HostQueryRsList = responseXmlDoc.GetElementsByTagName("HostQueryRs");
             foreach (var hostQueryResult in HostQueryRsList)
             {
                 XmlNode responseNode = hostQueryResult as XmlNode;
 
-                //Check the status code, info, and severity
+                // Check the return status.
                 XmlAttributeCollection rsAttributes = responseNode.Attributes;
                 string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
                 string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
@@ -1130,7 +1631,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response."); }
 
-            //Check the status code, info, and severity
+            // Check the return status.
             XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
             string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
             string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
