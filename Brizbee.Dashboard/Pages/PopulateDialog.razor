@@ -25,10 +25,10 @@
     <li role="presentation" class="@(selectedTab == "SERVICE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SERVICE")" @onclick:preventDefault>Customer Rates</a></li>
 </ul>
 
-<div style="padding: 0 1.5em 0 1.5em;">
+<div style="padding: 1.5em 0 1.5em 0;">
     @if (selectedTab == "PAYROLL")
     {
-        <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="basePayrollRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(basePayrollRatesQuestionIcon))"></i></strong></p>
+        <p><strong>Base Rates <i class="far fa-question-circle" @ref="basePayrollRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(basePayrollRatesQuestionIcon))"></i></strong></p>
         <table class="table table-bordered table-condensed table-supercondensed">
             <thead>
                 <tr>
@@ -92,7 +92,7 @@
     }
     else if (selectedTab == "SERVICE")
     {
-        <p style="margin-top: 1em;"><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
+        <p><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
         <table class="table table-bordered table-condensed table-supercondensed">
             <thead>
                 <tr>

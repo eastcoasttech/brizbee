@@ -170,7 +170,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 8%;">
+                <th style="width: 7%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Punches/InAt"))">
                         In
                         @if (sortBy == "Punches/InAt" && sortDirection == "ASC")
@@ -183,7 +183,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 8%;">
+                <th style="width: 7%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Punches/OutAt"))">
                         Out
                         @if (sortBy == "Punches/OutAt" && sortDirection == "ASC")
@@ -196,13 +196,19 @@
                         }
                     </a>
                 </th>
-                <th style="width: 5%;">
+                <th style="width: 4%;">
                     Hours
                 </th>
-                <th style="width: 5%;">
+                <th style="width: 4%;">
                     Running
                 </th>
-                <th style="width: 15%;">
+                <th style="width: 3%;">
+                    <abbr title="Source">Src</abbr> In
+                </th>
+                <th style="width: 3%;">
+                    <abbr title="Source">Src</abbr> Out
+                </th>
+                <th style="width: 14%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Customers/Number"))">
                         Customer
                         @if (sortBy == "Customers/Number" && sortDirection == "ASC")
@@ -215,7 +221,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 15%;">
+                <th style="width: 14%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Jobs/Number"))">
                         Job
                         @if (sortBy == "Jobs/Number" && sortDirection == "ASC")
@@ -228,7 +234,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 12%;">
+                <th style="width: 14%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Tasks/Number"))">
                         Task
                         @if (sortBy == "Tasks/Number" && sortDirection == "ASC")
@@ -241,7 +247,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 10%;">
+                <th style="width: 9%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ServiceRate/Name"))">
                         Customer Rate
                         @if (sortBy == "ServiceRate/Name" && sortDirection == "ASC")
@@ -254,7 +260,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 10%;">
+                <th style="width: 9%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("PayrollRate/Name"))">
                         Payroll Rate
                         @if (sortBy == "PayrollRate/Name" && sortDirection == "ASC")
@@ -275,33 +281,67 @@
             @foreach (var punch in punches)
             {
                 <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
-                    <td><a href="javascript:void(0)">@punch.User.Name</a></td>
-                    <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
+                    <td>@punch.User.Name</td>
+                    <td>@punch.InAt.ToString("M/d/yyyy h:mm tt")</td>
                     <td>
                         @if (punch.OutAt.HasValue)
                         {
-                            <a href="javascript:void(0)">@punch.OutAt.Value.ToString("M/d/yyyy h:mm tt")</a>
+                            @punch.OutAt.Value.ToString("M/d/yyyy h:mm tt")
                         }
                         else
                         {
                             <span>STILL WORKING</span>
                         }
                     </td>
-                    <td><a href="">@(Math.Round(punch.Minutes / 60.0, 2))</a></td>
-                    <td><a href="">@(Math.Round(punch.CumulativeMinutes / 60.0, 2))</a></td>
-                    <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number &ndash; @punch.Task.Job.Customer.Name</a></td>
-                    <td><a href="javascript:void(0)">@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</a></td>
-                    <td><a href="javascript:void(0)">@punch.Task.Number &ndash; @punch.Task.Name</a></td>
+                    <td>@(Math.Round(punch.Minutes / 60.0, 2))</td>
+                    <td>@(Math.Round(punch.CumulativeMinutes / 60.0, 2))</td>
+                    <td class="text-center">
+                        @switch (punch.InAtSourceHardware)
+                        {
+                            case "Mobile":
+                                <i class="fas fa-mobile-alt" title="Mobile"></i>
+                                break;
+                            case "Dashboard":
+                                <i class="fas fa-pen-square" title="Dashboard"></i>
+                                break;
+                            case "Phone":
+                                <i class="fas fa-phone" title="Phone"></i>
+                                break;
+                            case "Web":
+                                <i class="far fa-id-badge" title="Web"></i>
+                                break;
+                        }
+                    </td>
+                    <td class="text-center">
+                        @switch (punch.OutAtSourceHardware)
+                        {
+                            case "Mobile":
+                                <i class="fas fa-mobile-alt" title="Mobile"></i>
+                                break;
+                            case "Dashboard":
+                                <i class="fas fa-pen-square" title="Dashboard"></i>
+                                break;
+                            case "Phone":
+                                <i class="fas fa-phone" title="Phone"></i>
+                                break;
+                            case "Web":
+                                <i class="far fa-id-badge" title="Web"></i>
+                                break;
+                        }
+                    </td>
+                    <td>@punch.Task.Job.Customer.Number &ndash; @punch.Task.Job.Customer.Name</td>
+                    <td>@punch.Task.Job.Number &ndash; @punch.Task.Job.Name</td>
+                    <td>@punch.Task.Number &ndash; @punch.Task.Name</td>
                     <td>
                         @if (punch.ServiceRate != null)
                         {
-                            <a href="javascript:void(0)">@punch.ServiceRate.Name</a>
+                            @punch.ServiceRate.Name
                         }
                     </td>
                     <td>
                         @if (punch.PayrollRate != null)
                         {
-                            <a href="javascript:void(0)">@punch.PayrollRate.Name</a>
+                            @punch.PayrollRate.Name
                         }
                     </td>
                     <td class="text-center">
@@ -315,13 +355,13 @@
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="11"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="12"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && punches.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="11">No Punches for the Selected Date Range</td>
+                    <td colspan="12">No Punches for the Selected Date Range</td>
                 </tr>
             }
         </tbody>

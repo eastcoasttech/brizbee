@@ -15,221 +15,306 @@
 @inject PunchService punchService
 @inject SharedService sharedService
 
-<EditForm Model="@punch" OnValidSubmit="SavePunch" class="form-horizontal" autocomplete="off">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<ul class="nav nav-tabs">
+    <li role="presentation" class="@(selectedTab == "DETAILS" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "DETAILS")" @onclick:preventDefault>Details</a></li>
+    <li role="presentation" class="@(selectedTab == "SOURCE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SOURCE")" @onclick:preventDefault>Source</a></li>
+</ul>
 
-    <div class="form-group">
-        <label for="selected_user_id" class="col-sm-3 control-label">User</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_user_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" autofocus
-                         ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedUserId )"
-                         Value="@selectedUserId">
-                @foreach (var user in users)
-                {
-                    <option value="@user.Id">@user.Name</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedCustomerId )"
-                         Value="@selectedCustomerId">
-                @foreach (var customer in customers)
-                {
-                    <option value="@customer.Id">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{customer.Number} - {customer.Name}" : customer.Name)</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedJobId )"
-                         Value="@selectedJobId">
-                @foreach (var project in jobs)
-                {
-                    <option value="@project.Id">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{project.Number} - {project.Name}" : project.Name)</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedTaskId )"
-                         Value="@selectedTaskId">
-                @foreach (var task in tasks)
-                {
-                    <option value="@task.Id">@(sharedService.CurrentUser.Organization.ShowTaskNumber ? $"{task.Number} - {task.Name}" : task.Name)</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group">
-        <label for="in_at" class="col-sm-3 control-label">In</label>
-        <div class="col-sm-9">
-            <div class="row" style="margin-right: 0;">
-                <div class="col-md-6" style="padding-right: 0;">
-                    <InputDate @bind-Value="punch.InAt" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
-                </div>
-                <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
-                        @for (int i = 1; i <= 12; i++)
-                        {
-                            <option value="@i">@i</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
-                        @for (int i = 0; i <= 59; i++)
-                        {
-                            <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@inAtMeridian</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_in_at_country_code" class="col-sm-3 control-label">Country</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_in_at_country_code" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (string x) => selectedInAtCountryCodeValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedInAtCountryCode )"
-                         Value="@selectedInAtCountryCode">
-                @foreach (var country in countries)
-                {
-                    <option value="@country.CountryCode">@country.Name</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_in_at_time_zone" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (string x) => selectedInAtTimeZoneValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedInAtTimeZone )"
-                         Value="@selectedInAtTimeZone">
-                @foreach (var timeZone in inAtZones)
-                {
-                    <option value="@timeZone.Id">@timeZone.Id</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-group">
-        <div class="col-sm-offset-3 col-sm-9">
-            <div class="checkbox">
-                <label>
-                    <InputCheckbox @bind-Value="hasPunchOut" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" /> Has Punch Out?
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="out_at" class="col-sm-3 control-label">Out</label>
-        <div class="col-sm-9">
-            <div class="row" style="margin-right: 0;">
-                <div class="col-md-6" style="padding-right: 0;">
-                    <InputDate @bind-Value="punch.OutAt" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
-                </div>
-                <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
-                        @for (int i = 1; i <= 12; i++)
-                        {
-                            <option value="@i">@i</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div class="col-md-2" style="padding-right: 0;">
-                    <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
-                        @for (int i = 0; i <= 59; i++)
-                        {
-                            <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@outAtMeridian</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_out_at_country_code" class="col-sm-3 control-label">Country</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_out_at_country_code" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (string x) => selectedOutAtCountryCodeValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedOutAtCountryCode )"
-                         Value="@selectedOutAtCountryCode">
-                @foreach (var country in countries)
-                {
-                    <option value="@country.CountryCode">@country.Name</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="selected_out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
-        <div class="col-sm-9">
-            <InputSelect class="form-control" id="selected_out_at_time_zone" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                         ValueChanged="@( (string x) => selectedOutAtTimeZoneValueChangeHandler(x) )"
-                         ValueExpression="@( () => selectedOutAtTimeZone )"
-                         Value="@selectedOutAtTimeZone">
-                @foreach (var timeZone in outAtZones)
-                {
-                    <option value="@timeZone.Id">@timeZone.Id</option>
-                }
-            </InputSelect>
-        </div>
-    </div>
-
-    @if (punch.CommitId.HasValue)
+<div style="padding: 1.5em 0 1.5em 0;">
+    @if (selectedTab == "DETAILS")
     {
-        <p class="text-danger">
-            This punch is locked.
-        </p>
+        <EditForm Model="@punch" OnValidSubmit="SavePunch" class="form-horizontal" autocomplete="off">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="selected_user_id" class="col-sm-3 control-label">User</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_user_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" autofocus
+                                 ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedUserId )"
+                                 Value="@selectedUserId">
+                        @foreach (var user in users)
+                        {
+                            <option value="@user.Id">@user.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedCustomerId )"
+                                 Value="@selectedCustomerId">
+                        @foreach (var customer in customers)
+                        {
+                            <option value="@customer.Id">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{customer.Number} - {customer.Name}" : customer.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedJobId )"
+                                 Value="@selectedJobId">
+                        @foreach (var project in jobs)
+                        {
+                            <option value="@project.Id">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{project.Number} - {project.Name}" : project.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedTaskId )"
+                                 Value="@selectedTaskId">
+                        @foreach (var task in tasks)
+                        {
+                            <option value="@task.Id">@(sharedService.CurrentUser.Organization.ShowTaskNumber ? $"{task.Number} - {task.Name}" : task.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="form-group">
+                <label for="in_at" class="col-sm-3 control-label">In</label>
+                <div class="col-sm-9">
+                    <div class="row" style="margin-right: 0;">
+                        <div class="col-md-6" style="padding-right: 0;">
+                            <InputDate @bind-Value="punch.InAt" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 1; i <= 12; i++)
+                                    {
+                                    <option value="@i">@i</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 0; i <= 59; i++)
+                                    {
+                                    <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@inAtMeridian</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_in_at_country_code" class="col-sm-3 control-label">Country</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_in_at_country_code" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedInAtCountryCodeValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedInAtCountryCode )"
+                                 Value="@selectedInAtCountryCode">
+                        @foreach (var country in countries)
+                        {
+                            <option value="@country.CountryCode">@country.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_in_at_time_zone" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedInAtTimeZoneValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedInAtTimeZone )"
+                                 Value="@selectedInAtTimeZone">
+                        @foreach (var timeZone in inAtZones)
+                        {
+                            <option value="@timeZone.Id">@timeZone.Id</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <div class="checkbox">
+                        <label>
+                            <InputCheckbox @bind-Value="hasPunchOut" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" /> Has Punch Out?
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="out_at" class="col-sm-3 control-label">Out</label>
+                <div class="col-sm-9">
+                    <div class="row" style="margin-right: 0;">
+                        <div class="col-md-6" style="padding-right: 0;">
+                            <InputDate @bind-Value="punch.OutAt" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 1; i <= 12; i++)
+                                    {
+                                    <option value="@i">@i</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 0; i <= 59; i++)
+                                    {
+                                    <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@outAtMeridian</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_out_at_country_code" class="col-sm-3 control-label">Country</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_out_at_country_code" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedOutAtCountryCodeValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedOutAtCountryCode )"
+                                 Value="@selectedOutAtCountryCode">
+                        @foreach (var country in countries)
+                        {
+                            <option value="@country.CountryCode">@country.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_out_at_time_zone" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedOutAtTimeZoneValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedOutAtTimeZone )"
+                                 Value="@selectedOutAtTimeZone">
+                        @foreach (var timeZone in outAtZones)
+                        {
+                            <option value="@timeZone.Id">@timeZone.Id</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            @if (punch.CommitId.HasValue)
+            {
+                <p class="text-danger">
+                    This punch is locked.
+                </p>
+            }
+
+            <hr />
+
+            @if (punch.Id != 0)
+            {
+                <button class="btn btn-danger" type="button" @onclick="DeletePunch" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">Delete</button>
+            }
+            <i class="@((working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+            <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+            <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" style="margin-left: 2px;">OK</button>
+        </EditForm>
     }
-
-    <hr />
-
-    @if (punch.Id != 0)
+    else if (selectedTab == "SOURCE")
     {
-        <button class="btn btn-danger" type="button" @onclick="DeletePunch" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">Delete</button>
+        <h4>Location</h4>
+        @if (center != null)
+        {
+            <RadzenGoogleMap style="height: 250px" ApiKey="AIzaSyB3s-RGefYucx0hhIAtCKvf_g6G9CqrGe8" Zoom=13 Center="center">
+                <Markers>
+                    @if (!string.IsNullOrEmpty(punch.LatitudeForInAt) && !string.IsNullOrEmpty(punch.LongitudeForInAt))
+                    {
+                        <RadzenGoogleMapMarker Title="@($"Punched In at {punch.InAt.ToShortTimeString()}")" Label="In" Position=@(new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForInAt), Lng = double.Parse(punch.LongitudeForInAt) }) />
+                    }
+
+                    @if (!string.IsNullOrEmpty(punch.LatitudeForOutAt) && !string.IsNullOrEmpty(punch.LongitudeForOutAt))
+                    {
+                        <RadzenGoogleMapMarker Title="@($"Punched Out at {punch.OutAt.Value.ToShortTimeString()}")" Label="Out" Position=@(new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForOutAt), Lng = double.Parse(punch.LongitudeForOutAt) }) />
+                    }
+                </Markers>
+            </RadzenGoogleMap>
+        }
+        else
+        {
+            <p>There is no location data for the punch in or out.</p>
+        }
+
+        <h4 style="margin-top: 1em;">Metadata</h4>
+        <table class="table table-condensed table-supercondensed">
+            <tbody>
+                <tr>
+                    <th></th>
+                    <th>Punch In</th>
+                    <th>Punch Out</th>
+                </tr>
+                <tr>
+                    <th>Source Hardware</th>
+                    <td>@punch.InAtSourceHardware</td>
+                    <td>@punch.OutAtSourceHardware</td>
+                </tr>
+                <tr>
+                    <th>Source OS</th>
+                    <td>@punch.InAtSourceOperatingSystem</td>
+                    <td>@punch.OutAtSourceOperatingSystem</td>
+                </tr>
+                <tr>
+                    <th>Source OS Version</th>
+                    <td>@punch.InAtSourceOperatingSystemVersion</td>
+                    <td>@punch.OutAtSourceOperatingSystemVersion</td>
+                </tr>
+                <tr>
+                    <th>Source Browser</th>
+                    <td>@punch.InAtSourceBrowser</td>
+                    <td>@punch.OutAtSourceBrowser</td>
+                </tr>
+                <tr>
+                    <th>Source Browser Version</th>
+                    <td>@punch.InAtSourceBrowserVersion</td>
+                    <td>@punch.OutAtSourceBrowserVersion</td>
+                </tr>
+                <tr>
+                    <th>Source Hostname</th>
+                    <td>@punch.InAtSourceHostname</td>
+                    <td>@punch.OutAtSourceHostname</td>
+                </tr>
+                <tr>
+                    <th>Source IP</th>
+                    <td>@punch.InAtSourceIpAddress</td>
+                    <td>@punch.OutAtSourceIpAddress</td>
+                </tr>
+                <tr>
+                    <th>Source Phone Number</th>
+                    <td>@punch.InAtSourcePhoneNumber</td>
+                    <td>@punch.OutAtSourcePhoneNumber</td>
+                </tr>
+            </tbody>
+        </table>
     }
-    <i class="@((working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
-    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" style="margin-left: 2px;">OK</button>
-</EditForm>
+</div>
 
 @code {
     [Parameter] public int? Id { get; set; }
@@ -264,6 +349,8 @@
     private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
     private List<Job> jobs = new List<Job>();
     private List<User> users = new List<User>();
+    private string selectedTab = "DETAILS";
+    private GoogleMapPosition center = null;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -398,6 +485,15 @@
 
             // Set the user based on the UserId for this punch.
             await RefreshUsers();
+
+            if (!string.IsNullOrEmpty(punch.LatitudeForInAt) && !string.IsNullOrEmpty(punch.LongitudeForInAt))
+            {
+                center = new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForInAt), Lng = double.Parse(punch.LongitudeForInAt) };
+            }
+            else if (!string.IsNullOrEmpty(punch.LatitudeForOutAt) && !string.IsNullOrEmpty(punch.LongitudeForOutAt))
+            {
+                center = new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForOutAt), Lng = double.Parse(punch.LongitudeForOutAt) };
+            }
         }
         else
         {
