@@ -17,7 +17,11 @@
 
 <ul class="nav nav-tabs">
     <li role="presentation" class="@(selectedTab == "DETAILS" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "DETAILS")" @onclick:preventDefault>Details</a></li>
-    <li role="presentation" class="@(selectedTab == "SOURCE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SOURCE")" @onclick:preventDefault>Source</a></li>
+
+    @if (Id.HasValue)
+    {
+        <li role="presentation" class="@(selectedTab == "SOURCE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SOURCE")" @onclick:preventDefault>Source</a></li>
+    }
 </ul>
 
 <div style="padding: 1.5em 0 1.5em 0;">
