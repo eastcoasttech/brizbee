@@ -388,9 +388,9 @@
                         <div class="form-group">
                             <label>Status (Only Applies to Punch Reports)</label>
                             <select class="form-control" @bind="includeLocked">
+                                <option value="all">Both Locked and Unlocked Punches</option>
                                 <option value="only">Only Locked Punches</option>
                                 <option value="uncommitted">Only Unlocked Punches</option>
-                                <option value="all">Both Locked and Unlocked Punches</option>
                             </select>
                         </div>
                     </form>
@@ -411,7 +411,7 @@
     private List<User> userResults = new List<User>();
     private string projectScope = "all";
     private string userScope = "all";
-    private string includeLocked = "only";
+    private string includeLocked = "all";
     private string projectQuery = "";
     private string userQuery = "";
     private Timer userQueryTimer;
