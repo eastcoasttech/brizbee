@@ -47,7 +47,13 @@ namespace Brizbee.Web.Tests
                     Name = "Test Organization",
                     Code = "1234",
                     StripeCustomerId = "BLANK",
-                    StripeSubscriptionId = "BLANK"
+                    StripeSubscriptionId = "BLANK",
+                    SortCustomersByColumn = "Number",
+                    SortProjectsByColumn = "Number",
+                    SortTasksByColumn = "Number",
+                    ShowCustomerNumber = true,
+                    ShowProjectNumber = true,
+                    ShowTaskNumber = true
                 };
                 _context.Organizations.Add(organization);
                 _context.SaveChanges();

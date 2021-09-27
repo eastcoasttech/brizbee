@@ -30,6 +30,8 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
+using System.Data.Entity.Validation;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -166,6 +168,7 @@ namespace Brizbee.Web.Controllers
                     user.Role = "Administrator";
                     user.CreatedAt = DateTime.UtcNow;
                     user.AllowedPhoneNumbers = "*";
+                    user.TimeZone = "America/New_York";
                     user.IsActive = true;
                     user.CanViewPunches = true;
                     user.CanCreatePunches = true;
@@ -299,6 +302,22 @@ namespace Brizbee.Web.Controllers
                     transaction.Commit();
 
                     return Created("auth/me", user);
+                }
+                catch (DbEntityValidationException ex)
+                {
+                    string message = "";
+
+                    foreach (var eve in ex.EntityValidationErrors)
+                    {
+                        foreach (var ve in eve.ValidationErrors)
+                        {
+                            message += string.Format("{0} has error '{1}'; ", ve.PropertyName, ve.ErrorMessage);
+                        }
+                    }
+
+                    telemetryClient.TrackException(ex);
+
+                    return BadRequest(message);
                 }
                 catch (Exception ex)
                 {
