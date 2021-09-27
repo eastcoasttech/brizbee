@@ -1,0 +1,24 @@
+﻿<Window x:Class="Brizbee.Integration.Utility.Views.SendLogWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:Brizbee.Integration.Utility.Views"
+    mc:Ignorable="d"
+    Height="240" MinHeight="240" Width="480" MinWidth="240"
+    WindowStartupLocation="CenterScreen"
+    Title="Send Log Files to Support">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*" MinWidth="250"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="1">
+            <TextBlock TextWrapping="Wrap" FontSize="10" Padding="0 20">Sending log files enables us to view output from the communication to QuickBooks to troubleshoot issues.</TextBlock>
+            <Button Name="ButtonSend" Click="ButtonSend_Click" Content="Send Now" Height="30" IsEnabled="{Binding IsSendEnabled}" />
+            <TextBlock TextWrapping="Wrap" Text="{Binding StatusText}" FontSize="9" Padding="0 5"></TextBlock>
+        </StackPanel>
+    </Grid>
+</Window>

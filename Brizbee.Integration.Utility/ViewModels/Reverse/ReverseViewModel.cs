@@ -24,6 +24,7 @@
 using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
+using NLog;
 using RestSharp;
 using System;
 using System.ComponentModel;
@@ -48,6 +49,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
 
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         #endregion
 
         public void Reverse()
@@ -145,9 +147,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                     service.BuildTxnDelRq(delDocument, delElement, transactionType, txnId); // InventoryAdjustment, SalesReceipt, TimeTracking, or Bill
 
                     // Make the request.
-                    Trace.TraceInformation(delDocument.OuterXml);
+                    Logger.Debug(delDocument.OuterXml);
                     var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
-                    Trace.TraceInformation(delResponse);
+                    Logger.Debug(delResponse);
 
                     // Then walk the response.
                     var delWalkResponse = service.WalkTxnDelRs(delResponse);
@@ -191,7 +193,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
             }
             catch (COMException cex)
             {
-                Trace.TraceError(cex.ToString());
+                Logger.Error(cex.ToString());
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
@@ -206,7 +208,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
 
                 StatusText += string.Format("{0} - Reverse failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");

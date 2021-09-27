@@ -25,6 +25,7 @@ using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Serialization;
 using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
+using NLog;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -51,6 +52,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
 
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         #endregion
 
         public void Sync()
@@ -113,16 +115,18 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                         service.BuildCustomerQueryRq(findDocument, findElement, parentName);
 
                         // Make the request.
+                        Logger.Debug(findDocument.OuterXml);
                         var findResponse = req.ProcessRequest(ticket, findDocument.OuterXml);
+                        Logger.Debug(findResponse);
 
                         // Then walk the response.
                         var findWalkResponse = service.WalkCustomerQueryRs(findResponse);
 
-                        var found = findWalkResponse.Item3;
-                        var parent = found.FirstOrDefault();
-
-                        if (parent != null)
+                        if (findWalkResponse.Item1)
                         {
+                            var found = findWalkResponse.Item3;
+                            var parent = found.FirstOrDefault();
+
                             // Prepare a new QBXML document to create the job with customer details.
                             var jobQBXML = service.MakeQBXMLDocument();
                             var jobDocument = jobQBXML.Item1;
@@ -136,7 +140,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                             service.BuildCustomerAddRqForJob(jobDocument, jobElement, newJob, parentName);
 
                             // Make the request.
+                            Logger.Debug(jobDocument.OuterXml);
                             var jobResponse = req.ProcessRequest(ticket, jobDocument.OuterXml);
+                            Logger.Debug(jobResponse);
                         }
                         else
                         {
@@ -149,7 +155,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                             service.BuildCustomerAddRqForCustomer(custDocument, custElement, parentName);
 
                             // Make the request.
+                            Logger.Debug(custDocument.OuterXml);
                             var custResponse = req.ProcessRequest(ticket, custDocument.OuterXml);
+                            Logger.Debug(custResponse);
 
                             // Prepare a new QBXML document to create the job.
                             var jobQBXML = service.MakeQBXMLDocument();
@@ -163,7 +171,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
                             }, parentName);
 
                             // Make the request.
+                            Logger.Debug(jobDocument.OuterXml);
                             var jobResponse = req.ProcessRequest(ticket, jobDocument.OuterXml);
+                            Logger.Debug(jobResponse);
                         }
                     }
 
@@ -196,7 +206,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
             }
             catch (COMException cex)
             {
-                Trace.TraceError(cex.ToString());
+                Logger.Error(cex.ToString());
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
@@ -211,7 +221,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
 
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");

@@ -37,6 +37,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
+using NLog;
 
 namespace Brizbee.Integration.Utility.ViewModels.Punches
 {
@@ -57,6 +58,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private Commit commit;
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private List<Punch> punches;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         #endregion
 
         public void Export()
@@ -157,8 +159,6 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     // Add an element for each punch to be synced
                     foreach (var punch in punches)
                     {
-                        Trace.TraceInformation(punch.Task.Job.QuickBooksCustomerJob);
-
                         // Prepare a new QBXML document.
                         var punchQBXML = service.MakeQBXMLDocument();
                         var punchDocument = punchQBXML.Item1;
@@ -167,9 +167,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                         BuildTimeTrackingAddRq(punchDocument, punchElement, punch);
 
                         // Make the request.
-                        Trace.TraceInformation(punchDocument.OuterXml);
+                        Logger.Debug(punchDocument.OuterXml);
                         var punchResponse = req.ProcessRequest(ticket, punchDocument.OuterXml);
-                        Trace.TraceInformation(punchResponse);
+                        Logger.Debug(punchResponse);
 
                         // Then walk the response.
                         var walkReponse = WalkTimeTrackingAddRs(punchResponse);
@@ -251,9 +251,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                         service.BuildTxnDelRq(delDocument, delElement, "TimeTracking", txnId);
 
                         // Make the request.
-                        Trace.TraceInformation(delDocument.OuterXml);
+                        Logger.Debug(delDocument.OuterXml);
                         var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
-                        Trace.TraceInformation(delResponse);
+                        Logger.Debug(delResponse);
 
                         // Then walk the response.
                         var delWalkResponse = service.WalkTxnDelRs(delResponse);
@@ -275,7 +275,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             }
             catch (COMException cex)
             {
-                Trace.TraceError(cex.ToString());
+                Logger.Error(cex.ToString());
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
@@ -290,7 +290,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
 
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
@@ -333,7 +333,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             }
             else
             {
-                Trace.TraceWarning(response.Content);
+                Logger.Warn(response.Content);
                 throw new DownloadFailedException();
             }
         }

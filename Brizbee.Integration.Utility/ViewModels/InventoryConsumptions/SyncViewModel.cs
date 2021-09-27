@@ -34,6 +34,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Configuration;
+using NLog;
 
 namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 {
@@ -56,6 +57,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         private string selectedValue = Application.Current.Properties["SelectedValue"] as string;
         private string vendorFullName = ConfigurationManager.AppSettings["InventoryConsumptionVendorName"].ToString();
         private string refNumber = "Materials";
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         #endregion
 
         public void Sync()
@@ -148,9 +150,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 service.BuildHostQueryRq(hostDocument, hostElement);
 
                 // Make the request.
-                Trace.TraceInformation(hostDocument.OuterXml);
+                Logger.Debug(hostDocument.OuterXml);
                 var hostResponse = req.ProcessRequest(ticket, hostDocument.OuterXml);
-                Trace.TraceInformation(hostResponse);
+                Logger.Debug(hostResponse);
 
                 // Then walk the response.
                 var hostWalkResponse = service.WalkHostQueryRsAndParseHostDetails(hostResponse);
@@ -186,9 +188,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         service.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
 
                         // Make the request.
-                        Trace.TraceInformation(consDocument.OuterXml);
+                        Logger.Debug(consDocument.OuterXml);
                         var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
-                        Trace.TraceInformation(consResponse);
+                        Logger.Debug(consResponse);
 
                         // Then walk the response.
                         var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
@@ -206,9 +208,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                             service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, refNumber, selectedValue.ToUpperInvariant());
 
                             // Make the request.
-                            Trace.TraceInformation(consDocument.OuterXml);
+                            Logger.Debug(consDocument.OuterXml);
                             var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
-                            Trace.TraceInformation(consResponse);
+                            Logger.Debug(consResponse);
 
                             // Then walk the response.
                             var walkReponse = service.WalkBillAddRs(consResponse);
@@ -225,9 +227,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
 
                         // Make the request.
-                        Trace.TraceInformation(consDocument.OuterXml);
+                        Logger.Debug(consDocument.OuterXml);
                         var consResponse = req.ProcessRequest(ticket, consDocument.OuterXml);
-                        Trace.TraceInformation(consResponse);
+                        Logger.Debug(consResponse);
 
                         // Then walk the response.
                         var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
@@ -290,7 +292,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             }
             catch (COMException cex)
             {
-                Trace.TraceError(cex.ToString());
+                Logger.Error(cex.ToString());
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
@@ -305,7 +307,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
 
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
@@ -348,7 +350,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             }
             else
             {
-                Trace.TraceWarning(response.Content);
+                Logger.Warn(response.Content);
                 throw new DownloadFailedException();
             }
         }

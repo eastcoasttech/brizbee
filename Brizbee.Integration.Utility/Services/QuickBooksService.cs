@@ -960,7 +960,7 @@ namespace Brizbee.Integration.Utility.Services
             // ------------------------------------------------------------
 
             if (!quickBooksCustomer.IsActive)
-                customer.AppendChild(MakeSimpleElement(doc, "IsActive", "false"));
+                customer.AppendChild(MakeSimpleElement(doc, "IsActive", "true"));
 
             // ------------------------------------------------------------
             // CustomerAdd > ParentRef
@@ -1117,27 +1117,6 @@ namespace Brizbee.Integration.Utility.Services
                 customer.AppendChild(MakeSimpleElement(doc, "SalesTaxCountry", quickBooksCustomer.SalesTaxCountry));
 
             // ------------------------------------------------------------
-            // CustomerAdd > ResaleNumber
-            // ------------------------------------------------------------
-
-            if (!string.IsNullOrEmpty(quickBooksCustomer.ResaleNumber))
-                customer.AppendChild(MakeSimpleElement(doc, "ResaleNumber", quickBooksCustomer.ResaleNumber));
-
-            // ------------------------------------------------------------
-            // CustomerAdd > AccountNumber
-            // ------------------------------------------------------------
-
-            if (!string.IsNullOrEmpty(quickBooksCustomer.AccountNumber))
-                customer.AppendChild(MakeSimpleElement(doc, "AccountNumber", quickBooksCustomer.AccountNumber));
-
-            // ------------------------------------------------------------
-            // CustomerAdd > CreditLimit
-            // ------------------------------------------------------------
-
-            if (!string.IsNullOrEmpty(quickBooksCustomer.CreditLimit))
-                customer.AppendChild(MakeSimpleElement(doc, "CreditLimit", quickBooksCustomer.CreditLimit));
-
-            // ------------------------------------------------------------
             // CustomerAdd > SalesTaxCodeRefListId
             // ------------------------------------------------------------
 
@@ -1160,6 +1139,27 @@ namespace Brizbee.Integration.Utility.Services
 
                 itemSalesTaxRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.ItemSalesTaxRefListId));
             }
+
+            // ------------------------------------------------------------
+            // CustomerAdd > ResaleNumber
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.ResaleNumber))
+                customer.AppendChild(MakeSimpleElement(doc, "ResaleNumber", quickBooksCustomer.ResaleNumber));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > AccountNumber
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.AccountNumber))
+                customer.AppendChild(MakeSimpleElement(doc, "AccountNumber", quickBooksCustomer.AccountNumber));
+
+            // ------------------------------------------------------------
+            // CustomerAdd > CreditLimit
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(quickBooksCustomer.CreditLimit))
+                customer.AppendChild(MakeSimpleElement(doc, "CreditLimit", quickBooksCustomer.CreditLimit));
 
             // ------------------------------------------------------------
             // CustomerAdd > PreferredPaymentMethodRefListId

@@ -1,8 +1,8 @@
 ﻿//
-//  WizardWindow.xaml.cs
+//  SendLogWindow.xaml.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,34 +21,38 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using System.Windows.Navigation;
+using Brizbee.Integration.Utility.ViewModels;
+using System;
+using System.Threading;
+using System.Windows;
 
 namespace Brizbee.Integration.Utility.Views
 {
     /// <summary>
-    /// Interaction logic for WizardWindow.xaml
+    /// Interaction logic for SendLogWindow.xaml
     /// </summary>
-    public partial class WizardWindow : NavigationWindow
+    public partial class SendLogWindow : Window
     {
-        public WizardWindow()
+        public SendLogWindow()
         {
             InitializeComponent();
-        }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
-        {
-            base.OnClosing(e);
-            e.Cancel = true;
-            Hide();
-        }
-
-        private void NavigationWindow_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.F1)
+            DataContext = new SendLogViewModel()
             {
-                var help = new SendLogWindow();
-                help.Topmost = true;
-                help.Show();
+                IsSendEnabled = true
+            };
+        }
+
+        private void ButtonSend_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var thread = new Thread((DataContext as SendLogViewModel).Upload);
+                thread.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Could Not Send Log", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

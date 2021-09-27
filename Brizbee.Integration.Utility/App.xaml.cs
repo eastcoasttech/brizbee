@@ -22,6 +22,7 @@
 //
 
 using Brizbee.Integration.Utility.Views;
+using NLog;
 using System;
 using System.Drawing;
 using System.IO;
@@ -43,6 +44,19 @@ namespace Brizbee.Integration.Utility
 
         public App()
         {
+            var config = new NLog.Config.LoggingConfiguration();
+
+            // Setup loggers.
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = "file.txt" };
+            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+
+            // Rules for mapping loggers.
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+
+            // Apply configuration to logger.
+            LogManager.Configuration = config;
+
             // Initialize MessageBus Using Dispatcher
             Action<Action> uiThreadMarshaller =
                 action => Dispatcher.Invoke(DispatcherPriority.Normal, action);
@@ -60,6 +74,9 @@ namespace Brizbee.Integration.Utility
 
             var strip = new ContextMenuStrip();
             strip.Items.Add("Open...");
+            strip.Items.Add("-");
+            strip.Items.Add("Send Log Files...");
+            strip.Items.Add("-");
             strip.Items.Add("Exit");
 
             strip.ItemClicked += contexMenuStrip_ItemClicked;
@@ -94,6 +111,11 @@ namespace Brizbee.Integration.Utility
             {
                 MainWindow = new WizardWindow();
                 MainWindow.Show();
+            }
+            else if (item.Text == "Send Log Files...")
+            {
+                var sendLogWindow = new SendLogWindow();
+                sendLogWindow.Show();
             }
             else if (item.Text == "Exit")
             {

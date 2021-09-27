@@ -8,4 +8,5 @@
     x:Class="Brizbee.Integration.Utility.Views.WizardWindow"
     Height="600" MinHeight="480" Width="800" MinWidth="640"
     WindowStartupLocation="CenterScreen"
+    KeyUp="NavigationWindow_KeyUp"
     Source="LoginPage.xaml"/>

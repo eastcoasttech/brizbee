@@ -25,6 +25,7 @@ using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Services;
 using CsvHelper;
 using Interop.QBXMLRP2;
+using NLog;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -55,6 +56,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
         #region Private Fields
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private string offsetFileName = Application.Current.Properties["OffsetFileName"] as string;
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         #endregion
 
         public void Sync()
@@ -80,7 +82,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             {
                 try
                 {
-                    Trace.TraceInformation($"Opening offset mapping file at {offsetFileName}");
+                    Logger.Debug($"Opening offset mapping file at {offsetFileName}");
 
                     using (var reader = new StreamReader(offsetFileName))
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
@@ -88,11 +90,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                         offsetMappings = csv.GetRecords<OffsetMapping>().ToList();
                     }
 
-                    Trace.TraceInformation($"There are {offsetMappings.Count} mappings");
+                    Logger.Debug($"There are {offsetMappings.Count} mappings");
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError(ex.ToString());
+                    Logger.Error(ex.ToString());
 
                     StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                     OnPropertyChanged("StatusText");
@@ -224,7 +226,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
             catch (COMException cex)
             {
-                Trace.TraceError(cex.ToString());
+                Logger.Error(cex.ToString());
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
@@ -239,7 +241,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
 
                 StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
                 OnPropertyChanged("StatusText");
@@ -284,11 +286,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
             try
             {
-                Trace.TraceInformation(doc.OuterXml);
+                Logger.Debug(doc.OuterXml);
 
                 var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                Trace.TraceInformation(response);
+                Logger.Debug(response);
 
                 // Then walk the response.
                 var walkReponse = service.WalkInventoryItemQueryRs(response);
@@ -307,7 +309,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
                 return new List<QBDInventoryItem>();
             }
         }
@@ -333,11 +335,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
             try
             {
-                Trace.TraceInformation(doc.OuterXml);
+                Logger.Debug(doc.OuterXml);
 
                 var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                Trace.TraceInformation(response);
+                Logger.Debug(response);
 
                 if (string.IsNullOrEmpty(response))
                     return new List<QBDInventorySite>();
@@ -359,7 +361,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
                 return new List<QBDInventorySite>();
             }
         }
@@ -385,11 +387,11 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 
             try
             {
-                Trace.TraceInformation(doc.OuterXml);
+                Logger.Debug(doc.OuterXml);
 
                 var response = req.ProcessRequest(ticket, doc.OuterXml);
 
-                Trace.TraceInformation(response);
+                Logger.Debug(response);
 
                 if (string.IsNullOrEmpty(response))
                     return new List<QBDUnitOfMeasureSet>();
@@ -411,7 +413,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
+                Logger.Error(ex.ToString());
                 return new List<QBDUnitOfMeasureSet>();
             }
         }
