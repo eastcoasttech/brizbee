@@ -311,5 +311,10 @@ namespace Brizbee.Common.Models
         /// Indicates whether or not the user can delete tasks.
         /// </summary>
         public bool CanDeleteTasks { get; set; }
+
+        /// <summary>
+        /// Indicates whether or not the user can view audits.
+        /// </summary>
+        public bool CanViewAudits { get; set; }
     }
 }

@@ -61,6 +61,7 @@
     <Compile Include="Exceptions\NotAuthorizedException.cs" />
     <Compile Include="Exceptions\NotFoundException.cs" />
     <Compile Include="Exceptions\StripeException.cs" />
+    <Compile Include="Models\Audit.cs" />
     <Compile Include="Models\Commit.cs" />
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\Job.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="Serialization\QuickBooksHostDetails.cs" />
     <Compile Include="Serialization\QuickBooksUnitOfMeasure.cs" />
     <Compile Include="Serialization\QuickBooksUnitOfMeasures.cs" />
+    <Compile Include="Serialization\Records\AuditRecord.cs" />
     <Compile Include="Validations\FullNameLengthValidationAttribute.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -22,6 +22,7 @@ namespace Brizbee.Dashboard
             });
 
             // Configure additional services.
+            builder.Services.AddSingleton<AuditService>();
             builder.Services.AddSingleton<ExportService>();
             builder.Services.AddSingleton<TimesheetEntryService>();
             builder.Services.AddSingleton<CommitService>();

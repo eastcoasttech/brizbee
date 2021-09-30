@@ -7,6 +7,7 @@
 @inject NavigationManager NavigationManager
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
+@inject AuditService auditService
 @inject UserService userService
 @inject CommitService commitService
 @inject PunchService punchService
@@ -135,6 +136,7 @@
             !string.IsNullOrEmpty(credential.AuthToken))
         {
             // Update headers on services.
+            auditService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
             commitService.ConfigureHeadersWithCredentials(credential);
@@ -206,6 +208,7 @@
             await localStorageService.SetLocalStorage("AuthExpiration", credential.AuthExpiration);
 
             // Update headers on services
+            auditService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
             commitService.ConfigureHeadersWithCredentials(credential);

@@ -1,4 +1,27 @@
-﻿using Brizbee.Common.Models;
+﻿//
+//  AuditsController.cs
+//  BRIZBEE API
+//
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//
+//  This file is part of the BRIZBEE API.
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU Affero General Public License as
+//  published by the Free Software Foundation, either version 3 of the
+//  License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU Affero General Public License for more details.
+//
+//  You should have received a copy of the GNU Affero General Public License
+//  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
+using Brizbee.Common.Models;
+using Brizbee.Common.Serialization.Records;
 using Dapper;
 using Newtonsoft.Json;
 using System;
@@ -26,18 +49,21 @@ namespace Brizbee.Web.Controllers
         // GET: api/Audits
         [HttpGet]
         [Route("api/Audits")]
-        public HttpResponseMessage GetAudits([FromUri] int skip = 0, [FromUri] int pageSize = 1000,
-            [FromUri] string orderBy = "AUDITS/NUMBER", [FromUri] string orderByDirection = "ASC",
+        public HttpResponseMessage GetAudits([FromUri] DateTime min, [FromUri] DateTime max, 
+            [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
+            [FromUri] string orderBy = "AUDITS/CREATEDAT", [FromUri] string orderByDirection = "DESC",
             [FromUri] int[] userIds = null)
         {
+            if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
+
             var currentUser = CurrentUser();
 
-            //// Ensure that user is authorized.
-            //if (!currentUser.CanViewAudits)
-            //    Request.CreateResponse(HttpStatusCode.BadRequest);
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewAudits)
+                Request.CreateResponse(HttpStatusCode.BadRequest);
 
             var total = 0;
-            List<Task> tasks = new List<Task>(0);
+            List<Audit> audits = new List<Audit>(0);
             using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
             {
                 connection.Open();
@@ -46,20 +72,11 @@ namespace Brizbee.Web.Controllers
                 var orderByFormatted = "";
                 switch (orderBy.ToUpperInvariant())
                 {
-                    case "JOBS/NUMBER":
-                        orderByFormatted = "[J].[Number]";
-                        break;
-                    case "JOBS/NAME":
-                        orderByFormatted = "[J].[Name]";
-                        break;
-                    case "TASKS/NUMBER":
-                        orderByFormatted = "[T].[Number]";
-                        break;
-                    case "TASKS/NAME":
-                        orderByFormatted = "[T].[Name]";
+                    case "AUDITS/CREATEDAT":
+                        orderByFormatted = "[CreatedAt]";
                         break;
                     default:
-                        orderByFormatted = "[T].[NUMBER]";
+                        orderByFormatted = "[CreatedAt]";
                         break;
                 }
 
@@ -78,173 +95,112 @@ namespace Brizbee.Web.Controllers
                         break;
                 }
 
+                var whereClause = "";
+                var parameters = new DynamicParameters();
+
+                // Common clause.
+                parameters.Add("@Min", min);
+                parameters.Add("@Max", max);
+                parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+                // Clause for user ids.
+                if (userIds != null && userIds.Any())
+                {
+                    whereClause += $" AND [UserId] IN ({string.Join(",", userIds)})";
+                }
+
                 // Get the count.
                 var countSql = $@"
                     SELECT
-                        COUNT(DISTINCT([P].[TaskId]))
+                        COUNT(*)
                     FROM
-                        [Punches] AS [P]
-                    INNER JOIN
-                        [Users] AS [U] ON [P].[UserId] = [U].[Id]
-                    WHERE
-	                    [U].[OrganizationId] = @OrganizationId AND
-	                    CAST([P].[InAt] AS DATE) BETWEEN @Min AND @Max;";
+                        (
+                            SELECT
+                                [Id]
+                            FROM
+                                [PunchAudits]
+                            WHERE
+                                [OrganizationId] = @OrganizationId AND
+                                [CreatedAt] BETWEEN @Min AND @Max {whereClause}
+                            UNION ALL
+                            SELECT
+                                [Id]
+                            FROM
+                                [TimeCardAudits]
+                            WHERE
+                                [OrganizationId] = @OrganizationId AND
+                                [CreatedAt] BETWEEN @Min AND @Max {whereClause}
+                        ) [Audits];";
 
-                total = connection.QueryFirst<int>(countSql, new
-                {
-                    OrganizationId = currentUser.OrganizationId
-                });
+                total = connection.QueryFirst<int>(countSql, parameters);
+
+                // Paging parameters.
+                parameters.Add("@Skip", skip);
+                parameters.Add("@PageSize", pageSize);
 
                 // Get the records.
                 var recordsSql = $@"
                     SELECT
-                        [T].[Id] AS Task_Id,
-                        [T].[CreatedAt] AS Task_CreatedAt,
-                        [T].[JobId] AS Task_JobId,
-                        [T].[Name] AS Task_Name,
-                        [T].[Number] AS Task_Number,
-                        [T].[QuickBooksPayrollItem] AS Task_QuickBooksPayrollItem,
-                        [T].[QuickBooksServiceItem] AS Task_QuickBooksServiceItem,
-                        [T].[BaseServiceRateId] AS Task_BaseServiceRateId,
-                        [T].[BasePayrollRateId] AS Task_BasePayrollRateId,
-
-                        [J].[Id] AS Job_Id,
-                        [J].[CreatedAt] AS Job_CreatedAt,
-                        [J].[CustomerId] AS Job_CustomerId,
-                        [J].[Description] AS Job_Description,
-                        [J].[Name] AS Job_Name,
-                        [J].[Number] AS Job_Number,
-                        [J].[QuickBooksCustomerJob] AS Job_QuickBooksCustomerJob,
-
-                        [C].[Id] AS Customer_Id,
-                        [C].[CreatedAt] AS Customer_CreatedAt,
-                        [C].[Description] AS Customer_Description,
-                        [C].[Name] AS Customer_Name,
-                        [C].[Number] AS Customer_Number,
-                        [C].[OrganizationId] AS Customer_OrganizationId,
-
-                        [PR].[Id] AS BasePayrollRate_Id,
-                        [PR].[CreatedAt] AS BasePayrollRate_CreatedAt,
-                        [PR].[IsDeleted] AS BasePayrollRate_IsDeleted,
-                        [PR].[Name] AS BasePayrollRate_Name,
-                        [PR].[OrganizationId] AS BasePayrollRate_OrganizationId,
-                        [PR].[ParentRateId] AS BasePayrollRate_ParentRateId,
-                        [PR].[QBDPayrollItem] AS BasePayrollRate_QBDPayrollItem,
-                        [PR].[QBOPayrollItem] AS BasePayrollRate_QBOPayrollItem,
-                        [PR].[Type] AS BasePayrollRate_Type,
-
-                        [SR].[Id] AS BaseServiceRate_Id,
-                        [SR].[CreatedAt] AS BaseServiceRate_CreatedAt,
-                        [SR].[IsDeleted] AS BaseServiceRate_IsDeleted,
-                        [SR].[Name] AS BaseServiceRate_Name,
-                        [SR].[OrganizationId] AS BaseServiceRate_OrganizationId,
-                        [SR].[ParentRateId] AS BaseServiceRate_ParentRateId,
-                        [SR].[QBDServiceItem] AS BaseServiceRate_QBDServiceItem,
-                        [SR].[QBOServiceItem] AS BaseServiceRate_QBOServiceItem,
-                        [SR].[Type] AS BaseServiceRate_Type
+                        [Id] AS [Task_Id],
+                        [CreatedAt] AS [Task_CreatedAt],
+                        [OrganizationId] AS [Task_OrganizationId],
+                        [UserId] AS [Task_UserId],
+                        [ObjectId] AS [Task_ObjectId],
+                        [Action] AS [Task_Action],
+                        [Before] AS [Task_Before],
+                        [After] AS [Task_After],
+                        'PUNCH' AS [Task_ObjectType]
                     FROM
-                        [Tasks] AS [T]
-                    INNER JOIN
-                        [Jobs] AS [J] ON [J].[Id] = [T].[JobId]
-                    INNER JOIN
-                        [Customers] AS [C] ON [C].[Id] = [J].[CustomerId]
-                    LEFT OUTER JOIN
-                        [Rates] AS [PR] ON [T].[BasePayrollRateId] = [PR].[Id]
-                    LEFT OUTER JOIN
-                        [Rates] AS [SR] ON [T].[BaseServiceRateId] = [SR].[Id]
+                        [PunchAudits]
                     WHERE
-                        [T].[Id] IN
-                        (
-                            SELECT
-	                            [T].[Id]
-                            FROM
-	                            [Punches] AS [P]
-                            INNER JOIN
-	                            [Tasks] AS [T] ON [T].[Id] = [P].[TaskId]
-                            INNER JOIN
-	                            [Users] AS [U] ON [U].[Id] = [P].[UserId]
-                            WHERE
-	                            [U].[OrganizationId] = @OrganizationId AND
-	                            CAST([P].[InAt] AS DATE) BETWEEN @Min AND @Max
-                            GROUP BY
-	                            [T].[Id]
-                        )
+                        [OrganizationId] = @OrganizationId AND
+                        [CreatedAt] BETWEEN @Min AND @Max {whereClause}
+                    UNION ALL
+                    SELECT
+                        [Id] AS [Task_Id],
+                        [CreatedAt] AS [Task_CreatedAt],
+                        [OrganizationId] AS [Task_OrganizationId],
+                        [UserId] AS [Task_UserId],
+                        [ObjectId] AS [Task_ObjectId],
+                        [Action] AS [Task_Action],
+                        [Before] AS [Task_Before],
+                        [After] AS [Task_After],
+                        'TIMECARD' AS [Task_ObjectType]
+                    FROM
+                        [TimeCardAudits]
+                    WHERE
+                        [OrganizationId] = @OrganizationId AND
+                        [CreatedAt] BETWEEN @Min AND @Max {whereClause}
                     ORDER BY
-                        {orderByFormatted} {orderByDirectionFormatted};";
+                        {orderByFormatted} {orderByDirectionFormatted}
+                    OFFSET @Skip ROWS
+                    FETCH NEXT @PageSize ROWS ONLY;";
 
-                var results = connection.Query<TaskExpanded>(recordsSql, new
-                {
-                    OrganizationId = currentUser.OrganizationId,
-                    Min = min,
-                    Max = max
-                });
+                var records = connection.Query<AuditRecord>(recordsSql, parameters);
 
-                foreach (var result in results)
+                foreach (var record in records)
                 {
-                    tasks.Add(new Task()
+                    audits.Add(new Audit()
                     {
-                        Id = result.Task_Id,
-                        CreatedAt = result.Task_CreatedAt,
-                        JobId = result.Task_JobId,
-                        Name = result.Task_Name,
-                        Number = result.Task_Number,
-                        QuickBooksPayrollItem = result.Task_QuickBooksPayrollItem,
-                        QuickBooksServiceItem = result.Task_QuickBooksServiceItem,
-                        BaseServiceRateId = result.Task_BaseServiceRateId,
-                        BasePayrollRateId = result.Task_BasePayrollRateId,
-                        Job = new Job()
-                        {
-                            Id = result.Job_Id,
-                            CreatedAt = result.Job_CreatedAt,
-                            CustomerId = result.Job_CustomerId,
-                            Description = result.Job_Description,
-                            Name = result.Job_Name,
-                            Number = result.Job_Number,
-                            QuickBooksCustomerJob = result.Job_QuickBooksCustomerJob,
-                            Customer = new Customer()
-                            {
-                                Id = result.Customer_Id,
-                                CreatedAt = result.Customer_CreatedAt,
-                                Description = result.Customer_Description,
-                                Name = result.Customer_Name,
-                                Number = result.Customer_Number,
-                                OrganizationId = result.Customer_OrganizationId
-                            }
-                        },
-                        BasePayrollRate = new Rate()
-                        {
-                            Id = result.BasePayrollRate_Id.GetValueOrDefault(),
-                            IsDeleted = result.BasePayrollRate_IsDeleted.GetValueOrDefault(),
-                            CreatedAt = result.BasePayrollRate_CreatedAt.GetValueOrDefault(),
-                            Name = result.BasePayrollRate_Name,
-                            OrganizationId = result.BasePayrollRate_OrganizationId.GetValueOrDefault(),
-                            ParentRateId = result.BasePayrollRate_ParentRateId,
-                            QBDPayrollItem = result.BasePayrollRate_QBDPayrollItem,
-                            QBOPayrollItem = result.BasePayrollRate_QBOPayrollItem,
-                            Type = result.BasePayrollRate_Type
-                        },
-                        BaseServiceRate = new Rate()
-                        {
-                            Id = result.BaseServiceRate_Id.GetValueOrDefault(),
-                            IsDeleted = result.BaseServiceRate_IsDeleted.GetValueOrDefault(),
-                            CreatedAt = result.BaseServiceRate_CreatedAt.GetValueOrDefault(),
-                            Name = result.BaseServiceRate_Name,
-                            OrganizationId = result.BaseServiceRate_OrganizationId.GetValueOrDefault(),
-                            ParentRateId = result.BaseServiceRate_ParentRateId,
-                            QBDServiceItem = result.BaseServiceRate_QBDServiceItem,
-                            QBOServiceItem = result.BaseServiceRate_QBOServiceItem,
-                            Type = result.BaseServiceRate_Type
-                        },
+                        Id = record.Audit_Id,
+                        CreatedAt = record.Audit_CreatedAt,
+                        OrganizationId = record.Audit_OrganizationId,
+                        UserId = record.Audit_UserId,
+                        ObjectId = record.Audit_ObjectId,
+                        Action = record.Audit_Action,
+                        Before = record.Audit_Before,
+                        After = record.Audit_After,
+                        ObjectType = record.Audit_ObjectType
                     });
                 }
 
                 connection.Close();
             }
 
-            // Create the response
+            // Create the response.
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent(JsonConvert.SerializeObject(tasks, settings),
+                Content = new StringContent(JsonConvert.SerializeObject(audits, settings),
                     System.Text.Encoding.UTF8,
                     "application/json")
             };
@@ -253,6 +209,189 @@ namespace Brizbee.Web.Controllers
             response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
 
             return response;
+        }
+
+        // GET: api/Audits/Punches
+        [HttpGet]
+        [Route("api/Audits/Punches")]
+        public HttpResponseMessage GetPunchAudits([FromUri] DateTime min, [FromUri] DateTime max,
+            [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
+            [FromUri] string orderBy = "AUDITS/CREATEDAT", [FromUri] string orderByDirection = "DESC",
+            [FromUri] int[] userIds = null)
+        {
+            if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
+
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewAudits)
+                Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            var asdfadf = Audits("PUNCH", orderBy, orderByDirection, skip, pageSize, userIds, currentUser, min, max);
+
+            // Create the response.
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(asdfadf.Item1, settings),
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+
+            // Set headers.
+            response.Headers.Add("X-Paging-TotalRecordCount", asdfadf.Item2.ToString(CultureInfo.InvariantCulture));
+
+            return response;
+        }
+
+        // GET: api/Audits/TimeCards
+        [HttpGet]
+        [Route("api/Audits/TimeCards")]
+        public HttpResponseMessage GetTimeCardsAudits([FromUri] DateTime min, [FromUri] DateTime max,
+            [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
+            [FromUri] string orderBy = "AUDITS/CREATEDAT", [FromUri] string orderByDirection = "DESC",
+            [FromUri] int[] userIds = null)
+        {
+            if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
+
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewAudits)
+                Request.CreateResponse(HttpStatusCode.BadRequest);
+
+            var asdfadf = Audits("TIMECARD", orderBy, orderByDirection, skip, pageSize, userIds, currentUser, min, max);
+
+            // Create the response.
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(asdfadf.Item1, settings),
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+
+            // Set headers.
+            response.Headers.Add("X-Paging-TotalRecordCount", asdfadf.Item2.ToString(CultureInfo.InvariantCulture));
+
+            return response;
+        }
+
+        private (List<Audit>, int) Audits(string objectType, string orderBy, string orderByDirection, int skip, int pageSize, int[] userIds, User currentUser, DateTime min, DateTime max)
+        {
+            string tableName;
+            if (objectType.ToUpperInvariant() == "PUNCH")
+                tableName = "PunchAudits";
+            else if (objectType.ToUpperInvariant() == "TIMECARD")
+                tableName = "TimeCardAudits";
+            else
+                throw new ArgumentException();
+
+            var total = 0;
+            List<Audit> audits = new List<Audit>(0);
+            using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
+            {
+                connection.Open();
+
+                // Determine the order by columns.
+                var orderByFormatted = "";
+                switch (orderBy.ToUpperInvariant())
+                {
+                    case "AUDITS/CREATEDAT":
+                        orderByFormatted = "[CreatedAt]";
+                        break;
+                    default:
+                        orderByFormatted = "[CreatedAt]";
+                        break;
+                }
+
+                // Determine the order direction.
+                var orderByDirectionFormatted = "";
+                switch (orderByDirection.ToUpperInvariant())
+                {
+                    case "ASC":
+                        orderByDirectionFormatted = "ASC";
+                        break;
+                    case "DESC":
+                        orderByDirectionFormatted = "DESC";
+                        break;
+                    default:
+                        orderByDirectionFormatted = "ASC";
+                        break;
+                }
+
+                var whereClause = "";
+                var parameters = new DynamicParameters();
+
+                // Common clause.
+                parameters.Add("@Min", min);
+                parameters.Add("@Max", max);
+                parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+                // Clause for user ids.
+                if (userIds != null && userIds.Any())
+                {
+                    whereClause += $" AND [UserId] IN ({string.Join(",", userIds)})";
+                }
+
+                // Get the count.
+                var countSql = $@"
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        [{tableName}]
+                    WHERE
+                        [OrganizationId] = @OrganizationId AND
+                        [CreatedAt] BETWEEN @Min AND @Max {whereClause};";
+
+                total = connection.QueryFirst<int>(countSql, parameters);
+
+                // Paging parameters.
+                parameters.Add("@Skip", skip);
+                parameters.Add("@PageSize", pageSize);
+
+                // Get the records.
+                var recordsSql = $@"
+                    SELECT
+                        [Id] AS [Task_Id],
+                        [CreatedAt] AS [Task_CreatedAt],
+                        [OrganizationId] AS [Task_OrganizationId],
+                        [UserId] AS [Task_UserId],
+                        [ObjectId] AS [Task_ObjectId],
+                        [Action] AS [Task_Action],
+                        [Before] AS [Task_Before],
+                        [After] AS [Task_After],
+                        'PUNCH' AS [Task_ObjectType]
+                    FROM
+                        [{tableName}]
+                    WHERE
+                        [OrganizationId] = @OrganizationId AND
+                        [CreatedAt] BETWEEN @Min AND @Max {whereClause}
+                    ORDER BY
+                        {orderByFormatted} {orderByDirectionFormatted}
+                    OFFSET @Skip ROWS
+                    FETCH NEXT @PageSize ROWS ONLY;";
+
+                var results = connection.Query<AuditRecord>(recordsSql, parameters);
+
+                foreach (var result in results)
+                {
+                    audits.Add(new Audit()
+                    {
+                        Id = result.Audit_Id,
+                        CreatedAt = result.Audit_CreatedAt,
+                        OrganizationId = result.Audit_OrganizationId,
+                        UserId = result.Audit_UserId,
+                        ObjectId = result.Audit_ObjectId,
+                        Action = result.Audit_Action,
+                        Before = result.Audit_Before,
+                        After = result.Audit_After,
+                        ObjectType = result.Audit_ObjectType
+                    });
+                }
+
+                connection.Close();
+            }
+
+            return (audits, total);
         }
 
         protected override void Dispose(bool disposing)

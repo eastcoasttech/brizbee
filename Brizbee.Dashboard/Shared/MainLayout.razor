@@ -6,6 +6,7 @@
 @inject LocalStorageService localStorageService
 
 @inject SharedService sharedService
+@inject AuditService auditService
 @inject UserService userService
 @inject PunchService punchService
 @inject RateService rateService
@@ -54,6 +55,7 @@
         await localStorageService.RemoveFromLocalStorage("AuthExpiration");
 
         // Clear the headers
+        auditService.ResetHeaders();
         userService.ResetHeaders();
         punchService.ResetHeaders();
         rateService.ResetHeaders();
@@ -71,7 +73,7 @@
         taskTemplateService.ResetHeaders();
         populateTemplateService.ResetHeaders();
 
-// Reset shared variables
+        // Reset shared variables
         sharedService.Reset();
 
         // Return to login
