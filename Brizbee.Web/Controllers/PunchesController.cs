@@ -154,6 +154,9 @@ namespace Brizbee.Web.Controllers
 
             db.SaveChanges();
 
+            // Record the activity.
+            AuditPunch(null, punch, currentUser, "CREATE");
+
             return Created(punch);
         }
 
@@ -177,6 +180,9 @@ namespace Brizbee.Web.Controllers
                 .Where(p => p.User.OrganizationId == currentUser.OrganizationId)
                 .Where(p => p.Id == key)
                 .FirstOrDefault();
+
+            // Record the punch before any changes are made.
+            var before = punch;
 
             if (punch == null)
                 return NotFound();
@@ -203,6 +209,9 @@ namespace Brizbee.Web.Controllers
 
             db.SaveChanges();
 
+            // Record the activity.
+            AuditPunch(before, punch, currentUser, "UPDATE");
+
             return Updated(punch);
         }
 
@@ -228,6 +237,9 @@ namespace Brizbee.Web.Controllers
             db.Punches.Remove(punch);
 
             db.SaveChanges();
+
+            // Record the activity.
+            AuditPunch(punch, null, currentUser, "DELETE");
 
             return StatusCode(HttpStatusCode.NoContent);
         }
@@ -578,6 +590,30 @@ namespace Brizbee.Web.Controllers
 
                     return BadRequest(ex.ToString());
                 }
+            }
+        }
+
+        private void AuditPunch(Punch before, Punch after, User currentUser, string action)
+        {
+            try
+            {
+                var audit = new Audit()
+                {
+                    CreatedAt = DateTime.UtcNow,
+                    ObjectId = before.Id,
+                    OrganizationId = currentUser.OrganizationId,
+                    UserId = currentUser.Id,
+                    Action = action,
+                    Before = JsonConvert.SerializeObject(before),
+                    After = JsonConvert.SerializeObject(after)
+                };
+
+                db.Audits.Add(audit);
+                db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                telemetryClient.TrackException(ex);
             }
         }
 
