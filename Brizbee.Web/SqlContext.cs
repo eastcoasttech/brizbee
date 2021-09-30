@@ -36,7 +36,6 @@ namespace Brizbee.Web
             // Here is where to specify connection configuration
         }
 
-        public DbSet<Audit> Audits { get; set; }
         public DbSet<Commit> Commits { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Job> Jobs { get; set; }

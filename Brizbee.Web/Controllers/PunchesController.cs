@@ -25,6 +25,7 @@ using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
 using Brizbee.Web.Serialization;
 using Brizbee.Web.Services;
+using Dapper;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNet.OData;
@@ -35,6 +36,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Validation;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -181,7 +183,7 @@ namespace Brizbee.Web.Controllers
                 .Where(p => p.Id == key)
                 .FirstOrDefault();
 
-            // Record the punch before any changes are made.
+            // Record the object before any changes are made.
             var before = punch;
 
             if (punch == null)
@@ -597,19 +599,25 @@ namespace Brizbee.Web.Controllers
         {
             try
             {
-                var audit = new Audit()
+                using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
                 {
-                    CreatedAt = DateTime.UtcNow,
-                    ObjectId = before.Id,
-                    OrganizationId = currentUser.OrganizationId,
-                    UserId = currentUser.Id,
-                    Action = action,
-                    Before = JsonConvert.SerializeObject(before),
-                    After = JsonConvert.SerializeObject(after)
-                };
+                    string insertQuery = @"
+                        INSERT INTO [PunchAudits]
+                            ([CreatedAt], [ObjectId], [OrganizationId], [UserId], [Action], [Before], [After])
+                        VALUES
+                            (@CreatedAt, @ObjectId, @OrganizationId, @UserId, @Action, @Before, @After);";
 
-                db.Audits.Add(audit);
-                db.SaveChanges();
+                    var result = connection.Execute(insertQuery, new
+                    {
+                        CreatedAt = DateTime.UtcNow,
+                        ObjectId = before.Id,
+                        OrganizationId = currentUser.OrganizationId,
+                        UserId = currentUser.Id,
+                        Action = action,
+                        Before = JsonConvert.SerializeObject(before),
+                        After = JsonConvert.SerializeObject(after)
+                    });
+                }
             }
             catch (Exception ex)
             {

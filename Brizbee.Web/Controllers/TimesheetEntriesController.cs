@@ -22,10 +22,15 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Web.Repositories;
+using Dapper;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNet.OData;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.Entity.Validation;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -36,6 +41,7 @@ namespace Brizbee.Web.Controllers
     public class TimesheetEntriesController : BaseODataController
     {
         private SqlContext db = new SqlContext();
+        private TelemetryClient telemetryClient = new TelemetryClient();
 
         // GET: odata/TimesheetEntries
         [EnableQuery(PageSize = 20, MaxExpansionDepth = 3)]
@@ -75,15 +81,15 @@ namespace Brizbee.Web.Controllers
 
             var currentUser = CurrentUser();
 
-            var now = DateTime.UtcNow;
-            var organization = db.Organizations.Find(currentUser.OrganizationId);
-
             // Auto-generated
-            timesheetEntry.CreatedAt = now;
+            timesheetEntry.CreatedAt = DateTime.UtcNow;
 
             db.TimesheetEntries.Add(timesheetEntry);
 
             db.SaveChanges();
+
+            // Record the activity.
+            AuditTimesheetEntry(null, timesheetEntry, currentUser, "CREATE");
 
             return Created(timesheetEntry);
         }
@@ -105,10 +111,16 @@ namespace Brizbee.Web.Controllers
 
             var timesheetEntry = db.TimesheetEntries.Find(key);
 
+            // Record the object before any changes are made.
+            var before = timesheetEntry;
+
             // Peform the update
             patch.Patch(timesheetEntry);
 
             db.SaveChanges();
+
+            // Record the activity.
+            AuditTimesheetEntry(before, timesheetEntry, currentUser, "UPDATE");
 
             return Updated(timesheetEntry);
         }
@@ -132,6 +144,9 @@ namespace Brizbee.Web.Controllers
             db.TimesheetEntries.Remove(timesheetEntry);
 
             db.SaveChanges();
+
+            // Record the activity.
+            AuditTimesheetEntry(timesheetEntry, null, currentUser, "DELETE");
 
             return StatusCode(HttpStatusCode.NoContent);
         }
@@ -180,6 +195,47 @@ namespace Brizbee.Web.Controllers
             {
                 return Content(HttpStatusCode.BadRequest, ex.Message);
             }
+        }
+
+        private void AuditTimesheetEntry(TimesheetEntry before, TimesheetEntry after, User currentUser, string action)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
+                {
+                    string insertQuery = @"
+                        INSERT INTO [TimeCardAudits]
+                            ([CreatedAt], [ObjectId], [OrganizationId], [UserId], [Action], [Before], [After])
+                        VALUES
+                            (@CreatedAt, @ObjectId, @OrganizationId, @UserId, @Action, @Before, @After);";
+
+                    var result = connection.Execute(insertQuery, new
+                    {
+                        CreatedAt = DateTime.UtcNow,
+                        ObjectId = before.Id,
+                        OrganizationId = currentUser.OrganizationId,
+                        UserId = currentUser.Id,
+                        Action = action,
+                        Before = JsonConvert.SerializeObject(before),
+                        After = JsonConvert.SerializeObject(after)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                telemetryClient.TrackException(ex);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+
+                telemetryClient.Flush();
+            }
+            base.Dispose(disposing);
         }
     }
 }
