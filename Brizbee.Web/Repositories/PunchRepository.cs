@@ -93,9 +93,11 @@ namespace Brizbee.Web.Repositories
                 punch.OutAtSourceBrowser = sourceBrowser;
                 punch.OutAtSourceBrowserVersion = sourceBrowserVersion;
                 punch.OutAtSourcePhoneNumber = sourcePhoneNumber;
+                punch.InAt = zero;
                 existing.OutAt = zero;
                 existing.OutAtTimeZone = timezone;
-                punch.InAt = zero;
+                existing.LatitudeForOutAt = latitude;
+                existing.LongitudeForOutAt = longitude;
             }
             else
             {
