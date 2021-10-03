@@ -6,29 +6,49 @@
 @inject DialogService dialogService
 @inject UserService userService
 
-<table class="table table-condensed">
-    <thead>
-        <tr>
-            <th class="col-md-2"></th>
-            <th class="col-md-10">Name</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in users)
-        {
-            bool isChecked = false;
-            if (selectedUsers.Where(x => x.Id == user.Id).Any())
-            {
-                isChecked = true;
-            }
-
-            <tr class="fadeIn">
-                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(user, args.Value); }" /></td>
-                <td>@user.Name</td>
+<div style="height: 400px; overflow-y: scroll;">
+    <table class="table table-condensed">
+        <thead>
+            <tr>
+                <th class="col-md-2"></th>
+                <th class="col-md-10">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Name"))">
+                        Name
+                        @if (sortBy == "Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                bool isChecked = false;
+                if (selectedUsers.Where(x => x.Id == user.Id).Any())
+                {
+                    isChecked = true;
+                }
+
+                <tr class="fadeIn" style="cursor: pointer;" @onclick="args => { ToggleCheckbox(user); }">
+                    <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(user, args.Value); }" /></td>
+                    <td>@user.Name</td>
+                </tr>
+            }
+            @if (working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="2"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 <button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
 <button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">Add</button>
@@ -38,13 +58,15 @@
 
     private List<User> users = new List<User>(0);
     private HashSet<User> selectedUsers = new HashSet<User>(0);
+    private string sortBy = "Name";
+    private string sortDirection = "ASC";
+    private bool working = false;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         selectedUsers = ExistingFilters;
 
-        var result = await userService.GetUsersAsync();
-        users = result.Item1;
+        await RefreshUsers();
     }
 
     private void CloseDialogCancelled(MouseEventArgs e)
@@ -74,5 +96,48 @@
             }
         }
         StateHasChanged();
+    }
+
+    private void ToggleCheckbox(User user)
+    {
+        if (!selectedUsers.Contains(user))
+        {
+            selectedUsers.Add(user);
+        }
+        else
+        {
+            selectedUsers.Remove(user);
+        }
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshUsers()
+    {
+        working = true;
+        users.Clear();
+
+        StateHasChanged();
+
+        var result = await userService.GetUsersAsync(sortBy: sortBy, sortDirection: sortDirection);
+        users = result.Item1;
+
+        working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        sortBy = column;
+
+        if (sortDirection == "ASC")
+        {
+            sortDirection = "DESC";
+        }
+        else
+        {
+            sortDirection = "ASC";
+        }
+
+        await RefreshUsers();
     }
 }

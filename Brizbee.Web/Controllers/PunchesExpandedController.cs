@@ -67,9 +67,6 @@ namespace Brizbee.Web.Controllers
             if (!currentUser.CanViewPunches)
                 Request.CreateResponse(HttpStatusCode.Forbidden);
 
-            // Determine the number of records to skip.
-            //int skip = (pageNumber - 1) * pageSize;
-
             var total = 0;
             List<Punch> punches = new List<Punch>(0);
             using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))

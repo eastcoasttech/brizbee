@@ -528,6 +528,7 @@
     <Compile Include="Repositories\PunchRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
+    <Compile Include="Serialization\Expanded\JobExpanded.cs" />
     <Compile Include="Serialization\Expanded\PunchExpanded.cs" />
     <Compile Include="Serialization\Expanded\QBDInventoryConsumptionExpanded.cs" />
     <Compile Include="Serialization\Expanded\TaskExpanded.cs" />
