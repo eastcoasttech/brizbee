@@ -102,23 +102,21 @@
         if (result is HashSet<User>)
         {
             filters.Users = result as HashSet<User>;
-            StateHasChanged();
         }
         else if (result is HashSet<Customer>)
         {
             filters.Customers = result as HashSet<Customer>;
-            StateHasChanged();
         }
         else if (result is HashSet<Job>)
         {
             filters.Projects = result as HashSet<Job>;
-            StateHasChanged();
         }
         else if (result is HashSet<Brizbee.Common.Models.Task>)
         {
             filters.Tasks = result as HashSet<Brizbee.Common.Models.Task>;
-            StateHasChanged();
         }
+
+        StateHasChanged();
     }
 
     private void CloseDialogCancelled(MouseEventArgs e)
