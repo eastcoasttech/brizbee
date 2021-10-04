@@ -39,6 +39,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Caching;
 using System.Text;
 using System.Web;
 using System.Web.Http;
@@ -50,6 +51,7 @@ namespace Brizbee.Web.Controllers
         private SqlContext db = new SqlContext();
         private PunchRepository repo = new PunchRepository();
         private TelemetryClient telemetryClient = new TelemetryClient();
+        private ObjectCache cache = MemoryCache.Default;
 
         // GET: odata/Punches
         [EnableQuery(PageSize = 500, MaxExpansionDepth = 3)]
@@ -299,6 +301,11 @@ namespace Brizbee.Web.Controllers
             if (task.Job.Status != "Open")
                 return BadRequest();
 
+            // Prevent double submission.
+            var submission = cache.Get($"submission.punchin.{currentUser.Id}") as bool?;
+            if (submission.HasValue)
+                return BadRequest("Cannot punch in twice within 5 seconds.");
+
             try
             {
                 var punch = repo.PunchIn(
@@ -315,6 +322,12 @@ namespace Brizbee.Web.Controllers
                     sourceOperatingSystemVersion,
                     sourceBrowser,
                     sourceBrowserVersion);
+
+                // Record the submission.
+                var policy = new CacheItemPolicy();
+                policy.AbsoluteExpiration = DateTime.UtcNow.AddSeconds(5);
+                cache.Set($"submission.punchin.{currentUser.Id}", true, policy);
+
                 return Created(punch);
             }
             catch (DbEntityValidationException e)
@@ -353,10 +366,17 @@ namespace Brizbee.Web.Controllers
             var sourceBrowser = (string)parameters["SourceBrowser"];
             var sourceBrowserVersion = (string)parameters["SourceBrowserVersion"];
 
+            var currentUser = CurrentUser();
+
+            // Prevent double submission.
+            var submission = cache.Get($"submission.punchout.{currentUser.Id}") as bool?;
+            if (submission.HasValue)
+                return BadRequest("Cannot punch out twice within 5 seconds.");
+
             try
             {
                 var punch = repo.PunchOut(
-                    CurrentUser(),
+                    currentUser,
                     "",
                     timezone,
                     latitudeForOutAt,
@@ -368,6 +388,12 @@ namespace Brizbee.Web.Controllers
                     sourceOperatingSystemVersion,
                     sourceBrowser,
                     sourceBrowserVersion);
+
+                // Record the submission.
+                var policy = new CacheItemPolicy();
+                policy.AbsoluteExpiration = DateTime.UtcNow.AddSeconds(5);
+                cache.Set($"submission.punchout.{currentUser.Id}", true, policy);
+
                 return Created(punch);
             }
             catch (DbEntityValidationException e)

@@ -36,6 +36,7 @@ using System.Data.Entity.Validation;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Description;
@@ -46,6 +47,7 @@ namespace Brizbee.Web.Controllers
     {
         private SqlContext _context = new SqlContext();
         private PunchRepository repo = new PunchRepository();
+        private ObjectCache cache = MemoryCache.Default;
 
         // POST: api/Kiosk/PunchIn
         [HttpPost]
@@ -88,6 +90,11 @@ namespace Brizbee.Web.Controllers
             if (task.Job.Status != "Open")
                 return BadRequest("Cannot punch in on tasks for projects that are not open.");
 
+            // Prevent double submission.
+            var submission = cache.Get($"submission.punchin.{currentUser.Id}") as bool?;
+            if (submission.HasValue)
+                return BadRequest("Cannot punch in twice within 5 seconds.");
+
             try
             {
                 var punch = repo.PunchIn(
@@ -104,6 +111,11 @@ namespace Brizbee.Web.Controllers
                     sourceOperatingSystemVersion,
                     sourceBrowser,
                     sourceBrowserVersion);
+
+                // Record the submission.
+                var policy = new CacheItemPolicy();
+                policy.AbsoluteExpiration = DateTime.UtcNow.AddSeconds(5);
+                cache.Set($"submission.punchin.{currentUser.Id}", true, policy);
 
                 return Ok(punch);
             }
@@ -156,10 +168,17 @@ namespace Brizbee.Web.Controllers
             }
             catch { }
 
+            var currentUser = CurrentUser();
+
+            // Prevent double submission.
+            var submission = cache.Get($"submission.punchout.{currentUser.Id}") as bool?;
+            if (submission.HasValue)
+                return BadRequest("Cannot punch out twice within 5 seconds.");
+
             try
             {
                 var punch = repo.PunchOut(
-                    CurrentUser(),
+                    currentUser,
                     "",
                     timeZone,
                     latitude,
@@ -171,6 +190,11 @@ namespace Brizbee.Web.Controllers
                     sourceOperatingSystemVersion,
                     sourceBrowser,
                     sourceBrowserVersion);
+
+                // Record the submission.
+                var policy = new CacheItemPolicy();
+                policy.AbsoluteExpiration = DateTime.UtcNow.AddSeconds(5);
+                cache.Set($"submission.punchout.{currentUser.Id}", true, policy);
 
                 return Ok(punch);
             }
