@@ -402,9 +402,9 @@
 
     private PopulateBlade populateBlade;
     private bool showPopulateBlade = false;
-    private bool working = false;
+    private bool working = true;
     private User currentUser;
-    private List<Punch> punches = new List<Punch>();
+    private List<Punch> punches = new List<Punch>(0);
     private string sortBy = "Punches/InAt";
     private string sortDirection = "ASC";
     private int pageSize = 100;
@@ -412,7 +412,7 @@
     private long punchesCount = 0;
     private int punchesPageStart = 0;
     private string hoursAndMinutes = "0 hours and 0 minutes";
-    private List<Alert> alerts = new List<Alert>();
+    private List<Alert> alerts = new List<Alert>(0);
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {

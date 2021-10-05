@@ -159,7 +159,7 @@ namespace Brizbee.Web.Controllers
             db.SaveChanges();
 
             // Record the activity.
-            AuditPunch(null, punch, currentUser, "CREATE");
+            AuditPunch(punch.Id, null, JsonConvert.SerializeObject(punch), currentUser, "CREATE");
 
             return Created(punch);
         }
@@ -186,7 +186,7 @@ namespace Brizbee.Web.Controllers
                 .FirstOrDefault();
 
             // Record the object before any changes are made.
-            var before = punch;
+            var before = JsonConvert.SerializeObject(punch);
 
             if (punch == null)
                 return NotFound();
@@ -214,7 +214,7 @@ namespace Brizbee.Web.Controllers
             db.SaveChanges();
 
             // Record the activity.
-            AuditPunch(before, punch, currentUser, "UPDATE");
+            AuditPunch(punch.Id, before, JsonConvert.SerializeObject(punch), currentUser, "UPDATE");
 
             return Updated(punch);
         }
@@ -243,7 +243,7 @@ namespace Brizbee.Web.Controllers
             db.SaveChanges();
 
             // Record the activity.
-            AuditPunch(punch, null, currentUser, "DELETE");
+            AuditPunch(punch.Id, JsonConvert.SerializeObject(punch), null, currentUser, "DELETE");
 
             return StatusCode(HttpStatusCode.NoContent);
         }
@@ -621,7 +621,7 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        private void AuditPunch(Punch before, Punch after, User currentUser, string action)
+        private void AuditPunch(int id, string before, string after, User currentUser, string action)
         {
             try
             {
@@ -636,17 +636,18 @@ namespace Brizbee.Web.Controllers
                     var result = connection.Execute(insertQuery, new
                     {
                         CreatedAt = DateTime.UtcNow,
-                        ObjectId = before.Id,
+                        ObjectId = id,
                         OrganizationId = currentUser.OrganizationId,
                         UserId = currentUser.Id,
                         Action = action,
-                        Before = JsonConvert.SerializeObject(before),
-                        After = JsonConvert.SerializeObject(after)
+                        Before = before,
+                        After = after
                     });
                 }
             }
             catch (Exception ex)
             {
+                Trace.TraceError(ex.ToString());
                 telemetryClient.TrackException(ex);
             }
         }

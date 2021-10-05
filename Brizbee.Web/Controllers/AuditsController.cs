@@ -296,10 +296,10 @@ namespace Brizbee.Web.Controllers
                 switch (orderBy.ToUpperInvariant())
                 {
                     case "AUDITS/CREATEDAT":
-                        orderByFormatted = "[CreatedAt]";
+                        orderByFormatted = "[A].[CreatedAt]";
                         break;
                     default:
-                        orderByFormatted = "[CreatedAt]";
+                        orderByFormatted = "[A].[CreatedAt]";
                         break;
                 }
 
@@ -329,13 +329,13 @@ namespace Brizbee.Web.Controllers
                 // Clause for user ids.
                 if (userIds != null && userIds.Any())
                 {
-                    whereClause += $" AND [UserId] IN ({string.Join(",", userIds)})";
+                    whereClause += $" AND [A].[UserId] IN ({string.Join(",", userIds)})";
                 }
 
                 // Clause for object ids.
                 if (objectIds != null && objectIds.Any())
                 {
-                    whereClause += $" AND [ObjectId] IN ({string.Join(",", objectIds)})";
+                    whereClause += $" AND [A].[ObjectId] IN ({string.Join(",", objectIds)})";
                 }
 
                 // Get the count.
@@ -343,10 +343,10 @@ namespace Brizbee.Web.Controllers
                     SELECT
                         COUNT(*)
                     FROM
-                        [{tableName}]
+                        [{tableName}] AS [A]
                     WHERE
-                        [OrganizationId] = @OrganizationId AND
-                        [CreatedAt] BETWEEN @Min AND @Max {whereClause};";
+                        [A].[OrganizationId] = @OrganizationId AND
+                        [A].[CreatedAt] BETWEEN @Min AND @Max {whereClause};";
 
                 total = connection.QueryFirst<int>(countSql, parameters);
 
@@ -357,20 +357,25 @@ namespace Brizbee.Web.Controllers
                 // Get the records.
                 var recordsSql = $@"
                     SELECT
-                        [Id] AS [Task_Id],
-                        [CreatedAt] AS [Task_CreatedAt],
-                        [OrganizationId] AS [Task_OrganizationId],
-                        [UserId] AS [Task_UserId],
-                        [ObjectId] AS [Task_ObjectId],
-                        [Action] AS [Task_Action],
-                        [Before] AS [Task_Before],
-                        [After] AS [Task_After],
-                        'PUNCH' AS [Task_ObjectType]
+                        [A].[Id] AS [Audit_Id],
+                        [A].[CreatedAt] AS [Audit_CreatedAt],
+                        [A].[OrganizationId] AS [Audit_OrganizationId],
+                        [A].[UserId] AS [Audit_UserId],
+                        [A].[ObjectId] AS [Audit_ObjectId],
+                        [A].[Action] AS [Audit_Action],
+                        [A].[Before] AS [Audit_Before],
+                        [A].[After] AS [Audit_After],
+                        '{objectType.ToUpper()}' AS [Audit_ObjectType],
+
+                        [U].[Id] AS [User_Id],
+                        [U].[Name] AS [User_Name]
                     FROM
-                        [{tableName}]
+                        [{tableName}] AS [A]
+                    JOIN
+                        [Users] AS [U] ON [U].[Id] = [A].[UserId]
                     WHERE
-                        [OrganizationId] = @OrganizationId AND
-                        [CreatedAt] BETWEEN @Min AND @Max {whereClause}
+                        [A].[OrganizationId] = @OrganizationId AND
+                        [A].[CreatedAt] BETWEEN @Min AND @Max {whereClause}
                     ORDER BY
                         {orderByFormatted} {orderByDirectionFormatted}
                     OFFSET @Skip ROWS
@@ -390,7 +395,13 @@ namespace Brizbee.Web.Controllers
                         Action = result.Audit_Action,
                         Before = result.Audit_Before,
                         After = result.Audit_After,
-                        ObjectType = result.Audit_ObjectType
+                        ObjectType = result.Audit_ObjectType,
+
+                        User = new User()
+                        {
+                            Id = result.User_Id,
+                            Name = result.User_Name
+                        }
                     });
                 }
 

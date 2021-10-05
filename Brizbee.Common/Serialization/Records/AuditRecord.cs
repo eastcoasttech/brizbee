@@ -43,5 +43,9 @@ namespace Brizbee.Common.Serialization.Records
         public string Audit_After { get; set; }
 
         public string Audit_ObjectType { get; set; }
+
+        public int User_Id { get; set; }
+
+        public string User_Name { get; set; }
     }
 }

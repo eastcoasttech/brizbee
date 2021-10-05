@@ -89,7 +89,7 @@ namespace Brizbee.Web.Controllers
             db.SaveChanges();
 
             // Record the activity.
-            AuditTimesheetEntry(null, timesheetEntry, currentUser, "CREATE");
+            AuditTimesheetEntry(timesheetEntry.Id, null, JsonConvert.SerializeObject(timesheetEntry), currentUser, "CREATE");
 
             return Created(timesheetEntry);
         }
@@ -112,7 +112,7 @@ namespace Brizbee.Web.Controllers
             var timesheetEntry = db.TimesheetEntries.Find(key);
 
             // Record the object before any changes are made.
-            var before = timesheetEntry;
+            var before = JsonConvert.SerializeObject(timesheetEntry);
 
             // Peform the update
             patch.Patch(timesheetEntry);
@@ -120,7 +120,7 @@ namespace Brizbee.Web.Controllers
             db.SaveChanges();
 
             // Record the activity.
-            AuditTimesheetEntry(before, timesheetEntry, currentUser, "UPDATE");
+            AuditTimesheetEntry(timesheetEntry.Id, before, JsonConvert.SerializeObject(timesheetEntry), currentUser, "UPDATE");
 
             return Updated(timesheetEntry);
         }
@@ -146,7 +146,7 @@ namespace Brizbee.Web.Controllers
             db.SaveChanges();
 
             // Record the activity.
-            AuditTimesheetEntry(timesheetEntry, null, currentUser, "DELETE");
+            AuditTimesheetEntry(timesheetEntry.Id, JsonConvert.SerializeObject(timesheetEntry), null, currentUser, "DELETE");
 
             return StatusCode(HttpStatusCode.NoContent);
         }
@@ -197,7 +197,7 @@ namespace Brizbee.Web.Controllers
             }
         }
 
-        private void AuditTimesheetEntry(TimesheetEntry before, TimesheetEntry after, User currentUser, string action)
+        private void AuditTimesheetEntry(int id, string before, string after, User currentUser, string action)
         {
             try
             {
@@ -212,12 +212,12 @@ namespace Brizbee.Web.Controllers
                     var result = connection.Execute(insertQuery, new
                     {
                         CreatedAt = DateTime.UtcNow,
-                        ObjectId = before.Id,
+                        ObjectId = id,
                         OrganizationId = currentUser.OrganizationId,
                         UserId = currentUser.Id,
                         Action = action,
-                        Before = JsonConvert.SerializeObject(before),
-                        After = JsonConvert.SerializeObject(after)
+                        Before = before,
+                        After = after
                     });
                 }
             }

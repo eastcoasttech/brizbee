@@ -4,6 +4,7 @@
 @using Brizbee.Common.Models
 @using Brizbee.Common.Serialization
 @using System.Globalization
+@using System.Text.Json 
 @using NodaTime
 @using NodaTime.TimeZones
 
@@ -22,7 +23,11 @@
     @if (Id.HasValue)
     {
         <li role="presentation" class="@(selectedTab == "SOURCE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SOURCE")" @onclick:preventDefault>Source</a></li>
-        <li role="presentation" class="@(selectedTab == "AUDIT" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "AUDIT")" @onclick:preventDefault>History</a></li>
+
+        @if (sharedService.CurrentUser.CanViewAudits)
+        {
+            <li role="presentation" class="@(selectedTab == "AUDIT" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "AUDIT")" @onclick:preventDefault>Audit Trail</a></li>
+        }
     }
 </ul>
 
@@ -320,25 +325,69 @@
             </tbody>
         </table>
     }
-    else if (selectedTab == "SOURCE")
+    else if (selectedTab == "AUDIT")
     {
         <table class="table table-condensed table-supercondensed">
             <thead>
                 <tr>
-                    <th>Action</th>
-                    <th>Timestamp</th>
-                    <th>User</th>
+                    <th class="col-md-4">Timestamp <span class="fa fa-caret-down"></span></th>
+                    <th class="col-md-3">Action</th>
+                    <th class="col-md-5">User</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var audit in audits)
+                @foreach (var audit in audits.OrderByDescending(a => a.CreatedAt))
                 {
-                    <tr>
+                    <tr class="fadeIn selectable" style="cursor: pointer;" @onclick="args => SelectAudit(audit)">
+                        <td>@audit.CreatedAt.ToString("MMM d, yyyy h:mm:ss tt")</td>
                         <td>@audit.Action</td>
-                        <td>@audit.CreatedAt.ToString("yyyy-MM-dd hh:mm:ss tt")</td>
-                        <td>@audit.UserId</td>
+                        <td>@audit.User.Name</td>
                     </tr>
                 }
+            </tbody>
+        </table>
+
+        <hr />
+
+        <table class="table table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th class="col-md-4"></th>
+                    <th class="col-md-4">Before</th>
+                    <th class="col-md-4">After</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>In</th>
+                    <td>@(selectedBefore != null ? selectedBefore.InAt.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.InAt.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                </tr>
+                <tr>
+                    <th>In Time Zone</th>
+                    <td>@(selectedBefore != null ? selectedBefore.InAtTimeZone : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.InAtTimeZone : "")</td>
+                </tr>
+                <tr>
+                    <th>Out</th>
+                    <td>@(selectedBefore != null && selectedBefore.OutAt.HasValue ? selectedBefore.OutAt.Value.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                    <td>@(selectedAfter != null && selectedAfter.OutAt.HasValue ? selectedAfter.OutAt.Value.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                </tr>
+                <tr>
+                    <th>Out Time Zone</th>
+                    <td>@(selectedBefore != null ? selectedBefore.OutAtTimeZone : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.OutAtTimeZone : "")</td>
+                </tr>
+                <tr>
+                    <th>Task Id</th>
+                    <td>@(selectedBefore != null ? selectedBefore.TaskId : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.TaskId : "")</td>
+                </tr>
+                <tr>
+                    <th>User Id</th>
+                    <td>@(selectedBefore != null ? selectedBefore.UserId : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.UserId : "")</td>
+                </tr>
             </tbody>
         </table>
     }
@@ -381,6 +430,9 @@
     private List<Audit> audits = new List<Audit>();
     private string selectedTab = "DETAILS";
     private GoogleMapPosition center = null;
+    private Audit selectedAudit = null;
+    private Punch selectedBefore = null;
+    private Punch selectedAfter = null;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -524,6 +576,9 @@
             {
                 center = new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForOutAt), Lng = double.Parse(punch.LongitudeForOutAt) };
             }
+
+            if (sharedService.CurrentUser.CanViewAudits)
+                await RefreshAudits();
         }
         else
         {
@@ -696,7 +751,7 @@
     {
         loadingAudits = true;
 
-        var result = await auditService.GetPunchAuditsAsync(DateTime.MinValue, DateTime.MaxValue, objectIds: new int[] { punch.Id });
+        var result = await auditService.GetPunchAuditsAsync(new DateTime(2021, 1, 1), new DateTime(2031, 1, 1), objectIds: new int[] { punch.Id });
         audits = result.Item1;
 
         loadingAudits = false;
@@ -752,13 +807,32 @@
             return;
 
         working = true;
+        StateHasChanged();
 
         // Delete the punch on the server and close the dialog.
         var result = await punchService.DeletePunchAsync(punch.Id);
         if (result)
             dialogService.Close("punch.deleted");
         else
+        {
             working = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectAudit(Audit audit)
+    {
+        selectedAudit = audit;
+
+        if (!string.IsNullOrEmpty(audit.Before))
+            selectedBefore = JsonSerializer.Deserialize<Punch>(audit.Before);
+        else
+            selectedBefore = null;
+
+        if (!string.IsNullOrEmpty(audit.After))
+            selectedAfter = JsonSerializer.Deserialize<Punch>(audit.After);
+        else
+            selectedAfter = null;
     }
 
     private void CloseDialog(MouseEventArgs e)

@@ -16,8 +16,8 @@ CREATE TABLE [dbo].[PunchAudits] (
     [UserId]            INT NOT NULL,
     [ObjectId]          BIGINT NOT NULL,
     [Action]            VARCHAR(10) NOT NULL,
-    [Before]            NVARCHAR(MAX) CONSTRAINT [CK_PunchAudits_Before] CHECK (ISJSON([Before])=1) NOT NULL,
-    [After]             NVARCHAR(MAX) CONSTRAINT [CK_PunchAudits_After] CHECK (ISJSON([After])=1) NOT NULL
+    [Before]            NVARCHAR(MAX) CONSTRAINT [CK_PunchAudits_Before] CHECK (ISJSON([Before]) = 1) NULL,
+    [After]             NVARCHAR(MAX) CONSTRAINT [CK_PunchAudits_After] CHECK (ISJSON([After]) = 1) NULL
 );
 GO
 
@@ -37,8 +37,8 @@ CREATE TABLE [dbo].[TimeCardAudits] (
     [UserId]            INT NOT NULL,
     [ObjectId]          BIGINT NOT NULL,
     [Action]            VARCHAR(10) NOT NULL,
-    [Before]            NVARCHAR(MAX) CONSTRAINT [CK_TimeCardAudits_Before] CHECK (ISJSON([Before])=1) NOT NULL,
-    [After]             NVARCHAR(MAX) CONSTRAINT [CK_TimeCardAudits_After] CHECK (ISJSON([After])=1) NOT NULL
+    [Before]            NVARCHAR(MAX) CONSTRAINT [CK_TimeCardAudits_Before] CHECK (ISJSON([Before]) = 1) NULL,
+    [After]             NVARCHAR(MAX) CONSTRAINT [CK_TimeCardAudits_After] CHECK (ISJSON([After]) = 1) NULL
 );
 GO
 
