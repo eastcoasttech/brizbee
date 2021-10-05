@@ -12,13 +12,13 @@
 
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchUsersDialog())"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Users</button>
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchUsersDialog())"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Filter Users</button>
     </div>
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchCustomersDialog())"><i class="fas fa-user-tie fa-padded" aria-hidden="true"></i> Customers</button>
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchCustomersDialog())"><i class="fas fa-user-tie fa-padded" aria-hidden="true"></i> Filter Customers</button>
     </div>
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchProjectsDialog())"><i class="fa fa-truck fa-padded" aria-hidden="true"></i> Projects</button>
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchProjectsDialog())"><i class="fa fa-truck fa-padded" aria-hidden="true"></i> Filter Projects</button>
     </div>
     @*<div class="btn-group" role="group">
         <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchTasksDialog())"><i class="fas fa-project-diagram fa-padded" aria-hidden="true"></i> Tasks</button>
@@ -102,23 +102,21 @@
         if (result is HashSet<User>)
         {
             filters.Users = result as HashSet<User>;
-            StateHasChanged();
         }
         else if (result is HashSet<Customer>)
         {
             filters.Customers = result as HashSet<Customer>;
-            StateHasChanged();
         }
         else if (result is HashSet<Job>)
         {
             filters.Projects = result as HashSet<Job>;
-            StateHasChanged();
         }
         else if (result is HashSet<Brizbee.Common.Models.Task>)
         {
             filters.Tasks = result as HashSet<Brizbee.Common.Models.Task>;
-            StateHasChanged();
         }
+
+        StateHasChanged();
     }
 
     private void CloseDialogCancelled(MouseEventArgs e)
@@ -150,7 +148,7 @@
     {
         dialogService.Open<SearchProjectsDialog>("Search Projects",
                                 new Dictionary<string, object>() { { "ExistingFilters", filters.Projects } },
-                                new DialogOptions() { Width = "600px" });
+                                new DialogOptions() { Width = "800px" });
     }
 
     private void OpenSearchCustomersDialog()
