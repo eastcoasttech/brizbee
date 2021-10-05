@@ -217,7 +217,7 @@ namespace Brizbee.Web.Controllers
         public HttpResponseMessage GetPunchAudits([FromUri] DateTime min, [FromUri] DateTime max,
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
             [FromUri] string orderBy = "AUDITS/CREATEDAT", [FromUri] string orderByDirection = "DESC",
-            [FromUri] int[] userIds = null)
+            [FromUri] int[] userIds = null, [FromUri] int[] objectIds = null)
         {
             if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
@@ -227,7 +227,7 @@ namespace Brizbee.Web.Controllers
             if (!currentUser.CanViewAudits)
                 Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var asdfadf = Audits("PUNCH", orderBy, orderByDirection, skip, pageSize, userIds, currentUser, min, max);
+            var asdfadf = Audits("PUNCH", orderBy, orderByDirection, skip, pageSize, userIds, objectIds, currentUser, min, max);
 
             // Create the response.
             var response = new HttpResponseMessage(HttpStatusCode.OK)
@@ -249,7 +249,7 @@ namespace Brizbee.Web.Controllers
         public HttpResponseMessage GetTimeCardsAudits([FromUri] DateTime min, [FromUri] DateTime max,
             [FromUri] int skip = 0, [FromUri] int pageSize = 1000,
             [FromUri] string orderBy = "AUDITS/CREATEDAT", [FromUri] string orderByDirection = "DESC",
-            [FromUri] int[] userIds = null)
+            [FromUri] int[] userIds = null, [FromUri] int[] objectIds = null)
         {
             if (pageSize > 1000) { Request.CreateResponse(HttpStatusCode.BadRequest); }
 
@@ -259,7 +259,7 @@ namespace Brizbee.Web.Controllers
             if (!currentUser.CanViewAudits)
                 Request.CreateResponse(HttpStatusCode.BadRequest);
 
-            var asdfadf = Audits("TIMECARD", orderBy, orderByDirection, skip, pageSize, userIds, currentUser, min, max);
+            var asdfadf = Audits("TIMECARD", orderBy, orderByDirection, skip, pageSize, userIds, objectIds, currentUser, min, max);
 
             // Create the response.
             var response = new HttpResponseMessage(HttpStatusCode.OK)
@@ -275,7 +275,7 @@ namespace Brizbee.Web.Controllers
             return response;
         }
 
-        private (List<Audit>, int) Audits(string objectType, string orderBy, string orderByDirection, int skip, int pageSize, int[] userIds, User currentUser, DateTime min, DateTime max)
+        private (List<Audit>, int) Audits(string objectType, string orderBy, string orderByDirection, int skip, int pageSize, int[] userIds, int[] objectIds, User currentUser, DateTime min, DateTime max)
         {
             string tableName;
             if (objectType.ToUpperInvariant() == "PUNCH")
@@ -330,6 +330,12 @@ namespace Brizbee.Web.Controllers
                 if (userIds != null && userIds.Any())
                 {
                     whereClause += $" AND [UserId] IN ({string.Join(",", userIds)})";
+                }
+
+                // Clause for object ids.
+                if (objectIds != null && objectIds.Any())
+                {
+                    whereClause += $" AND [ObjectId] IN ({string.Join(",", objectIds)})";
                 }
 
                 // Get the count.

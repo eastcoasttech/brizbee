@@ -13,6 +13,7 @@
 @inject JobService jobService
 @inject TaskService taskService
 @inject PunchService punchService
+@inject AuditService auditService
 @inject SharedService sharedService
 
 <ul class="nav nav-tabs">
@@ -21,6 +22,7 @@
     @if (Id.HasValue)
     {
         <li role="presentation" class="@(selectedTab == "SOURCE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SOURCE")" @onclick:preventDefault>Source</a></li>
+        <li role="presentation" class="@(selectedTab == "AUDIT" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "AUDIT")" @onclick:preventDefault>History</a></li>
     }
 </ul>
 
@@ -318,6 +320,28 @@
             </tbody>
         </table>
     }
+    else if (selectedTab == "SOURCE")
+    {
+        <table class="table table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var audit in audits)
+                {
+                    <tr>
+                        <td>@audit.Action</td>
+                        <td>@audit.CreatedAt.ToString("yyyy-MM-dd hh:mm:ss tt")</td>
+                        <td>@audit.UserId</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>
 
 @code {
@@ -329,6 +353,7 @@
     private bool loadingCustomers = true;
     private bool loadingJobs = true;
     private bool loadingTasks = true;
+    private bool loadingAudits = true;
     private List<Country> countries = new List<Country>();
     private List<IanaTimeZone> zones = new List<IanaTimeZone>();
     private List<IanaTimeZone> inAtZones = new List<IanaTimeZone>();
@@ -353,6 +378,7 @@
     private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
     private List<Job> jobs = new List<Job>();
     private List<User> users = new List<User>();
+    private List<Audit> audits = new List<Audit>();
     private string selectedTab = "DETAILS";
     private GoogleMapPosition center = null;
 
@@ -662,6 +688,18 @@
         }
 
         loadingTasks = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshAudits()
+    {
+        loadingAudits = true;
+
+        var result = await auditService.GetPunchAuditsAsync(DateTime.MinValue, DateTime.MaxValue, objectIds: new int[] { punch.Id });
+        audits = result.Item1;
+
+        loadingAudits = false;
 
         StateHasChanged();
     }

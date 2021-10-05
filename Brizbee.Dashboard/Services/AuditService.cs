@@ -57,12 +57,15 @@ namespace Brizbee.Dashboard.Services
             return (value, total);
         }
 
-        public async Task<(List<Audit>, long?)> GetPunchAuditsAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Audits/CreatedAt", string sortDirection = "ASC", int[] userIds = null)
+        public async Task<(List<Audit>, long?)> GetPunchAuditsAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Audits/CreatedAt", string sortDirection = "ASC", int[] userIds = null, int[] objectIds = null)
         {
             var filterParameters = new StringBuilder();
 
             if (userIds != null)
                 filterParameters.Append(string.Join("", userIds.Select(x => $"&userIds={x}")));
+
+            if (objectIds != null)
+                filterParameters.Append(string.Join("", objectIds.Select(x => $"&objectIds={x}")));
 
             var response = await _apiService.GetHttpClient().GetAsync($"api/Audits/Punches?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}");
 
@@ -75,12 +78,15 @@ namespace Brizbee.Dashboard.Services
             return (value, total);
         }
 
-        public async Task<(List<Audit>, long?)> GetTimeCardAuditsAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Audits/CreatedAt", string sortDirection = "ASC", int[] userIds = null)
+        public async Task<(List<Audit>, long?)> GetTimeCardAuditsAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "Audits/CreatedAt", string sortDirection = "ASC", int[] userIds = null, int[] objectIds = null)
         {
             var filterParameters = new StringBuilder();
 
             if (userIds != null)
                 filterParameters.Append(string.Join("", userIds.Select(x => $"&userIds={x}")));
+
+            if (objectIds != null)
+                filterParameters.Append(string.Join("", objectIds.Select(x => $"&objectIds={x}")));
 
             var response = await _apiService.GetHttpClient().GetAsync($"api/Audits/TimeCards?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}");
 
