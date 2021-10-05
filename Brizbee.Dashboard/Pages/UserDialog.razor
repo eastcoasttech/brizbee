@@ -232,6 +232,15 @@
                         <td class="text-center"><InputCheckbox @bind-Value="user.CanSyncInventoryConsumptions" disabled="@(working || loading)" /></td>
                         <td></td>
                     </tr>
+                    <tr>
+                        <th>Audit Trails</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewAudits" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
