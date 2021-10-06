@@ -9,7 +9,7 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject UserService userService
-@inject PunchService punchService
+@inject KioskService kioskService
 
 @implements IDisposable
 
@@ -171,7 +171,7 @@
 
         working = true;
         currentUser = sharedService.CurrentUser;
-        currentPunch = await punchService.GetExpandedCurrentPunchAsync();
+        currentPunch = await kioskService.GetCurrentPunchAsync();
         working = false;
     }
 

@@ -10,8 +10,7 @@
 
 @inject NavigationManager NavigationManager
 @inject SharedService sharedService
-@inject PunchService punchService
-@inject UserService userService
+@inject KioskService kioskService
 @inject GeolocationService GeolocationService
 @inject IJSRuntime JSRuntime
 
@@ -218,7 +217,7 @@
         var operatingSystemName = details["OperatingSystemName"];
         var operatingSystemVersion = details["OperatingSystemVersion"];
 
-        var success = await punchService.PunchOut(latitude, longitude,
+        var success = await kioskService.PunchOutAsync(latitude, longitude,
             browserName, browserVersion,
             operatingSystemName, operatingSystemVersion, model.TimeZone);
 

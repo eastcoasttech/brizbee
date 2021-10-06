@@ -10,8 +10,7 @@
 
 @inject NavigationManager NavigationManager
 @inject SharedService sharedService
-@inject PunchService punchService
-@inject UserService userService
+@inject KioskService kioskService
 @inject GeolocationService GeolocationService
 @inject IJSRuntime JSRuntime
 
@@ -222,7 +221,7 @@
         var operatingSystemName = details["OperatingSystemName"];
         var operatingSystemVersion = details["OperatingSystemVersion"];
 
-        var success = await punchService.PunchIn(sharedService.AttemptedTask.Id,
+        var success = await kioskService.PunchInAsync(sharedService.AttemptedTask.Id,
             latitude, longitude, browserName, browserVersion,
             operatingSystemName, operatingSystemVersion, model.TimeZone);
 

@@ -211,7 +211,7 @@ namespace Brizbee.Dashboard.Services
                     { "CanViewTasks", user.CanViewTasks },
                     { "CanCreateTasks", user.CanCreateTasks },
                     { "CanModifyTasks", user.CanModifyTasks },
-                    { "CanDeleteTasks", user.CanDeleteTasks },,
+                    { "CanDeleteTasks", user.CanDeleteTasks },
                     { "CanViewAudits", user.CanViewAudits },
                     { "CanViewRates", user.CanViewRates },
                     { "CanCreateRates", user.CanCreateRates },

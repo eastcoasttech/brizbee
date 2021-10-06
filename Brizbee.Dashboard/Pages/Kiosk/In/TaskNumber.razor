@@ -6,7 +6,7 @@
 
 @inject NavigationManager NavigationManager
 @inject SharedService sharedService
-@inject TaskService taskService
+@inject KioskService kioskService
 @inject UserService userService
 
 <nav class="navbar navbar-default navbar-fixed-top">
@@ -102,7 +102,7 @@
     {
         working = true;
 
-        var found = await taskService.SearchTasksAsync(model.Number);
+        var found = await kioskService.SearchTasksAsync(model.Number);
 
         if (found != null)
         {

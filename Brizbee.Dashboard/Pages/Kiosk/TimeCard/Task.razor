@@ -6,11 +6,7 @@
 
 @inject NavigationManager NavigationManager
 @inject SharedService sharedService
-@inject UserService userService
-@inject CustomerService customerService
-@inject JobService jobService
-@inject TaskService taskService
-@inject TimesheetEntryService timesheetEntryService
+@inject KioskService kioskService
 
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
@@ -233,7 +229,7 @@
     {
         loadingCustomers = true;
 
-        var result = await customerService.GetCustomersAsync();
+        var result = await kioskService.GetCustomersAsync();
         customers = result.Item1;
 
         if (customerId.HasValue)
@@ -261,7 +257,7 @@
     {
         loadingJobs = true;
 
-        var result = await jobService.GetJobsAsync(selectedCustomerId);
+        var result = await kioskService.GetProjectsAsync(selectedCustomerId);
         jobs = result.Item1;
 
         if (jobId.HasValue)
@@ -289,7 +285,7 @@
     {
         loadingTasks = true;
 
-        var result = await taskService.GetTasksAsync(selectedJobId);
+        var result = await kioskService.GetTasksAsync(selectedJobId);
         tasks = result.Item1;
 
         if (taskId.HasValue)
@@ -322,7 +318,7 @@
         timeCard.UserId = sharedService.CurrentUser.Id;
 
         // Save the time card on the server and close the dialog.
-        var success = await timesheetEntryService.SaveTimesheetEntryAsync(timeCard);
+        var success = await kioskService.AddTimecardAsync(timeCard.EnteredAt, timeCard.Minutes, timeCard.Notes, timeCard.TaskId);
 
         if (success != null)
         {

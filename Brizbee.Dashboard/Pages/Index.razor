@@ -8,6 +8,7 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject AuditService auditService
+@inject KioskService kioskService
 @inject UserService userService
 @inject CommitService commitService
 @inject PunchService punchService
@@ -137,6 +138,7 @@
         {
             // Update headers on services.
             auditService.ConfigureHeadersWithCredentials(credential);
+            kioskService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
             commitService.ConfigureHeadersWithCredentials(credential);
@@ -209,6 +211,7 @@
 
             // Update headers on services
             auditService.ConfigureHeadersWithCredentials(credential);
+            kioskService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
             commitService.ConfigureHeadersWithCredentials(credential);

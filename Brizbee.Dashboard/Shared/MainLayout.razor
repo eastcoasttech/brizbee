@@ -7,6 +7,7 @@
 
 @inject SharedService sharedService
 @inject AuditService auditService
+@inject KioskService kioskService
 @inject UserService userService
 @inject PunchService punchService
 @inject RateService rateService
@@ -56,6 +57,7 @@
 
         // Clear the headers
         auditService.ResetHeaders();
+        kioskService.ResetHeaders();
         userService.ResetHeaders();
         punchService.ResetHeaders();
         rateService.ResetHeaders();
