@@ -53,7 +53,7 @@
                         <div class="panel panel-default panel-login">
                             <div class="panel-heading">Login with Your PIN</div>
                             <div class="panel-body">
-                                <EditForm Model="@pinSession" OnValidSubmit="AuthenticateAsync" autocomplete="off">
+                                <EditForm Model="@pinSession" OnValidSubmit="AuthenticateAsync" id="formPin" autocomplete="off">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary />
 
@@ -61,7 +61,7 @@
                                         <InputText id="inputOrganizationCode" @bind-Value="pinSession.OrganizationCode" class="form-control" placeholder="Organization Code" disabled="@working" />
                                     </div>
                                     <div class="form-group form-group-lg">
-                                        <InputText @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@working" />
+                                        <InputText id="inputUserPin" @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@working" />
                                     </div>
                                     <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
                                     <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
@@ -76,7 +76,7 @@
                         <div class="panel panel-default panel-login">
                             <div class="panel-heading">Login with Email Address</div>
                             <div class="panel-body">
-                                <EditForm Model="@emailSession" OnValidSubmit="AuthenticateAsync" autocomplete="off">
+                                <EditForm Model="@emailSession" OnValidSubmit="AuthenticateAsync" id="formEmail" autocomplete="off">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary />
 
@@ -84,7 +84,7 @@
                                         <InputText id="inputEmailAddress" @bind-Value="emailSession.EmailAddress" class="form-control" type="email" placeholder="Email Address" disabled="@working" />
                                     </div>
                                     <div class="form-group form-group-lg">
-                                        <InputText @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@working" />
+                                        <InputText id="inputPassword" @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@working" />
                                     </div>
                                     <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
                                     <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
@@ -186,6 +186,7 @@
     private async System.Threading.Tasks.Task AuthenticateAsync()
     {
         working = true;
+        StateHasChanged();
 
         try
         {
@@ -239,11 +240,8 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
-        }
-        finally
-        {
             working = false;
+            StateHasChanged();
         }
     }
 

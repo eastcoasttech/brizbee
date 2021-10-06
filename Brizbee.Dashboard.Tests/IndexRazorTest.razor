@@ -1,7 +1,10 @@
 ﻿@using Microsoft.VisualStudio.TestTools.UnitTesting
 @using Microsoft.Extensions.DependencyInjection
+@using Brizbee.Common.Security
+@using Brizbee.Common.Models
 @using Brizbee.Dashboard.Services
 @using Radzen
+@using RichardSzalay.MockHttp
 
 @attribute [TestClass]
 @code
@@ -11,8 +14,15 @@
     {
         // Arrange
         using var ctx = new Bunit.TestContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+
+        // Prepare mock client.
+        var mock = ctx.Services.AddMockHttpClient();
+        mock.When("/odata/Users/Default.Authenticate").RespondJson(new Credential() { AuthExpiration = "0", AuthToken = "0", AuthUserId = "1" });
+        mock.When("/odata/Users(1)?$expand=Organization").RespondJson(new User() { Id = 1, EmailAddress = "user@brizbee.com", Name = "BRIZBEE User" });
 
         // Configure additional services.
+        ctx.Services.AddSingleton<ApiService>();
         ctx.Services.AddSingleton<AuditService>();
         ctx.Services.AddSingleton<KioskService>();
         ctx.Services.AddSingleton<ExportService>();
@@ -45,7 +55,12 @@
         // Act
         var cut = ctx.Render(@<Brizbee.Dashboard.Pages.Index />);
 
+        cut.Find("#inputOrganizationCode").Change("1234");
+        cut.Find("#inputUserPin").Change("0000");
+        cut.Find("#formPin").Submit();
+
         // Assert
-        cut.MarkupMatches(@<div class="panel-heading">Login with Your PIN</div>);
+        Assert.IsTrue(cut.Find("#inputOrganizationCode").HasAttribute("disabled"));
+        Assert.IsTrue(cut.Find("#inputUserPin").HasAttribute("disabled"));
     }
 }

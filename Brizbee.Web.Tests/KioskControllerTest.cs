@@ -89,7 +89,7 @@ namespace Brizbee.Web.Tests
             var minutes = 60;
             var notes = "";
 
-            var actionResult = controller.Timecard(taskId, enteredAt, minutes, notes);
+            var actionResult = controller.TimeCard(taskId, enteredAt, minutes, notes);
 
             var content = actionResult as OkNegotiatedContentResult<TimesheetEntry>;
 
