@@ -13,6 +13,8 @@
         using var ctx = new Bunit.TestContext();
 
         // Configure additional services.
+        ctx.Services.AddSingleton<AuditService>();
+        ctx.Services.AddSingleton<KioskService>();
         ctx.Services.AddSingleton<ExportService>();
         ctx.Services.AddSingleton<TimesheetEntryService>();
         ctx.Services.AddSingleton<CommitService>();
