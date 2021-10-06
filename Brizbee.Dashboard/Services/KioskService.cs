@@ -111,11 +111,11 @@ namespace Brizbee.Dashboard.Services
             return value;
         }
 
-        public async Task<bool> AddTimecardAsync(DateTime enteredAt, int minutes, string notes, int taskId)
+        public async Task<bool> AddTimeCardAsync(DateTime enteredAt, int minutes, string notes, int taskId)
         {
             // Build the URL with query parameters.
             var url = new StringBuilder();
-            url.Append("api/Kiosk/Timecard?");
+            url.Append("api/Kiosk/TimeCard?");
             url.Append($"taskId={taskId}&");
             url.Append($"enteredAt={enteredAt}&");
             url.Append($"minutes={minutes}&");

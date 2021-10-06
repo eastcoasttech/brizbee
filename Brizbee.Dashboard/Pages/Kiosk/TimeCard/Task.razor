@@ -318,7 +318,7 @@
         timeCard.UserId = sharedService.CurrentUser.Id;
 
         // Save the time card on the server and close the dialog.
-        var success = await kioskService.AddTimecardAsync(timeCard.EnteredAt, timeCard.Minutes, timeCard.Notes, timeCard.TaskId);
+        var success = await kioskService.AddTimeCardAsync(timeCard.EnteredAt, timeCard.Minutes, timeCard.Notes, timeCard.TaskId);
 
         if (success != null)
         {
