@@ -379,11 +379,11 @@ namespace Brizbee.Web.Controllers
                 return Ok(new { });
         }
 
-        // POST: api/Kiosk/Timecard
+        // POST: api/Kiosk/TimeCard
         [HttpPost]
-        [Route("api/Kiosk/Timecard")]
+        [Route("api/Kiosk/TimeCard")]
         [ResponseType(typeof(TimesheetEntry))]
-        public IHttpActionResult Timecard([FromUri] int taskId, [FromUri] DateTime enteredAt, [FromUri] int minutes, [FromUri] string notes = "")
+        public IHttpActionResult TimeCard([FromUri] int taskId, [FromUri] DateTime enteredAt, [FromUri] int minutes, [FromUri] string notes = "")
         {
             var currentUser = CurrentUser();
 
@@ -398,7 +398,7 @@ namespace Brizbee.Web.Controllers
 
             // Ensure job is open.
             if (task.Job.Status != "Open")
-                return BadRequest("Cannot add timecards for projects that are not open.");
+                return BadRequest("Cannot add time cards for projects that are not open.");
 
             try
             {
