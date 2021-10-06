@@ -229,8 +229,7 @@
     {
         loadingCustomers = true;
 
-        var result = await kioskService.GetCustomersAsync();
-        customers = result.Item1;
+        customers = await kioskService.GetCustomersAsync();
 
         if (customerId.HasValue)
         {
@@ -257,8 +256,7 @@
     {
         loadingJobs = true;
 
-        var result = await kioskService.GetProjectsAsync(selectedCustomerId);
-        jobs = result.Item1;
+        jobs = await kioskService.GetProjectsAsync(selectedCustomerId);
 
         if (jobId.HasValue)
         {
@@ -285,8 +283,7 @@
     {
         loadingTasks = true;
 
-        var result = await kioskService.GetTasksAsync(selectedJobId);
-        tasks = result.Item1;
+        tasks = await kioskService.GetTasksAsync(selectedJobId);
 
         if (taskId.HasValue)
         {
@@ -311,6 +308,9 @@
 
     private async System.Threading.Tasks.Task Continue()
     {
+        working = true;
+        StateHasChanged();
+
         // Calculate the minutes based on the hours and minutes.
         timeCard.Minutes = (int.Parse(hours) * 60) + int.Parse(minutes);
 
@@ -318,15 +318,16 @@
         timeCard.UserId = sharedService.CurrentUser.Id;
 
         // Save the time card on the server and close the dialog.
-        var success = await kioskService.AddTimeCardAsync(timeCard.EnteredAt, timeCard.Minutes, timeCard.Notes, timeCard.TaskId);
+        var result = await kioskService.AddTimeCardAsync(timeCard.EnteredAt, timeCard.Minutes, timeCard.Notes, timeCard.TaskId);
 
-        if (success != null)
+        if (result)
         {
             NavigationManager.NavigateTo("kiosk/timecard/done");
         }
         else
         {
-            Console.WriteLine("Could not save the time card!");
+            working = false;
+            StateHasChanged();
         }
     }
 

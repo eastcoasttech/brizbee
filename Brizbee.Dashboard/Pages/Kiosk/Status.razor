@@ -171,7 +171,11 @@
 
         working = true;
         currentUser = sharedService.CurrentUser;
-        currentPunch = await kioskService.GetCurrentPunchAsync();
+
+        var result = await kioskService.GetCurrentPunchAsync();
+        if (result.Id != 0)
+            currentPunch = result;
+
         working = false;
     }
 

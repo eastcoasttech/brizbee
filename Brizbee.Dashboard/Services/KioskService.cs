@@ -154,43 +154,40 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<(List<Customer>, long?)> GetCustomersAsync()
+        public async Task<List<Customer>> GetCustomersAsync()
         {
             var response = await _apiService.GetHttpClient().GetAsync("api/Kiosk/Customers");
 
             if (!response.IsSuccessStatusCode)
-                return (new List<Customer>(0), 0);
+                return new List<Customer>(0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var value = await JsonSerializer.DeserializeAsync<List<Customer>>(responseContent, options);
-            var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
-            return (value, total);
+            return value;
         }
 
-        public async Task<(List<Job>, long?)> GetProjectsAsync(int customerId)
+        public async Task<List<Job>> GetProjectsAsync(int customerId)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/Kiosk/Projects?customerId={customerId}");
 
             if (!response.IsSuccessStatusCode)
-                return (new List<Job>(0), 0);
+                return new List<Job>(0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var value = await JsonSerializer.DeserializeAsync<List<Job>>(responseContent, options);
-            var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
-            return (value, total);
+            return value;
         }
 
-        public async Task<(List<Brizbee.Common.Models.Task>, long?)> GetTasksAsync(int projectId)
+        public async Task<List<Brizbee.Common.Models.Task>> GetTasksAsync(int projectId)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/Kiosk/Tasks?projectId={projectId}");
 
             if (!response.IsSuccessStatusCode)
-                return (new List<Brizbee.Common.Models.Task>(0), 0);
+                return new List<Brizbee.Common.Models.Task>(0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             var value = await JsonSerializer.DeserializeAsync<List<Brizbee.Common.Models.Task>>(responseContent, options);
-            var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
-            return (value, total);
+            return value;
         }
     }
 }
