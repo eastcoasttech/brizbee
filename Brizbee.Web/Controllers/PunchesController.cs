@@ -647,7 +647,6 @@ namespace Brizbee.Web.Controllers
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.ToString());
                 telemetryClient.TrackException(ex);
             }
         }

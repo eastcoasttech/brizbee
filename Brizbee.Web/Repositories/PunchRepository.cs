@@ -21,9 +21,14 @@
 //
 
 using Brizbee.Common.Models;
+using Dapper;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNet.OData;
+using Newtonsoft.Json;
 using NodaTime;
 using System;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 
@@ -32,6 +37,7 @@ namespace Brizbee.Web.Repositories
     public class PunchRepository : IDisposable
     {
         private SqlContext db = new SqlContext();
+        private TelemetryClient telemetryClient = new TelemetryClient();
 
         /// <summary>
         /// Disposes of the database connection.
@@ -84,6 +90,9 @@ namespace Brizbee.Web.Repositories
 
             if (existing != null)
             {
+                // Record the object before any changes are made.
+                var before = JsonConvert.SerializeObject(existing);
+
                 // Punch out the user
                 punch.OutAtSourceHardware = sourceHardware;
                 punch.OutAtSourceHostname = sourceHostname;
@@ -98,6 +107,9 @@ namespace Brizbee.Web.Repositories
                 existing.OutAtTimeZone = timezone;
                 existing.LatitudeForOutAt = latitude;
                 existing.LongitudeForOutAt = longitude;
+
+                // Record the activity.
+                AuditPunch(existing.Id, before, JsonConvert.SerializeObject(existing), currentUser, "UPDATE");
             }
             else
             {
@@ -125,6 +137,9 @@ namespace Brizbee.Web.Repositories
             db.Punches.Add(punch);
 
             db.SaveChanges();
+
+            // Record the activity.
+            AuditPunch(punch.Id, null, JsonConvert.SerializeObject(punch), currentUser, "CREATE");
 
             return punch;
         }
@@ -155,6 +170,10 @@ namespace Brizbee.Web.Repositories
                 .Where(p => !p.OutAt.HasValue)
                 .OrderByDescending(p => p.InAt)
                 .FirstOrDefault();
+
+            // Record the object before any changes are made.
+            var before = JsonConvert.SerializeObject(punch);
+
             var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timezone);
             var nowInstant = SystemClock.Instance.GetCurrentInstant();
             var nowLocal = nowInstant.InZone(tz);
@@ -184,7 +203,40 @@ namespace Brizbee.Web.Repositories
 
             db.SaveChanges();
 
+            // Record the activity.
+            AuditPunch(punch.Id, before, JsonConvert.SerializeObject(punch), currentUser, "UPDATE");
+
             return punch;
+        }
+
+        private void AuditPunch(int id, string before, string after, User currentUser, string action)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["SqlContext"].ToString()))
+                {
+                    string insertQuery = @"
+                        INSERT INTO [PunchAudits]
+                            ([CreatedAt], [ObjectId], [OrganizationId], [UserId], [Action], [Before], [After])
+                        VALUES
+                            (@CreatedAt, @ObjectId, @OrganizationId, @UserId, @Action, @Before, @After);";
+
+                    var result = connection.Execute(insertQuery, new
+                    {
+                        CreatedAt = DateTime.UtcNow,
+                        ObjectId = id,
+                        OrganizationId = currentUser.OrganizationId,
+                        UserId = currentUser.Id,
+                        Action = action,
+                        Before = before,
+                        After = after
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                telemetryClient.TrackException(ex);
+            }
         }
     }
 }
