@@ -535,7 +535,6 @@
     <Compile Include="Serialization\Expanded\TaskExpanded.cs" />
     <Compile Include="Serialization\PopulateRateOption.cs" />
     <Compile Include="Serialization\PopulateRateOptions.cs" />
-    <Compile Include="Serialization\PseudoCommit.cs" />
     <Compile Include="Serialization\QBO\Customer.cs" />
     <Compile Include="Serialization\QBO\Employee.cs" />
     <Compile Include="Serialization\QBO\PayrollItem.cs" />

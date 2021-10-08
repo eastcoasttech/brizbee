@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Principal;
@@ -77,7 +78,8 @@ namespace Brizbee.Web.Filters
                     var authToken = queryString["AuthToken"];
 
                     // Verify the hash in the headers and the calculated hash
-                    var token = string.Format("{0} {1} {2}", "SECRET KEY", authUserId, authExpiration);
+                    var secretKey = ConfigurationManager.AppSettings["AuthenticationSecretKey"];
+                    var token = string.Format("{0} {1} {2}", secretKey, authUserId, authExpiration);
                     var calculatedToken = new SecurityService().GenerateHash(token);
 
                     if (authToken.Equals(calculatedToken))
@@ -104,7 +106,8 @@ namespace Brizbee.Web.Filters
                     var authToken = tokenHeaders.FirstOrDefault();
 
                     // Verify the hash in the headers and the calculated hash
-                    var token = string.Format("{0} {1} {2}", "SECRET KEY", authUserId, authExpiration);
+                    var secretKey = ConfigurationManager.AppSettings["AuthenticationSecretKey"];
+                    var token = string.Format("{0} {1} {2}", secretKey, authUserId, authExpiration);
                     var calculatedToken = new SecurityService().GenerateHash(token);
 
                     if (authToken.Equals(calculatedToken))
