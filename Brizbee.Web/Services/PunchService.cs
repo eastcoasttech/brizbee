@@ -22,12 +22,9 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Web.Serialization;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Web;
 
 namespace Brizbee.Web.Services
 {
@@ -63,26 +60,6 @@ namespace Brizbee.Web.Services
             // Split at midnight
             var splitPunches = SplitAtMidnight(originalPunches, currentUser);
 
-            // Record the split
-            //var beforeSplit = JsonConvert.SerializeObject(punches, settings);
-            //var afterSplit = JsonConvert.SerializeObject(processed, settings);
-
-            //var split = new Split()
-            //{
-            //    BeforeSplit = beforeSplit,
-            //    CreatedAt = nowUtc,
-            //    CreatedByUserId = currentUser.Id,
-            //    AfterSplit = afterSplit,
-            //    OrganizationId = currentUser.OrganizationId
-            //};
-
-
-            // Print the details after midnight split
-            foreach (var punch in splitPunches.OrderBy(p => p.UserId).ThenBy(p => p.InAt))
-            {
-                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-            }
-
             // Then split at each additional interval
             foreach (var option in options)
             {
@@ -94,42 +71,22 @@ namespace Brizbee.Web.Services
                         
                         if (option.CountScope == "day")
                         {
-                            Trace.TraceInformation(string.Format("Splitting at daily count of {0} minutes", minute));
                             splitPunches = SplitAtMinute(splitPunches, currentUser, minutesPerDay: minute);
-
-                            foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-                            {
-                                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-                            }
                         }
                         else if (option.CountScope == "total")
                         {
-                            Trace.TraceInformation(string.Format("Splitting at total count of {0} minutes", minute));
                             splitPunches = SplitAtMinute(splitPunches, currentUser, minutesPerSpan: minute);
-
-                            foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-                            {
-                                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-                            }
                         }
 
                         break;
                     case "range":
 
                         var minutes = option.RangeMinutes.Value;
-                        Trace.TraceInformation(string.Format("Splitting at {0} minutes each day", minutes));
                         splitPunches = SplitAtMinute(splitPunches, currentUser, minuteOfDay: minutes);
-
-                        foreach (var punch in splitPunches.OrderBy(p => p.InAt))
-                        {
-                            Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes));
-                        }
 
                         break;
                 }
             }
-
-            Trace.TraceInformation(string.Format("Populating base rates for all punches: {0}", splitPunches.Count));
 
             // Populate the base rate before any of the alternate rates are populated
             foreach (var punch in splitPunches)
@@ -151,8 +108,6 @@ namespace Brizbee.Web.Services
                     rate = "payroll";
                     baseRateId = option.BasePayrollRateId.Value;
                     alternateRateId = option.AlternatePayrollRateId.Value;
-
-                    Trace.TraceInformation("Populating payroll rate");
                 }
                 else if (option.AlternateServiceRateId.HasValue)
                 {
@@ -160,8 +115,6 @@ namespace Brizbee.Web.Services
                     rate = "service";
                     baseRateId = option.BaseServiceRateId.Value;
                     alternateRateId = option.AlternateServiceRateId.Value;
-
-                    Trace.TraceInformation("Populating service rate");
                 }
                 else
                 {
@@ -261,7 +214,6 @@ namespace Brizbee.Web.Services
             {
                 var payrollRate = db.Rates.Find(punch.PayrollRateId);
                 var serviceRate = db.Rates.Find(punch.ServiceRateId);
-                Trace.TraceInformation(string.Format("{0} thru {1} ({2} minutes)    Payroll: {3}    Service: {4} - ID {5}", punch.InAt.ToString("yyyy-MM-dd HH:mm"), punch.OutAt.Value.ToString("yyyy-MM-dd HH:mm"), punch.Minutes, payrollRate.Name, serviceRate.Name, punch.Id));
             }
 
             return ordered;
@@ -566,8 +518,8 @@ namespace Brizbee.Web.Services
                             var spanInAt = punch.InAt.Subtract(midnight);
                             var spanOutAt = punch.OutAt.Value.Subtract(midnight);
 
-                            var minuteOfInAt = spanInAt.TotalMinutes;//(punch.InAt.Hour * 60) + punch.InAt.Minute;
-                            var minuteOfOutAt = spanOutAt.TotalMinutes;//(punch.OutAt.Value.Hour * 60) + punch.OutAt.Value.Minute;
+                            var minuteOfInAt = spanInAt.TotalMinutes;
+                            var minuteOfOutAt = spanOutAt.TotalMinutes;
 
                             // Example punch is 6:00:00.000am thru 10:00:59.999am. Split at 7am.
                             // So if 7am is 420 minutes, check if 420 minutes is between InAt and OutAt.
@@ -581,14 +533,6 @@ namespace Brizbee.Web.Services
 
                                 var newInAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, 0, 0, 0, 0).AddMinutes(minuteOfDay.Value);
                                 var newOutAt = originalOutAt;
-
-                                // Do not create a punch with a zero length
-                                if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes == 0 ||
-                                    newOutAt.Subtract(newInAt).TotalMinutes == 0)
-                                {
-                                    Trace.TraceInformation(adjustedOutAt.Subtract(adjustedInAt).TotalMinutes.ToString());
-                                    Trace.TraceInformation(newOutAt.Subtract(newInAt).TotalMinutes.ToString());
-                                }
 
                                 var adjustedPunch = new Punch()
                                 {
@@ -714,14 +658,6 @@ namespace Brizbee.Web.Services
                                 var newInAt = punch.OutAt.Value.AddMinutes(-Convert.ToInt32(minutesExceeded));
                                 var newOutAt = originalOutAt;
 
-                                // Do not create a punch with a zero length
-                                if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes == 0 ||
-                                    newOutAt.Subtract(newInAt).TotalMinutes == 0)
-                                {
-                                    Trace.TraceInformation(adjustedOutAt.Subtract(adjustedInAt).TotalMinutes.ToString());
-                                    Trace.TraceInformation(newOutAt.Subtract(newInAt).TotalMinutes.ToString());
-                                }
-
                                 var adjustedPunch = new Punch()
                                 {
                                     InAt = adjustedInAt,
@@ -812,8 +748,6 @@ namespace Brizbee.Web.Services
                     var split = false;
                     foreach (var punch in filtered) // 10:15am - 4:30pm = 375 minutes
                     {
-                        Trace.TraceInformation($"Working on {punch.InAt.ToShortTimeString()} - {punch.OutAt.Value.ToShortTimeString()}");
-
                         if (split)
                         {
                             // If punches have been split, do not further process
@@ -836,14 +770,6 @@ namespace Brizbee.Web.Services
 
                             var newInAt = punch.OutAt.Value.AddMinutes(-Convert.ToInt32(minutesExceeded));
                             var newOutAt = originalOutAt;
-
-                            // Do not create a punch with a zero length
-                            //if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes == 0 ||
-                            //    newOutAt.Subtract(newInAt).TotalMinutes == 0)
-                            //{
-                            //    Trace.TraceInformation(adjustedOutAt.Subtract(adjustedInAt).TotalMinutes.ToString());
-                            //    Trace.TraceInformation(newOutAt.Subtract(newInAt).TotalMinutes.ToString());
-                            //}
 
                             if (adjustedOutAt.Subtract(adjustedInAt).TotalMinutes != 0)
                             {
