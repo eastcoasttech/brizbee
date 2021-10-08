@@ -545,8 +545,10 @@ namespace Brizbee.Web.Controllers
                         .ToArray();
                     var originalPunchesTracked = db.Punches
                         .Where(p => userIds.Contains(p.UserId))
-                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                        .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt.Date)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) <= outAt.Date)
+                        .Where(p => !p.CommitId.HasValue); // Only unlocked punches
                     var originalPunchesNotTracked = originalPunchesTracked
                         .AsNoTracking() // Will be manipulated in memory
                         .ToList();
