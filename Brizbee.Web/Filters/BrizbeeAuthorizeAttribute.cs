@@ -82,7 +82,7 @@ namespace Brizbee.Web.Filters
                     var token = string.Format("{0} {1} {2}", secretKey, authUserId, authExpiration);
                     var calculatedToken = new SecurityService().GenerateHash(token);
 
-                    if (authToken.Equals(calculatedToken))
+                    if (authToken.Equals(calculatedToken) && !IsExpired(authExpiration))
                     {
                         var roles = new string[] { };
                         actionContext.RequestContext.Principal = new GenericPrincipal(new GenericIdentity(authUserId), roles);
@@ -110,7 +110,7 @@ namespace Brizbee.Web.Filters
                     var token = string.Format("{0} {1} {2}", secretKey, authUserId, authExpiration);
                     var calculatedToken = new SecurityService().GenerateHash(token);
 
-                    if (authToken.Equals(calculatedToken))
+                    if (authToken.Equals(calculatedToken) && !IsExpired(authExpiration))
                     {
                         var roles = new string[] { };
                         actionContext.RequestContext.Principal = new GenericPrincipal(new GenericIdentity(authUserId), roles);
@@ -139,6 +139,11 @@ namespace Brizbee.Web.Filters
                 return Enumerable.Any(actionContext.ControllerContext.ControllerDescriptor.GetCustomAttributes<AllowAnonymousAttribute>());
             else
                 return true;
+        }
+
+        private bool IsExpired(string ticks)
+        {
+            return new DateTime(long.Parse(ticks)) < DateTime.UtcNow;
         }
     }
 }

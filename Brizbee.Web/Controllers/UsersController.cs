@@ -25,6 +25,7 @@ using Brizbee.Common.Security;
 using Brizbee.Web.Repositories;
 using Microsoft.AspNet.OData;
 using System;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -345,8 +346,9 @@ namespace Brizbee.Web.Controllers
 
             var service = new SecurityService();
 
-            var now = DateTime.UtcNow.Ticks.ToString();
-            var token = string.Format("{0} {1} {2}", "SECRET KEY", user.Id.ToString(), now);
+            var now = (DateTime.UtcNow.AddDays(1)).Ticks.ToString();
+            var secretKey = ConfigurationManager.AppSettings["AuthenticationSecretKey"];
+            var token = string.Format("{0} {1} {2}", secretKey, user.Id.ToString(), now);
             credential.AuthToken = service.GenerateHash(token);
             credential.AuthExpiration = now;
             credential.AuthUserId = user.Id.ToString();
