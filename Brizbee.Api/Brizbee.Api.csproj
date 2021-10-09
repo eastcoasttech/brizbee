@@ -20,10 +20,10 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NodaTime" Version="3.0.5" />
-    <PackageReference Include="SendGrid" Version="9.24.2" />
-    <PackageReference Include="Stripe.net" Version="39.67.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.1" />
+    <PackageReference Include="NodaTime" Version="3.0.7" />
+    <PackageReference Include="SendGrid" Version="9.24.3" />
+    <PackageReference Include="Stripe.net" Version="39.71.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.2" />
   </ItemGroup>
 
   <ItemGroup>

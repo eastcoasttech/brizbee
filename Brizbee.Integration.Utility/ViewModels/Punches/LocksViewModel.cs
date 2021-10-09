@@ -23,8 +23,10 @@
 
 using Brizbee.Common.Models;
 using RestSharp;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 
 namespace Brizbee.Integration.Utility.ViewModels.Punches
@@ -58,14 +60,15 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             OnPropertyChanged("IsContinueEnabled");
 
             // Build request to retrieve commits
-            var request = new RestRequest("odata/Commits?$orderby=InAt", Method.GET);
+            var request = new RestRequest("api/Locks?orderBy=LOCK/INAT&orderByDirection=DESC", Method.GET);
 
             // Execute request to retrieve authenticated user
-            var response = await client.ExecuteAsync<ODataResponse<Commit>>(request);
+            var response = await client.ExecuteAsync<List<Commit>>(request);
+            Trace.TraceInformation(response.Content);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
-                Commits = new ObservableCollection<Commit>(response.Data.Value);
+                Commits = new ObservableCollection<Commit>(response.Data);
                 OnPropertyChanged("Commits");
 
                 if (Commits.Count == 0)

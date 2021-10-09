@@ -130,22 +130,22 @@ namespace Brizbee.Web.Controllers
                 // Get the records.
                 var recordsSql = $@"
                     SELECT
-                        [C].[Id],
-                        [C].[CreatedAt],
-                        [C].[OrganizationId],
-                        [C].[InAt],
-                        [C].[OutAt],
-                        [C].[QuickBooksExportedAt],
-                        [C].[PunchCount],
-                        [C].[UserId],
-                        [C].[Guid],
+                        [C].[Id] AS [Lock_Id],
+                        [C].[CreatedAt] AS [Lock_CreatedAt],
+                        [C].[OrganizationId] AS [Lock_OrganizationId],
+                        [C].[InAt] AS [Lock_InAt],
+                        [C].[OutAt] AS [Lock_OutAt],
+                        [C].[QuickBooksExportedAt] AS [Lock_QuickBooksExportedAt],
+                        [C].[PunchCount] AS [Lock_PunchCount],
+                        [C].[UserId] AS [Lock_UserId],
+                        [C].[Guid] AS [Lock_Guid],
 
                         [U].[Id] AS [User_Id],
                         [U].[Name] AS [User_Name]
                     FROM
                         [Commits] AS [C]
                     INNER JOIN
-                        [User] AS [U] ON [U].[Id] = [C].[UserId]
+                        [Users] AS [U] ON [U].[Id] = [C].[UserId]
                     WHERE
                         [C].[OrganizationId] = @OrganizationId
                     ORDER BY
@@ -227,10 +227,10 @@ namespace Brizbee.Web.Controllers
         [Route("api/Locks")]
         public IHttpActionResult Post([FromBody] Commit commit)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
 
             var currentUser = CurrentUser();
 
@@ -279,7 +279,9 @@ namespace Brizbee.Web.Controllers
                         .ToArray();
                     var originalPunchesTracked = _context.Punches
                         .Where(p => userIds.Contains(p.UserId))
-                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt.Date)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) <= outAt.Date)
                         .Where(p => !p.CommitId.HasValue); // Only uncommited punches
                     var originalPunchesNotTracked = originalPunchesTracked
                         .AsNoTracking() // Will be manipulated in memory

@@ -259,7 +259,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<bool> LockPunches(DateTime inAt, DateTime outAt)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Commits"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "api/Locks"))
             {
                 var payload = new Dictionary<string, object>() {
                     { "InAt", inAt.ToString("yyyy-MM-dd") },

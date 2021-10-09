@@ -338,29 +338,6 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             }
         }
 
-        private async System.Threading.Tasks.Task<Commit> UpdateLock(Commit commit, DateTime exportedAt)
-        {
-            // Build the request
-            var url = string.Format("odata/Commits({0})", commit.Id);
-            var request = new RestRequest(url, Method.PATCH);
-            request.AddJsonBody(new
-            {
-                QuickBooksExportedAt = exportedAt
-            });
-
-            // Execute request
-            var response = await client.ExecuteAsync<Commit>(request);
-            if ((response.ResponseStatus == ResponseStatus.Completed) &&
-                    (response.StatusCode == System.Net.HttpStatusCode.NoContent))
-            {
-                return response.Data;
-            }
-            else
-            {
-                throw new Exception(response.Content);
-            }
-        }
-
         private XmlElement MakeSimpleElem(XmlDocument doc, string tagName, string tagVal)
         {
             XmlElement elem = doc.CreateElement(tagName);
