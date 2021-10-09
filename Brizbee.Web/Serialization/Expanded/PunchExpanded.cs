@@ -52,10 +52,6 @@ namespace Brizbee.Web.Serialization.Expanded
 
         public string Punch_OutAtTimeZone { get; set; }
 
-        public string Punch_SourceForInAt { get; set; }
-
-        public string Punch_SourceForOutAt { get; set; }
-
         public int Punch_TaskId { get; set; }
 
         public int Punch_UserId { get; set; }

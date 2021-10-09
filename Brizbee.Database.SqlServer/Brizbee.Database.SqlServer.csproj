@@ -127,11 +127,12 @@
     <EmbeddedResource Include="Migrations\0008 Adding Populate Templates.sql" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Migrations\0013 Adding Indexes to Punches.sql" />
     <EmbeddedResource Include="Migrations\0009 Adding IsActive and Permissions.sql" />
     <EmbeddedResource Include="Migrations\0010 Adding Column Preferences.sql" />
     <EmbeddedResource Include="Migrations\0011 Add Auditing.sql" />
     <EmbeddedResource Include="Migrations\0012 Adding Unique NULL OutAt Index.sql" />
-    <Content Include="Migrations\0013 Removing NULL.sql" />
+    <Content Include="Migrations\0014 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
