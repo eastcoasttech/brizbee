@@ -494,6 +494,7 @@
     <Compile Include="Controllers\ExportsController.cs" />
     <Compile Include="Controllers\JobsExpandedController.cs" />
     <Compile Include="Controllers\KioskController.cs" />
+    <Compile Include="Controllers\LocksController.cs" />
     <Compile Include="Controllers\OrganizationsExpandedController.cs" />
     <Compile Include="Controllers\PopulateTemplatesController.cs" />
     <Compile Include="Controllers\PunchesExpandedController.cs" />
@@ -530,6 +531,7 @@
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="SecurityService.cs" />
     <Compile Include="Serialization\Expanded\JobExpanded.cs" />
+    <Compile Include="Serialization\Expanded\LockExpanded.cs" />
     <Compile Include="Serialization\Expanded\PunchExpanded.cs" />
     <Compile Include="Serialization\Expanded\QBDInventoryConsumptionExpanded.cs" />
     <Compile Include="Serialization\Expanded\TaskExpanded.cs" />

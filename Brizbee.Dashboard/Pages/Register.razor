@@ -13,7 +13,7 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject UserService userService
-@inject CommitService commitService
+@inject LockService lockService
 @inject PunchService punchService
 @inject CustomerService customerService
 @inject TaskService taskService
@@ -244,7 +244,7 @@
         // Update headers on services.
         userService.ConfigureHeadersWithCredentials(credential);
         punchService.ConfigureHeadersWithCredentials(credential);
-        commitService.ConfigureHeadersWithCredentials(credential);
+        lockService.ConfigureHeadersWithCredentials(credential);
         customerService.ConfigureHeadersWithCredentials(credential);
         taskService.ConfigureHeadersWithCredentials(credential);
         taskTemplateService.ConfigureHeadersWithCredentials(credential);

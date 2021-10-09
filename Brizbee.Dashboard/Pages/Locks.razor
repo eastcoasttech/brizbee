@@ -7,7 +7,7 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject UserService userService
-@inject CommitService commitService
+@inject LockService lockService
 @inject PunchService punchService
 @inject DialogService dialogService
 
@@ -129,7 +129,7 @@
         </div>
     </div>
 
-    <!--List of Commits-->
+    <!--List of Locks-->
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -137,65 +137,65 @@
                     Id
                 </th>
                 <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("InAt"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("LOCK/INAT"))">
                         From
-                        @if (sortBy == "InAt" && sortDirection == "ASC")
+                        @if (sortBy == "LOCK/INAT" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "InAt" && sortDirection == "DESC")
+                        else if (sortBy == "LOCK/INAT" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("OutAt"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("LOCK/OUTAT"))">
                         To
-                        @if (sortBy == "OutAt" && sortDirection == "ASC")
+                        @if (sortBy == "LOCK/OUTAT" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "OutAt" && sortDirection == "DESC")
+                        else if (sortBy == "LOCK/OUTAT" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th class="col-md-1">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("PunchCount"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("LOCK/PUNCHCOUNT"))">
                         Punches
-                        @if (sortBy == "PunchCount" && sortDirection == "ASC")
+                        @if (sortBy == "LOCK/PUNCHCOUNT" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "PunchCount" && sortDirection == "DESC")
+                        else if (sortBy == "LOCK/PUNCHCOUNT" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th class="col-md-2">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CreatedAt"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("LOCK/CREATEDAT"))">
                         Locked
-                        @if (sortBy == "CreatedAt" && sortDirection == "ASC")
+                        @if (sortBy == "LOCK/CREATEDAT" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "CreatedAt" && sortDirection == "DESC")
+                        else if (sortBy == "LOCK/CREATEDAT" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
                     </a>
                 </th>
                 <th class="col-md-3">
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("User/Name"))">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("USER/NAME"))">
                         User
-                        @if (sortBy == "User/Name" && sortDirection == "ASC")
+                        @if (sortBy == "USER/NAME" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "User/Name" && sortDirection == "DESC")
+                        else if (sortBy == "USER/NAME" && sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
@@ -307,7 +307,7 @@
     {
         working = true;
         locks.Clear();
-        var result = await commitService.GetCommitsAsync(pageSize, skip, sortBy, sortDirection);
+        var result = await lockService.GetLocksAsync(pageSize, skip, sortBy, sortDirection);
         locks = result.Item1;
         locksCount = result.Item2.GetValueOrDefault();
         working = false;
@@ -344,7 +344,7 @@
         await RefreshLocks();
     }
 
-    private async void Undo(int commitId)
+    private async void Undo(int lockId)
     {
         // Confirm that the user wants to make the change.
         var confirm = await dialogService.Confirm(
@@ -354,7 +354,7 @@
         if (confirm != true)
             return;
 
-        await commitService.PostUndoAsync(commitId);
+        await lockService.PostUndoAsync(lockId);
         await RefreshLocks();
     }
 }

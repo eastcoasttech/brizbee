@@ -1,5 +1,4 @@
-﻿using Brizbee.Blazor;
-using Brizbee.Common.Models;
+﻿using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Brizbee.Dashboard.Services
 {
-    public class CommitService
+    public class LockService
     {
         public ApiService _apiService;
         private JsonSerializerOptions options = new JsonSerializerOptions
@@ -17,7 +16,7 @@ namespace Brizbee.Dashboard.Services
             PropertyNameCaseInsensitive = true
         };
 
-        public CommitService(ApiService apiService)
+        public LockService(ApiService apiService)
         {
             _apiService = apiService;
         }
@@ -39,19 +38,22 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
-        public async Task<(List<Commit>, long?)> GetCommitsAsync(int pageSize = 20, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
+        public async Task<(List<Commit>, long?)> GetLocksAsync(int pageSize = 20, int skip = 0, string sortBy = "LOCK/INAT", string sortDirection = "ASC")
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Commits?$count=true&$expand=User&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
-            response.EnsureSuccessStatusCode();
+            var response = await _apiService.GetHttpClient().GetAsync($"api/Locks?pageSize={pageSize}&skip={skip}&orderBy={sortBy}&orderByDirection={sortDirection}");
+
+            if (!response.IsSuccessStatusCode)
+                return (new List<Commit>(0), 0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Commit>>(responseContent, options);
-            return (odataResponse.Value.ToList(), odataResponse.Count);
+            var value = await JsonSerializer.DeserializeAsync<List<Commit>>(responseContent, options);
+            var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
+            return (value, total);
         }
 
         public async Task<bool> PostUndoAsync(int commitId)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, $"odata/Commits({commitId})/Default.Undo"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, $"api/Locks/{commitId}/Undo"))
             {
                 using (var response = await _apiService
                     .GetHttpClient()

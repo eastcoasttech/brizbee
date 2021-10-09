@@ -10,7 +10,7 @@
 @inject AuditService auditService
 @inject KioskService kioskService
 @inject UserService userService
-@inject CommitService commitService
+@inject LockService lockService
 @inject PunchService punchService
 @inject CustomerService customerService
 @inject TaskService taskService
@@ -141,7 +141,7 @@
             kioskService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
-            commitService.ConfigureHeadersWithCredentials(credential);
+            lockService.ConfigureHeadersWithCredentials(credential);
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             taskTemplateService.ConfigureHeadersWithCredentials(credential);
@@ -215,7 +215,7 @@
             kioskService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
-            commitService.ConfigureHeadersWithCredentials(credential);
+            lockService.ConfigureHeadersWithCredentials(credential);
             customerService.ConfigureHeadersWithCredentials(credential);
             taskService.ConfigureHeadersWithCredentials(credential);
             taskTemplateService.ConfigureHeadersWithCredentials(credential);

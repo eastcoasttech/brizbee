@@ -26,7 +26,7 @@ namespace Brizbee.Dashboard
             builder.Services.AddSingleton<KioskService>();
             builder.Services.AddSingleton<ExportService>();
             builder.Services.AddSingleton<TimesheetEntryService>();
-            builder.Services.AddSingleton<CommitService>();
+            builder.Services.AddSingleton<LockService>();
             builder.Services.AddSingleton<PunchService>();
             builder.Services.AddSingleton<UserService>();
             builder.Services.AddSingleton<CustomerService>();
