@@ -209,10 +209,10 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     QBMajorVersion = hostDetails.QBMajorVersion,
                     QBMinorVersion = hostDetails.QBMinorVersion,
                     QBSupportedQBXMLVersions = hostDetails.QBSupportedQBXMLVersions,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = new DateTimeOffset(DateTime.UtcNow),
                     CommitId = commit.Id,
-                    InAt = commit.InAt,
-                    OutAt = commit.OutAt,
+                    InAt = new DateTimeOffset(commit.InAt),
+                    OutAt = new DateTimeOffset(commit.OutAt),
                     Log = StatusText,
                     TxnIDs = string.Join(",", ids)
                 };
