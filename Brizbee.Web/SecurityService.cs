@@ -164,12 +164,11 @@ namespace Brizbee.Web
             return builder.ToString();
         }
 
-        public bool AuthenticateWithPassword(User user, string password)
+        public bool AuthenticateWithPassword(string salt, string hash, string password)
         {
-            var contents = string.Format("{0} {1}", password,
-                user.PasswordSalt);
+            var contents = string.Format("{0} {1}", password, salt);
             var calculatedHash = GenerateHash(contents);
-            var storedHash = user.PasswordHash;
+            var storedHash = hash;
             return calculatedHash == storedHash;
         }
     }

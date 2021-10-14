@@ -72,48 +72,60 @@ namespace Brizbee.Web.Controllers
         [AllowAnonymous]
         public IHttpActionResult Authenticate([FromBody] Session session)
         {
-            User user = null;
-
-            switch (session.Method.ToUpperInvariant())
+            if ("EMAIL" == session.Method.ToUpperInvariant())
             {
-                case "EMAIL":
-                    var service = new SecurityService();
+                var service = new SecurityService();
 
-                    // Validate both an Email and Password.
-                    if (session.EmailAddress == null || session.EmailPassword == null)
-                        return BadRequest("Must provide both an Email address and password.");
+                // Validate both an Email and Password.
+                if (session.EmailAddress == null || session.EmailPassword == null)
+                    return BadRequest("Must provide both an Email address and password.");
 
-                    user = _context.Users
-                        .Where(u => u.EmailAddress == session.EmailAddress)
-                        .Where(u => u.IsDeleted == false)
-                        .Where(u => u.IsActive == true)
-                        .FirstOrDefault();
+                var found = _context.Users
+                    .Where(u => u.IsDeleted == false)
+                    .Where(u => u.IsActive == true)
+                    .Where(u => u.EmailAddress == session.EmailAddress)
+                    .Select(u => new
+                    {
+                        u.Id,
+                        u.PasswordHash,
+                        u.PasswordSalt
+                    })
+                    .FirstOrDefault();
 
-                    // Attempt to authenticate.
-                    if ((user == null) || !service.AuthenticateWithPassword(user, session.EmailPassword))
-                        return BadRequest("Invalid Email address and password combination.");
+                // Attempt to authenticate.
+                if ((found == null) || !service.AuthenticateWithPassword(found.PasswordSalt, found.PasswordHash, session.EmailPassword))
+                    return BadRequest("Invalid Email address and password combination.");
 
-                    return Content(HttpStatusCode.Created, GetCredentials(user));
-                case "PIN":
-                    // Validate both an organization code and user pin.
-                    if (session.PinUserPin == null || session.PinOrganizationCode == null)
-                        return BadRequest("Must provide both an organization code and user pin.");
+                return Content(HttpStatusCode.Created, GetCredentials(found.Id));
+            }
+            else if ("PIN" == session.Method.ToUpperInvariant())
+            {
+                // Validate both an organization code and user pin.
+                if (session.PinUserPin == null || session.PinOrganizationCode == null)
+                    return BadRequest("Must provide both an organization code and user pin.");
 
-                    user = _context.Users.Include("Organization")
-                        .Where(u => u.Pin == session.PinUserPin.ToUpper())
-                        .Where(u => u.Organization.Code == session.PinOrganizationCode.ToUpper())
-                        .Where(u => u.IsDeleted == false)
-                        .Where(u => u.IsActive == true)
-                        .FirstOrDefault();
+                var found = _context.Users
+                    .Include("Organization")
+                    .Where(u => u.IsDeleted == false)
+                    .Where(u => u.IsActive == true)
+                    .Where(u => u.Organization.Code == session.PinOrganizationCode.ToUpper())
+                    .Where(u => u.Pin == session.PinUserPin.ToUpper())
+                    .Select(u => new
+                    {
+                        u.Id
+                    })
+                    .FirstOrDefault();
 
-                    // Attempt to authenticate.
-                    if (user == null)
-                        return BadRequest("Invalid organization code and user pin combination.");
+                // Attempt to authenticate.
+                if (found == null)
+                    return BadRequest("Invalid organization code and user pin combination.");
 
 
-                    return Content(HttpStatusCode.Created, GetCredentials(user));
-                default:
-                    return BadRequest("Must authenticate via either Email or pin method.");
+                return Content(HttpStatusCode.Created, GetCredentials(found.Id));
+            }
+            else
+            {
+                return BadRequest("Must authenticate via either Email or pin method.");
             }
         }
 
@@ -419,7 +431,7 @@ namespace Brizbee.Web.Controllers
             return Ok(user);
         }
 
-        private Credential GetCredentials(User user)
+        private Credential GetCredentials(int userId)
         {
             // Return a token, expiration, and user id. The
             // token and expiration are concatenated and verified
@@ -428,12 +440,12 @@ namespace Brizbee.Web.Controllers
 
             var service = new SecurityService();
 
-            var now = (DateTime.UtcNow.AddDays(1)).Ticks.ToString();
+            var now = DateTime.UtcNow.AddDays(1).Ticks.ToString();
             var secretKey = ConfigurationManager.AppSettings["AuthenticationSecretKey"];
-            var token = string.Format("{0} {1} {2}", secretKey, user.Id.ToString(), now);
+            var token = string.Format("{0} {1} {2}", secretKey, userId.ToString(), now);
             credential.AuthToken = service.GenerateHash(token);
             credential.AuthExpiration = now;
-            credential.AuthUserId = user.Id.ToString();
+            credential.AuthUserId = userId.ToString();
 
             return credential;
         }
