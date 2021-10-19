@@ -218,7 +218,7 @@
                         <th>Inventory Items</th>
                         <td class="text-center"><InputCheckbox @bind-Value="user.CanViewInventoryItems" disabled="@(working || loading)" /></td>
                         <td></td>
-                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyInventoryItems" disabled="@(working || loading)" /></td>
                         <td></td>
                         <td class="text-center"><InputCheckbox @bind-Value="user.CanSyncInventoryItems" disabled="@(working || loading)" /></td>
                         <td></td>

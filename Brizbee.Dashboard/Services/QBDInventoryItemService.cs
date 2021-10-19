@@ -2,6 +2,9 @@
 using Brizbee.Common.Security;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -46,6 +49,52 @@ namespace Brizbee.Dashboard.Services
             var value = await JsonSerializer.DeserializeAsync<List<QBDInventoryItem>>(responseContent, options);
             var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
             return (value, total);
+        }
+
+        public async Task<QBDInventoryItem> GetQBDInventoryItemByIdAsync(long id)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"api/QBDInventoryItems/{id}");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<QBDInventoryItem>(responseContent);
+        }
+
+        public async Task<(bool, string)> SaveQBDInventoryItemAsync(QBDInventoryItem inventoryItem)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Put, $"api/QBDInventoryItems/{inventoryItem.Id}"))
+            {
+                var payload = new Dictionary<string, object>() {
+                    { "CustomBarCodeValue", inventoryItem.CustomBarCodeValue }
+                };
+
+                var json = JsonSerializer.Serialize(payload, options);
+
+                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    request.Content = stringContent;
+
+                    using (var response = await _apiService
+                        .GetHttpClient()
+                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                        .ConfigureAwait(false))
+                    {
+                        using var responseContent = await response.Content.ReadAsStreamAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            if (response.StatusCode == HttpStatusCode.OK)
+                                return (true, "");
+                            else
+                                return (false, responseContent.ToString());
+                        }
+                        else
+                        {
+                            return (false, responseContent.ToString());
+                        }
+                    }
+                }
+            }
         }
     }
 }

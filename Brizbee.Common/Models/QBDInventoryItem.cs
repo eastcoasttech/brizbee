@@ -36,6 +36,12 @@ namespace Brizbee.Common.Models
         public string BarCodeValue { get; set; }
 
         /// <summary>
+        /// Custom bar code value specified by the user in the dashboard.
+        /// </summary>
+        [StringLength(50)]
+        public string CustomBarCodeValue { get; set; }
+
+        /// <summary>
         /// ListID of the inventory item in QuickBooks Desktop.
         /// </summary>
         [StringLength(20)]

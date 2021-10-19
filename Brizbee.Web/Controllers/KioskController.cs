@@ -608,39 +608,50 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            var inventoryItem = _context.QBDInventoryItems
+            // Attempt to find an item based on the custom bar code
+            var foundCustomItem = _context.QBDInventoryItems
+                .Where(i => i.OrganizationId == currentUser.OrganizationId)
+                .Where(i => i.CustomBarCodeValue == barCodeValue)
+                .FirstOrDefault();
+
+            // Attempt to find an item based on the QuickBooks Enterprise bar code
+            var foundQuickBooksItem = _context.QBDInventoryItems
                 .Where(i => i.OrganizationId == currentUser.OrganizationId)
                 .Where(i => i.BarCodeValue == barCodeValue)
                 .FirstOrDefault();
 
-            if (inventoryItem == null)
+            if (foundCustomItem == null && foundQuickBooksItem == null)
                 return NotFound();
 
-            // Return item with units of measure.
-            if (inventoryItem.QBDUnitOfMeasureSetId.HasValue)
+            // Determine which item will be returned
+            var chosenBarCodeValue = foundCustomItem != null ? foundCustomItem.CustomBarCodeValue : foundQuickBooksItem.BarCodeValue;
+            var chosenItem = foundCustomItem != null ? foundCustomItem : foundQuickBooksItem;
+
+            // Return item with units of measure
+            if (chosenItem.QBDUnitOfMeasureSetId.HasValue)
             {
-                inventoryItem.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
-                    .Where(s => s.Id == inventoryItem.QBDUnitOfMeasureSetId)
+                chosenItem.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
+                    .Where(s => s.Id == chosenItem.QBDUnitOfMeasureSetId)
                     .FirstOrDefault();
 
                 return Ok(new
                 {
-                    inventoryItem.Id,
-                    inventoryItem.FullName,
-                    inventoryItem.BarCodeValue,
-                    inventoryItem.ListId,
-                    inventoryItem.Name,
-                    inventoryItem.ManufacturerPartNumber,
-                    inventoryItem.PurchaseCost,
-                    inventoryItem.PurchaseDescription,
-                    inventoryItem.SalesPrice,
-                    inventoryItem.SalesDescription,
+                    chosenItem.Id,
+                    chosenItem.FullName,
+                    BarCodeValue = chosenBarCodeValue,
+                    chosenItem.ListId,
+                    chosenItem.Name,
+                    chosenItem.ManufacturerPartNumber,
+                    chosenItem.PurchaseCost,
+                    chosenItem.PurchaseDescription,
+                    chosenItem.SalesPrice,
+                    chosenItem.SalesDescription,
                     QBDUnitOfMeasureSet = new
                     {
-                        inventoryItem.QBDUnitOfMeasureSet.ListId,
-                        inventoryItem.QBDUnitOfMeasureSet.Name,
-                        inventoryItem.QBDUnitOfMeasureSet.UnitOfMeasureType,
-                        UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(inventoryItem.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
+                        chosenItem.QBDUnitOfMeasureSet.ListId,
+                        chosenItem.QBDUnitOfMeasureSet.Name,
+                        chosenItem.QBDUnitOfMeasureSet.UnitOfMeasureType,
+                        UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(chosenItem.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
                     }
                 });
             }
@@ -648,16 +659,16 @@ namespace Brizbee.Web.Controllers
             {
                 return Ok(new
                 {
-                    inventoryItem.Id,
-                    inventoryItem.FullName,
-                    inventoryItem.BarCodeValue,
-                    inventoryItem.ListId,
-                    inventoryItem.Name,
-                    inventoryItem.ManufacturerPartNumber,
-                    inventoryItem.PurchaseCost,
-                    inventoryItem.PurchaseDescription,
-                    inventoryItem.SalesPrice,
-                    inventoryItem.SalesDescription
+                    chosenItem.Id,
+                    chosenItem.FullName,
+                    BarCodeValue = chosenBarCodeValue,
+                    chosenItem.ListId,
+                    chosenItem.Name,
+                    chosenItem.ManufacturerPartNumber,
+                    chosenItem.PurchaseCost,
+                    chosenItem.PurchaseDescription,
+                    chosenItem.SalesPrice,
+                    chosenItem.SalesDescription
                 });
             }
         }

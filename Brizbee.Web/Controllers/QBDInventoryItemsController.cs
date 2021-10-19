@@ -83,6 +83,9 @@ namespace Brizbee.Web.Controllers
                     case "QBDINVENTORYITEMS/BARCODEVALUE":
                         orderByFormatted = "I.[BarCodeValue]";
                         break;
+                    case "QBDINVENTORYITEMS/CUSTOMBARCODEVALUE":
+                        orderByFormatted = "I.[CustomBarCodeValue]";
+                        break;
                     case "QBDINVENTORYITEMS/PURCHASEDESCRIPTION":
                         orderByFormatted = "I.[PurchaseDescription]";
                         break;
@@ -181,39 +184,50 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            var item = _context.QBDInventoryItems
+            // Attempt to find an item based on the custom bar code
+            var foundCustomItem = _context.QBDInventoryItems
+                .Where(i => i.OrganizationId == currentUser.OrganizationId)
+                .Where(i => i.CustomBarCodeValue == barCode)
+                .FirstOrDefault();
+
+            // Attempt to find an item based on the QuickBooks Enterprise bar code
+            var foundQuickBooksItem = _context.QBDInventoryItems
                 .Where(i => i.OrganizationId == currentUser.OrganizationId)
                 .Where(i => i.BarCodeValue == barCode)
                 .FirstOrDefault();
 
-            if (item == null)
+            if (foundCustomItem == null && foundQuickBooksItem == null)
                 return NotFound();
 
+            // Determine which item will be returned
+            var chosenBarCodeValue = foundCustomItem != null ? foundCustomItem.CustomBarCodeValue : foundQuickBooksItem.BarCodeValue;
+            var chosenItem = foundCustomItem != null ? foundCustomItem : foundQuickBooksItem;
+
             // Return item with units of measure
-            if (item.QBDUnitOfMeasureSetId.HasValue)
+            if (chosenItem.QBDUnitOfMeasureSetId.HasValue)
             {
-                item.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
-                    .Where(s => s.Id == item.QBDUnitOfMeasureSetId)
+                chosenItem.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
+                    .Where(s => s.Id == chosenItem.QBDUnitOfMeasureSetId)
                     .FirstOrDefault();
 
                 return Ok(new
                 {
-                    item.Id,
-                    item.FullName,
-                    item.BarCodeValue,
-                    item.ListId,
-                    item.Name,
-                    item.ManufacturerPartNumber,
-                    item.PurchaseCost,
-                    item.PurchaseDescription,
-                    item.SalesPrice,
-                    item.SalesDescription,
+                    chosenItem.Id,
+                    chosenItem.FullName,
+                    BarCodeValue = chosenBarCodeValue,
+                    chosenItem.ListId,
+                    chosenItem.Name,
+                    chosenItem.ManufacturerPartNumber,
+                    chosenItem.PurchaseCost,
+                    chosenItem.PurchaseDescription,
+                    chosenItem.SalesPrice,
+                    chosenItem.SalesDescription,
                     QBDUnitOfMeasureSet = new
                     {
-                        item.QBDUnitOfMeasureSet.ListId,
-                        item.QBDUnitOfMeasureSet.Name,
-                        item.QBDUnitOfMeasureSet.UnitOfMeasureType,
-                        UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(item.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
+                        chosenItem.QBDUnitOfMeasureSet.ListId,
+                        chosenItem.QBDUnitOfMeasureSet.Name,
+                        chosenItem.QBDUnitOfMeasureSet.UnitOfMeasureType,
+                        UnitNamesAndAbbreviations = JsonConvert.DeserializeObject<QuickBooksUnitOfMeasures>(chosenItem.QBDUnitOfMeasureSet.UnitNamesAndAbbreviations)
                     }
                 });
             }
@@ -221,16 +235,16 @@ namespace Brizbee.Web.Controllers
             {
                 return Ok(new
                 {
-                    item.Id,
-                    item.FullName,
-                    item.BarCodeValue,
-                    item.ListId,
-                    item.Name,
-                    item.ManufacturerPartNumber,
-                    item.PurchaseCost,
-                    item.PurchaseDescription,
-                    item.SalesPrice,
-                    item.SalesDescription
+                    chosenItem.Id,
+                    chosenItem.FullName,
+                    BarCodeValue = chosenBarCodeValue,
+                    chosenItem.ListId,
+                    chosenItem.Name,
+                    chosenItem.ManufacturerPartNumber,
+                    chosenItem.PurchaseCost,
+                    chosenItem.PurchaseDescription,
+                    chosenItem.SalesPrice,
+                    chosenItem.SalesDescription
                 });
             }
         }
@@ -388,6 +402,7 @@ namespace Brizbee.Web.Controllers
                             // Create the inventory item - massage properties if necessary.
                             item.QBDInventoryItemSyncId = sync.Id;
                             item.BarCodeValue = string.IsNullOrEmpty(item.BarCodeValue) ? "" : item.BarCodeValue;
+                            item.CustomBarCodeValue = ""; // Default to blank
                             item.ManufacturerPartNumber = string.IsNullOrEmpty(item.ManufacturerPartNumber) ? "" : item.ManufacturerPartNumber;
                             item.PurchaseDescription = string.IsNullOrEmpty(item.PurchaseDescription) ? "" : item.PurchaseDescription;
                             item.SalesDescription = string.IsNullOrEmpty(item.SalesDescription) ? "" : item.SalesDescription;
@@ -446,6 +461,72 @@ namespace Brizbee.Web.Controllers
                     return BadRequest(ex.ToString());
                 }
             }
+        }
+
+        // GET: api/QBDInventoryItems/5
+        public IHttpActionResult GetQBDInventoryItem(long id)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewInventoryItems)
+                return StatusCode(HttpStatusCode.Forbidden);
+
+            var inventoryItem = _context.QBDInventoryItems
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == id)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.FullName,
+                    c.ManufacturerPartNumber,
+                    c.BarCodeValue,
+                    c.CustomBarCodeValue,
+                    c.ListId,
+                    c.PurchaseDescription,
+                    c.PurchaseCost,
+                    c.SalesDescription,
+                    c.SalesPrice,
+                    c.QBDUnitOfMeasureSetFullName,
+                    c.QBDUnitOfMeasureSetListId,
+                    c.QBDUnitOfMeasureSetId,
+                    c.QBDInventoryItemSyncId,
+                    c.QBDCOGSAccountFullName,
+                    c.QBDCOGSAccountListId,
+                    c.OffsetItemFullName,
+                    c.OrganizationId
+                })
+                .FirstOrDefault();
+
+            if (inventoryItem == null)
+                return NotFound();
+
+            return Ok(inventoryItem);
+        }
+
+        // PUT: api/QBDInventoryItems/5
+        public IHttpActionResult PutQBDInventoryItem(long id, [FromBody] QBDInventoryItem inventoryItem)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyInventoryItems)
+                return StatusCode(HttpStatusCode.Forbidden);
+
+            var entity = _context.QBDInventoryItems
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == id)
+                .FirstOrDefault();
+
+            if (entity == null)
+                return NotFound();
+
+            entity.CustomBarCodeValue = inventoryItem.CustomBarCodeValue;
+
+            _context.SaveChanges();
+
+            return Ok();
         }
 
         private User CurrentUser()

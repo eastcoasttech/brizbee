@@ -203,6 +203,11 @@ namespace Brizbee.Common.Models
         public bool CanViewInventoryItems { get; set; }
 
         /// <summary>
+        /// Indicates whether or not the user can modify inventory items.
+        /// </summary>
+        public bool CanModifyInventoryItems { get; set; }
+
+        /// <summary>
         /// Indicates whether or not the user can sync inventory items.
         /// </summary>
         public bool CanSyncInventoryItems { get; set; }

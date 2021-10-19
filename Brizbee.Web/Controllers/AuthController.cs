@@ -374,6 +374,7 @@ namespace Brizbee.Web.Controllers
                     u.CanDeleteTimecards,
                     u.CanDeleteUsers,
                     u.CanModifyCustomers,
+                    u.CanModifyInventoryItems,
                     u.CanModifyOrganizationDetails,
                     u.CanModifyProjects,
                     u.CanModifyPunches,

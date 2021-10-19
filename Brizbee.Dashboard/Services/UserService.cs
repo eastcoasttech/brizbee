@@ -236,6 +236,7 @@ namespace Brizbee.Dashboard.Services
                     { "CanCreateLocks", user.CanCreateLocks },
                     { "CanUndoLocks", user.CanUndoLocks },
                     { "CanViewInventoryItems", user.CanViewInventoryItems },
+                    { "CanModifyInventoryItems", user.CanModifyInventoryItems },
                     { "CanSyncInventoryItems", user.CanSyncInventoryItems },
                     { "CanViewInventoryConsumptions", user.CanViewInventoryConsumptions },
                     { "CanDeleteInventoryConsumptions", user.CanDeleteInventoryConsumptions },

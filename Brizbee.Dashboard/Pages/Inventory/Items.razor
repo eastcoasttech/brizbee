@@ -141,7 +141,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 5%;">
+                <th style="width: 7%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/ManufacturerPartNumber"))">
                         Part #
                         @if (sortBy == "QBDInventoryItems/ManufacturerPartNumber" && sortDirection == "ASC")
@@ -156,7 +156,7 @@
                 </th>
                 <th style="width: 10%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/BarCodeValue"))">
-                        Bar Code
+                        QB Bar Code
                         @if (sortBy == "QBDInventoryItems/BarCodeValue" && sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
@@ -167,7 +167,20 @@
                         }
                     </a>
                 </th>
-                <th style="width: 20%;">
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/CustomBarCodeValue"))">
+                        Custom Bar Code
+                        @if (sortBy == "QBDInventoryItems/CustomBarCodeValue" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryItems/CustomBarCodeValue" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 17%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/PurchaseDescription"))">
                         Purchase <abbr title="Description">Desc</abbr>
                         @if (sortBy == "QBDInventoryItems/PurchaseDescription" && sortDirection == "ASC")
@@ -180,7 +193,7 @@
                         }
                     </a>
                 </th>
-                <th style="width: 20%;">
+                <th style="width: 17%;">
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryItems/SalesDescription"))">
                         Sales <abbr title="Description">Desc</abbr>
                         @if (sortBy == "QBDInventoryItems/SalesDescription" && sortDirection == "ASC")
@@ -193,10 +206,10 @@
                         }
                     </a>
                 </th>
-                <th style="width: 10%;">
+                <th style="width: 7%;">
                     Purchase Cost
                 </th>
-                <th style="width: 10%;">
+                <th style="width: 7%;">
                     Sales Price
                 </th>
                 <th style="width: 10%;">
@@ -207,10 +220,11 @@
         <tbody>
             @foreach (var item in items)
             {
-                <tr class="fadeIn selectable">
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyInventoryItemDialog(item))">
                     <td><a href="javascript:void(0)">@item.Name</a></td>
                     <td><a href="javascript:void(0)">@item.ManufacturerPartNumber</a></td>
                     <td><a href="javascript:void(0)">@item.BarCodeValue</a></td>
+                    <td><a href="javascript:void(0)">@item.CustomBarCodeValue</a></td>
                     <td><a href="javascript:void(0)">@formatText(item.PurchaseDescription)</a></td>
                     <td><a href="javascript:void(0)">@formatText(item.SalesDescription)</a></td>
                     <td><a href="javascript:void(0)">@item.PurchaseCost.ToString("C")</a></td>
@@ -221,13 +235,13 @@
             @if (working)
             {
                 <tr class="fadeIn">
-                    <td colspan="8"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="9"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!working && items.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="8">You haven't synced any inventory items</td>
+                    <td colspan="9">You haven't synced any inventory items</td>
                 </tr>
             }
         </tbody>
@@ -301,7 +315,10 @@
 
     private async void Close(dynamic result)
     {
-        await RefreshItems();
+        if ((result as string) == "item.updated")
+        {
+            await RefreshItems();
+        }
     }
 
     private async System.Threading.Tasks.Task RefreshItems()
@@ -339,5 +356,12 @@
             return $"{text.Substring(0, 26)}...";
         else
             return text;
+    }
+
+    private void OpenModifyInventoryItemDialog(QBDInventoryItem inventoryItem)
+    {
+        dialogService.Open<InventoryItemDialog>("Edit Inventory Item",
+                                new Dictionary<string, object>() { { "Id", inventoryItem.Id } },
+                                new DialogOptions() { Width = "600px" });
     }
 }
