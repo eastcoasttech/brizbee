@@ -11,71 +11,71 @@
     <ValidationSummary />
 
     <div class="form-group">
-        <label for="inventory_item_name" class="col-sm-3 control-label">Name</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_name" class="col-sm-4 control-label">Name</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.Name</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_full_name" class="col-sm-3 control-label">Full Name</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_full_name" class="col-sm-4 control-label">Full Name</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.FullName</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_manufacturer_part_number" class="col-sm-3 control-label">Manufacturer Part Number</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_manufacturer_part_number" class="col-sm-4 control-label">Manufacturer Part Number</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.ManufacturerPartNumber</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_bar_code_value" class="col-sm-3 control-label">QuickBooks Bar Code Value</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_bar_code_value" class="col-sm-4 control-label">QuickBooks Barcode Value</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.BarCodeValue</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_custom_bar_code_value" class="col-sm-3 control-label">Custom Bar Code Value</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_custom_bar_code_value" class="col-sm-4 control-label">Custom Barcode Value</label>
+        <div class="col-sm-8">
             <InputText class="form-control" id="inventory_item_custom_bar_code_value" @bind-Value="inventoryItem.CustomBarCodeValue" disabled="@(working || loading)" />
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_purchase_description" class="col-sm-3 control-label">Purchase Description</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_purchase_description" class="col-sm-4 control-label">Purchase Description</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.PurchaseDescription</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_purchase_cost" class="col-sm-3 control-label">Purchase Cost</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_purchase_cost" class="col-sm-4 control-label">Purchase Cost</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.PurchaseCost</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_sales_description" class="col-sm-3 control-label">Sales Description</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_sales_description" class="col-sm-4 control-label">Sales Description</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.SalesDescription</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_sales_price" class="col-sm-3 control-label">Sales Price</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_sales_price" class="col-sm-4 control-label">Sales Price</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.SalesPrice</p>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="inventory_item_offset_item_full_name" class="col-sm-3 control-label">Offset Item Full Name</label>
-        <div class="col-sm-9">
+        <label for="inventory_item_offset_item_full_name" class="col-sm-4 control-label">Offset Item Full Name</label>
+        <div class="col-sm-8">
             <p class="form-control-static">@inventoryItem.OffsetItemFullName</p>
         </div>
     </div>
