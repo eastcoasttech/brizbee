@@ -434,7 +434,7 @@ namespace Brizbee.Web.Controllers
         [HttpPost]
         public IHttpActionResult SplitAtMidnight(ODataActionParameters parameters)
         {
-            Trace.TraceInformation("Attempting to split at midnight");
+            telemetryClient.TrackEvent("Split:Requested");
 
             using (var transaction = db.Database.BeginTransaction())
             {
@@ -452,13 +452,21 @@ namespace Brizbee.Web.Controllers
                         .ToArray();
                     var originalPunchesTracked = db.Punches
                         .Where(p => userIds.Contains(p.UserId))
-                        .Where(p => p.InAt >= inAt && p.OutAt.HasValue && p.OutAt.Value <= outAt)
-                        .Where(p => !p.CommitId.HasValue); // Only uncommited punches
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) >= inAt.Date)
+                        .Where(p => DbFunctions.TruncateTime(p.InAt) <= outAt.Date)
+                        .Where(p => !p.CommitId.HasValue); // Only unlocked punches
                     var originalPunchesNotTracked = originalPunchesTracked
                         .AsNoTracking() // Will be manipulated in memory
                         .ToList();
 
-                    Trace.TraceInformation($"Splitting punches {inAt:G} through {outAt:G} for {currentUser.OrganizationId}");
+                    telemetryClient.TrackEvent("Split:Starting", new Dictionary<string, string>()
+                    {
+                        { "InAt", inAt.ToString("G") },
+                        { "OutAt", outAt.ToString("G") },
+                        { "UserId", currentUser.Id.ToString() },
+                        { "OrganizationId", currentUser.OrganizationId.ToString() }
+                    });
 
                     // Save what the punches looked like before.
                     var before = originalPunchesNotTracked;
@@ -468,13 +476,9 @@ namespace Brizbee.Web.Controllers
                     // Save what the punches look like after.
                     var after = splitPunches;
 
-                    Trace.TraceInformation("Removing original punches");
-
                     // Delete the old punches and save the new ones
                     db.Punches.RemoveRange(originalPunchesTracked);
                     db.SaveChanges();
-
-                    Trace.TraceInformation("Adding split punches");
 
                     db.Punches.AddRange(splitPunches);
                     db.SaveChanges();
@@ -503,8 +507,11 @@ namespace Brizbee.Web.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning(ex.ToString());
+                        telemetryClient.TrackException(ex);
                     }
+
+                    telemetryClient.TrackEvent("Split:Succeeded");
+                    telemetryClient.Flush();
 
                     transaction.Commit();
 
@@ -512,8 +519,9 @@ namespace Brizbee.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError("Population failed");
-                    Trace.TraceError(ex.ToString());
+                    telemetryClient.TrackEvent("Split:Failed");
+                    telemetryClient.TrackException(ex);
+                    telemetryClient.Flush();
 
                     transaction.Rollback();
 
