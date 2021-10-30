@@ -92,6 +92,12 @@ namespace Brizbee.Common.Models
         public bool UsesTimesheets { get; set; }
 
         /// <summary>
+        /// Indicates whether or not to send an Email every day
+        /// showing punches for users who were punched in through midnight.
+        /// </summary>
+        public bool ShouldSendMidnightPunchEmail { get; set; }
+
+        /// <summary>
         /// Comma-separated list of phone numbers that are
         /// allowed to use the touch-tone telephone clock.
         /// </summary>

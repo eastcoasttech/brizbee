@@ -135,7 +135,8 @@
     <EmbeddedResource Include="Migrations\0014 Adding Indexes to Customers Jobs and Tasks.sql" />
     <EmbeddedResource Include="Migrations\0015 Adding Index to Users.sql" />
     <EmbeddedResource Include="Migrations\0016 Adding CustomBarCodeValue.sql" />
-    <Content Include="Migrations\0017 Removing NULL.sql" />
+    <EmbeddedResource Include="Migrations\0017 Adding Column to Users.sql" />
+    <Content Include="Migrations\0018 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
