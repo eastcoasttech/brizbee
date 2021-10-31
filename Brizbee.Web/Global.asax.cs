@@ -41,11 +41,16 @@ namespace Brizbee.Web
 
             GlobalConfiguration.Configure(WebApiConfig.Register);
 
-            // Configure Application Insights key
             try
             {
-                TelemetryConfiguration.Active.ConnectionString = ConfigurationManager.AppSettings["ApplicationInsightsConnectionString"].ToString();
-                //TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+                // Configure Application Insights key
+                var connectionString = ConfigurationManager.AppSettings["ApplicationInsightsConnectionString"];
+                if (!string.IsNullOrEmpty(connectionString))
+                    TelemetryConfiguration.Active.ConnectionString = connectionString;
+            }
+            catch (NullReferenceException ex)
+            {
+                Trace.TraceError(ex.ToString());
             }
             catch (ArgumentNullException ex)
             {

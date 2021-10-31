@@ -545,6 +545,9 @@
     <Compile Include="Services\MidnightSplitter.cs" />
     <Compile Include="Services\PunchService.cs" />
     <Compile Include="Services\ReportBuilder.cs" />
+    <Compile Include="Services\Reports\PunchesByUserAsExcel.cs" />
+    <Compile Include="Services\Reports\Stylesheets.cs" />
+    <Compile Include="Services\Reports\TimeCardsByUserAsExcel.cs" />
     <Compile Include="SqlContext.cs" />
   </ItemGroup>
   <ItemGroup>

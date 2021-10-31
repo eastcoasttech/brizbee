@@ -38,7 +38,6 @@ namespace Brizbee.Web.Services
     {
         private SqlContext db = new SqlContext();
         private Font fontH1 = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, BaseColor.WHITE);
-        private Font fontH2 = new Font(Font.FontFamily.HELVETICA, 9, Font.BOLDITALIC);
         private Font fontH3 = new Font(Font.FontFamily.HELVETICA, 8, Font.BOLD);
         private Font fontH4 = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
         private Font fontP = new Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL);
