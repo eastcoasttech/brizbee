@@ -1,7 +1,6 @@
 ﻿using Brizbee.Blazor;
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
-using Brizbee.Dashboard.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,83 +42,6 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
         }
 
-        public async Task<Credential> AuthenticateWithPinAsync(PinSession session)
-        {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Users/Default.Authenticate"))
-            {
-                var payload = new
-                {
-                    Session = new
-                    {
-                        PinOrganizationCode = session.OrganizationCode,
-                        Method = "pin",
-                        PinUserPin = session.UserPin
-                    }
-                };
-
-                var json = JsonSerializer.Serialize(payload);
-                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
-                {
-                    request.Content = stringContent;
-
-                    using (var response = await _apiService
-                        .GetHttpClient()
-                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
-                        .ConfigureAwait(false))
-                    {
-                        if (response.IsSuccessStatusCode)
-                        {
-                            using var responseContent = await response.Content.ReadAsStreamAsync();
-                            var deserialized = await JsonSerializer.DeserializeAsync<Credential>(responseContent, options);
-                            return deserialized;
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                }
-            }
-        }
-
-        public async Task<Credential> AuthenticateWithEmailAsync(EmailSession session)
-        {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Users/Default.Authenticate"))
-            {
-                var payload = new
-                {
-                    Session = new {
-                        EmailAddress = session.EmailAddress,
-                        Method = "email",
-                        EmailPassword = session.EmailPassword
-                    }
-                };
-
-                var json = JsonSerializer.Serialize(payload);
-                using (var stringContent = new StringContent(json, Encoding.UTF8, "application/json"))
-                {
-                    request.Content = stringContent;
-
-                    using (var response = await _apiService
-                        .GetHttpClient()
-                        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
-                        .ConfigureAwait(false))
-                    {
-                        if (response.IsSuccessStatusCode)
-                        {
-                            using var responseContent = await response.Content.ReadAsStreamAsync();
-                            var deserialized = await JsonSerializer.DeserializeAsync<Credential>(responseContent, options);
-                            return deserialized;
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                }
-            }
-        }
-
         public async Task<(List<User>, long?)> GetUsersAsync(int pageSize = 100, int skip = 0, string sortBy = "Name", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
@@ -137,24 +59,6 @@ namespace Brizbee.Dashboard.Services
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             return await JsonSerializer.DeserializeAsync<User>(responseContent, options);
-        }
-
-        public async Task<User> GetUserMeAsync(int userId)
-        {
-            var response = await _apiService
-                .GetHttpClient()
-                .GetAsync($"odata/Users({userId})?$expand=Organization");
-
-            if (response.IsSuccessStatusCode)
-            {
-                using var responseContent = await response.Content.ReadAsStreamAsync();
-                var deserialized = await JsonSerializer.DeserializeAsync<User>(responseContent, options);
-                return deserialized;
-            }
-            else
-            {
-                return null;
-            }
         }
 
         public async Task<List<User>> SearchUsersAsync(string query)
@@ -194,6 +98,7 @@ namespace Brizbee.Dashboard.Services
                     { "UsesMobileClock", user.UsesMobileClock },
                     { "UsesTouchToneClock", user.UsesTouchToneClock },
                     { "UsesWebClock", user.UsesWebClock },
+                    { "ShouldSendMidnightPunchEmail", user.ShouldSendMidnightPunchEmail },
                     { "AllowedPhoneNumbers", user.AllowedPhoneNumbers },
                     { "NotificationMobileNumbers", user.NotificationMobileNumbers },
                     { "Pin", user.Pin },

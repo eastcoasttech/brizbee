@@ -8,6 +8,7 @@
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
 @inject AuditService auditService
+@inject AuthService authService
 @inject KioskService kioskService
 @inject UserService userService
 @inject LockService lockService
@@ -58,10 +59,12 @@
                                     <ValidationSummary />
 
                                     <div class="form-group form-group-lg">
-                                        <InputText id="inputOrganizationCode" @bind-Value="pinSession.OrganizationCode" class="form-control" placeholder="Organization Code" disabled="@working" />
+                                        <label class="control-label" for="inputOrganizationCode">Organization Code</label>
+                                        <InputText id="inputOrganizationCode" @bind-Value="pinSession.OrganizationCode" class="form-control" disabled="@working" />
                                     </div>
                                     <div class="form-group form-group-lg">
-                                        <InputText id="inputUserPin" @bind-Value="pinSession.UserPin" class="form-control" placeholder="PIN Number" type="password" disabled="@working" />
+                                        <label class="control-label" for="inputUserPin">PIN Number</label>
+                                        <InputText id="inputUserPin" @bind-Value="pinSession.UserPin" class="form-control" type="password" disabled="@working" />
                                     </div>
                                     <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
                                     <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
@@ -81,10 +84,12 @@
                                     <ValidationSummary />
 
                                     <div class="form-group form-group-lg">
-                                        <InputText id="inputEmailAddress" @bind-Value="emailSession.EmailAddress" class="form-control" type="email" placeholder="Email Address" disabled="@working" />
+                                        <label class="control-label" for="inputEmailAddress">Email Address</label>
+                                        <InputText id="inputEmailAddress" @bind-Value="emailSession.EmailAddress" class="form-control" type="email" disabled="@working" />
                                     </div>
                                     <div class="form-group form-group-lg">
-                                        <InputText id="inputPassword" @bind-Value="emailSession.EmailPassword" class="form-control" placeholder="Password" type="password" disabled="@working" />
+                                        <label class="control-label" for="inputPassword">Password</label>
+                                        <InputText id="inputPassword" @bind-Value="emailSession.EmailPassword" class="form-control" type="password" disabled="@working" />
                                     </div>
                                     <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
                                     <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
@@ -138,6 +143,7 @@
         {
             // Update headers on services.
             auditService.ConfigureHeadersWithCredentials(credential);
+            authService.ConfigureHeadersWithCredentials(credential);
             kioskService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
@@ -157,7 +163,7 @@
             exportService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service.
-            sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
+            sharedService.CurrentUser = await authService.GetMeAsync();
             sharedService.AuthUserId = int.Parse(credential.AuthUserId);
             sharedService.AuthToken = credential.AuthToken;
             sharedService.AuthExpiration = credential.AuthExpiration;
@@ -194,11 +200,11 @@
 
             if (method == "pin")
             {
-                credential = await userService.AuthenticateWithPinAsync(pinSession);
+                credential = await authService.AuthenticateWithPinAsync(pinSession);
             }
             else if (method == "email")
             {
-                credential = await userService.AuthenticateWithEmailAsync(emailSession);
+                credential = await authService.AuthenticateWithEmailAsync(emailSession);
             }
             else
             {
@@ -212,6 +218,7 @@
 
             // Update headers on services
             auditService.ConfigureHeadersWithCredentials(credential);
+            authService.ConfigureHeadersWithCredentials(credential);
             kioskService.ConfigureHeadersWithCredentials(credential);
             userService.ConfigureHeadersWithCredentials(credential);
             punchService.ConfigureHeadersWithCredentials(credential);
@@ -231,7 +238,7 @@
             exportService.ConfigureHeadersWithCredentials(credential);
 
             // Configure shared service
-            sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
+            sharedService.CurrentUser = await authService.GetMeAsync();
             sharedService.AuthUserId = int.Parse(credential.AuthUserId);
             sharedService.AuthToken = credential.AuthToken;
             sharedService.AuthExpiration = credential.AuthExpiration;

@@ -416,6 +416,7 @@ namespace Brizbee.Web.Controllers
                     u.UsesTimesheets,
                     u.UsesTouchToneClock,
                     u.UsesWebClock,
+                    u.ShouldSendMidnightPunchEmail,
                     Organization = new
                     {
                         u.Organization.Code,

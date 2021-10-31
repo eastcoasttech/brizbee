@@ -12,12 +12,16 @@
 @inject NavigationManager NavigationManager
 @inject LocalStorageService localStorageService
 @inject SharedService sharedService
+@inject AuditService auditService
+@inject AuthService authService
+@inject KioskService kioskService
 @inject UserService userService
 @inject LockService lockService
 @inject PunchService punchService
 @inject CustomerService customerService
 @inject TaskService taskService
 @inject TaskTemplateService taskTemplateService
+@inject PopulateTemplateService populateTemplateService
 @inject JobService jobService
 @inject RateService rateService
 @inject OrganizationService organizationService
@@ -230,7 +234,7 @@
             working = true;
 
         // Authenticate the user.
-        var credential = await userService.AuthenticateWithEmailAsync(new EmailSession()
+        var credential = await authService.AuthenticateWithEmailAsync(new EmailSession()
         {
             EmailAddress = registration.EmailAddress,
             EmailPassword = registration.Password
@@ -242,12 +246,16 @@
         await localStorageService.SetLocalStorage("AuthExpiration", credential.AuthExpiration);
 
         // Update headers on services.
+        auditService.ConfigureHeadersWithCredentials(credential);
+        authService.ConfigureHeadersWithCredentials(credential);
+        kioskService.ConfigureHeadersWithCredentials(credential);
         userService.ConfigureHeadersWithCredentials(credential);
         punchService.ConfigureHeadersWithCredentials(credential);
         lockService.ConfigureHeadersWithCredentials(credential);
         customerService.ConfigureHeadersWithCredentials(credential);
         taskService.ConfigureHeadersWithCredentials(credential);
         taskTemplateService.ConfigureHeadersWithCredentials(credential);
+        populateTemplateService.ConfigureHeadersWithCredentials(credential);
         jobService.ConfigureHeadersWithCredentials(credential);
         rateService.ConfigureHeadersWithCredentials(credential);
         organizationService.ConfigureHeadersWithCredentials(credential);
@@ -259,7 +267,7 @@
         exportService.ConfigureHeadersWithCredentials(credential);
 
         // Configure shared service.
-        sharedService.CurrentUser = await userService.GetUserMeAsync(int.Parse(credential.AuthUserId));
+        sharedService.CurrentUser = await authService.GetMeAsync();
         sharedService.AuthUserId = int.Parse(credential.AuthUserId);
         sharedService.AuthToken = credential.AuthToken;
         sharedService.AuthExpiration = credential.AuthExpiration;
