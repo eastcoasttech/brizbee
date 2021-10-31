@@ -713,11 +713,11 @@ namespace Brizbee.Web.Controllers
                             rowPunch.Append(cellCustomerName);
 
                             // Customer Rate
-                            var cellCustomerRate = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.ServiceRate.Name) };
+                            var cellCustomerRate = new Cell() { CellReference = $"I{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.ServiceRateId.HasValue ? punch.ServiceRate.Name : "") };
                             rowPunch.Append(cellCustomerRate);
 
                             // Payroll Rate
-                            var cellPayrollRate = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.PayrollRate.Name) };
+                            var cellPayrollRate = new Cell() { CellReference = $"J{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.PayrollRateId.HasValue ? punch.PayrollRate.Name : "") };
                             rowPunch.Append(cellPayrollRate);
 
                             // Locked
