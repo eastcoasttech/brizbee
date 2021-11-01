@@ -425,7 +425,10 @@ namespace Brizbee.Web.Controllers
                         u.Organization.Id,
                         u.Organization.MinutesFormat,
                         u.Organization.Name,
-                        u.Organization.PlanId
+                        u.Organization.PlanId,
+                        u.Organization.SortCustomersByColumn,
+                        u.Organization.SortProjectsByColumn,
+                        u.Organization.SortTasksByColumn
                     }
                 })
                 .FirstOrDefault();
