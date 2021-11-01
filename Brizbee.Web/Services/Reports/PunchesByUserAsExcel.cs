@@ -503,7 +503,11 @@ namespace Brizbee.Web.Services.Reports
                 worksheet1.Append(sheetViews1);
                 worksheet1.Append(columns1);
                 worksheet1.Append(sheetData1);
-                worksheet1.Append(mergeCells1);
+
+                // Cannot add zero merge cells.
+                if (mergeCells1.Count != 0)
+                    worksheet1.Append(mergeCells1);
+
                 worksheet1.Append(pageMargins1);
                 worksheet1.Append(pageSetup1);
                 worksheet1.Append(headerFooter1);
