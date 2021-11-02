@@ -39,7 +39,7 @@ namespace Brizbee.Functions.Alerts
     {
         private ILogger logger;
 
-        //[FunctionName("GenerateFunction")]
+        [FunctionName("GenerateFunction")]
         public void Run([TimerTrigger("0 */30 * * * *", RunOnStartup = true)]TimerInfo myTimer, ILogger log)
         {
             logger = log;
