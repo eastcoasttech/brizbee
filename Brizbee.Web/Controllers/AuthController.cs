@@ -426,6 +426,9 @@ namespace Brizbee.Web.Controllers
                         u.Organization.MinutesFormat,
                         u.Organization.Name,
                         u.Organization.PlanId,
+                        u.Organization.ShowCustomerNumber,
+                        u.Organization.ShowProjectNumber,
+                        u.Organization.ShowTaskNumber,
                         u.Organization.SortCustomersByColumn,
                         u.Organization.SortProjectsByColumn,
                         u.Organization.SortTasksByColumn
