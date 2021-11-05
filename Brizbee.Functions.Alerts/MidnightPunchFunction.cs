@@ -106,7 +106,12 @@ namespace Brizbee.Functions.Alerts
                                 [U].[Name] AS [User_Name],
 
                                 FORMAT([P].[InAt], 'ddd, MMM dd, yyyy h:mm tt') AS [Punch_InAt],
-                                FORMAT([P].[OutAt], 'ddd, MMM dd, yyyy h:mm tt') AS [Punch_OutAt],
+
+                                CASE
+                                    WHEN [P].[OutAt] IS NOT NULL THEN FORMAT([P].[OutAt], 'ddd, MMM dd, yyyy h:mm tt')
+                                    WHEN [P].[OutAt] IS NULL THEN 'STILL WORKING'
+                                    ELSE 'STILL WORKING'
+                                END AS [Punch_OutAt],
 
                                 [T].[Number] AS [Task_Number],
                                 [T].[Name] AS [Task_Name],
@@ -128,7 +133,7 @@ namespace Brizbee.Functions.Alerts
                                 [Customers] AS [C] ON [C].[Id] = [J].[CustomerId]
                             WHERE
                                 [P].[InAt] < @Midnight AND
-                                [P].[OutAt] > @Midnight AND
+                                ([P].[OutAt] > @Midnight OR [P].[OutAt] IS NULL) AND
                                 [U].[IsDeleted] = 0 AND
                                 [U].[OrganizationId] = @OrganizationId;";
 
