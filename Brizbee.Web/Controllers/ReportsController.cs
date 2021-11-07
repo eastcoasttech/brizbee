@@ -22,14 +22,9 @@
 
 using Brizbee.Common.Models;
 using Brizbee.Web.Services;
+using Brizbee.Web.Services.Reports;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
-using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using NodaTime;
 using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -37,11 +32,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Web.Http;
-using System.IO;
-using System.Text;
-using System.Data.Entity.SqlServer;
-using System.Data.Entity;
-using Brizbee.Web.Services.Reports;
 
 namespace Brizbee.Web.Controllers
 {
@@ -153,19 +143,17 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            Trace.TraceInformation($"Generating PunchesByDay report for {Min:G} through {Max:G}");
-
+            telemetryClient.TrackTrace($"Generating PunchesByDay report for {Min:G} through {Max:G}");
 
             // Ensure that user is authorized.
             if (!currentUser.CanViewReports)
                 return StatusCode(HttpStatusCode.Forbidden);
 
-            var bytes = new ReportBuilder().PunchesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
-            return new FileActionResult(bytes, "application/pdf",
-                string.Format(
-                    "Punches by Day {0} thru {1}.pdf",
-                    Min.ToShortDateString(),
-                    Max.ToShortDateString()),
+            var bytes = new PunchesByDayAsExcel().Build(currentUser, Min, Max, UserScope, UserIds, JobScope, JobIds, CommitStatus);
+            return new FileActionResult(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Report - Punches by Day {Min.ToString("yyyy_MM_dd")} thru {Max.ToString("yyyy_MM_dd")}.xlsx",
                 Request);
         }
 
@@ -233,19 +221,17 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            Trace.TraceInformation($"Generating TimeEntriesByDay report for {Min:G} through {Max:G}");
-
+            telemetryClient.TrackTrace($"Generating TimeEntriesByDay report for {Min:G} through {Max:G}");
 
             // Ensure that user is authorized.
             if (!currentUser.CanViewReports)
                 return StatusCode(HttpStatusCode.Forbidden);
 
-            var bytes = new ReportBuilder().TimeEntriesByDayAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
-            return new FileActionResult(bytes, "application/pdf",
-                string.Format(
-                    "Time Cards by Day {0} thru {1}.pdf",
-                    Min.ToShortDateString(),
-                    Max.ToShortDateString()),
+            var bytes = new TimeCardsByDayAsExcel().Build(currentUser, Min, Max, UserScope, UserIds, JobScope, JobIds);
+            return new FileActionResult(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Report - Time Cards by Day {Min.ToString("yyyy_MM_dd")} thru {Max.ToString("yyyy_MM_dd")}.xlsx",
                 Request);
         }
 
