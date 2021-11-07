@@ -90,8 +90,8 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Azure.Core, Version=1.20.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
-      <HintPath>..\packages\Azure.Core.1.20.0\lib\net461\Azure.Core.dll</HintPath>
+    <Reference Include="Azure.Core, Version=1.21.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
+      <HintPath>..\packages\Azure.Core.1.21.0\lib\net461\Azure.Core.dll</HintPath>
     </Reference>
     <Reference Include="Azure.Storage.Blobs, Version=12.10.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
       <HintPath>..\packages\Azure.Storage.Blobs.12.10.0\lib\netstandard2.0\Azure.Storage.Blobs.dll</HintPath>
@@ -117,13 +117,13 @@
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.7.11\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.7.12\lib\net45\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="RestSharp, Version=106.12.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
-      <HintPath>..\packages\RestSharp.106.12.0\lib\net452\RestSharp.dll</HintPath>
+    <Reference Include="RestSharp, Version=106.13.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.106.13.0\lib\net452\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="RestSharp.Serializers.NewtonsoftJson, Version=106.12.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
-      <HintPath>..\packages\RestSharp.Serializers.NewtonsoftJson.106.12.0\lib\net452\RestSharp.Serializers.NewtonsoftJson.dll</HintPath>
+    <Reference Include="RestSharp.Serializers.NewtonsoftJson, Version=106.13.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.Serializers.NewtonsoftJson.106.13.0\lib\net452\RestSharp.Serializers.NewtonsoftJson.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
