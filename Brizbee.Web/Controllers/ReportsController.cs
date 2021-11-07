@@ -126,19 +126,17 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            Trace.TraceInformation($"Generating PunchesByJob report for {Min:G} through {Max:G}");
-
+            telemetryClient.TrackTrace($"Generating PunchesByJob report for {Min:G} through {Max:G}");
 
             // Ensure that user is authorized.
             if (!currentUser.CanViewReports)
                 return StatusCode(HttpStatusCode.Forbidden);
 
-            var bytes = new ReportBuilder().PunchesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, CommitStatus, currentUser);
-            return new FileActionResult(bytes, "application/pdf",
-                string.Format(
-                    "Punches by Job and Task {0} thru {1}.pdf",
-                    Min.ToShortDateString(),
-                    Max.ToShortDateString()),
+            var bytes = new PunchesByProjectAsExcel().Build(currentUser, Min, Max, UserScope, UserIds, JobScope, JobIds, CommitStatus);
+            return new FileActionResult(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Report - Punches by Project {Min.ToString("yyyy_MM_dd")} thru {Max.ToString("yyyy_MM_dd")}.xlsx",
                 Request);
         }
 
@@ -193,7 +191,7 @@ namespace Brizbee.Web.Controllers
             return new FileActionResult(
                 bytes,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"Report - Timecards by User {Min.ToString("yyyy_MM_dd")} thru {Max.ToString("yyyy_MM_dd")}.xlsx",
+                $"Report - Time Cards by User {Min.ToString("yyyy_MM_dd")} thru {Max.ToString("yyyy_MM_dd")}.xlsx",
                 Request);
         }
 
@@ -207,29 +205,20 @@ namespace Brizbee.Web.Controllers
             [FromUri] DateTime Min,
             [FromUri] DateTime Max)
         {
-            try
-            {
-                var currentUser = CurrentUser();
+            var currentUser = CurrentUser();
 
-                Trace.TraceInformation($"Generating TimeEntriesByJob report for {Min:G} through {Max:G}");
+            telemetryClient.TrackTrace($"Generating TimeEntriesByJob report for {Min:G} through {Max:G}");
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewReports)
+                return StatusCode(HttpStatusCode.Forbidden);
 
-                // Ensure that user is authorized.
-                if (!currentUser.CanViewReports)
-                    return StatusCode(HttpStatusCode.Forbidden);
-
-                var bytes = new ReportBuilder().TimeEntriesByJobAndTaskAsPdf(UserScope, UserIds, JobScope, JobIds, Min, Max, currentUser);
-                return new FileActionResult(bytes, "application/pdf",
-                    string.Format(
-                        "Time Cards by Job and Task {0} thru {1}.pdf",
-                        Min.ToShortDateString(),
-                        Max.ToShortDateString()),
-                    Request);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.ToString());
-            }
+            var bytes = new TimeCardsByProjectAsExcel().Build(currentUser, Min, Max, UserScope, UserIds, JobScope, JobIds);
+            return new FileActionResult(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Report - Time Cards by Project {Min.ToString("yyyy_MM_dd")} thru {Max.ToString("yyyy_MM_dd")}.xlsx",
+                Request);
         }
 
         // GET: api/Reports/TimeEntriesByDay

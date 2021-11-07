@@ -1,5 +1,5 @@
 ﻿//
-//  TimeCardsByUserAsExcel.cs
+//  TimeCardsByProjectAsExcel.cs
 //  BRIZBEE API
 //
 //  Copyright (C) 2020-2021 East Coast Technology Services, LLC
@@ -32,7 +32,7 @@ using System.Linq;
 
 namespace Brizbee.Web.Services.Reports
 {
-    public class TimeCardsByUserAsExcel
+    public class TimeCardsByProjectAsExcel
     {
         private SqlContext db = new SqlContext();
 
@@ -40,7 +40,7 @@ namespace Brizbee.Web.Services.Reports
         {
             var organization = db.Organizations.Find(currentUser.OrganizationId);
 
-            var reportTitle = $"TIME CARDS BY USER {min.ToString("M/d/yyyy")} thru {max.ToString("M/d/yyyy")} GENERATED {DateTime.Now.ToString("ddd, MMM d, yyyy h:mm:ss tt").ToUpperInvariant()}";
+            var reportTitle = $"TIME CARDS BY PROJECT {min.ToString("M/d/yyyy")} thru {max.ToString("M/d/yyyy")} GENERATED {DateTime.Now.ToString("ddd, MMM d, yyyy h:mm:ss tt").ToUpperInvariant()}";
 
             using (var stream = new MemoryStream())
             using (var document = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
@@ -125,36 +125,43 @@ namespace Brizbee.Web.Services.Reports
 
                 var timeCards = timeCardsQueryable.ToList();
 
+                var projectIds = timeCards
+                    .OrderBy(t => t.Task.Job.Number)
+                    .GroupBy(t => t.Task.JobId)
+                    .Select(g => g.Key)
+                    .ToList();
+
 
                 // ------------------------------------------------------------
-                // Loop each user.
+                // Loop each project.
                 // ------------------------------------------------------------
 
                 var rowIndex = (uint)1;
-                foreach (var user in users)
+                foreach (var projectId in projectIds)
                 {
-                    var timeCardsForUser = timeCards
-                        .Where(t => t.UserId == user.Id)
-                        .OrderBy(t => t.EnteredAt);
+                    var project = db.Jobs.Find(projectId);
+                    var groupedTaskIds = timeCards
+                        .GroupBy(t => t.TaskId)
+                        .Select(g => g.Key)
+                        .ToList();
+                    var timeCardsForProject = timeCards
+                        .Where(t => groupedTaskIds.Contains(t.TaskId))
+                        .ToList();
 
-                    // Do not continue adding this user if there are no timecards.
-                    if (!timeCardsForUser.Any())
-                        continue;
-                    
 
                     // ------------------------------------------------------------
-                    // Header for user cell.
+                    // Header for project cell.
                     // ------------------------------------------------------------
 
-                    var rowUser = new Row() { RowIndex = rowIndex, Height = 22D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
+                    var rowProject = new Row() { RowIndex = rowIndex, Height = 22D, CustomHeight = true, Spans = new ListValue<StringValue>() { InnerText = "1:1" }, StyleIndex = 4U, CustomFormat = true };
 
-                    var cellUser = new Cell() { CellReference = $"A{rowIndex}", StyleIndex = 4U, DataType = CellValues.String, CellValue = new CellValue($"User {user.Name}") };
-                    rowUser.Append(cellUser);
+                    var cellProject = new Cell() { CellReference = $"A{rowIndex}", StyleIndex = 4U, DataType = CellValues.String, CellValue = new CellValue($"Project {project.Number} - {project.Name} for Customer {project.Customer.Number} - {project.Customer.Name}") };
+                    rowProject.Append(cellProject);
 
-                    sheetData1.Append(rowUser);
+                    sheetData1.Append(rowProject);
 
                     // Merge the user name across the row.
-                    var mergeCell0 = new MergeCell() { Reference = $"A{rowIndex}:H{rowIndex}" };
+                    var mergeCell0 = new MergeCell() { Reference = $"A{rowIndex}:E{rowIndex}" };
                     mergeCells1.Append(mergeCell0);
                     mergeCells1.Count++;
 
@@ -171,10 +178,13 @@ namespace Brizbee.Web.Services.Reports
                         .ToList();
                     foreach (var date in dates)
                     {
-                        var timeCardsForDate = timeCardsForUser
-                            .Where(t => t.EnteredAt.Date == date.Date);
+                        var timeCardsForProjectAndDate = timeCards
+                            .Where(t => t.EnteredAt.Date == date.Date)
+                            .Where(t => groupedTaskIds.Contains(t.TaskId))
+                            .OrderBy(t => t.EnteredAt)
+                            .ToList();
 
-                        if (!timeCardsForDate.Any())
+                        if (!timeCardsForProjectAndDate.Any())
                             continue;
 
                         rowIndex++;
@@ -192,7 +202,7 @@ namespace Brizbee.Web.Services.Reports
                         sheetData1.Append(rowDate);
 
                         // Merge the date across the row.
-                        var mergeCell1 = new MergeCell() { Reference = $"A{rowIndex}:H{rowIndex}" };
+                        var mergeCell1 = new MergeCell() { Reference = $"A{rowIndex}:E{rowIndex}" };
                         mergeCells1.Append(mergeCell1);
                         mergeCells1.Count++;
 
@@ -213,28 +223,16 @@ namespace Brizbee.Web.Services.Reports
                         var cellTaskNameHeader = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Task") };
                         rowHeaders.Append(cellTaskNameHeader);
 
-                        // Project Number
-                        var cellProjectNumberHeader = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("#") };
-                        rowHeaders.Append(cellProjectNumberHeader);
-
-                        // Project Name
-                        var cellProjectNameHeader = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Project") };
-                        rowHeaders.Append(cellProjectNameHeader);
-
-                        // Customer Number
-                        var cellCustomerNumberHeader = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("#") };
-                        rowHeaders.Append(cellCustomerNumberHeader);
-
-                        // Customer Name
-                        var cellCustomerNameHeader = new Cell() { CellReference = $"F{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Customer") };
-                        rowHeaders.Append(cellCustomerNameHeader);
+                        // User Name
+                        var cellUserNameHeader = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("User") };
+                        rowHeaders.Append(cellUserNameHeader);
 
                         // Notes
-                        var cellNotesHeader = new Cell() { CellReference = $"G{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Notes") };
+                        var cellNotesHeader = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, StyleIndex = 1U, CellValue = new CellValue("Notes") };
                         rowHeaders.Append(cellNotesHeader);
 
                         // Total
-                        var cellTotalHeader = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue("Total") };
+                        var cellTotalHeader = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue("Total") };
                         rowHeaders.Append(cellTotalHeader);
 
                         sheetData1.Append(rowHeaders);
@@ -246,7 +244,7 @@ namespace Brizbee.Web.Services.Reports
                         // Time cards cells.
                         // ------------------------------------------------------------
 
-                        foreach (var timeCard in timeCardsForDate)
+                        foreach (var timeCard in timeCardsForProjectAndDate)
                         {
                             var rowTimeCard = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true };
 
@@ -258,31 +256,19 @@ namespace Brizbee.Web.Services.Reports
                             var cellTaskName = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(timeCard.Task.Name) };
                             rowTimeCard.Append(cellTaskName);
 
-                            // Project Number
-                            var cellProjectNumber = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.Number, StyleIndex = 6U, CellValue = new CellValue(timeCard.Task.Job.Number) };
-                            rowTimeCard.Append(cellProjectNumber);
-
-                            // Project Name
-                            var cellProjectName = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(timeCard.Task.Job.Name) };
-                            rowTimeCard.Append(cellProjectName);
-
-                            // Customer Number
-                            var cellCustomerNumber = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 6U, CellValue = new CellValue(timeCard.Task.Job.Customer.Number) };
-                            rowTimeCard.Append(cellCustomerNumber);
-
-                            // Customer Name
-                            var cellCustomerName = new Cell() { CellReference = $"F{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(timeCard.Task.Job.Customer.Name) };
-                            rowTimeCard.Append(cellCustomerName);
+                            // User Name
+                            var cellUserName = new Cell() { CellReference = $"C{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(timeCard.User.Name) };
+                            rowTimeCard.Append(cellUserName);
 
                             // Notes
-                            var cellNotes = new Cell() { CellReference = $"G{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(timeCard.Notes) };
+                            var cellNotes = new Cell() { CellReference = $"D{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(timeCard.Notes) };
                             rowTimeCard.Append(cellNotes);
 
                             // Calculate the total
                             var total = Math.Round((double)timeCard.Minutes / 60, 2).ToString("0.00");
 
                             // Total
-                            var cellTotal = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(total) };
+                            var cellTotal = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 5U, CellValue = new CellValue(total) };
                             rowTimeCard.Append(cellTotal);
 
                             sheetData1.Append(rowTimeCard);
@@ -302,20 +288,20 @@ namespace Brizbee.Web.Services.Reports
 
                         // Calculate the total
                         double dailyTotalMinutes = 0;
-                        foreach (var timeCard in timeCardsForDate)
+                        foreach (var timeCard in timeCardsForProjectAndDate)
                         {
                             dailyTotalMinutes += timeCard.Minutes;
                         }
                         var dailyTotal = Math.Round(dailyTotalMinutes / 60, 2).ToString("0.00");
 
                         // Total Cell
-                        var cellDateTotal = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue(dailyTotal) };
+                        var cellDateTotal = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue(dailyTotal) };
                         rowDateTotal.Append(cellDateTotal);
 
                         sheetData1.Append(rowDateTotal);
 
                         // Merge the date across the row.
-                        var mergeCell3 = new MergeCell() { Reference = $"A{rowIndex}:G{rowIndex}" };
+                        var mergeCell3 = new MergeCell() { Reference = $"A{rowIndex}:D{rowIndex}" };
                         mergeCells1.Append(mergeCell3);
                         mergeCells1.Count++;
 
@@ -324,31 +310,31 @@ namespace Brizbee.Web.Services.Reports
 
 
                     // ------------------------------------------------------------
-                    // Cells for user total.
+                    // Cells for project total.
                     // ------------------------------------------------------------
 
                     var rowTotal = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true, StyleIndex = 1U, CustomFormat = true };
 
                     // Header Cell
-                    var cellUserName = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue($"Total for User {user.Name}") };
-                    rowTotal.Append(cellUserName);
+                    var cellProjectName = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 2U, CellValue = new CellValue($"Total for Project {project.Number} - {project.Name}") };
+                    rowTotal.Append(cellProjectName);
 
                     // Calculate the total
-                    double userTotalMinutes = 0;
-                    foreach (var timeCard in timeCardsForUser)
+                    double projectTotalMinutes = 0;
+                    foreach (var timeCard in timeCardsForProject)
                     {
-                        userTotalMinutes += timeCard.Minutes;
+                        projectTotalMinutes += timeCard.Minutes;
                     }
-                    var userTotal = Math.Round(userTotalMinutes / 60, 2).ToString("0.00");
+                    var projectTotal = Math.Round(projectTotalMinutes / 60, 2).ToString("0.00");
 
                     // Total Cell
-                    var cellUserTotal = new Cell() { CellReference = $"H{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue(userTotal) };
-                    rowTotal.Append(cellUserTotal);
+                    var cellProjectTotal = new Cell() { CellReference = $"E{rowIndex}", DataType = CellValues.Number, StyleIndex = 2U, CellValue = new CellValue(projectTotal) };
+                    rowTotal.Append(cellProjectTotal);
 
                     sheetData1.Append(rowTotal);
 
-                    // Merge the user name across the row.
-                    var mergeCell4 = new MergeCell() { Reference = $"A{rowIndex}:G{rowIndex}" };
+                    // Merge the project name across the row.
+                    var mergeCell4 = new MergeCell() { Reference = $"A{rowIndex}:D{rowIndex}" };
                     mergeCells1.Append(mergeCell4);
                     mergeCells1.Count++;
 
@@ -376,21 +362,15 @@ namespace Brizbee.Web.Services.Reports
 
                 var column1 = new Column() { Min = 1U, Max = 1U, Width = 10D, CustomWidth = true };
                 var column2 = new Column() { Min = 2U, Max = 2U, Width = 28D, CustomWidth = true };
-                var column3 = new Column() { Min = 3U, Max = 3U, Width = 10D, CustomWidth = true };
-                var column4 = new Column() { Min = 4U, Max = 4U, Width = 28D, CustomWidth = true };
+                var column3 = new Column() { Min = 3U, Max = 3U, Width = 28D, CustomWidth = true };
+                var column4 = new Column() { Min = 4U, Max = 4U, Width = 40D, CustomWidth = true };
                 var column5 = new Column() { Min = 5U, Max = 5U, Width = 10D, CustomWidth = true };
-                var column6 = new Column() { Min = 6U, Max = 6U, Width = 28D, CustomWidth = true };
-                var column7 = new Column() { Min = 7U, Max = 7U, Width = 34D, CustomWidth = true };
-                var column8 = new Column() { Min = 8U, Max = 8U, Width = 10D, CustomWidth = true };
 
                 columns1.Append(column1);
                 columns1.Append(column2);
                 columns1.Append(column3);
                 columns1.Append(column4);
                 columns1.Append(column5);
-                columns1.Append(column6);
-                columns1.Append(column7);
-                columns1.Append(column8);
 
 
                 // ------------------------------------------------------------

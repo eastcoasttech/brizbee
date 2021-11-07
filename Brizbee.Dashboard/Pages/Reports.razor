@@ -137,7 +137,7 @@
                             <table class="table table-report">
                                 <tr>
                                     <td class="col-md-1">
-                                        <i class="far fa-file-pdf text-danger" aria-hidden="true" style="font-size: 40px;"></i>
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
                                     </td>
                                     <td class="col-md-11">
                                         <a href="@($"{apiService.GetBaseUrl()}/api/Reports/PunchesByJob?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&CommitStatus={includeLocked}&AuthUserId={sharedService.AuthUserId}&AuthExpiration={sharedService.AuthExpiration}&AuthToken={sharedService.AuthToken}")">
@@ -206,7 +206,7 @@
                             <table class="table table-report">
                                 <tr>
                                     <td class="col-md-1">
-                                        <i class="far fa-file-pdf text-danger" aria-hidden="true" style="font-size: 40px;"></i>
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
                                     </td>
                                     <td class="col-md-11">
                                         <a href="@($"{apiService.GetBaseUrl()}/api/Reports/TimeEntriesByJob?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&AuthUserId={sharedService.AuthUserId}&AuthExpiration={sharedService.AuthExpiration}&AuthToken={sharedService.AuthToken}")">
