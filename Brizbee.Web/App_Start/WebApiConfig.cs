@@ -23,13 +23,11 @@
 using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Common.Serialization;
-using Brizbee.Common.Serialization.Alerts;
 using Brizbee.Web.Filters;
 using Brizbee.Web.Serialization;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Cors;
@@ -72,7 +70,6 @@ namespace Brizbee
             builder.EntitySet<Punch>("Punches");
             builder.EntitySet<Rate>("Rates");
             builder.EntitySet<QuickBooksDesktopExport>("QuickBooksDesktopExports");
-            builder.EntitySet<QuickBooksOnlineExport>("QuickBooksOnlineExports");
             builder.EntitySet<Task>("Tasks");
             builder.EntitySet<TaskTemplate>("TaskTemplates");
             builder.EntitySet<TimesheetEntry>("TimesheetEntries");

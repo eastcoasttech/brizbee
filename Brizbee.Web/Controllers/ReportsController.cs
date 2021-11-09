@@ -241,15 +241,18 @@ namespace Brizbee.Web.Controllers
         {
             var currentUser = CurrentUser();
 
-            Trace.TraceInformation($"Generating TasksByJob report for project {JobId}");
+            telemetryClient.TrackTrace($"Generating TasksByJob report for project {JobId}");
 
-            var job = db.Jobs.Where(j => j.Id == JobId).FirstOrDefault();
-            var bytes = new ReportBuilder().TasksByJobAsPdf(JobId, CurrentUser(), taskGroupScope);
+            var project = db.Jobs
+                .Where(p => p.Id == JobId)
+                .FirstOrDefault();
+
+            var bytes = new ReportBuilder().TasksByProjectAsPdf(JobId, CurrentUser(), taskGroupScope);
             return new FileActionResult(bytes, "application/pdf",
                 string.Format(
-                    "Tasks by Job for {0} - {1}.pdf",
-                    job.Number,
-                    job.Name),
+                    "Tasks by Project for {0} - {1}.pdf",
+                    project.Number,
+                    project.Name),
                 Request);
         }
 

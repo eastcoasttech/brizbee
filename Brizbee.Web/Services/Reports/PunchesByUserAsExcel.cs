@@ -181,6 +181,7 @@ namespace Brizbee.Web.Services.Reports
                     var dates = punches
                         .GroupBy(p => p.InAt.Date)
                         .Select(g => g.Key)
+                        .OrderBy(g => g.Date)
                         .ToList();
                     foreach (var date in dates)
                     {

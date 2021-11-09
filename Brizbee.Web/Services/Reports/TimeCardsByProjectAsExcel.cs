@@ -175,6 +175,7 @@ namespace Brizbee.Web.Services.Reports
                     var dates = timeCards
                         .GroupBy(t => t.EnteredAt.Date)
                         .Select(g => g.Key)
+                        .OrderBy(g => g)
                         .ToList();
                     foreach (var date in dates)
                     {
