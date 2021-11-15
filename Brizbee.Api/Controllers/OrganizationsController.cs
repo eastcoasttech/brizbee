@@ -2,7 +2,7 @@
 //  OrganizationsController.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,100 +20,117 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Api.Serialization.DTO;
-using Brizbee.Common.Models;
-using Brizbee.Common.Serialization;
+using Brizbee.Core.Models;
+using Brizbee.Core.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 using NodaTime;
 using NodaTime.TimeZones;
-using System;
-using System.Collections.Generic;
+using Stripe;
 using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
-    [ApiController]
-    [Authorize]
-    public class OrganizationsController : ControllerBase
+    public class OrganizationsController : ODataController
     {
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
 
         public OrganizationsController(IConfiguration configuration, SqlContext context)
         {
-            _config = configuration;
+            _configuration = configuration;
             _context = context;
         }
 
-        // GET api/Organizations/5
-        [HttpGet("api/Organizations/{id}")]
-        public async Task<ActionResult<OrganizationDTO>> GetOrganization(int id)
+        // GET: odata/Organizations(5)
+        [EnableQuery]
+        public SingleResult<Organization> GetOrganization([FromODataUri] int key)
         {
             var currentUser = CurrentUser();
 
-            // Only permit users in the same organization
-            if (currentUser.OrganizationId != id)
-            {
-                return BadRequest();
-            }
-
-            // Prevent access to secure properties
-            var organization = await _context.Organizations
-                .Where(o => o.Id == id)
-                .Select(o => OrganizationToDTO(o))
-                .FirstOrDefaultAsync();
-
-            if (organization == null)
-            {
-                return NotFound();
-            }
-
-            return organization;
+            return SingleResult.Create(_context.Organizations
+                .Where(o => o.Id == currentUser.OrganizationId)
+                .Where(o => o.Id == key));
         }
 
-        // PUT api/Organizations/5
-        [HttpPut("api/Organizations/{id}")]
-        public IActionResult PutOrganization(int id, [FromBody] Organization patch)
+        // PATCH: odata/Organizations(5)
+        public IActionResult Patch([FromODataUri] int key, Delta<Organization> patch)
         {
             var currentUser = CurrentUser();
 
-            var organization = _context.Organizations.Find(id);
+            var organization = _context.Organizations.Find(key);
 
-            if (organization == null)
-            {
-                return NotFound();
-            }
+            // Ensure that object was found
+            if (organization == null) return NotFound();
 
-            // Only permit Administrators of the same organization
-            if (currentUser.Role != "Administrator" && currentUser.OrganizationId != id)
-            {
+            // Ensure that user is authorized
+            if (!currentUser.CanModifyOrganizationDetails ||
+                currentUser.OrganizationId != key)
                 return BadRequest();
+
+            // Do not allow modifying some properties.
+            if (patch.GetChangedPropertyNames().Contains("StripeCustomerId") ||
+                patch.GetChangedPropertyNames().Contains("StripeSourceCardBrand") ||
+                patch.GetChangedPropertyNames().Contains("StripeSourceCardLast4") ||
+                patch.GetChangedPropertyNames().Contains("StripeSourceCardExpirationMonth") ||
+                patch.GetChangedPropertyNames().Contains("StripeSourceCardExpirationYear") ||
+                patch.GetChangedPropertyNames().Contains("StripeSubscriptionId") ||
+                patch.GetChangedPropertyNames().Contains("CreatedAt") ||
+                patch.GetChangedPropertyNames().Contains("Id"))
+            {
+                return BadRequest("Not authorized to modify CreatedAt, Id, StripeCustomerId, StripeSourceCardBrand, StripeSourceCardLast4, StripeSourceCardExpirationMonth, StripeSourceCardExpirationYear, or StripeSubscriptionId.");
             }
 
-            // Apply the changes
-            organization.Code = patch.Code;
-            organization.Name = patch.Name;
-            organization.MinutesFormat = patch.MinutesFormat;
+            // Peform the update
+            patch.Patch(organization);
 
-            try
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(organization));
+            if (!TryValidateModel(organization, nameof(organization)))
+                return BadRequest();
+
+            // Update the Stripe payment source if it is provided
+            if (patch.GetChangedPropertyNames().Contains("StripeSourceId"))
             {
-                _context.SaveChanges();
+                var customerService = new CustomerService();
+                var sourceService = new SourceService();
+                
+                // Attach the card source id to the customer
+                var attachOptions = new SourceAttachOptions()
+                {
+                    Source = organization.StripeSourceId
+                };
+                sourceService.Attach(organization.StripeCustomerId, attachOptions);
+
+                // Update the customer's default source
+                var customerOptions = new CustomerUpdateOptions()
+                {
+                    DefaultSource = organization.StripeSourceId
+                };
+                Stripe.Customer customer = customerService.Update(organization.StripeCustomerId, customerOptions);
+
+                var source = sourceService.Get(organization.StripeSourceId);
+
+                // Record the card details
+                organization.StripeSourceCardLast4 = source.Card.Last4;
+                organization.StripeSourceCardBrand = source.Card.Brand;
+                organization.StripeSourceCardExpirationMonth = source.Card.ExpMonth.ToString();
+                organization.StripeSourceCardExpirationYear = source.Card.ExpYear.ToString();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+
+            _context.SaveChanges();
 
             return NoContent();
         }
 
-        // GET api/Organizations/Countries
-        [HttpGet("api/Organizations/Countries")]
+        // GET: odata/Organizations/Default.Countries
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult Countries()
         {
             List<Country> countries = new List<Country>();
@@ -132,8 +149,9 @@ namespace Brizbee.Api.Controllers
             return Ok(countries.OrderBy(c => c.Name).ToList());
         }
 
-        // GET api/Organizations/TimeZones
-        [HttpGet("api/Organizations/TimeZones")]
+        // GET: odata/Organizations/Default.TimeZones
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult TimeZones()
         {
             List<IanaTimeZone> zones = new List<IanaTimeZone>();
@@ -144,7 +162,7 @@ namespace Brizbee.Api.Controllers
             var list =
                 from location in TzdbDateTimeZoneSource.Default.ZoneLocations
                 where string.IsNullOrEmpty(countryCode) ||
-                    location.CountryCode.Equals(countryCode,
+                      location.CountryCode.Equals(countryCode,
                         StringComparison.OrdinalIgnoreCase)
                 let zoneId = location.ZoneId
                 let tz = tzdb[zoneId]
@@ -155,25 +173,14 @@ namespace Brizbee.Api.Controllers
                     Id = zoneId,
                     CountryCode = location.CountryCode
                 };
-
+            
             foreach (var z in list)
             {
                 zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
             }
-
+            
             return Ok(zones);
         }
-
-        private static OrganizationDTO OrganizationToDTO(Organization organization) =>
-            new OrganizationDTO
-            {
-                Id = organization.Id,
-                Name = organization.Name,
-                Code = organization.Code,
-                CreatedAt = organization.CreatedAt,
-                MinutesFormat = organization.MinutesFormat,
-                PlanId = organization.PlanId
-            };
 
         private User CurrentUser()
         {

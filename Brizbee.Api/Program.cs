@@ -2,7 +2,7 @@
 //  Program.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,23 +20,131 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using Brizbee.Api;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.OData;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Net;
+using System.Text;
+using System.Text.Json.Serialization;
 
-namespace Brizbee.Api
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+var builder = WebApplication.CreateBuilder(args);
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+builder.Services.AddMemoryCache();
+
+builder.Services.AddApplicationInsightsTelemetry();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Issuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = (context) => {
+                            StringValues values;
+
+                            if (!context.Request.Query.TryGetValue("access_token", out values))
+                            {
+                                return Task.CompletedTask;
+                            }
+
+                            if (values.Count > 1)
+                            {
+                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                                context.Fail(
+                                    "Only one 'access_token' query string parameter can be defined. " +
+                                    $"However, {values.Count:N0} were included in the request."
+                                );
+
+                                return Task.CompletedTask;
+                            }
+
+                            var token = values.Single();
+
+                            if (string.IsNullOrWhiteSpace(token))
+                            {
+                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                                context.Fail(
+                                    "The 'access_token' query string parameter was defined, " +
+                                    "but a value to represent the token was not included."
+                                );
+
+                                return Task.CompletedTask;
+                            }
+
+                            context.Token = token;
+
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
-    }
-}
+
+builder.Services.AddDbContext<SqlContext>(options =>
+                options.UseSqlServer(builder.Configuration["ConnectionStrings:SqlContext"]));
+
+builder.Services.AddControllers()
+                .AddOData(options =>
+                {
+                    options
+                        .Select()
+                        .Expand()
+                        .OrderBy()
+                        .Filter()
+                        .Count()
+                        .SetMaxTop(null)
+                        .AddRouteComponents("odata", BrizbeeEntityDataModel.GetEntityDataModel());
+                })
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.SuppressModelStateInvalidFilter = true;
+                })
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                });
+
+builder.Services.AddODataQueryFilter();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.OperationFilter<AuthorizationHeaderOperation>();
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Brizbee.Api", Version = "v1" });
+});
+
+var app = builder.Build();
+
+app.UseRouting();
+
+app.UseCors(builder =>
+{
+    builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .WithExposedHeaders("*");
+});
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
+
+app.Run();

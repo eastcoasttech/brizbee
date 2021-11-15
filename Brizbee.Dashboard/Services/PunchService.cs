@@ -26,36 +26,22 @@ namespace Brizbee.Dashboard.Services
             _apiService = apiService;
         }
 
-        public void ConfigureHeadersWithCredentials(Credential credential)
+        public void ConfigureHeadersWithToken(string token)
         {
             // Clear old headers first
             ResetHeaders();
 
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_USER_ID", credential.AuthUserId);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_TOKEN", credential.AuthToken);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_EXPIRATION", credential.AuthExpiration);
+            _apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public void ResetHeaders()
         {
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_USER_ID");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_TOKEN");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
+            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
         public async Task<(List<Punch>, long?)> GetCurrentPunchesAsync(int pageSize = 100, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches?$count=true&$filter=OutAt eq null&$expand=User,Task($expand=Job($expand=Customer))&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
-            response.EnsureSuccessStatusCode();
-
-            using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Punch>>(responseContent, options);
-            return (odataResponse.Value.ToList(), odataResponse.Count);
-        }
-
-        public async Task<(List<Punch>, long?)> GetPunchesAsync(DateTime min, DateTime max, int pageSize = 100, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
-        {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches?$count=true&$expand=User,ServiceRate,PayrollRate,Task($expand=Job($expand=Customer))&$top={pageSize}&$skip={skip}&$filter=InAt ge {min.ToString("yyyy-MM-ddTHH:mm:ssZ")} and InAt le {max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&$orderby={sortBy} {sortDirection}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -112,17 +98,6 @@ namespace Brizbee.Dashboard.Services
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
             return await JsonSerializer.DeserializeAsync<Punch>(responseContent, options);
-        }
-
-        public async Task<Punch> GetCurrentAsync()
-        {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches/Default.Current?$expand=Task($expand=Job($expand=Customer))");
-            response.EnsureSuccessStatusCode();
-
-            using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Punch>>(responseContent, options);
-            var punches = odataResponse.Value.ToList();
-            return punches.FirstOrDefault();
         }
 
         public async Task<bool> DeletePunchAsync(int id)
@@ -226,7 +201,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<bool> SplitPunches(DateTime inAt, DateTime outAt)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.SplitAtMidnight"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/SplitAtMidnight"))
             {
                 var payload = new Dictionary<string, object>() {
                     { "InAt", new DateTime(inAt.Year, inAt.Month, inAt.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:00Z") },
@@ -292,7 +267,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<bool> PostPopulateRatesAsync(DateTime inAt, DateTime outAt, List<Dictionary<string, object>> populateRateOptions)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PopulateRates"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/PopulateRates"))
             {
                 var payload = new
                 {
@@ -329,7 +304,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<bool> PunchIn(int taskId, string latitude, string longitude, string browserName, string browserVersion, string operationSystemName, string operationSystemVersion, string timeZone)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PunchIn"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/PunchIn"))
             {
                 var payload = new Dictionary<string, object>() {
                     { "InAtTimeZone", timeZone },
@@ -369,7 +344,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<bool> PunchOut(string latitude, string longitude, string browserName, string browserVersion, string operationSystemName, string operationSystemVersion, string timeZone)
         {
-            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/Default.PunchOut"))
+            using (var request = new HttpRequestMessage(HttpMethod.Post, "odata/Punches/PunchOut"))
             {
                 var payload = new Dictionary<string, object>() {
                     { "OutAtTimeZone", timeZone },

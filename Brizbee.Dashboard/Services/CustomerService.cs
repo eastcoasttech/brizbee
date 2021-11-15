@@ -24,21 +24,17 @@ namespace Brizbee.Dashboard.Services
             _apiService = apiService;
         }
 
-        public void ConfigureHeadersWithCredentials(Credential credential)
+        public void ConfigureHeadersWithToken(string token)
         {
             // Clear old headers first
             ResetHeaders();
 
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_USER_ID", credential.AuthUserId);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_TOKEN", credential.AuthToken);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_EXPIRATION", credential.AuthExpiration);
+            _apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public void ResetHeaders()
         {
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_USER_ID");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_TOKEN");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
+            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
         public async Task<(List<Customer>, long?)> GetCustomersAsync(int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
@@ -122,7 +118,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<string> GetNextNumberAsync()
         {
-            var response = await _apiService.GetHttpClient().PostAsync("odata/Customers/Default.NextNumber", new StringContent(""));
+            var response = await _apiService.GetHttpClient().PostAsync("odata/Customers/NextNumber", new StringContent(""));
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();

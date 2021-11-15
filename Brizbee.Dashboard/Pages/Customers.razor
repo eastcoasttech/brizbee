@@ -764,11 +764,9 @@
             SelectTask(tasks.FirstOrDefault());
 
         // Refresh the task download URL
-        var authUserId = await localStorageService.GetFromLocalStorage("AuthUserId");
-        var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
-        var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
+        var token = await localStorageService.GetFromLocalStorage("Token");
 
-        downloadUrl = $"{apiService.GetBaseUrl()}/api/Reports/TasksByJob?JobId={selectedProjectId}&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
+        downloadUrl = $"{apiService.GetBaseUrl()}/api/Reports/TasksByJob?JobId={selectedProjectId}&access_token={token}";
 
         StateHasChanged();
     }

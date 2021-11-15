@@ -2,7 +2,7 @@
 //  SecurityService.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,11 +20,9 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
-using System;
 using System.Text;
 
-namespace Brizbee.Api
+namespace Brizbee.Api.Services
 {
     public class SecurityService
     {
@@ -40,8 +38,6 @@ namespace Brizbee.Api
             byte[] ASCIIValues = ASCIIEncoding.ASCII.GetBytes(KeyCode);
             int StringLength = ASCIIValues.Length;
             bool isAllZed = true;
-            bool isAllNine = true;
-            //Check if all has ZZZ.... then do nothing just return empty string.
 
             for (int i = 0; i < StringLength - 1; i++)
             {
@@ -55,26 +51,6 @@ namespace Brizbee.Api
             {
                 ASCIIValues[StringLength - 1] = 64;
             }
-
-            // Check if all has 999... then make it A0
-            for (int i = 0; i < StringLength; i++)
-            {
-                if (ASCIIValues[i] != 57)
-                {
-                    isAllNine = false;
-                    break;
-                }
-            }
-            if (isAllNine)
-            {
-                ASCIIValues[StringLength - 1] = 47;
-                ASCIIValues[0] = 65;
-                for (int i = 1; i < StringLength - 1; i++)
-                {
-                    ASCIIValues[i] = 48;
-                }
-            }
-
 
             for (int i = StringLength; i > 0; i--)
             {
@@ -160,12 +136,11 @@ namespace Brizbee.Api
             return builder.ToString();
         }
 
-        public bool AuthenticateWithPassword(User user, string password)
+        public bool AuthenticateWithPassword(string salt, string hash, string password)
         {
-            var contents = string.Format("{0} {1}", password,
-                user.PasswordSalt);
+            var contents = string.Format("{0} {1}", password, salt);
             var calculatedHash = GenerateHash(contents);
-            var storedHash = user.PasswordHash;
+            var storedHash = hash;
             return calculatedHash == storedHash;
         }
     }

@@ -2,7 +2,7 @@
 //  PunchesController.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,461 +20,484 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
-using Microsoft.AspNetCore.Authorization;
+using Azure.Storage.Blobs;
+using Brizbee.Api.Repositories;
+using Brizbee.Api.Serialization;
+using Brizbee.Api.Services;
+using Brizbee.Core.Models;
+using Dapper;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Data;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
+using System.Text;
+using System.Text.Json;
 
 namespace Brizbee.Api.Controllers
 {
-    [ApiController]
-    [Authorize]
-    public class PunchesController : ControllerBase
+    public class PunchesController : ODataController
     {
+        private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
-        private readonly ILogger<PunchesController> _logger;
-        private readonly IConfiguration Configuration;
+        private readonly IMemoryCache _memoryCache;
+        private readonly TelemetryClient _telemetryClient;
 
-        public PunchesController(ILogger<PunchesController> logger, SqlContext context, IConfiguration configuration)
+        public PunchesController(IConfiguration configuration, SqlContext context, IMemoryCache memoryCache, TelemetryClient telemetryClient)
         {
-            _logger = logger;
+            _configuration = configuration;
             _context = context;
-            Configuration = configuration;
+            _memoryCache = memoryCache;
+            _telemetryClient = telemetryClient;
         }
 
-        // GET: api/Punches
-        [HttpGet("api/Punches")]
-        public IActionResult GetPunches([FromQuery] DateTime inAt, [FromQuery] DateTime outAt, [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 1000, [FromQuery] string orderBy = "Punches/InAt",
-            [FromQuery] int[] jobIds = null, [FromQuery] string[] jobNames = null,
-            [FromQuery] int[] taskIds = null, [FromQuery] string[] taskNames = null,
-            [FromQuery] int[] customerIds = null, [FromQuery] string[] customerNames = null)
+        // GET: odata/Punches
+        [HttpGet]
+        [EnableQuery(PageSize = 500, MaxExpansionDepth = 3)]
+        public IQueryable<Punch> GetPunches()
         {
-            if (pageSize > 1000) { return BadRequest(); }
-
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
-
-            // Determine the number of records to skip.
-            int skip = (pageNumber - 1) * pageSize;
-
-            var punches = _context.Punches
-                .Include(p => p.ServiceRate)
-                .Include(p => p.PayrollRate)
-                .Include(p => p.Task)
-                .Include(p => p.Task.Job)
-                .Include(p => p.Task.Job.Customer)
+            return _context.Punches
                 .Include(p => p.User)
-                .Where(p => p.InAt >= inAt)
-                .Where(p => p.OutAt <= outAt)
-                .OrderBy(p => p.CreatedAt)
-                .Skip(skip)
-                .Take(pageSize)
-                .ToList();
-
-            var total = _context.Punches
-                .Where(p => p.InAt >= inAt)
-                .Where(p => p.OutAt <= outAt)
-                .Count();
-
-            //var total = 0;
-            //List<Punch> punches = new List<Punch>();
-            //using (var connection = new SqlConnection(Configuration.GetConnectionString("SqlContext")))
-            //{
-            //    connection.Open();
-
-            //    // Determine the order by columns.
-            //    var orderByFormatted = "";
-            //    switch (orderBy.ToUpperInvariant())
-            //    {
-            //        case "PUNCHES/CREATEDAT":
-            //            orderByFormatted = "P.[CreatedAt]";
-            //            break;
-            //        case "PUNCHES/INAT":
-            //            orderByFormatted = "P.[InAt]";
-            //            break;
-            //        case "PUNCHES/OUTAT":
-            //            orderByFormatted = "P.[OutAt]";
-            //            break;
-            //        default:
-            //            orderByFormatted = "P.[CreatedAt]";
-            //            break;
-            //    }
-
-            //    var whereClause = "";
-            //    var parameters = new DynamicParameters();
-
-            //    // Common clause.
-            //    parameters.Add("@InAt", inAt);
-            //    parameters.Add("@OutAt", outAt);
-
-            //    // Clause for job ids.
-            //    if (jobIds != null && jobIds.Any())
-            //    {
-            //        whereClause += "AND J.[Id] IN (@JobIds)";
-            //        parameters.Add("@JobIds", jobIds);
-            //    }
-
-            //    // Clause for job names.
-            //    if (jobNames != null && jobNames.Any())
-            //    {
-            //        whereClause += "AND J.[Name] IN (@JobNames)";
-            //        parameters.Add("@JobNames", jobNames);
-            //    }
-
-            //    // Clause for task ids.
-            //    if (taskIds != null && taskIds.Any())
-            //    {
-            //        whereClause += "AND T.[Id] IN (@TaskIds)";
-            //        parameters.Add("@TaskIds", taskIds);
-            //    }
-
-            //    // Clause for task names.
-            //    if (taskNames != null && taskNames.Any())
-            //    {
-            //        whereClause += "AND T.[Name] IN (@TaskNames)";
-            //        parameters.Add("@TaskNames", taskNames);
-            //    }
-
-            //    // Clause for customer ids.
-            //    if (customerIds != null && customerIds.Any())
-            //    {
-            //        whereClause += "AND C.[Id] IN (@CustomerIds)";
-            //        parameters.Add("@CustomerIds", customerIds);
-            //    }
-
-            //    // Clause for customer names.
-            //    if (customerNames != null && customerNames.Any())
-            //    {
-            //        whereClause += "AND C.[Name] IN (@CustomerNames)";
-            //        parameters.Add("@CustomerNames", customerNames);
-            //    }
-
-            //    // Get the count.
-            //    var countSql = $@"
-            //        SELECT
-            //            COUNT(*)
-            //        FROM
-            //            [Punches] AS P
-            //        INNER JOIN
-            //            [Tasks] AS T ON P.[TaskId] = T.[Id]
-            //        INNER JOIN
-            //            [Jobs] AS J ON T.[JobId] = J.[Id]
-            //        INNER JOIN
-            //            [Customers] AS C ON J.[CustomerId] = C.[Id]
-            //        WHERE
-            //            P.[InAt] >= @InAt AND P.[OutAt] <= @OutAt {whereClause};";
-
-            //    total = connection.QuerySingle<int>(countSql, parameters);
-
-            //    // Paging parameters.
-            //    parameters.Add("@Skip", skip);
-            //    parameters.Add("@PageSize", pageSize);
-
-            //    // Get the records.
-            //    var recordsSql = $@"
-            //        SELECT
-            //            P.[Id] AS Punch_Id,
-            //            P.[CommitId] AS Punch_CommitId,
-            //            P.[CreatedAt] AS Punch_CreatedAt,
-            //            P.[Guid] AS Punch_Guid,
-            //            P.[InAt] AS Punch_InAt,
-            //            P.[InAtTimeZone] AS Punch_InAtTimeZone,
-            //            P.[LatitudeForInAt] AS Punch_LatitudeForInAt,
-            //            P.[LongitudeForInAt] AS Punch_LongitudeForInAt,
-            //            P.[LatitudeForOutAt] AS Punch_LatitudeForOutAt,
-            //            P.[LongitudeForOutAt] AS Punch_LongitudeForOutAt,
-            //            P.[OutAt] AS Punch_OutAt,
-            //            P.[OutAtTimeZone] AS Punch_OutAtTimeZone,
-            //            P.[SourceForInAt] AS Punch_SourceForInAt,
-            //            P.[SourceForOutAt] AS Punch_SourceForOutAt,
-            //            P.[TaskId] AS Punch_TaskId,
-            //            P.[UserId] AS Punch_UserId,
-            //            P.[InAtSourceHardware] AS Punch_InAtSourceHardware,
-            //            P.[InAtSourceHostname] AS Punch_InAtSourceHostname,
-            //            P.[InAtSourceIpAddress] AS Punch_InAtSourceIpAddress,
-            //            P.[InAtSourceOperatingSystem] AS Punch_InAtSourceOperatingSystem,
-            //            P.[InAtSourceOperatingSystemVersion] AS Punch_InAtSourceOperatingSystemVersion,
-            //            P.[InAtSourceBrowser] AS Punch_InAtSourceBrowser,
-            //            P.[InAtSourceBrowserVersion] AS Punch_InAtSourceBrowserVersion,
-            //            P.[InAtSourcePhoneNumber] AS Punch_InAtSourcePhoneNumber,
-            //            P.[OutAtSourceHardware] AS Punch_OutAtSourceHardware,
-            //            P.[OutAtSourceHostname] AS Punch_OutAtSourceHostname,
-            //            P.[OutAtSourceIpAddress] AS Punch_OutAtSourceIpAddress,
-            //            P.[OutAtSourceOperatingSystem] AS Punch_OutAtSourceOperatingSystem,
-            //            P.[OutAtSourceOperatingSystemVersion] AS Punch_OutAtSourceOperatingSystemVersion,
-            //            P.[OutAtSourceBrowser] AS Punch_OutAtSourceBrowser,
-            //            P.[OutAtSourceBrowserVersion] AS Punch_OutAtSourceBrowserVersion,
-            //            P.[OutAtSourcePhoneNumber] AS Punch_OutAtSourcePhoneNumber,
-            //            P.[ServiceRateId] AS Punch_ServiceRateId,
-            //            P.[PayrollRateId] AS Punch_PayrollRateId,
-
-
-
-            //            C.[Id] AS Customer_Id,
-            //            C.[CreatedAt] AS Customer_CreatedAt,
-            //            C.[Description] AS Customer_Description,
-            //            C.[Name] AS Customer_Name,
-            //            C.[Number] AS Customer_Number,
-            //            C.[OrganizationId] AS Customer_OrganizationId,
-
-            //            J.[Id] AS Job_Id,
-            //            J.[CreatedAt] AS Job_CreatedAt,
-            //            J.[CustomerId] AS Job_CustomerId,
-            //            J.[Description] AS Job_Description,
-            //            J.[Name] AS Job_Name,
-            //            J.[Number] AS Job_Number,
-            //            J.[QuickBooksCustomerJob] AS Job_QuickBooksCustomerJob,
-
-            //            T.[Id] AS Task_Id,
-            //            T.[CreatedAt] AS Task_CreatedAt,
-            //            T.[JobId] AS Task_JobId,
-            //            T.[Name] AS Task_Name,
-            //            T.[Number] AS Task_Number,
-            //            T.[QuickBooksPayrollItem] AS Task_QuickBooksPayrollItem,
-            //            T.[QuickBooksServiceItem] AS Task_QuickBooksServiceItem,
-            //            T.[BaseServiceRateId] AS Task_BaseServiceRateId,
-            //            T.[BasePayrollRateId] AS Task_BasePayrollRateId,
-
-            //            U.[Id] AS User_Id,
-            //            U.[CreatedAt] AS User_CreatedAt,
-            //            U.[EmailAddress] AS User_EmailAddress,
-            //            U.[IsDeleted] AS User_IsDeleted,
-            //            U.[Name] AS User_Name,
-            //            U.[OrganizationId] AS User_OrganizationId,
-            //            U.[Role] AS User_Role,
-            //            U.[TimeZone] AS User_TimeZone,
-            //            U.[UsesMobileClock] AS User_UsesMobileClock,
-            //            U.[UsesTouchToneClock] AS User_UsesTouchToneClock,
-            //            U.[UsesWebClock] AS User_UsesWebClock,
-            //            U.[UsesTimesheets] AS User_UsesTimesheets,
-            //            U.[RequiresLocation] AS User_RequiresLocation,
-            //            U.[RequiresPhoto] AS User_RequiresPhoto,
-            //            U.[QBOGivenName] AS User_QBOGivenName,
-            //            U.[QBOMiddleName] AS User_QBOMiddleName,
-            //            U.[QBOFamilyName] AS User_QBOFamilyName
-            //        FROM
-            //            [Punches] AS P
-            //        INNER JOIN
-            //            [Tasks] AS T ON P.[TaskId] = T.[Id]
-            //        INNER JOIN
-            //            [Jobs] AS J ON T.[JobId] = J.[Id]
-            //        INNER JOIN
-            //            [Customers] AS C ON J.[CustomerId] = C.[Id]
-            //        INNER JOIN
-            //            [Users] AS U ON P.[UserId] = U.[Id]
-            //        WHERE
-            //         P.[InAt] >= @InAt AND P.[OutAt] <= @OutAt {whereClause}
-            //        ORDER BY
-            //         {orderByFormatted}
-            //        OFFSET @Skip ROWS
-            //        FETCH NEXT @PageSize ROWS ONLY;";
-
-            //    var results = connection.Query<PunchTaskJobCustomerUser>(recordsSql, parameters);
-
-            //    foreach (var result in results)
-            //    {
-            //        punches.Add(new Punch()
-            //        {
-            //            Id = result.Punch_Id,
-            //            CommitId = result.Punch_CommitId,
-            //            CreatedAt = result.Punch_CreatedAt,
-            //            Guid = result.Punch_Guid,
-            //            InAt = result.Punch_InAt,
-            //            OutAt = result.Punch_OutAt,
-            //            TaskId = result.Punch_TaskId,
-            //            UserId = result.Punch_UserId,
-            //            PayrollRateId = result.Punch_PayrollRateId,
-            //            ServiceRateId = result.Punch_ServiceRateId,
-            //            PayrollRate = new Rate()
-            //            {
-            //                Id = 
-            //            },
-            //            ServiceRate = new Rate()
-            //            {
-            //            },
-            //            Task = new Task()
-            //            {
-            //                Id = result.Task_Id,
-            //                Name = result.Task_Name,
-            //                Number = result.Task_Number,
-            //                BasePayrollRateId = result.Task_BasePayrollRateId,
-            //                BaseServiceRateId = result.Task_BaseServiceRateId,
-            //                CreatedAt = result.Task_CreatedAt,
-            //                Job = new Job()
-            //                {
-            //                    Id = result.Job_Id,
-            //                    Name = result.Job_Name,
-            //                    Number = result.Job_Number,
-            //                    CreatedAt = result.Job_CreatedAt,
-            //                    Description = result.Job_Description,
-            //                    QuickBooksCustomerJob = result.Job_QuickBooksCustomerJob,
-            //                    Customer = new Customer()
-            //                    {
-            //                        Id = result.Customer_Id,
-            //                        Name = result.Customer_Name,
-            //                        Number = result.Customer_Number,
-            //                        Description = result.Customer_Description,
-            //                        CreatedAt = result.Customer_CreatedAt,
-            //                        OrganizationId = result.Customer_OrganizationId
-            //                    }
-            //                }
-            //            },
-            //            User = new User()
-            //            {
-            //                Id = result.User_Id,
-            //                Name = result.User_Name,
-            //                EmailAddress = result.User_EmailAddress
-            //            }
-            //        });
-            //    }
-
-            //    connection.Close();
-            //}
-
-            // Determine page count.
-            int pageCount = total > 0
-                ? (int)Math.Ceiling(total / (double)pageSize)
-                : 0;
-
-            // Set headers for paging.
-            Response.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
-            Response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
-            Response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
-            Response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
-
-            return Ok(punches);
+                .Where(p => p.User!.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.User!.IsDeleted == false);
         }
 
-        // GET: api/Punches/5
-        [HttpGet("api/Punches/{id}")]
-        public async Task<ActionResult<Punch>> GetPunch(int id)
+        // GET: odata/Punches(5)
+        [HttpGet]
+        [EnableQuery]
+        public SingleResult<Punch> GetPunch([FromODataUri] int key)
         {
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
+            return SingleResult.Create(_context.Punches
+                .Include(p => p.User)
+                .Where(p => p.User!.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.User!.IsDeleted == false)
+                .Where(p => p.Id == key));
+        }
+
+        // POST: odata/Punches
+        public IActionResult Post(Punch punch)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreatePunches)
+                return Forbid();
+
+            // Ensure user is in same organization.
+            var isValidUserId = _context.Users
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.IsDeleted == false)
+                .Where(u => u.Id == punch.UserId)
+                .Any();
+
+            if (!isValidUserId)
                 return BadRequest();
 
-            // Find within the organization.
-            var userIds = _context.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id);
-            var punch = await _context.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.Id == id)
-                .FirstOrDefaultAsync();
+            // Ensure task is in same organization.
+            var isValidTaskId = _context.Tasks
+                .Include(t => t.Job.Customer)
+                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Id == punch.TaskId)
+                .Any();
 
-            if (punch == null)
+            if (!isValidTaskId)
+                return BadRequest("You must specify a valid task.");
+
+            // Get the public address and hostname for the punch.
+            var sourceIpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
+            var sourceHostname = HttpContext.Request.Host.ToString();
+            punch.InAtSourceHostname = sourceHostname;
+            punch.InAtSourceIpAddress = sourceIpAddress;
+            punch.InAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
+            if (punch.OutAt.HasValue)
             {
-                return NotFound();
+                punch.OutAtSourceHostname = sourceHostname;
+                punch.OutAtSourceIpAddress = sourceIpAddress;
+                punch.OutAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
             }
 
-            return punch;
-        }
+            // Auto-generated.
+            punch.CreatedAt = DateTime.UtcNow;
+            punch.Guid = Guid.NewGuid();
 
-        // POST: api/Punches
-        [HttpPost("api/Punches")]
-        public async Task<ActionResult<Punch>> PostPunch(Punch punch)
-        {
-            var currentUser = CurrentUser();
+            // Ensure InAt is at bottom of hour and OutAt is at top of the hour.
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
+            }
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
+            // Ensure punch does not overlap existing punches.
+            var doesOverlap = _context.Punches
+                .Include(p => p.Task.Job.Customer)
+                .Where(p => p.Task.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.UserId == punch.UserId)
+                .Where(p => p.InAt >= punch.InAt && p.OutAt <= punch.OutAt)
+                .Any();
 
-            // Ensure the same organization.
-            var userIds = _context.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id);
+            if (doesOverlap)
+                return BadRequest("This punch overlaps with another punch.");
 
-            if (!userIds.Contains(punch.UserId))
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(punch));
+            if (!TryValidateModel(punch, nameof(punch)))
                 return BadRequest();
 
             _context.Punches.Add(punch);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPunch", new { id = punch.Id }, punch);
+            _context.SaveChanges();
+
+            // Record the activity.
+            AuditPunch(punch.Id, null, JsonSerializer.Serialize(punch), currentUser, "CREATE");
+
+            return Created("", punch);
         }
 
-        // PUT: api/Punches/5
-        [HttpPut("api/Punches/{id}")]
-        public async Task<ActionResult> PutPunch(int id, Punch patch)
+        // PATCH: odata/Punches(5)
+        public IActionResult Patch([FromODataUri] int key, Delta<Punch> patch)
         {
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyPunches)
+                return Forbid();
+
+            var punch = _context.Punches
+                .Include(p => p.User)
+                .Where(p => p.User!.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.Id == key)
+                .FirstOrDefault();
+
+            // Record the object before any changes are made.
+            var before = JsonSerializer.Serialize(punch);
+
+            // Ensure that object was found.
+            if (punch == null) return NotFound();
+
+            // Cannot modify locked punches.
+            if (punch.CommitId.HasValue)
                 return BadRequest();
 
-            // Find within the organization.
-            var userIds = _context.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id);
-            var punch = await _context.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.Id == id)
-                .FirstOrDefaultAsync();
-
-            if (punch == null)
+            // Do not allow modifying some properties.
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
+                patch.GetChangedPropertyNames().Contains("CreatedAt") ||
+                patch.GetChangedPropertyNames().Contains("Id"))
             {
-                return NotFound();
+                return BadRequest("Cannont modify OrganizationId, CreatedAt, and Id.");
             }
 
-            // Apply the changes.
-            punch.InAt = patch.InAt;
-            punch.OutAt = patch.OutAt;
+            // Peform the update
+            patch.Patch(punch);
 
+            // Ensure InAt is at bottom of hour and OutAt is at top of the hour
+            punch.InAt = new DateTime(punch.InAt.Year, punch.InAt.Month, punch.InAt.Day, punch.InAt.Hour, punch.InAt.Minute, 0, 0);
+            if (punch.OutAt.HasValue)
+            {
+                punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
+            }
+
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(punch));
+            if (!TryValidateModel(punch, nameof(punch)))
+                return BadRequest();
+
+            _context.SaveChanges();
+
+            // Record the activity.
+            AuditPunch(punch.Id, before, JsonSerializer.Serialize(punch), currentUser, "UPDATE");
+
+            return NoContent();
+        }
+
+        // DELETE: odata/Punches(5)
+        public IActionResult Delete([FromODataUri] int key)
+        {
+            var currentUser = CurrentUser();
+
+            var punch = _context.Punches
+                .Include(p => p.User)
+                .Where(p => p.User!.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.Id == key)
+                .FirstOrDefault();
+
+            // Ensure that object was found.
+            if (punch == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeletePunches)
+                return Forbid();
+
+            // Delete the object itself.
+            _context.Punches.Remove(punch);
+
+            _context.SaveChanges();
+
+            // Record the activity.
+            AuditPunch(punch.Id, JsonSerializer.Serialize(punch), null, currentUser, "DELETE");
+
+            return NoContent();
+        }
+
+        // GET: odata/Punches/Download
+        [HttpGet]
+        public IActionResult Download([FromODataUri] int CommitId)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewPunches)
+                return Forbid();
+
+            var punches = _context.Punches
+                .Include(p => p.User)
+                .Include(p => p.Task.Job.Customer)
+                .Include(p => p.PayrollRate)
+                .Include(p => p.ServiceRate)
+                .Where(p => p.CommitId == CommitId)
+                .OrderBy(p => p.InAt)
+                .ToList();
+
+            return new JsonResult(punches);
+        }
+
+        // POST: odata/Punches/SplitAtMidnight
+        [HttpPost]
+        public IActionResult SplitAtMidnight(ODataActionParameters parameters)
+        {
+            _telemetryClient.TrackEvent("Split:Requested");
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var parsedInAt = DateTime.Parse(parameters["InAt"] as string);
+                    var parsedOutAt = DateTime.Parse(parameters["OutAt"] as string);
+                    var currentUser = CurrentUser();
+                    var nowUtc = DateTime.UtcNow;
+                    var inAt = new DateTime(parsedInAt.Year, parsedInAt.Month, parsedInAt.Day, 0, 0, 0, 0);
+                    var outAt = new DateTime(parsedOutAt.Year, parsedOutAt.Month, parsedOutAt.Day, 23, 59, 0, 0);
+                    int[] userIds = _context.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Select(u => u.Id)
+                        .ToArray();
+                    var originalPunchesTracked = _context.Punches
+                        .Where(p => userIds.Contains(p.UserId))
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt.Date >= inAt.Date)
+                        .Where(p => p.InAt.Date <= outAt.Date)
+                        .Where(p => !p.CommitId.HasValue); // Only unlocked punches
+                    var originalPunchesNotTracked = originalPunchesTracked
+                        .AsNoTracking() // Will be manipulated in memory
+                        .ToList();
+
+                    _telemetryClient.TrackEvent("Split:Starting", new Dictionary<string, string>()
+                    {
+                        { "InAt", inAt.ToString("G") },
+                        { "OutAt", outAt.ToString("G") },
+                        { "UserId", currentUser.Id.ToString() },
+                        { "OrganizationId", currentUser.OrganizationId.ToString() }
+                    });
+
+                    // Save what the punches looked like before.
+                    var before = originalPunchesNotTracked;
+
+                    var splitPunches = new PunchService(_context).SplitAtMidnight(originalPunchesNotTracked, currentUser);
+
+                    // Save what the punches look like after.
+                    var after = splitPunches;
+
+                    // Delete the old punches and save the new ones
+                    _context.Punches.RemoveRange(originalPunchesTracked);
+                    _context.SaveChanges();
+
+                    _context.Punches.AddRange(splitPunches);
+                    _context.SaveChanges();
+
+                    try
+                    {
+                        // Attempt to save the backup of the punches on Azure.
+                        var backup = new
+                        {
+                            Before = before,
+                            After = after
+                        };
+                        var json = JsonSerializer.Serialize(backup);
+
+                        // Prepare to upload the backup.
+                        var azureConnectionString = _configuration["PunchBackupsAzureStorageConnectionString"];
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("split-punch-backups");
+                        BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+
+                        // Perform the upload.
+                        using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                        {
+                            blobClient.Upload(stream);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _telemetryClient.TrackException(ex);
+                    }
+
+                    _telemetryClient.TrackEvent("Split:Succeeded");
+                    _telemetryClient.Flush();
+
+                    transaction.Commit();
+
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    _telemetryClient.TrackEvent("Split:Failed");
+                    _telemetryClient.TrackException(ex);
+                    _telemetryClient.Flush();
+
+                    transaction.Rollback();
+
+                    return BadRequest(ex.ToString());
+                }
+            }
+        }
+
+        // POST: odata/Punches/PopulateRates
+        [HttpPost]
+        public IActionResult PopulateRates(ODataActionParameters parameters)
+        {
+            _telemetryClient.TrackEvent("Populate:Requested");
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var populateOptions = parameters["Options"] as PopulateRateOptions;
+                    var currentUser = CurrentUser();
+                    var nowUtc = DateTime.UtcNow;
+                    var inAt = new DateTime(populateOptions.InAt.Year, populateOptions.InAt.Month, populateOptions.InAt.Day, 0, 0, 0, 0, DateTimeKind.Unspecified);
+                    var outAt = new DateTime(populateOptions.OutAt.Year, populateOptions.OutAt.Month, populateOptions.OutAt.Day, 23, 59, 0, 0, DateTimeKind.Unspecified);
+                    populateOptions.InAt = inAt;
+                    populateOptions.OutAt = outAt;
+                    int[] userIds = _context.Users
+                        .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                        .Select(u => u.Id)
+                        .ToArray();
+                    var originalPunchesTracked = _context.Punches
+                        .Where(p => userIds.Contains(p.UserId))
+                        .Where(p => p.OutAt.HasValue)
+                        .Where(p => p.InAt.Date >= inAt.Date)
+                        .Where(p => p.InAt.Date <= outAt.Date)
+                        .Where(p => !p.CommitId.HasValue); // Only unlocked punches
+                    var originalPunchesNotTracked = originalPunchesTracked
+                        .AsNoTracking() // Will be manipulated in memory
+                        .ToList();
+
+                    _telemetryClient.TrackEvent("Populate:Starting", new Dictionary<string, string>()
+                    {
+                        { "InAt", inAt.ToString("G") },
+                        { "OutAt", outAt.ToString("G") },
+                        { "UserId", currentUser.Id.ToString() },
+                        { "OrganizationId", currentUser.OrganizationId.ToString() }
+                    });
+
+                    // Save what the punches looked like before.
+                    var before = originalPunchesNotTracked;
+
+                    var populatedPunches = new PunchService(_context).Populate(populateOptions, originalPunchesNotTracked, currentUser);
+
+                    // Save what the punches look like after.
+                    var after = populatedPunches;
+
+                    // Delete the old punches and save the new ones.
+                    _context.Punches.RemoveRange(originalPunchesTracked);
+                    _context.SaveChanges();
+
+                    _context.Punches.AddRange(populatedPunches);
+                    _context.SaveChanges();
+
+                    try
+                    {
+                        // Attempt to save the backup of the punches on Azure.
+                        var backup = new
+                        {
+                            Before = before,
+                            After = after
+                        };
+                        var json = JsonSerializer.Serialize(backup);
+
+                        // Prepare to upload the backup.
+                        var azureConnectionString = _configuration["PunchBackupsAzureStorageConnectionString"];
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("populate-punch-backups");
+                        BlobClient blobClient = containerClient.GetBlobClient($"{currentUser.OrganizationId}/{nowUtc.Ticks}.json");
+
+                        // Perform the upload.
+                        using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
+                        {
+                            blobClient.Upload(stream);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _telemetryClient.TrackException(ex);
+                    }
+
+                    _telemetryClient.TrackEvent("Populate:Succeeded");
+                    _telemetryClient.Flush();
+
+                    transaction.Commit();
+
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    _telemetryClient.TrackEvent("Populate:Failed");
+                    _telemetryClient.TrackException(ex);
+                    _telemetryClient.Flush();
+
+                    transaction.Rollback();
+
+                    return BadRequest(ex.ToString());
+                }
+            }
+        }
+
+        private void AuditPunch(int id, string before, string after, User currentUser, string action)
+        {
             try
             {
-                _context.SaveChanges();
+                using (var connection = new SqlConnection(_configuration.GetConnectionString("SqlContext")))
+                {
+                    string insertQuery = @"
+                        INSERT INTO [PunchAudits]
+                            ([CreatedAt], [ObjectId], [OrganizationId], [UserId], [Action], [Before], [After])
+                        VALUES
+                            (@CreatedAt, @ObjectId, @OrganizationId, @UserId, @Action, @Before, @After);";
+
+                    var result = connection.Execute(insertQuery, new
+                    {
+                        CreatedAt = DateTime.UtcNow,
+                        ObjectId = id,
+                        OrganizationId = currentUser.OrganizationId,
+                        UserId = currentUser.Id,
+                        Action = action,
+                        Before = before,
+                        After = after
+                    });
+                }
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                throw;
+                _telemetryClient.TrackException(ex);
             }
-
-            return NoContent();
-        }
-
-        // DELETE: api/Punches/5
-        [HttpDelete("api/Punches/{id}")]
-        public async Task<ActionResult> DeletePunch(int id)
-        {
-            var currentUser = CurrentUser();
-
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
-
-            // Find within the organization.
-            var userIds = _context.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id);
-            var punch = await _context.Punches
-                .Where(p => userIds.Contains(p.UserId))
-                .Where(p => p.Id == id)
-                .FirstOrDefaultAsync();
-
-            if (punch == null)
-            {
-                return NotFound();
-            }
-
-            _context.Punches.Remove(punch);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
         private User CurrentUser()

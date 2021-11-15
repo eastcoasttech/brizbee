@@ -2,7 +2,7 @@
 //  UsersController.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,456 +20,207 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
-using Brizbee.Common.Security;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Brizbee.Api.Services;
+using Brizbee.Core.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using SendGrid;
-using SendGrid.Helpers.Mail;
-using Stripe;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Brizbee.Api.Controllers
 {
-    [ApiController]
-    [Authorize]
-    public class UsersController : ControllerBase
+    public class UsersController : ODataController
     {
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
-        private readonly IWebHostEnvironment _env;
 
-        public UsersController(IConfiguration configuration, SqlContext context, IWebHostEnvironment env)
+        public UsersController(IConfiguration configuration, SqlContext context)
         {
-            _config = configuration;
+            _configuration = configuration;
             _context = context;
-            _env = env;
         }
 
-        // GET: api/Users
-        [HttpGet("api/Users")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        // GET: odata/Users
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
+        public IQueryable<User> GetUsers()
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to see all users.
-            if (currentUser.Role != "Administrator")
-            {
-                return BadRequest();
-            }
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewUsers)
+                return Enumerable.Empty<User>().AsQueryable();
 
-            return await _context.Users
+            return _context.Users
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.OrganizationId == currentUser.OrganizationId);
+        }
+
+        // GET: odata/Users(5)
+        [EnableQuery]
+        public SingleResult<User> GetUser([FromODataUri] int key)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewUsers && currentUser.Id != key)
+                return SingleResult.Create(Enumerable.Empty<User>().AsQueryable());
+
+            return SingleResult.Create(_context.Users
                 .Where(u => !u.IsDeleted)
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => new User()
-                {
-                    CreatedAt = u.CreatedAt,
-                    EmailAddress = u.EmailAddress,
-                    Name = u.Name,
-                    IsDeleted = u.IsDeleted,
-                    OrganizationId = u.OrganizationId,
-                    Role = u.Role,
-                    TimeZone = u.TimeZone
-                })
-                .ToListAsync();
+                .Where(u => u.Id == key));
         }
 
-        // GET: api/Users/5
-        [HttpGet("api/Users/{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        // POST: odata/Users
+        public IActionResult Post([FromBody] User user)
         {
             var currentUser = CurrentUser();
 
-            // Only Administrators can see other users in the organization.
-            if (currentUser.Role != "Administrator" && currentUser.Id != id)
-            {
-                return BadRequest();
-            }
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateUsers)
+                return Forbid();
 
-            // Find within the organization.
-            var user = await _context.Users
-                .Where(u => !u.IsDeleted)
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Where(u => u.Id == id)
-                .Select(u => new User()
-                {
-                    CreatedAt = u.CreatedAt,
-                    EmailAddress = u.EmailAddress,
-                    Name = u.Name,
-                    IsDeleted = u.IsDeleted,
-                    OrganizationId = u.OrganizationId,
-                    Role = u.Role,
-                    TimeZone = u.TimeZone,
-                    Pin = u.Pin,
-                    QuickBooksEmployee = u.QuickBooksEmployee,
-                    RequiresLocation = u.RequiresLocation,
-                    RequiresPhoto = u.RequiresPhoto,
-                    UsesMobileClock = u.UsesMobileClock,
-                    UsesTouchToneClock = u.UsesTouchToneClock,
-                    UsesTimesheets = u.UsesTimesheets,
-                    UsesWebClock = u.UsesWebClock
-                })
-                .FirstOrDefaultAsync();
+            // Formatting
+            if (!string.IsNullOrEmpty(user.EmailAddress))
+                user.EmailAddress = user.EmailAddress.ToLower();
 
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return user;
-        }
-
-        // POST: api/Users
-        [HttpPost("api/Users")]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            var currentUser = CurrentUser();
-
-            // Ensure the same organization.
+            // Auto-generated
+            user.CreatedAt = DateTime.UtcNow;
             user.OrganizationId = currentUser.OrganizationId;
+            user.AllowedPhoneNumbers = "*";
+            user.Role = "Standard";
 
-            // Only permit administrators.
-            if (currentUser.Role != "Administrator")
+            // Ensure that Pin is unique in the organization
+            if (_context.Users
+                .Where(u => u.OrganizationId == user.OrganizationId)
+                .Where(u => u.Pin == user.Pin)
+                .Where(u => u.IsDeleted == false)
+                .Any())
             {
-                return BadRequest();
+                throw new Exception("Another user in the organization already has that Pin");
             }
+
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                // Generates a password hash and salt
+                var service = new SecurityService();
+                user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                user.Password = null;
+            }
+            else
+            {
+                user.Password = null;
+            }
+
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(user));
+            if (!TryValidateModel(user, nameof(user)))
+                return BadRequest();
 
             _context.Users.Add(user);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
-        }
-
-        // PUT: api/Users/5
-        [HttpPut("api/Users/{id}")]
-        public IActionResult PutUser(int id, User patch)
-        {
-            var currentUser = CurrentUser();
-
-            // Find within the organization.
-            var user = _context.Users
-                .Where(u => !u.IsDeleted)
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Where(u => u.Id == id)
-                .FirstOrDefault();
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            // Only permit administrators and the same user to update.
-            if (currentUser.Role != "Administrator" && currentUser.Id != id)
-            {
-                return BadRequest();
-            }
-
-            // Apply the changes
-            user.Name = patch.Name;
-            user.EmailAddress = patch.EmailAddress;
-            user.Pin = patch.Pin;
-            user.QBOFamilyName = patch.QBOFamilyName;
-            user.QBOGivenName = patch.QBOGivenName;
-            user.QBOMiddleName = patch.QBOMiddleName;
-            user.QuickBooksEmployee = patch.QuickBooksEmployee;
-            user.RequiresLocation = patch.RequiresLocation;
-            user.RequiresPhoto = patch.RequiresPhoto;
-            user.Role = patch.Role;
-            user.TimeZone = patch.TimeZone;
-            user.UsesMobileClock = patch.UsesMobileClock;
-            user.UsesTimesheets = patch.UsesTimesheets;
-            user.UsesTouchToneClock = patch.UsesTouchToneClock;
-            user.UsesWebClock = patch.UsesWebClock;
-
-            try
-            {
-                _context.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
-
-            return NoContent();
-        }
-
-        // GET: api/Users/Me
-        [HttpGet("api/Users/Me")]
-        public IActionResult GetMe()
-        {
-            var currentUser = CurrentUser();
-
-            if (currentUser == null) return BadRequest();
-
-            var user = _context.Users
-                .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Where(u => u.Id == currentUser.Id)
-                .FirstOrDefault();
+            _context.SaveChanges();
 
             return Ok(user);
         }
 
-        // DELETE: api/Users/5
-        [HttpDelete("api/Users/{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        // PATCH: odata/Users(5)
+        public IActionResult Patch([FromODataUri] int key, Delta<User> patch)
         {
             var currentUser = CurrentUser();
 
-            // Only permit administrators to delete users.
-            if (currentUser.Role != "Administrator")
-            {
-                return BadRequest();
-            }
-
-            // Find within the organization.
-            var user = await _context.Users
-                .Where(u => !u.IsDeleted)
+            var user = _context.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Where(u => u.Id == id)
-                .FirstOrDefaultAsync();
+                .Where(u => !u.IsDeleted)
+                .Where(u => u.Id == key)
+                .FirstOrDefault();
 
-            if (user == null)
+            // Ensure that object was found.
+            if (user == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyUsers)
+                return Forbid();
+
+            // Do not allow modifying some properties
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
+                patch.GetChangedPropertyNames().Contains("Id") ||
+                patch.GetChangedPropertyNames().Contains("EmailAddress"))
             {
-                return NotFound();
+                throw new Exception("Cannot modify Id, OrganizationId, or EmailAddress");
             }
 
-            // Apply the changes.
-            user.IsDeleted = true;
+            // Ensure that Pin is unique in the organization
+            if (patch.GetChangedPropertyNames().Contains("Pin"))
+            {
+                patch.TryGetPropertyValue("Pin", out object pin);
+                var castedPin = pin as string;
+                if (_context.Users
+                    .Where(u => u.OrganizationId == user.OrganizationId)
+                    .Where(u => u.Pin == castedPin)
+                    .Where(u => u.IsDeleted == false)
+                    .Where(u => u.Id != user.Id) // Do not include current user in determination
+                    .Any())
+                {
+                    throw new Exception("Another user in the organization already has that Pin");
+                }
+            }
 
-            await _context.SaveChangesAsync();
+            // Peform the update
+            patch.Patch(user);
+
+            if (user.Password != null)
+            {
+                // Generates a password hash and salt
+                var service = new SecurityService();
+                user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
+                user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
+                user.Password = null;
+            }
+            else
+            {
+                user.Password = null;
+            }
+
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(user));
+            if (!TryValidateModel(user, nameof(user)))
+                return BadRequest();
+
+            _context.SaveChanges();
 
             return NoContent();
         }
 
-        // POST: api/Users/ChangePassword
-        [HttpPost("api/Users/ChangePassword")]
-        [AllowAnonymous]
-        public IActionResult ChangePassword([FromQuery] string emailAddress, [FromQuery] string password)
+        // DELETE: odata/Users(5)
+        public IActionResult Delete([FromODataUri] int key)
         {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteUsers)
+                return Forbid();
+
             var user = _context.Users
                 .Where(u => !u.IsDeleted)
-                .Where(u => u.EmailAddress == emailAddress)
+                .Where(u => u.OrganizationId == currentUser.OrganizationId)
+                .Where(u => u.Id == key)
                 .FirstOrDefault();
 
-            // Generates a password hash and salt.
-            var service = new SecurityService();
-            user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
-            user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", password, user.PasswordSalt));
-            user.Password = null;
+            // Ensure that object was found.
+            if (user == null) return NotFound();
+
+            user.IsDeleted = true;
 
             _context.SaveChanges();
 
-            return Ok();
+            return NoContent();
         }
 
-        // POST: api/Users/Authenticate
-        [HttpPost("api/Users/Authenticate")]
-        [AllowAnonymous]
-        public IActionResult Authenticate([FromBody] Session session)
-        {
-            User user = null;
-
-            switch (session.Method)
-            {
-                case "email":
-                    var service = new SecurityService();
-
-                    // Validate both an Email and Password.
-                    if (session.EmailAddress == null || session.EmailPassword == null)
-                    {
-                        return BadRequest("Must provide both an Email Address and password");
-                    }
-
-                    user = _context.Users
-                        .Where(u => u.EmailAddress == session.EmailAddress)
-                        .FirstOrDefault();
-
-                    // Attempt to authenticate.
-                    if ((user == null) ||
-                        !service.AuthenticateWithPassword(user,
-                            session.EmailPassword))
-                    {
-                        return BadRequest("Invalid Email Address and password combination");
-                    }
-
-                    return Created("Authenticate", GenerateJSONWebToken(user));
-                case "pin":
-                    // Validate both an organization code and user pin.
-                    if (session.PinUserPin == null || session.PinOrganizationCode == null)
-                    {
-                        return BadRequest("Must provide both an organization code and user PIN");
-                    }
-
-                    user = _context.Users
-                        .Include("Organization")
-                        .Where(u => u.Pin == session.PinUserPin.ToUpper())
-                        .Where(u => u.Organization.Code ==
-                            session.PinOrganizationCode.ToUpper())
-                        .FirstOrDefault();
-
-                    // Attempt to authenticate.
-                    if (user == null)
-                    {
-                        return BadRequest("Invalid organization code and user pin combination");
-                    }
-
-                    return Created("Authenticate", GenerateJSONWebToken(user));
-                default:
-                    return BadRequest();
-            }
-        }
-
-        // POST: api/Users/Register
-        [HttpPost("api/Users/Register")]
-        [AllowAnonymous]
-        public IActionResult Register([FromBody] Registration registration)
-        {
-            var user = registration.User;
-            var organization = registration.Organization;
-
-            using (var transaction = _context.Database.BeginTransaction())
-            {
-                try
-                {
-                    // Ensure Email address is unique.
-                    var duplicate = _context.Users.Where(u => u.EmailAddress.ToLower().Equals(user.EmailAddress));
-                    if (duplicate.Any())
-                    {
-                        return BadRequest("Email Address is already taken");
-                    }
-
-                    // Generates a password hash and salt.
-                    var service = new SecurityService();
-                    user.PasswordSalt = service.GenerateHash(service.GenerateRandomString());
-                    user.PasswordHash = service.GenerateHash(string.Format("{0} {1}", user.Password, user.PasswordSalt));
-                    user.Password = null;
-
-                    // Auto-generated.
-                    user.Role = "Administrator";
-                    user.CreatedAt = DateTime.UtcNow;
-                    organization.CreatedAt = DateTime.UtcNow;
-                    organization.MinutesFormat = "minutes";
-
-                    if (_env.EnvironmentName.ToUpperInvariant() == "DEVELOPMENT")
-                    {
-                        organization.StripeCustomerId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
-                        organization.StripeSubscriptionId = string.Format("RANDOM{0}", new SecurityService().GenerateRandomString());
-                    }
-
-                    // Determine the actual Stripe Plan Id based on the PlanId.
-                    var stripePlanId = _config["Stripe:StripePlanId1"]; // Default plan is the contractor plan
-                    switch (organization.PlanId)
-                    {
-                        case 1:
-                            stripePlanId = _config["Stripe:StripePlanId1"];
-                            break;
-                        case 2:
-                            stripePlanId = _config["Stripe:StripePlanId2"];
-                            break;
-                        case 3:
-                            stripePlanId = _config["Stripe:StripePlanId3"];
-                            break;
-                        case 4:
-                            stripePlanId = _config["Stripe:StripePlanId4"];
-                            break;
-                    }
-
-                    if (_env.EnvironmentName.ToUpperInvariant() != "DEVELOPMENT")
-                    {
-                        try
-                        {
-                            // Create a Stripe customer object and save the customer id.
-                            var customerOptions = new CustomerCreateOptions
-                            {
-                                Email = user.EmailAddress
-                            };
-                            var customers = new CustomerService();
-                            Stripe.Customer customer = customers.Create(customerOptions);
-                            organization.StripeCustomerId = customer.Id;
-
-                            // Subscribe the customer to the price and save the subscription id.
-                            var subscriptionOptions = new SubscriptionCreateOptions
-                            {
-                                Customer = customer.Id, // ex. cus_IDjvN9UsoFp2mk
-                                Items = new List<SubscriptionItemOptions>
-                            {
-                                new SubscriptionItemOptions
-                                {
-                                    Price = stripePlanId // ex. price_1Hd5PvLI44a19MHX9w5EGD4r
-                                }
-                            },
-                                TrialFromPlan = true
-                            };
-                            var subscriptions = new SubscriptionService();
-                            Subscription subscription = subscriptions.Create(subscriptionOptions);
-
-                            organization.StripeSubscriptionId = subscription.Id;
-
-                            // Send Welcome Email.
-                            var apiKey = _config["SendGrid:ApiKey"];
-                            var client = new SendGridClient(apiKey);
-                            var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
-                            var to = new EmailAddress(user.EmailAddress);
-                            var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", null);
-                            var response = client.SendEmailAsync(msg);
-                        }
-                        catch (Exception ex)
-                        {
-                            return BadRequest(ex.Message);
-                        }
-                    }
-
-                    // Save the organization and user.
-                    _context.Organizations.Add(organization);
-                    user.OrganizationId = organization.Id;
-
-                    _context.Users.Add(user);
-
-                    _context.SaveChanges();
-
-                    transaction.Commit();
-
-                    return Created($"users/{user.Id}", user);
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-
-                    return BadRequest(ex.Message);
-                }
-            }
-        }
-
-        private string GenerateJSONWebToken(User user)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.EmailAddress),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            var token = new JwtSecurityToken(_config["Jwt:Issuer"],
-                _config["Jwt:Issuer"],
-                claims,
-                expires: DateTime.Now.AddMinutes(120),
-                signingCredentials: credentials);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
 
         private User CurrentUser()
         {

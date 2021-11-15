@@ -29,13 +29,11 @@
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
-        var authUserId = await localStorageService.GetFromLocalStorage("AuthUserId");
-        var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
-        var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
+        var accessToken = await localStorageService.GetFromLocalStorage("Token");
         var rangeMin = sharedService.RangeMin.ToString("yyyy-MM-dd");
         var rangeMax = sharedService.RangeMax.ToString("yyyy-MM-dd");
 
-        downloadUrl = $"{apiService.GetBaseUrl()}api/Exports/Csv?InAt={rangeMin}&OutAt={rangeMax}&Delimiter=,&AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
+        downloadUrl = $"{apiService.GetBaseUrl()}api/Exports/Csv?InAt={rangeMin}&OutAt={rangeMax}&Delimiter=,&access_token={accessToken}";
     }
 
     private void CloseDialog(MouseEventArgs e)

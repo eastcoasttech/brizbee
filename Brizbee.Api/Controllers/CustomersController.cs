@@ -2,7 +2,7 @@
 //  CustomersController.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,200 +20,160 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
-using Dapper;
-using Microsoft.AspNetCore.Authorization;
+using Brizbee.Api.Services;
+using Brizbee.Core.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace Brizbee.Api.Controllers
 {
-    [ApiController]
-    [Authorize]
-    public class CustomersController : ControllerBase
+    public class CustomersController : ODataController
     {
-        private readonly IConfiguration Configuration;
+        private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
 
         public CustomersController(IConfiguration configuration, SqlContext context)
         {
-            Configuration = configuration;
+            _configuration = configuration;
             _context = context;
         }
 
-        // GET: api/Customers
-        [HttpGet("api/Customers")]
-        public ActionResult<IEnumerable<Customer>> GetCustomers(string order = "CreatedAt", string direction = "ASC", int pageNumber = 1, int pageSize = 1000)
+        // GET: odata/Customers
+        [HttpGet]
+        [EnableQuery(PageSize = 1000)]
+        public IQueryable<Customer> GetCustomers()
         {
-            // Determine the number of records to skip.
-            int skip = (pageNumber - 1) * pageSize;
-
             var currentUser = CurrentUser();
 
-            // Validate order.
-            var allowed = new string[] { "CREATEDAT", "NAME", "NUMBER", "DESCRIPTION" };
-            if (!allowed.Contains(order.ToUpperInvariant()))
-            {
-                return BadRequest();
-            }
-
-            // Validate direction.
-            direction = direction.ToUpperInvariant();
-            if (direction != "ASC" || direction != "DESC")
-            {
-                return BadRequest();
-            }
-
-            var records = new List<Customer>();
-            using (var connection = new SqlConnection(Configuration["ConnectionStrings:SqlContext"]))
-            {
-                connection.Open();
-
-                var sql = $@"
-                    SELECT
-                        C.Id,
-	                    C.CreatedAt,
-	                    C.Name,
-	                    C.Number,
-                        C.Description,
-	                    C.OrganizationId
-                    FROM
-	                    [Customers] AS C
-                    WHERE
-	                    C.[OrganizationId] = @OrganizationId
-                    ORDER BY
-	                    [{order}] {direction}
-                    OFFSET @Skip ROWS
-                    FETCH NEXT @PageSize ROWS ONLY;";
-
-                records = connection.Query<Customer>(sql, new { OrganizationId = currentUser.OrganizationId, Skip = skip, PageSize = pageSize }).ToList();
-
-                connection.Close();
-            }
-
-            // Get total number of records.
-            var total = _context.Customers
-                .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Count();
-
-            // Determine page count.
-            int pageCount = total > 0
-                ? (int)Math.Ceiling(total / (double)pageSize)
-                : 0;
-
-            // Set headers for paging.
-            Response.Headers.Add("X-Paging-PageNumber", pageNumber.ToString(CultureInfo.InvariantCulture));
-            Response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
-            Response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
-            Response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
-
-            return records;
+            return _context.Customers
+                .Where(c => c.OrganizationId == currentUser.OrganizationId);
         }
 
-        // GET: api/Customers/5
-        [HttpGet("api/Customers/{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id)
+        // GET: odata/Customers(5)
+        [HttpGet]
+        [EnableQuery]
+        public SingleResult<Customer> GetCustomer([FromODataUri] int key)
         {
             var currentUser = CurrentUser();
 
-            // Find within the organization.
-            var customer = await _context.Customers
+            return SingleResult.Create(_context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Where(c => c.Id == id)
-                .FirstOrDefaultAsync();
-
-            if (customer == null)
-            {
-                return NotFound();
-            }
-
-            return customer;
+                .Where(c => c.Id == key));
         }
 
-        // POST: api/Customers
-        [HttpPost("api/Customers")]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        // POST: odata/Customers
+        public IActionResult Post([FromBody] Customer customer)
         {
             var currentUser = CurrentUser();
 
-            // Ensure the same organization.
+            // Ensure that user is authorized.
+            if (!currentUser.CanCreateCustomers)
+                return Forbid();
+
+            // Auto-generated
+            customer.CreatedAt = DateTime.UtcNow;
             customer.OrganizationId = currentUser.OrganizationId;
 
-            _context.Customers.Add(customer);
-            await _context.SaveChangesAsync();
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(customer));
+            if (!TryValidateModel(customer, nameof(customer)))
+                return BadRequest();
 
-            return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
+            _context.Customers.Add(customer);
+
+            _context.SaveChanges();
+
+            return Created("", customer);
         }
 
-        // PUT: api/Customers/5
-        [HttpPut("api/Customers/{id}")]
-        public ActionResult PutCustomer(int id, Customer patch)
+        // PATCH: odata/Customers(5)
+        public IActionResult Patch([FromODataUri] int key, Delta<Customer> patch)
         {
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
-
-            // Find within the organization.
             var customer = _context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.Id == key)
                 .FirstOrDefault();
 
-            if (customer == null)
+            // Ensure that object was found.
+            if (customer == null) return NotFound();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanModifyCustomers ||
+                currentUser.OrganizationId != customer.OrganizationId)
+                return Forbid();
+
+            // Do not allow modifying some properties.
+            if (patch.GetChangedPropertyNames().Contains("OrganizationId") ||
+                patch.GetChangedPropertyNames().Contains("Id") ||
+                patch.GetChangedPropertyNames().Contains("CreatedAt"))
             {
-                return NotFound();
+                return BadRequest("Not authorized to modify the OrganizationId, CreatedAt, or Id.");
             }
 
-            // Apply the changes.
-            customer.Name = patch.Name;
-            customer.Number = patch.Number;
-            customer.Description = patch.Description;
+            // Peform the update.
+            patch.Patch(customer);
 
-            try
-            {
-                _context.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+            // Validate the model.
+            ModelState.ClearValidationState(nameof(customer));
+            if (!TryValidateModel(customer, nameof(customer)))
+                return BadRequest();
+
+            _context.SaveChanges();
 
             return NoContent();
         }
 
-        // DELETE: api/Customers/5
-        [HttpDelete("api/Customers/{id}")]
-        public async Task<ActionResult> DeleteCustomer(int id)
+        // DELETE: odata/Customers(5)
+        public IActionResult Delete([FromODataUri] int key)
         {
             var currentUser = CurrentUser();
 
-            // Ensure Administrator.
-            if (currentUser.Role != "Administrator")
-                return BadRequest();
-
-            // Find within the organization.
-            var customer = await _context.Customers
+            var customer = _context.Customers
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Where(c => c.Id == id)
-                .FirstOrDefaultAsync();
+                .Where(c => c.Id == key)
+                .FirstOrDefault();
 
-            if (customer == null)
-            {
-                return NotFound();
-            }
+            // Ensure that object was found.
+            if (customer == null) return NotFound();
 
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteCustomers ||
+                currentUser.OrganizationId != customer.OrganizationId)
+                return Forbid();
+
+            // Delete the object itself
             _context.Customers.Remove(customer);
-            await _context.SaveChangesAsync();
+
+            _context.SaveChanges();
 
             return NoContent();
+        }
+
+        // POST: odata/Customers/NextNumber
+        [HttpPost]
+        public IActionResult NextNumber()
+        {
+            var organizationId = CurrentUser().OrganizationId;
+            var max = _context.Customers
+                .Where(c => c.OrganizationId == organizationId)
+                .Select(c => c.Number)
+                .Max();
+            if (max == null)
+            {
+                return Ok("1000");
+            }
+            else
+            {
+                var service = new SecurityService();
+                var next = service.NxtKeyCode(max);
+                return Ok(next);
+            }
         }
 
         private User CurrentUser()

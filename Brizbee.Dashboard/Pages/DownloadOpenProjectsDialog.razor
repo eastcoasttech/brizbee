@@ -29,11 +29,9 @@
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
-        var authUserId = await localStorageService.GetFromLocalStorage("AuthUserId");
-        var authExpiration = await localStorageService.GetFromLocalStorage("AuthExpiration");
-        var authToken = await localStorageService.GetFromLocalStorage("AuthToken");
+        var accessToken = await localStorageService.GetFromLocalStorage("Token");
 
-        downloadUrl = $"{apiService.GetBaseUrl()}api/JobsExpanded/Export?AuthUserId={authUserId}&AuthExpiration={authExpiration}&AuthToken={authToken}";
+        downloadUrl = $"{apiService.GetBaseUrl()}api/JobsExpanded/Export?access_token={accessToken}";
     }
 
     private void CloseDialog(MouseEventArgs e)

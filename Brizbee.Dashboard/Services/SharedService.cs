@@ -8,9 +8,7 @@ namespace Brizbee.Dashboard.Services
     public class SharedService
     {
         private User _currentUser;
-        private int _authUserId;
-        private string _authExpiration;
-        private string _authToken;
+        private string _token;
         private DateTime _rangeMin;
         private DateTime _rangeMax;
         private PunchFilters _punchFilters;
@@ -28,41 +26,15 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public int AuthUserId
+        public string Token
         {
             get
             {
-                return _authUserId;
+                return _token;
             }
             set
             {
-                _authUserId = value;
-                NotifyDataChanged();
-            }
-        }
-
-        public string AuthExpiration
-        {
-            get
-            {
-                return _authExpiration;
-            }
-            set
-            {
-                _authExpiration = value;
-                NotifyDataChanged();
-            }
-        }
-
-        public string AuthToken
-        {
-            get
-            {
-                return _authToken;
-            }
-            set
-            {
-                _authToken = value;
+                _token = value;
                 NotifyDataChanged();
             }
         }
@@ -128,9 +100,7 @@ namespace Brizbee.Dashboard.Services
         public void Reset()
         {
             // Clear variables
-            _authExpiration = "";
-            _authToken = "";
-            _authUserId = 0;
+            _token = null;
             _rangeMin = DateTime.Now;
             _rangeMax = DateTime.Now;
             _currentUser = null;

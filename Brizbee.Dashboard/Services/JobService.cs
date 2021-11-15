@@ -24,21 +24,17 @@ namespace Brizbee.Dashboard.Services
             _apiService = apiService;
         }
 
-        public void ConfigureHeadersWithCredentials(Credential credential)
+        public void ConfigureHeadersWithToken(string token)
         {
             // Clear old headers first
             ResetHeaders();
 
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_USER_ID", credential.AuthUserId);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_TOKEN", credential.AuthToken);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_EXPIRATION", credential.AuthExpiration);
+            _apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public void ResetHeaders()
         {
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_USER_ID");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_TOKEN");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
+            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
         public async Task<(List<Job>, long?)> GetExpandedJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
@@ -68,7 +64,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Job>, long?)> GetOpenJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs/Default.Open?$expand=Customer&$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs/Open()?$expand=Customer&$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
             
             if (!response.IsSuccessStatusCode)
                 return (new List<Job>(), 0);
@@ -177,7 +173,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<string> GetNextNumberAsync()
         {
-            var response = await _apiService.GetHttpClient().PostAsync("odata/Jobs/Default.NextNumber", new StringContent(""));
+            var response = await _apiService.GetHttpClient().PostAsync("odata/Jobs/NextNumber", new StringContent(""));
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();

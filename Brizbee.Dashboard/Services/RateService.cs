@@ -25,26 +25,22 @@ namespace Brizbee.Dashboard.Services
             _apiService = apiService;
         }
 
-        public void ConfigureHeadersWithCredentials(Credential credential)
+        public void ConfigureHeadersWithToken(string token)
         {
             // Clear old headers first
             ResetHeaders();
 
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_USER_ID", credential.AuthUserId);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_TOKEN", credential.AuthToken);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_EXPIRATION", credential.AuthExpiration);
+            _apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public void ResetHeaders()
         {
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_USER_ID");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_TOKEN");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
+            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
         public async Task<(List<Rate>, long?)> GetBasePayrollRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/Default.BasePayrollRatesForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/BasePayrollRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -54,7 +50,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Rate>, long?)> GetAlternatePayrollRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/Default.AlternatePayrollRatesForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/AlternatePayrollRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -64,7 +60,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Rate>, long?)> GetBaseServiceRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/Default.BaseServiceRatesForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/BaseServiceRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -74,7 +70,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Rate>, long?)> GetAlternateServiceRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/Default.AlternateServiceRatesForPunches(InAt='{min.ToString("yyyy-MM-dd")}',OutAt='{max.ToString("yyyy-MM-dd")}')?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/AlternateServiceRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();

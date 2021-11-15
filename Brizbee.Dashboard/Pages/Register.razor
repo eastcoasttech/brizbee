@@ -234,43 +234,39 @@
             working = true;
 
         // Authenticate the user.
-        var credential = await authService.AuthenticateWithEmailAsync(new EmailSession()
+        var token = await authService.AuthenticateWithEmailAsync(new EmailSession()
         {
             EmailAddress = registration.EmailAddress,
             EmailPassword = registration.Password
         });
-
-        // Save credential to local storage.
-        await localStorageService.SetLocalStorage("AuthUserId", credential.AuthUserId);
-        await localStorageService.SetLocalStorage("AuthToken", credential.AuthToken);
-        await localStorageService.SetLocalStorage("AuthExpiration", credential.AuthExpiration);
+        
+        // Save token to local storage.
+        await localStorageService.SetLocalStorage("Token", token);
 
         // Update headers on services.
-        auditService.ConfigureHeadersWithCredentials(credential);
-        authService.ConfigureHeadersWithCredentials(credential);
-        kioskService.ConfigureHeadersWithCredentials(credential);
-        userService.ConfigureHeadersWithCredentials(credential);
-        punchService.ConfigureHeadersWithCredentials(credential);
-        lockService.ConfigureHeadersWithCredentials(credential);
-        customerService.ConfigureHeadersWithCredentials(credential);
-        taskService.ConfigureHeadersWithCredentials(credential);
-        taskTemplateService.ConfigureHeadersWithCredentials(credential);
-        populateTemplateService.ConfigureHeadersWithCredentials(credential);
-        jobService.ConfigureHeadersWithCredentials(credential);
-        rateService.ConfigureHeadersWithCredentials(credential);
-        organizationService.ConfigureHeadersWithCredentials(credential);
-        timesheetEntryService.ConfigureHeadersWithCredentials(credential);
-        qbdInventoryItemService.ConfigureHeadersWithCredentials(credential);
-        qbdInventoryItemSyncService.ConfigureHeadersWithCredentials(credential);
-        qbdInventoryConsumptionService.ConfigureHeadersWithCredentials(credential);
-        qbdInventoryConsumptionSyncService.ConfigureHeadersWithCredentials(credential);
-        exportService.ConfigureHeadersWithCredentials(credential);
+        auditService.ConfigureHeadersWithToken(token);
+        authService.ConfigureHeadersWithToken(token);
+        kioskService.ConfigureHeadersWithToken(token);
+        userService.ConfigureHeadersWithToken(token);
+        punchService.ConfigureHeadersWithToken(token);
+        lockService.ConfigureHeadersWithToken(token);
+        customerService.ConfigureHeadersWithToken(token);
+        taskService.ConfigureHeadersWithToken(token);
+        taskTemplateService.ConfigureHeadersWithToken(token);
+        populateTemplateService.ConfigureHeadersWithToken(token);
+        jobService.ConfigureHeadersWithToken(token);
+        rateService.ConfigureHeadersWithToken(token);
+        organizationService.ConfigureHeadersWithToken(token);
+        timesheetEntryService.ConfigureHeadersWithToken(token);
+        qbdInventoryItemService.ConfigureHeadersWithToken(token);
+        qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+        qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+        qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+        exportService.ConfigureHeadersWithToken(token);
 
         // Configure shared service.
         sharedService.CurrentUser = await authService.GetMeAsync();
-        sharedService.AuthUserId = int.Parse(credential.AuthUserId);
-        sharedService.AuthToken = credential.AuthToken;
-        sharedService.AuthExpiration = credential.AuthExpiration;
+        sharedService.Token = token;
 
         NavigationManager.NavigateTo("kiosk/status");
     }

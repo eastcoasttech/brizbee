@@ -17,7 +17,7 @@ namespace Brizbee.Dashboard
             // Configure HttpClient to communicate with API.
             builder.Services.AddHttpClient<ApiService>(client =>
             {
-                client.BaseAddress = new Uri("https://app-brizbee-prod.azurewebsites.net");
+                client.BaseAddress = new Uri("http://localhost:5113");
                 client.Timeout = TimeSpan.FromMinutes(10);
             });
 

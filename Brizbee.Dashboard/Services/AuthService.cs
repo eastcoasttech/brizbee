@@ -21,24 +21,20 @@ namespace Brizbee.Dashboard.Services
             _apiService = apiService;
         }
 
-        public void ConfigureHeadersWithCredentials(Credential credential)
+        public void ConfigureHeadersWithToken(string token)
         {
             // Clear old headers first
             ResetHeaders();
 
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_USER_ID", credential.AuthUserId);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_TOKEN", credential.AuthToken);
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("AUTH_EXPIRATION", credential.AuthExpiration);
+            _apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public void ResetHeaders()
         {
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_USER_ID");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_TOKEN");
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("AUTH_EXPIRATION");
+            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
-        public async Task<Credential> AuthenticateWithPinAsync(PinSession session)
+        public async Task<string> AuthenticateWithPinAsync(PinSession session)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, "api/Auth/Authenticate"))
             {
@@ -61,9 +57,7 @@ namespace Brizbee.Dashboard.Services
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            using var responseContent = await response.Content.ReadAsStreamAsync();
-                            var deserialized = await JsonSerializer.DeserializeAsync<Credential>(responseContent, options);
-                            return deserialized;
+                            return await response.Content.ReadAsStringAsync();
                         }
                         else
                         {
@@ -74,7 +68,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<Credential> AuthenticateWithEmailAsync(EmailSession session)
+        public async Task<string> AuthenticateWithEmailAsync(EmailSession session)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Post, "api/Auth/Authenticate"))
             {
@@ -97,9 +91,7 @@ namespace Brizbee.Dashboard.Services
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            using var responseContent = await response.Content.ReadAsStreamAsync();
-                            var deserialized = await JsonSerializer.DeserializeAsync<Credential>(responseContent, options);
-                            return deserialized;
+                            return await response.Content.ReadAsStringAsync();
                         }
                         else
                         {

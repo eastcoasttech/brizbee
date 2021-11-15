@@ -51,9 +51,7 @@
     private async void SignOutAsync()
     {
         // Clear the local storage
-        await localStorageService.RemoveFromLocalStorage("AuthUserId");
-        await localStorageService.RemoveFromLocalStorage("AuthToken");
-        await localStorageService.RemoveFromLocalStorage("AuthExpiration");
+        await localStorageService.RemoveFromLocalStorage("Token");
 
         // Clear the headers
         auditService.ResetHeaders();
