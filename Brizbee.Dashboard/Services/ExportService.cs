@@ -1,6 +1,6 @@
 ﻿using Brizbee.Blazor;
-using Brizbee.Common.Models;
-using Brizbee.Common.Security;
+using Brizbee.Dashboard.Models;
+using Brizbee.Dashboard.Security;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;

@@ -1,7 +1,7 @@
 ﻿@page "/customers"
 
 @using Brizbee.Dashboard.Services
-@using Brizbee.Common.Models
+@using Brizbee.Dashboard.Models
 
 @inject NavigationManager NavigationManager
 @inject LocalStorageService localStorageService
@@ -438,7 +438,7 @@
     private User currentUser;
     private List<Customer> customers = new List<Customer>();
     private List<Job> projects = new List<Job>();
-    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<Brizbee.Dashboard.Models.Task> tasks = new List<Brizbee.Dashboard.Models.Task>();
     private string customersSortBy = "Name";
     private string customersSortDirection = "ASC";
     private string projectsSortBy = "Number";
@@ -670,7 +670,7 @@
                                 new DialogOptions() { Width = "600px" });
     }
 
-    private void OpenModifyTaskDialog(Brizbee.Common.Models.Task task)
+    private void OpenModifyTaskDialog(Brizbee.Dashboard.Models.Task task)
     {
         dialogService.Open<TaskDialog>("Edit Task",
                                 new Dictionary<string, object>() { { "Id", task.Id }, { "ProjectId", selectedProjectId } },
@@ -773,7 +773,7 @@
         StateHasChanged();
     }
 
-    private void SelectTask(Brizbee.Common.Models.Task task)
+    private void SelectTask(Brizbee.Dashboard.Models.Task task)
     {
         selectedTaskId = task.Id;
         StateHasChanged();

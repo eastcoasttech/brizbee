@@ -1,8 +1,8 @@
 ﻿@page "/dialogs/punch"
 
 @using Brizbee.Dashboard.Services
-@using Brizbee.Common.Models
-@using Brizbee.Common.Serialization
+@using Brizbee.Dashboard.Models
+@using Brizbee.Dashboard.Serialization
 @using System.Globalization
 @using System.Text.Json 
 @using NodaTime
@@ -424,7 +424,7 @@
     private string selectedOutAtTimeZone = "";
     private bool hasPunchOut = false;
     private List<Customer> customers = new List<Customer>();
-    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<Brizbee.Dashboard.Models.Task> tasks = new List<Brizbee.Dashboard.Models.Task>();
     private List<Job> jobs = new List<Job>();
     private List<User> users = new List<User>();
     private List<Audit> audits = new List<Audit>();

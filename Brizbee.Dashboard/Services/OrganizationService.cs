@@ -1,6 +1,6 @@
-﻿using Brizbee.Common.Models;
-using Brizbee.Common.Security;
-using Brizbee.Common.Serialization.Alerts;
+﻿using Brizbee.Dashboard.Models;
+using Brizbee.Dashboard.Security;
+using Brizbee.Dashboard.Serialization.Alerts;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;

@@ -1,7 +1,7 @@
 ﻿@page "/dialogs/task"
 
 @using Brizbee.Dashboard.Services
-@using Brizbee.Common.Models
+@using Brizbee.Dashboard.Models
 
 @inject DialogService dialogService
 @inject TaskService taskService
@@ -95,7 +95,7 @@
 
     private bool working = false;
     private bool loading = true;
-    private Brizbee.Common.Models.Task task = new Brizbee.Common.Models.Task();
+    private Brizbee.Dashboard.Models.Task task = new Brizbee.Dashboard.Models.Task();
     private string[] groups = new string[] { };
     private int selectedBaseServiceRateId;
     private List<Rate> baseServiceRates = new List<Rate>(0);

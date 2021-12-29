@@ -1,8 +1,8 @@
 ﻿@page "/dialogs/timecard"
 
 @using Brizbee.Dashboard.Services
-@using Brizbee.Common.Models
-@using Brizbee.Common.Serialization
+@using Brizbee.Dashboard.Models
+@using Brizbee.Dashboard.Serialization
 @using System.Globalization
 @using NodaTime
 @using NodaTime.TimeZones
@@ -150,7 +150,7 @@
     private string hours = "0";
     private string minutes = "0";
     private List<Customer> customers = new List<Customer>();
-    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<Brizbee.Dashboard.Models.Task> tasks = new List<Brizbee.Dashboard.Models.Task>();
     private List<Job> jobs = new List<Job>();
     private List<User> users = new List<User>();
 
