@@ -2,7 +2,7 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Brizbee.Dashboard.Services
-@using Brizbee.Common.Models
+@using Brizbee.Dashboard.Models
 
 @inject NavigationManager NavigationManager
 @inject SharedService sharedService
@@ -184,7 +184,7 @@
     private string hours = "0";
     private string minutes = "0";
     private List<Customer> customers = new List<Customer>();
-    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<Brizbee.Dashboard.Models.Task> tasks = new List<Brizbee.Dashboard.Models.Task>();
     private List<Job> jobs = new List<Job>();
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()

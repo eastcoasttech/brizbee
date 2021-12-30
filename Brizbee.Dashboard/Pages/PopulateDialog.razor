@@ -2,7 +2,7 @@
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
-@using Brizbee.Common.Models
+@using Brizbee.Dashboard.Models
 
 @inject TooltipService tooltipService
 @inject DialogService dialogService
@@ -170,7 +170,7 @@
     private List<Rate> alternatePayrollRates = new List<Rate>();
     private List<Rate> baseServiceRates = new List<Rate>();
     private List<Rate> alternateServiceRates = new List<Rate>();
-    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>();
+    private List<Brizbee.Dashboard.Models.Task> tasks = new List<Brizbee.Dashboard.Models.Task>();
     private List<PopulateRateException> serviceExceptions = new List<PopulateRateException>();
     private List<PopulateRateException> payrollExceptions = new List<PopulateRateException>();
     private ElementReference basePayrollRatesQuestionIcon;

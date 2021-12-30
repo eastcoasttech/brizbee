@@ -2,7 +2,7 @@
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Serialization
-@using Brizbee.Common.Models
+@using Brizbee.Dashboard.Models
 
 @inject DialogService dialogService
 @inject SharedService sharedService
@@ -111,9 +111,9 @@
         {
             filters.Projects = result as HashSet<Job>;
         }
-        else if (result is HashSet<Brizbee.Common.Models.Task>)
+        else if (result is HashSet<Brizbee.Dashboard.Models.Task>)
         {
-            filters.Tasks = result as HashSet<Brizbee.Common.Models.Task>;
+            filters.Tasks = result as HashSet<Brizbee.Dashboard.Models.Task>;
         }
 
         StateHasChanged();
@@ -163,6 +163,6 @@
         filters.Users = new HashSet<User>();
         filters.Customers = new HashSet<Customer>();
         filters.Projects = new HashSet<Job>();
-        filters.Tasks = new HashSet<Brizbee.Common.Models.Task>();
+        filters.Tasks = new HashSet<Brizbee.Dashboard.Models.Task>();
     }
 }

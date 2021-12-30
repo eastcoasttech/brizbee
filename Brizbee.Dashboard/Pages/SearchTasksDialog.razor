@@ -1,7 +1,7 @@
 ﻿@page "/dialogs/search/tasks"
 
 @using Brizbee.Dashboard.Services
-@using Brizbee.Common.Models
+@using Brizbee.Dashboard.Models
 
 @inject DialogService dialogService
 @inject TaskService taskService
@@ -34,10 +34,10 @@
 <button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">Add</button>
 
 @code {
-    [Parameter] public HashSet<Brizbee.Common.Models.Task> ExistingFilters { get; set; }
+    [Parameter] public HashSet<Brizbee.Dashboard.Models.Task> ExistingFilters { get; set; }
 
-    private List<Brizbee.Common.Models.Task> tasks = new List<Brizbee.Common.Models.Task>(0);
-    private HashSet<Brizbee.Common.Models.Task> selectedTasks = new HashSet<Brizbee.Common.Models.Task>(0);
+    private List<Brizbee.Dashboard.Models.Task> tasks = new List<Brizbee.Dashboard.Models.Task>(0);
+    private HashSet<Brizbee.Dashboard.Models.Task> selectedTasks = new HashSet<Brizbee.Dashboard.Models.Task>(0);
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -57,7 +57,7 @@
         dialogService.Close(selectedTasks);
     }
 
-    private void CheckboxClicked(Brizbee.Common.Models.Task selected, object isChecked)
+    private void CheckboxClicked(Brizbee.Dashboard.Models.Task selected, object isChecked)
     {
         if ((bool)isChecked)
         {

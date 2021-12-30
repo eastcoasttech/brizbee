@@ -1,6 +1,6 @@
 ﻿using Brizbee.Blazor;
-using Brizbee.Common.Models;
-using Brizbee.Common.Security;
+using Brizbee.Dashboard.Models;
+using Brizbee.Dashboard.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,46 +38,46 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
-        public async Task<(List<Brizbee.Common.Models.Task>, long?)> GetTasksAsync(int jobId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        public async Task<(List<Brizbee.Dashboard.Models.Task>, long?)> GetTasksAsync(int jobId, int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}&$filter=JobId eq {jobId}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Brizbee.Common.Models.Task>>(responseContent, options);
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Brizbee.Dashboard.Models.Task>>(responseContent, options);
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async Task<Brizbee.Common.Models.Task> GetTaskByIdAsync(int id)
+        public async Task<Brizbee.Dashboard.Models.Task> GetTaskByIdAsync(int id)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks({id})?$expand=BasePayrollRate,BaseServiceRate");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent);
+            return await JsonSerializer.DeserializeAsync<Brizbee.Dashboard.Models.Task>(responseContent);
         }
 
-        public async Task<(List<Brizbee.Common.Models.Task>, long?)> GetTasksForPunchesAsync(DateTime min, DateTime max)
+        public async Task<(List<Brizbee.Dashboard.Models.Task>, long?)> GetTasksForPunchesAsync(DateTime min, DateTime max)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/TasksExpanded/ForPunches?min={min.ToString("yyyy-MM-dd")}&max={max.ToString("yyyy-MM-dd")}");
 
             if (!response.IsSuccessStatusCode)
-                return (new List<Brizbee.Common.Models.Task>(0), 0);
+                return (new List<Brizbee.Dashboard.Models.Task>(0), 0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var value = await JsonSerializer.DeserializeAsync<List<Brizbee.Common.Models.Task>>(responseContent, options);
+            var value = await JsonSerializer.DeserializeAsync<List<Brizbee.Dashboard.Models.Task>>(responseContent, options);
             var total = long.Parse(response.Headers.GetValues("X-Paging-TotalRecordCount").FirstOrDefault());
             return (value, total);
         }
 
-        public async Task<Brizbee.Common.Models.Task> SearchTasksAsync(string number)
+        public async Task<Brizbee.Dashboard.Models.Task> SearchTasksAsync(string number)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Tasks/Search(Number='{number}')");
 
             if (response.IsSuccessStatusCode)
             {
                 using var responseContent = await response.Content.ReadAsStreamAsync();
-                var odataResponse = await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent, options);
+                var odataResponse = await JsonSerializer.DeserializeAsync<Brizbee.Dashboard.Models.Task>(responseContent, options);
                 return odataResponse;
             }
             else
@@ -99,7 +99,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<Brizbee.Common.Models.Task> SaveTaskAsync(Brizbee.Common.Models.Task task)
+        public async Task<Brizbee.Dashboard.Models.Task> SaveTaskAsync(Brizbee.Dashboard.Models.Task task)
         {
             var url = task.Id != 0 ? $"odata/Tasks({task.Id})" : "odata/Tasks";
             var method = task.Id != 0 ? HttpMethod.Patch : HttpMethod.Post;
@@ -139,7 +139,7 @@ namespace Brizbee.Dashboard.Services
                             }
                             else
                             {
-                                var deserialized = await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent, options);
+                                var deserialized = await JsonSerializer.DeserializeAsync<Brizbee.Dashboard.Models.Task>(responseContent, options);
                                 return deserialized;
                             }
                         }

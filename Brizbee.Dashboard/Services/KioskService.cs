@@ -1,5 +1,5 @@
-﻿using Brizbee.Common.Models;
-using Brizbee.Common.Security;
+﻿using Brizbee.Dashboard.Models;
+using Brizbee.Dashboard.Security;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -133,14 +133,14 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<Brizbee.Common.Models.Task> SearchTasksAsync(string taskNumber)
+        public async Task<Brizbee.Dashboard.Models.Task> SearchTasksAsync(string taskNumber)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/Kiosk/SearchTasks?taskNumber={taskNumber}");
 
             if (response.IsSuccessStatusCode)
             {
                 using var responseContent = await response.Content.ReadAsStreamAsync();
-                var value = await JsonSerializer.DeserializeAsync<Brizbee.Common.Models.Task>(responseContent, options);
+                var value = await JsonSerializer.DeserializeAsync<Brizbee.Dashboard.Models.Task>(responseContent, options);
                 return value;
             }
             else
@@ -173,15 +173,15 @@ namespace Brizbee.Dashboard.Services
             return value;
         }
 
-        public async Task<List<Brizbee.Common.Models.Task>> GetTasksAsync(int projectId)
+        public async Task<List<Brizbee.Dashboard.Models.Task>> GetTasksAsync(int projectId)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"api/Kiosk/Tasks?projectId={projectId}");
 
             if (!response.IsSuccessStatusCode)
-                return new List<Brizbee.Common.Models.Task>(0);
+                return new List<Brizbee.Dashboard.Models.Task>(0);
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var value = await JsonSerializer.DeserializeAsync<List<Brizbee.Common.Models.Task>>(responseContent, options);
+            var value = await JsonSerializer.DeserializeAsync<List<Brizbee.Dashboard.Models.Task>>(responseContent, options);
             return value;
         }
     }

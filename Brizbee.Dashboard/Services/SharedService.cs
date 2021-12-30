@@ -1,4 +1,4 @@
-﻿using Brizbee.Common.Models;
+﻿using Brizbee.Dashboard.Models;
 using Brizbee.Dashboard.Serialization;
 using System;
 using System.Collections.Generic;

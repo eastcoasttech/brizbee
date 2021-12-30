@@ -1,5 +1,5 @@
 ﻿
-using Brizbee.Common.Models;
+using Brizbee.Dashboard.Models;
 using System.Collections.Generic;
 
 namespace Brizbee.Dashboard.Serialization
