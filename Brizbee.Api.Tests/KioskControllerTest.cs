@@ -28,6 +28,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
@@ -325,6 +326,252 @@ namespace Brizbee.Api.Tests
             Assert.AreEqual(taskId, currentPunch.TaskId);
             Assert.IsNotNull(currentPunch.InAt);
             Assert.IsNull(currentPunch.OutAt);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task SearchTasks_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var taskId = _context.Tasks
+                .Where(t => t.Number == "1000")
+                .Select(t => t.Id)
+                .FirstOrDefault();
+            var taskNumber = "1000";
+
+            var response = await client.GetAsync($"api/Kiosk/SearchTasks?taskNumber={taskNumber}");
+
+            var task = JsonSerializer.Deserialize<Task>(response.Content.ReadAsStream(), options);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsNotNull(task);
+            Assert.AreEqual(taskNumber, task!.Number);
+            Assert.AreEqual(taskId, task!.Id);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task SearchTasks_Should_Fail()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var taskNumber = "999999";
+
+            var response = await client.GetAsync($"api/Kiosk/SearchTasks?taskNumber={taskNumber}");
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsFalse(response.IsSuccessStatusCode);
+            Assert.AreEqual(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task Customers_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var response = await client.GetAsync($"api/Kiosk/Customers");
+
+            var customers = JsonSerializer.Deserialize<List<Customer>>(response.Content.ReadAsStream(), options);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsNotNull(customers);
+            Assert.AreEqual(1, customers.Count);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task Projects_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var customerId = _context.Customers
+                .Where(c => c.Number == "1000")
+                .Select(c => c.Id)
+                .FirstOrDefault();
+
+            var response = await client.GetAsync($"api/Kiosk/Projects?customerId={customerId}");
+
+            var projects = JsonSerializer.Deserialize<List<Customer>>(response.Content.ReadAsStream(), options);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsNotNull(projects);
+            Assert.AreEqual(1, projects.Count);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task Tasks_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var projectId = _context.Jobs
+                .Where(j => j.Number == "1000")
+                .Select(j => j.Id)
+                .FirstOrDefault();
+
+            var response = await client.GetAsync($"api/Kiosk/Tasks?projectId={projectId}");
+
+            var tasks = JsonSerializer.Deserialize<List<Customer>>(response.Content.ReadAsStream(), options);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsNotNull(tasks);
+            Assert.AreEqual(1, tasks.Count);
         }
 
         private string GenerateJSONWebToken(int userId, string emailAddress)
