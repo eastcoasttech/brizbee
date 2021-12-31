@@ -1,7 +1,8 @@
 ﻿using Brizbee.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
-namespace Brizbee.Api
+namespace Brizbee.Api.Tests
 {
     public class SqlContext : DbContext
     {
