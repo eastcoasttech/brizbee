@@ -127,6 +127,7 @@
     <EmbeddedResource Include="Migrations\0008 Adding Populate Templates.sql" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Migrations\0018 Adding OrganizationId to Inventory Items.sql" />
     <EmbeddedResource Include="Migrations\0013 Adding Indexes to Punches.sql" />
     <EmbeddedResource Include="Migrations\0009 Adding IsActive and Permissions.sql" />
     <EmbeddedResource Include="Migrations\0010 Adding Column Preferences.sql" />
@@ -136,7 +137,7 @@
     <EmbeddedResource Include="Migrations\0015 Adding Index to Users.sql" />
     <EmbeddedResource Include="Migrations\0016 Adding CustomBarCodeValue.sql" />
     <EmbeddedResource Include="Migrations\0017 Adding Column to Users.sql" />
-    <Content Include="Migrations\0018 Removing NULL.sql" />
+    <Content Include="Migrations\0019 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

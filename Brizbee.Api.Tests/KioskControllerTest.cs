@@ -21,6 +21,7 @@
 //
 
 using Brizbee.Core.Models;
+using Brizbee.Core.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -458,7 +459,7 @@ namespace Brizbee.Api.Tests
             // Act
             // ----------------------------------------------------------------
 
-            var response = await client.GetAsync($"api/Kiosk/Customers");
+            var response = await client.GetAsync("api/Kiosk/Customers");
 
             var customers = JsonSerializer.Deserialize<List<Customer>>(response.Content.ReadAsStream(), options);
 
@@ -572,6 +573,115 @@ namespace Brizbee.Api.Tests
             Assert.IsTrue(response.IsSuccessStatusCode);
             Assert.IsNotNull(tasks);
             Assert.AreEqual(1, tasks.Count);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task TimeZones_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var response = await client.GetAsync("api/Kiosk/TimeZones");
+
+            var timeZones = JsonSerializer.Deserialize<List<IanaTimeZone>>(response.Content.ReadAsStream(), options);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsNotNull(timeZones);
+
+            var ameriaNewYork = timeZones.Where(t => t.Id == "America/New_York").FirstOrDefault();
+
+            Assert.IsNotNull(ameriaNewYork);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task SearchInventoryItems_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var invalidBarCodeValue = "999999999";
+
+            var responseInvalid = await client.GetAsync($"api/Kiosk/InventoryItems/Search?barCodeValue={invalidBarCodeValue}");
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsFalse(responseInvalid.IsSuccessStatusCode);
+
+
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            var validBarCodeValue = "70012";
+
+            var responseValid = await client.GetAsync($"api/Kiosk/InventoryItems/Search?barCodeValue={validBarCodeValue}");
+
+
+            // ----------------------------------------------------------------
+            // Assert again
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseValid.IsSuccessStatusCode);
         }
 
         private string GenerateJSONWebToken(int userId, string emailAddress)

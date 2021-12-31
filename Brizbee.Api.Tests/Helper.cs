@@ -78,16 +78,16 @@ namespace Brizbee.Api.Tests
                 // Scaffold a user.
                 // ----------------------------------------------------------------
 
-                var organizationId = _context.Organizations
-                    .Where(o => o.Name == "Test Organization")
-                    .Select(o => o.Id)
-                    .FirstOrDefault();
+                //var organizationId = _context.Organizations
+                //    .Where(o => o.Name == "Test Organization")
+                //    .Select(o => o.Id)
+                //    .FirstOrDefault();
                 var user = new User()
                 {
                     CreatedAt = DateTime.UtcNow,
                     EmailAddress = "test.user.a@brizbee.com",
                     Name = "Test User A",
-                    OrganizationId = organizationId,
+                    OrganizationId = organization.Id,
                     IsDeleted = false,
                     Pin = "0000",
                     Role = "Standard",
@@ -107,7 +107,7 @@ namespace Brizbee.Api.Tests
                     CreatedAt = DateTime.UtcNow,
                     Number = "1000",
                     Name = "General Electric",
-                    OrganizationId = organizationId
+                    OrganizationId = organization.Id
                 };
                 _context.Customers.Add(customer);
                 _context.SaveChanges();
@@ -151,6 +151,51 @@ namespace Brizbee.Api.Tests
                     JobId = jobId
                 };
                 _context.Tasks.Add(task);
+                _context.SaveChanges();
+
+
+                // ----------------------------------------------------------------
+                // Scaffold an inventory item sync.
+                // ----------------------------------------------------------------
+
+                var inventoryItemSync = new QBDInventoryItemSync()
+                {
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByUserId = user.Id,
+                    Hostname = "HOSTNAME-01",
+                    HostCompanyFileName = "COMPANY FILE NAME",
+                    HostCompanyFilePath = "PATH TO FILE",
+                    HostCountry = "US",
+                    HostMajorVersion = "1",
+                    HostMinorVersion = "0",
+                    HostProductName = "PRODUCT NAME",
+                    HostSupportedQBXMLVersion = "12"
+                };
+                _context.QBDInventoryItemSyncs.Add(inventoryItemSync);
+                _context.SaveChanges();
+
+
+                // ----------------------------------------------------------------
+                // Scaffold an inventory item.
+                // ----------------------------------------------------------------
+
+                var inventoryItem = new QBDInventoryItem()
+                {
+                    ListId = "019F79CACE27HDKDUD32",
+                    Name = "25-ft 12/2 Solid NM",
+                    FullName = "25-ft 12/2 Solid NM",
+                    PurchaseCost = 38.49m,
+                    PurchaseDescription = "Romex SIMpull 25-ft 12/2 Solid Non-Metallic Wire (By-the-Roll)",
+                    SalesPrice = 48.11m,
+                    SalesDescription = "Romex SIMpull 25-ft 12/2 Solid Non-Metallic Wire (By-the-Roll)",
+                    BarCodeValue = "70012",
+                    CustomBarCodeValue = "70012",
+                    OrganizationId = organization.Id,
+                    ManufacturerPartNumber = "28828221",
+                    QBDInventoryItemSyncId = inventoryItemSync.Id
+                };
+                _context.QBDInventoryItems.Add(inventoryItem);
                 _context.SaveChanges();
             }
             catch (DbUpdateException ex)

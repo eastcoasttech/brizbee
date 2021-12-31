@@ -46,8 +46,15 @@ namespace Brizbee.Api.Tests
                 .Ignore(j => j.TaskTemplateId);
 
             // Configure decimal precision
-            modelBuilder.Entity<QBDInventoryItem>().Property(o => o.SalesPrice).HasColumnType("decimal(10,2)").HasPrecision(2, 10);
-            modelBuilder.Entity<QBDInventoryItem>().Property(o => o.PurchaseCost).HasColumnType("decimal(10,2)").HasPrecision(2, 10);
+            modelBuilder.Entity<QBDInventoryItem>()
+                .Property(o => o.SalesPrice)
+                .HasColumnType("decimal(10,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<QBDInventoryItem>()
+                .Property(o => o.PurchaseCost)
+                .HasColumnType("decimal(10,2)")
+                .HasPrecision(10, 2);
         }
     }
 }
