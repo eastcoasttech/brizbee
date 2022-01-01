@@ -1,5 +1,5 @@
-//
-//  UsersControllerTest.cs
+﻿//
+//  CustomersControllerTest.cs
 //  BRIZBEE API
 //
 //  Copyright (C) 2019-2021 East Coast Technology Services, LLC
@@ -42,7 +42,7 @@ using System.Text.Json;
 namespace Brizbee.Api.Tests
 {
     [TestClass]
-    public class UsersControllerTest
+    public class CustomersControllerTest
     {
         public IConfiguration _configuration { get; set; }
 
@@ -55,7 +55,7 @@ namespace Brizbee.Api.Tests
             PropertyNameCaseInsensitive = true
         };
 
-        public UsersControllerTest()
+        public CustomersControllerTest()
         {
             // Setup configuration
             var configurationBuilder = new ConfigurationBuilder();
@@ -82,7 +82,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task GetAllUsers_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task GetAllCustomers_Should_ReturnSuccessfully()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -113,7 +113,7 @@ namespace Brizbee.Api.Tests
             // Act
             // ----------------------------------------------------------------
 
-            var response = await client.GetAsync($"odata/Users");
+            var response = await client.GetAsync($"odata/Customers");
 
 
             // ----------------------------------------------------------------
@@ -124,7 +124,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task GetUser_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task GetCustomer_Should_ReturnSuccessfully()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -155,12 +155,12 @@ namespace Brizbee.Api.Tests
             // Act
             // ----------------------------------------------------------------
 
-            var userId = _context.Users
-                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
-                .Select(u => u.Id)
+            var customerId = _context.Customers
+                .Where(c => c.Number == "1000")
+                .Select(c => c.Id)
                 .FirstOrDefault();
 
-            var response = await client.GetAsync($"odata/Users({userId})");
+            var response = await client.GetAsync($"odata/Customers({customerId})");
 
 
             // ----------------------------------------------------------------
@@ -171,7 +171,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task CreateUser_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task CreateCustomer_Should_ReturnSuccessfully()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -204,20 +204,15 @@ namespace Brizbee.Api.Tests
 
             var content = new
             {
-                EmailAddress = "test.user.b@brizbee.com",
-                Name = "Test User B",
-                Password = "password",
-                TimeZone = "America/New_York",
-                AllowedPhoneNumbers = "*",
-                Pin = "1234",
-                Role = "Standard"
+                Number = "1001",
+                Name = "Microsoft"
             };
             var json = JsonSerializer.Serialize(content, options);
             var buffer = Encoding.UTF8.GetBytes(json);
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"odata/Users", byteContent);
+            var response = await client.PostAsync($"odata/Customers", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -228,7 +223,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task UpdateUser_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task UpdateCustomer_Should_ReturnSuccessfully()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -261,20 +256,15 @@ namespace Brizbee.Api.Tests
 
             var content = new
             {
-                EmailAddress = "test.user.b@brizbee.com",
-                Name = "Test User B",
-                Password = "password",
-                TimeZone = "America/New_York",
-                AllowedPhoneNumbers = "*",
-                Pin = "1234",
-                Role = "Standard"
+                Number = "1001",
+                Name = "Microsoft"
             };
             var jsonCreate = JsonSerializer.Serialize(content, options);
             var bufferCreate = Encoding.UTF8.GetBytes(jsonCreate);
             var byteContentCreate = new ByteArrayContent(bufferCreate);
             byteContentCreate.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var responseCreate = await client.PostAsync($"odata/Users", byteContentCreate);
+            var responseCreate = await client.PostAsync($"odata/Customers", byteContentCreate);
 
 
             // ----------------------------------------------------------------
@@ -288,21 +278,21 @@ namespace Brizbee.Api.Tests
             // Act again
             // ----------------------------------------------------------------
 
-            var userId = _context.Users
-                .Where(u => u.EmailAddress == "test.user.b@brizbee.com")
-                .Select(u => u.Id)
+            var customerId = _context.Customers
+                .Where(c => c.Name == "Microsoft")
+                .Select(c => c.Id)
                 .FirstOrDefault();
 
             var changes = new
             {
-                Pin = "1989"
+                Name = "Wells Fargo"
             };
             var jsonChanges = JsonSerializer.Serialize(changes, options);
             var bufferChanges = Encoding.UTF8.GetBytes(jsonChanges);
             var byteContentChanges = new ByteArrayContent(bufferChanges);
             byteContentChanges.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var responseUpdate = await client.PatchAsync($"odata/Users({userId})", byteContentChanges);
+            var responseUpdate = await client.PatchAsync($"odata/Customers({customerId})", byteContentChanges);
 
 
             // ----------------------------------------------------------------
@@ -313,7 +303,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task DeleteUser_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task DeleteCustomer_Should_ReturnSuccessfully()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -346,20 +336,15 @@ namespace Brizbee.Api.Tests
 
             var content = new
             {
-                EmailAddress = "test.user.b@brizbee.com",
-                Name = "Test User B",
-                Password = "password",
-                TimeZone = "America/New_York",
-                AllowedPhoneNumbers = "*",
-                Pin = "1234",
-                Role = "Standard"
+                Number = "1001",
+                Name = "Microsoft"
             };
             var json = JsonSerializer.Serialize(content, options);
             var buffer = Encoding.UTF8.GetBytes(json);
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var responseCreate = await client.PostAsync($"odata/Users", byteContent);
+            var responseCreate = await client.PostAsync($"odata/Customers", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -373,12 +358,12 @@ namespace Brizbee.Api.Tests
             // Act again
             // ----------------------------------------------------------------
 
-            var userId = _context.Users
-                .Where(u => u.EmailAddress == "test.user.b@brizbee.com")
-                .Select(u => u.Id)
+            var customerId = _context.Customers
+                .Where(c => c.Name == "Microsoft")
+                .Select(c => c.Id)
                 .FirstOrDefault();
 
-            var responseDelete = await client.DeleteAsync($"odata/Users({userId})");
+            var responseDelete = await client.DeleteAsync($"odata/Customers({customerId})");
 
 
             // ----------------------------------------------------------------

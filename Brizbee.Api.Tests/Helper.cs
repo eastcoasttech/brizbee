@@ -91,7 +91,12 @@ namespace Brizbee.Api.Tests
                     AllowedPhoneNumbers = "*",
                     CanCreateUsers = true,
                     CanDeleteUsers = true,
-                    CanModifyUsers = true
+                    CanModifyUsers = true,
+                    CanViewUsers = true,
+                    CanCreateCustomers = true,
+                    CanDeleteCustomers = true,
+                    CanModifyCustomers = true,
+                    CanViewCustomers = true,
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
