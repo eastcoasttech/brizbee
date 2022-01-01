@@ -97,6 +97,10 @@ namespace Brizbee.Api.Tests
                     CanDeleteCustomers = true,
                     CanModifyCustomers = true,
                     CanViewCustomers = true,
+                    CanCreateProjects = true,
+                    CanDeleteProjects = true,
+                    CanModifyProjects = true,
+                    CanViewProjects = true
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
