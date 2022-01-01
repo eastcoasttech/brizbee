@@ -100,7 +100,11 @@ namespace Brizbee.Api.Tests
                     CanCreateProjects = true,
                     CanDeleteProjects = true,
                     CanModifyProjects = true,
-                    CanViewProjects = true
+                    CanViewProjects = true,
+                    CanCreateTasks = true,
+                    CanDeleteTasks = true,
+                    CanModifyTasks = true,
+                    CanViewTasks = true
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
