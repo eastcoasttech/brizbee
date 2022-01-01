@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
@@ -682,6 +683,74 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             Assert.IsTrue(responseValid.IsSuccessStatusCode);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task ConsumeInventoryItems_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var taskId = _context.Tasks
+                .Where(t => t.Number == "1000")
+                .Select(t => t.Id)
+                .FirstOrDefault();
+            var timeZone = "America/New_York";
+            var latitude = "";
+            var longitude = "";
+            var sourceHardware = "";
+            var sourceOperatingSystem = "";
+            var sourceOperatingSystemVersion = "";
+            var sourceBrowser = "";
+            var sourceBrowserVersion = "";
+
+            var responsePunchIn = await client.PostAsync($"api/Kiosk/PunchIn?taskId={taskId}&timeZone={timeZone}&latitude={latitude}&longitude={longitude}&sourceHardware={sourceHardware}&sourceOperatingSystem={sourceOperatingSystem}&sourceOperatingSystemVersion={sourceOperatingSystemVersion}&sourceBrowser={sourceBrowser}&sourceBrowserVersion={sourceBrowserVersion}", new StringContent(""));
+
+            Assert.IsTrue(responsePunchIn.IsSuccessStatusCode);
+
+            var qbdInventoryItemId = _context.QBDInventoryItems
+                .Where(i => i.CustomBarCodeValue == "70012")
+                .Select(i => i.Id)
+                .FirstOrDefault();
+
+            var quantity = 1;
+            var hostname = "HOSTNAME-01";
+            var unitOfMeasure = "each";
+
+            var responseConsume = await client.PostAsync($"api/Kiosk/InventoryItems/Consume?qbdInventoryItemId={qbdInventoryItemId}&quantity={quantity}&hostname={hostname}&unitOfMeasure={unitOfMeasure}", new StringContent(""));
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseConsume.IsSuccessStatusCode);
         }
 
         private string GenerateJSONWebToken(int userId, string emailAddress)
