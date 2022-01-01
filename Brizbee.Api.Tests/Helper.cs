@@ -78,10 +78,6 @@ namespace Brizbee.Api.Tests
                 // Scaffold a user.
                 // ----------------------------------------------------------------
 
-                //var organizationId = _context.Organizations
-                //    .Where(o => o.Name == "Test Organization")
-                //    .Select(o => o.Id)
-                //    .FirstOrDefault();
                 var user = new User()
                 {
                     CreatedAt = DateTime.UtcNow,
@@ -92,7 +88,10 @@ namespace Brizbee.Api.Tests
                     Pin = "0000",
                     Role = "Standard",
                     TimeZone = "America/New_York",
-                    AllowedPhoneNumbers = ""
+                    AllowedPhoneNumbers = "*",
+                    CanCreateUsers = true,
+                    CanDeleteUsers = true,
+                    CanModifyUsers = true
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
