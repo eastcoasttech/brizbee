@@ -108,7 +108,10 @@ namespace Brizbee.Api.Tests
                     CanCreateRates = true,
                     CanDeleteRates = true,
                     CanModifyRates = true,
-                    CanViewRates = true
+                    CanViewRates = true,
+                    CanCreateLocks = true,
+                    CanUndoLocks = true,
+                    CanViewLocks = true
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
