@@ -82,7 +82,24 @@ namespace Brizbee.Api.Controllers
             // Validate the model.
             ModelState.ClearValidationState(nameof(rate));
             if (!TryValidateModel(rate, nameof(rate)))
-                return BadRequest();
+            {
+                var errors = new List<string>();
+
+                foreach (var modelStateKey in ModelState.Keys)
+                {
+                    var value = ModelState[modelStateKey];
+
+                    if (value == null) continue;
+
+                    foreach (var error in value.Errors)
+                    {
+                        errors.Add(error.ErrorMessage);
+                    }
+                }
+
+                var message = string.Join(", ", errors);
+                return BadRequest(message);
+            }
 
             _context.Rates.Add(rate);
 

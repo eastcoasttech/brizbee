@@ -104,7 +104,11 @@ namespace Brizbee.Api.Tests
                     CanCreateTasks = true,
                     CanDeleteTasks = true,
                     CanModifyTasks = true,
-                    CanViewTasks = true
+                    CanViewTasks = true,
+                    CanCreateRates = true,
+                    CanDeleteRates = true,
+                    CanModifyRates = true,
+                    CanViewRates = true
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
