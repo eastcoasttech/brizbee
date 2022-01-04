@@ -21,7 +21,6 @@
 //
 
 using Azure.Storage.Blobs;
-using Brizbee.Api.Repositories;
 using Brizbee.Api.Serialization;
 using Brizbee.Api.Services;
 using Brizbee.Core.Models;
@@ -84,7 +83,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: odata/Punches
-        public IActionResult Post(Punch punch)
+        public IActionResult Post([FromBody] Punch punch)
         {
             var currentUser = CurrentUser();
 
@@ -100,7 +99,7 @@ namespace Brizbee.Api.Controllers
                 .Any();
 
             if (!isValidUserId)
-                return BadRequest();
+                return BadRequest("You must specify a valid user.");
 
             // Ensure task is in same organization.
             var isValidTaskId = _context.Tasks
@@ -150,7 +149,24 @@ namespace Brizbee.Api.Controllers
             // Validate the model.
             ModelState.ClearValidationState(nameof(punch));
             if (!TryValidateModel(punch, nameof(punch)))
-                return BadRequest();
+            {
+                var errors = new List<string>();
+
+                foreach (var modelStateKey in ModelState.Keys)
+                {
+                    var value = ModelState[modelStateKey];
+
+                    if (value == null) continue;
+
+                    foreach (var error in value.Errors)
+                    {
+                        errors.Add(error.ErrorMessage);
+                    }
+                }
+
+                var message = string.Join(", ", errors);
+                return BadRequest(message);
+            }
 
             _context.Punches.Add(punch);
 

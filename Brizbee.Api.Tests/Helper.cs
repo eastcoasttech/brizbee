@@ -108,7 +108,11 @@ namespace Brizbee.Api.Tests
                     CanCreateRates = true,
                     CanDeleteRates = true,
                     CanModifyRates = true,
-                    CanViewRates = true
+                    CanViewRates = true,
+                    CanCreatePunches = true,
+                    CanDeletePunches = true,
+                    CanModifyPunches = true,
+                    CanViewPunches = true
                 };
                 _context.Users.Add(user);
                 _context.SaveChanges();
@@ -167,6 +171,23 @@ namespace Brizbee.Api.Tests
                     JobId = jobId
                 };
                 _context.Tasks.Add(task);
+                _context.SaveChanges();
+
+
+                // ----------------------------------------------------------------
+                // Scaffold a punch.
+                // ----------------------------------------------------------------
+
+                var punch = new Punch()
+                {
+                    CreatedAt = DateTime.UtcNow,
+                    TaskId = task.Id,
+                    InAt = new DateTime(2022, 1, 1, 8, 0, 0),
+                    OutAt = new DateTime(2022, 1, 1, 17, 0, 0),
+                    Guid = Guid.NewGuid(),
+                    UserId = user.Id
+                };
+                _context.Punches.Add(punch);
                 _context.SaveChanges();
 
 
