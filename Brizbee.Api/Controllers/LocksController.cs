@@ -192,7 +192,7 @@ namespace Brizbee.Api.Controllers
 
         // GET: api/Locks/{id}
         [HttpGet("api/Locks/{id}")]
-        public IActionResult GetLock([FromQuery] int id)
+        public IActionResult GetLock(int id)
         {
             var currentUser = CurrentUser();
 
@@ -230,7 +230,7 @@ namespace Brizbee.Api.Controllers
 
                     // Ensure that no two commits overlap
                     var overlap = _context.Commits
-                        .Where(c => c.OrganizationId == commit.OrganizationId)
+                        .Where(c => c.OrganizationId == currentUser.OrganizationId)
                         .Where(c => (inAt < c.OutAt) && (c.InAt < outAt))
                         .FirstOrDefault();
                     if (overlap != null)

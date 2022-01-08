@@ -109,7 +109,7 @@ namespace Brizbee.Api.Tests
             // Act
             // ----------------------------------------------------------------
 
-            var response = await client.GetAsync($"api/Locks");
+            var response = await client.GetAsync("api/Locks");
 
 
             // ----------------------------------------------------------------
@@ -153,11 +153,75 @@ namespace Brizbee.Api.Tests
 
             CreateSomePunches();
 
+            var content = new
+            {
+                InAt = new DateTime(2022, 1, 1, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ")
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responsePost = await client.PostAsync("api/Locks", byteContent);
+
             var lockId = _context.Commits
-                .Select(l => l.Id)
+                .Select(c => c.Id)
                 .FirstOrDefault();
 
-            var response = await client.GetAsync($"api/Locks/{lockId}");
+            var responseGet = await client.GetAsync($"api/Locks/{lockId}");
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseGet.IsSuccessStatusCode);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task PostLock_Should_ReturnSuccessfully()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var content = new
+            {
+                InAt = new DateTime(2022, 1, 1, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ")
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync("api/Locks", byteContent);
 
 
             // ----------------------------------------------------------------
