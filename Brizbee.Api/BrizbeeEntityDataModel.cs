@@ -12,8 +12,6 @@ namespace Brizbee.Api
         public static IEdmModel GetEntityDataModel()
         {
             var builder = new ODataConventionModelBuilder();
-            builder.Namespace = "AirVinyl";
-            builder.ContainerName = "AirVinylContainer";
 
             builder.EntitySet<Customer>("Customers");
             builder.EntitySet<Job>("Jobs");
