@@ -343,20 +343,6 @@ namespace Brizbee.Api.Controllers
             return Ok();
         }
 
-        // GET: api/Locks/{id}/Export
-        [HttpGet("api/Locks/{id}/Export")]
-        public HttpResponseMessage GetExport([FromQuery] int id, [FromQuery] string delimiter)
-        {
-            var currentUser = CurrentUser();
-
-            var exportService = new ExportService(id, currentUser.Id, _context);
-            string csv = exportService.BuildCsv(delimiter);
-
-            var response = new HttpResponseMessage(HttpStatusCode.OK);
-            response.Content = new StringContent(csv, System.Text.Encoding.UTF8, "text/csv");
-            return response;
-        }
-
         private User CurrentUser()
         {
             var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
