@@ -85,6 +85,7 @@ namespace Brizbee.Api.Tests
                     Name = "Test User A",
                     OrganizationId = organization.Id,
                     IsDeleted = false,
+                    IsActive = true,
                     Pin = "0000",
                     Role = "Standard",
                     TimeZone = "America/New_York",
