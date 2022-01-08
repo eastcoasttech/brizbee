@@ -203,15 +203,12 @@ namespace Brizbee.Api.Tests
                 .Select(t => t.Id)
                 .FirstOrDefault();
 
-            var content = new Punch()
+            var content = new
             {
-                Id = 0,
-                TaskId = taskId,
-                InAt = new DateTime(2022, 1, 2, 8, 0, 0),
-                OutAt = new DateTime(2022, 1, 2, 17, 0, 0),
-                UserId = currentUser.Id,
-                CreatedAt = DateTime.UtcNow,
-                Guid = Guid.NewGuid()
+                taskId = taskId,
+                inAt = new DateTime(2022, 1, 2, 8, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                outAt = new DateTime(2022, 1, 2, 17, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                userId = currentUser.Id
             };
             var json = JsonSerializer.Serialize(content, options);
             var buffer = Encoding.UTF8.GetBytes(json);

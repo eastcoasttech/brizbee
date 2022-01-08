@@ -112,7 +112,9 @@ namespace Brizbee.Api.Controllers
                 return BadRequest("You must specify a valid task.");
 
             // Get the public address and hostname for the punch.
-            var sourceIpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
+            string sourceIpAddress = "UNKNOWN";
+            if (HttpContext.Connection.RemoteIpAddress != null)
+                sourceIpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
             var sourceHostname = HttpContext.Request.Host.ToString();
             punch.InAtSourceHostname = sourceHostname;
             punch.InAtSourceIpAddress = sourceIpAddress;
