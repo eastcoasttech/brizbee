@@ -90,6 +90,7 @@ namespace Brizbee.Api.Tests
                     Role = "Standard",
                     TimeZone = "America/New_York",
                     AllowedPhoneNumbers = "*",
+                    UsesTouchToneClock = true,
                     CanCreateUsers = true,
                     CanDeleteUsers = true,
                     CanModifyUsers = true,

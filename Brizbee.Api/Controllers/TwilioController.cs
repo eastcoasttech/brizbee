@@ -99,15 +99,15 @@ namespace Brizbee.Api.Controllers
             var user = _context.Users
                 .Include("Organization")
                 .Where(u => u.Pin == Digits)
-                .Where(u => u.Organization.Code == OrganizationCode)
+                .Where(u => u.Organization!.Code == OrganizationCode)
                 .Where(u => u.IsDeleted == false)
                 .FirstOrDefault();
 
             if (user != null)
             {
                 // Ensure that the user is allowed to use touch-tone clock.
-                var allowedPhoneNumbers = user.AllowedPhoneNumbers.Split(',');
-                if (!allowedPhoneNumbers.Contains("*") && !allowedPhoneNumbers.Contains(From))
+                var allowedPhoneNumbers = user.AllowedPhoneNumbers!.Split(',');
+                if (!user.UsesTouchToneClock || (!allowedPhoneNumbers.Contains("*") && !allowedPhoneNumbers.Contains(From)))
                 {
                     // Inform the user that they are denied.
                     string deniedTemplate = "<?xml version = '1.0'?>";
@@ -128,7 +128,9 @@ namespace Brizbee.Api.Controllers
 
                 // Continue punching in.
                 var punch = _context.Punches
-                    .Include("Task")
+                    .Include(p => p.Task)
+                    .Include(p => p.Task!.Job)
+                    .Include(p => p.Task!.Job!.Customer)
                     .Where(p => p.UserId == user.Id)
                     .Where(p => !p.OutAt.HasValue)
                     .OrderByDescending(p => p.InAt)
