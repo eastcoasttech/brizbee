@@ -408,7 +408,7 @@ namespace Brizbee.Api.Controllers
             var task = _context.Tasks
                 .Include("Job")
                 .Include("Job.Customer")
-                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Where(t => t.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(t => t.Number == taskNumber)
                 .Select(t => new
                 {
@@ -419,14 +419,15 @@ namespace Brizbee.Api.Controllers
                     t.JobId,
                     Job = new
                     {
-                        t.Job.Id,
+                        t.Job!.Id,
                         t.Job.Name,
                         t.Job.Number,
                         t.Job.CreatedAt,
                         t.Job.CustomerId,
+                        t.Job.Status,
                         Customer = new
                         {
-                            t.Job.Customer.Id,
+                            t.Job!.Customer!.Id,
                             t.Job.Customer.Name,
                             t.Job.Customer.Number,
                             t.Job.Customer.CreatedAt
