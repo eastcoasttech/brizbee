@@ -462,6 +462,7 @@ namespace Brizbee.Web.Controllers
                         t.Job.Number,
                         t.Job.CreatedAt,
                         t.Job.CustomerId,
+                        t.Job.Status,
                         Customer = new
                         {
                             t.Job.Customer.Id,
