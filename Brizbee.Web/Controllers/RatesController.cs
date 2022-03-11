@@ -155,7 +155,7 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Rates/Default.BaseServiceRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> BaseServiceRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
         {
             var inAt = DateTime.Parse(InAt);
@@ -179,7 +179,7 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Rates/Default.BasePayrollRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> BasePayrollRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
         {
             var inAt = DateTime.Parse(InAt);
@@ -203,7 +203,7 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Rates/Default.AlternateServiceRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> AlternateServiceRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
         {
             var inAt = DateTime.Parse(InAt);
@@ -228,7 +228,7 @@ namespace Brizbee.Web.Controllers
 
         // GET: odata/Rates/Default.AlternatePayrollRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> AlternatePayrollRatesForPunches([FromODataUri] string InAt, [FromODataUri] string OutAt)
         {
             var inAt = DateTime.Parse(InAt);
