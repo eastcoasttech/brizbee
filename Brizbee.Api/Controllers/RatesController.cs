@@ -181,7 +181,7 @@ namespace Brizbee.Api.Controllers
 
         // GET: odata/Rates/BaseServiceRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> BaseServiceRatesForPunches([FromODataUri] DateTimeOffset InAt, [FromODataUri] DateTimeOffset OutAt)
         {
             var currentUser = CurrentUser();
@@ -203,7 +203,7 @@ namespace Brizbee.Api.Controllers
 
         // GET: odata/Rates/BasePayrollRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> BasePayrollRatesForPunches([FromODataUri] DateTimeOffset InAt, [FromODataUri] DateTimeOffset OutAt)
         {
             var currentUser = CurrentUser();
@@ -225,7 +225,7 @@ namespace Brizbee.Api.Controllers
 
         // GET: odata/Rates/AlternateServiceRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> AlternateServiceRatesForPunches([FromODataUri] DateTimeOffset InAt, [FromODataUri] DateTimeOffset OutAt)
         {
             var currentUser = CurrentUser();
@@ -248,7 +248,7 @@ namespace Brizbee.Api.Controllers
 
         // GET: odata/Rates/AlternatePayrollRatesForPunches
         [HttpGet]
-        [EnableQuery(PageSize = 30, MaxExpansionDepth = 1)]
+        [EnableQuery(PageSize = 100, MaxExpansionDepth = 1)]
         public IQueryable<Rate> AlternatePayrollRatesForPunches([FromODataUri] DateTimeOffset InAt, [FromODataUri] DateTimeOffset OutAt)
         {
             var currentUser = CurrentUser();
