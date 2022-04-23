@@ -57,7 +57,9 @@ namespace Brizbee.Dashboard.Services
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            return await response.Content.ReadAsStringAsync();
+                            using var responseContent = await response.Content.ReadAsStreamAsync();
+                            var deserialized = await JsonSerializer.DeserializeAsync<Authentication>(responseContent, options);
+                            return deserialized.Token;
                         }
                         else
                         {
@@ -91,7 +93,9 @@ namespace Brizbee.Dashboard.Services
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            return await response.Content.ReadAsStringAsync();
+                            using var responseContent = await response.Content.ReadAsStreamAsync();
+                            var deserialized = await JsonSerializer.DeserializeAsync<Authentication>(responseContent, options);
+                            return deserialized.Token;
                         }
                         else
                         {

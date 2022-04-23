@@ -102,7 +102,10 @@ namespace Brizbee.Api.Controllers
                 if ((found == null) || !service.AuthenticateWithPassword(found.PasswordSalt, found.PasswordHash, session.EmailPassword))
                     return BadRequest("Invalid Email address and password combination.");
 
-                return Created("Authenticate", GenerateJSONWebToken(found.Id, found.EmailAddress));
+                return Created("auth/authenticate", new
+                {
+                    Token = GenerateJSONWebToken(found.Id, found.EmailAddress)
+                });
             }
             else if ("PIN" == session.Method.ToUpperInvariant())
             {
@@ -127,7 +130,10 @@ namespace Brizbee.Api.Controllers
                 if (found == null)
                     return BadRequest("Invalid organization code and user pin combination.");
 
-                return Created("Authenticate", GenerateJSONWebToken(found.Id, found.EmailAddress));
+                return Created("auth/authenticate", new
+                {
+                    Token = GenerateJSONWebToken(found.Id, found.EmailAddress)
+                });
             }
             else
             {
