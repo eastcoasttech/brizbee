@@ -57,22 +57,10 @@ namespace Brizbee.Api.Controllers
             [FromQuery] string sourceOperatingSystem, [FromQuery] string sourceOperatingSystemVersion,
             [FromQuery] string sourceBrowser, [FromQuery] string sourceBrowserVersion)
         {
-            string sourceHostname = "";
-            string sourceIpAddress = "";
+            var sourceHostname = ""; // Leave blank
 
-            try
-            {
-                // Attempt to get the client hostname.
-                sourceHostname = HttpContext.Request.Host.ToString();
-            }
-            catch { }
-
-            try
-            {
-                // Attempt to get the client IP address.
-                sourceIpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
-            }
-            catch { }
+            // Attempt to get the client IP address.
+            var sourceIpAddress = $"{HttpContext.Connection.RemoteIpAddress}";
 
             var currentUser = CurrentUser();
 
@@ -121,12 +109,12 @@ namespace Brizbee.Api.Controllers
             catch (DbUpdateException ex)
             {
                 Trace.TraceError(ex.ToString());
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = ex.Message });
             }
             catch (Exception ex)
             {
                 Trace.TraceError(ex.ToString());
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = ex.Message });
             }
         }
 
@@ -138,22 +126,10 @@ namespace Brizbee.Api.Controllers
             [FromQuery] string sourceOperatingSystem, [FromQuery] string sourceOperatingSystemVersion,
             [FromQuery] string sourceBrowser, [FromQuery] string sourceBrowserVersion)
         {
-            string sourceHostname = "";
-            string sourceIpAddress = "";
+            var sourceHostname = ""; // Leave blank
 
-            try
-            {
-                // Attempt to get the client hostname.
-                sourceHostname = HttpContext.Request.Host.ToString();
-            }
-            catch { }
-
-            try
-            {
-                // Attempt to get the client IP address.
-                sourceIpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
-            }
-            catch { }
+            // Attempt to get the client IP address.
+            var sourceIpAddress = $"{HttpContext.Connection.RemoteIpAddress}";
 
             var currentUser = CurrentUser();
 
