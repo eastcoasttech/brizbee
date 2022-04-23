@@ -82,7 +82,7 @@ namespace Brizbee.Web.Services
             document.SetMargins(30, 30, 30, 30);
 
             // Set page header and footer.
-            pdf.AddEventHandler(PdfDocumentEvent.END_PAGE, new MyEventHandler(currentUser.Organization.Name));
+            pdf.AddEventHandler(PdfDocumentEvent.END_PAGE, new MyEventHandler(organization.Name));
 
             var generatedParagraph = new Paragraph($"GENERATED {nowDateTime.ToString("ddd, MMM d, yyyy h:mm:ss tt").ToUpper()}");
             generatedParagraph.SetFont(fontP);
@@ -103,7 +103,7 @@ namespace Brizbee.Web.Services
             customerParagraph.SetFont(fontH1);
             customerParagraph.SetPaddingBottom(0);
 
-            if (currentUser.Organization.ShowCustomerNumber)
+            if (organization.ShowCustomerNumber)
             {
                 customerParagraph.Add($"CUSTOMER: {project.Customer.Number} - {project.Customer.Name.ToUpper()}");
             }
@@ -116,7 +116,7 @@ namespace Brizbee.Web.Services
             projectParagraph.SetFont(fontH1);
             projectParagraph.SetPaddingBottom(10);
 
-            if (currentUser.Organization.ShowProjectNumber)
+            if (organization.ShowProjectNumber)
             {
                 projectParagraph.Add($"PROJECT: {project.Number} - {project.Name.ToUpper()}");
             }

@@ -164,7 +164,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 // ------------------------------------------------------------
 
                 var consumptions = GetConsumption();
-                var ids = new List<string>();
+                var txnIds = new List<string>(consumptions.Count);
 
                 if (consumptions.Count == 0)
                 {
@@ -194,7 +194,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
                         // Then walk the response.
                         var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
-                        ids = walkReponse.Item3;
+                        txnIds = walkReponse.Item3;
                     }
                     else if (selectedMethod == "Bill")
                     {
@@ -214,7 +214,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
                             // Then walk the response.
                             var walkReponse = service.WalkBillAddRs(consResponse);
-                            ids = ids.Concat(walkReponse.Item3).ToList();
+                            txnIds = txnIds.Concat(walkReponse.Item3).ToList();
                         }
                     }
                     else if (selectedMethod == "Inventory Adjustment")
@@ -233,20 +233,53 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
                         // Then walk the response.
                         var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
-                        ids = walkReponse.Item3;
+                        txnIds = walkReponse.Item3;
                     }
 
                     if (SaveErrorCount > 0)
                     {
                         StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
                         OnPropertyChanged("StatusText");
+
+                        var transactionType = "";
+
+                        switch (selectedMethod)
+                        {
+                            case "Sales Receipt":
+                                transactionType = "SalesReceipt";
+                                break;
+                            case "Bill":
+                                transactionType = "Bill";
+                                break;
+                            case "Inventory Adjustment":
+                                transactionType = "InventoryAdjustment";
+                                break;
+                        }
+
+                        // Reverse the transactions.
+                        foreach (var txnId in txnIds)
+                        {
+                            // Prepare a new QBXML document.
+                            var delQBXML = service.MakeQBXMLDocument();
+                            var delDocument = delQBXML.Item1;
+                            var delElement = delQBXML.Item2;
+                            service.BuildTxnDelRq(delDocument, delElement, transactionType, txnId); // InventoryAdjustment, SalesReceipt, or Bill
+
+                            // Make the request.
+                            Logger.Debug(delDocument.OuterXml);
+                            var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
+                            Logger.Debug(delResponse);
+
+                            // Then walk the response.
+                            var delWalkResponse = service.WalkTxnDelRs(delResponse);
+                        }
                     }
                     else
                     {
                         // Build the payload.
                         var payload = new
                         {
-                            TxnIDs = ids,
+                            TxnIDs = txnIds,
                             Ids = consumptions.Select(c => c.Id).ToArray()
                         };
 
