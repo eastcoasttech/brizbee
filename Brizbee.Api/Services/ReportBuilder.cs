@@ -32,6 +32,7 @@ using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using System.Diagnostics;
 
@@ -54,6 +55,7 @@ namespace Brizbee.Api.Services
             var organization = context.Organizations.Find(currentUser.OrganizationId);
 
             var project = context.Jobs
+                .Include("Customer")
                 .Where(p => p.Id == projectId)
                 .FirstOrDefault();
 

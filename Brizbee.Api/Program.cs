@@ -21,6 +21,7 @@
 //
 
 using Brizbee.Api;
+using Invio.Extensions.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
@@ -57,46 +58,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         ValidAudience = builder.Configuration["Jwt:Issuer"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
                     };
+                })
 
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = (context) => {
-                            StringValues values;
-
-                            if (!context.Request.Query.TryGetValue("access_token", out values))
-                            {
-                                return Task.CompletedTask;
-                            }
-
-                            if (values.Count > 1)
-                            {
-                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                                context.Fail(
-                                    "Only one 'access_token' query string parameter can be defined. " +
-                                    $"However, {values.Count:N0} were included in the request."
-                                );
-
-                                return Task.CompletedTask;
-                            }
-
-                            var token = values.Single();
-
-                            if (string.IsNullOrWhiteSpace(token))
-                            {
-                                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                                context.Fail(
-                                    "The 'access_token' query string parameter was defined, " +
-                                    "but a value to represent the token was not included."
-                                );
-
-                                return Task.CompletedTask;
-                            }
-
-                            context.Token = token;
-
-                            return Task.CompletedTask;
-                        }
-                    };
+                // This example shows the default options. You can set them to
+                // whatever you like or you can leave out the lambda altogether.
+                .AddJwtBearerQueryStringAuthentication(options =>
+                {
+                    options.QueryStringParameterName = "access_token";
+                    options.QueryStringBehavior = QueryStringBehaviors.Redact;
                 });
 
 builder.Services.AddDbContext<SqlContext>(options =>
@@ -149,6 +118,7 @@ app.UseCors(builder =>
 });
 
 app.UseAuthentication();
+app.UseJwtBearerQueryString();
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>

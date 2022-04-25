@@ -359,7 +359,7 @@ namespace Brizbee.Api.Controllers
                 });
                 _context.SaveChanges();
 
-                return Ok();
+                return Ok(timesheetEntry);
             }
             catch (DbUpdateException ex)
             {
