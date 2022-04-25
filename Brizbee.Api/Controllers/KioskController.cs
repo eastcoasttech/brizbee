@@ -334,8 +334,8 @@ namespace Brizbee.Api.Controllers
             var currentUser = CurrentUser();
 
             var task = _context.Tasks
-                .Include(t => t.Job.Customer)
-                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Include(t => t.Job!.Customer)
+                .Where(t => t.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(t => t.Id == taskId)
                 .FirstOrDefault();
 
@@ -343,12 +343,12 @@ namespace Brizbee.Api.Controllers
             if (task == null) return NotFound();
 
             // Ensure job is open.
-            if (task.Job.Status != "Open")
+            if (task.Job!.Status != "Open")
                 return BadRequest("Cannot add time cards for projects that are not open.");
 
             try
             {
-                var timesheetEntry = _context.TimesheetEntries.Add(new TimesheetEntry()
+                var timesheetEntry = new TimesheetEntry()
                 {
                     CreatedAt = DateTime.UtcNow,
                     EnteredAt = enteredAt,
@@ -356,7 +356,8 @@ namespace Brizbee.Api.Controllers
                     Notes = notes,
                     TaskId = taskId,
                     UserId = currentUser.Id
-                });
+                };
+                _context.TimesheetEntries.Add(timesheetEntry);
                 _context.SaveChanges();
 
                 return Ok(timesheetEntry);
@@ -364,12 +365,12 @@ namespace Brizbee.Api.Controllers
             catch (DbUpdateException ex)
             {
                 Trace.TraceError(ex.ToString());
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = ex.Message });
             }
             catch (Exception ex)
             {
                 Trace.TraceError(ex.ToString());
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = ex.Message });
             }
         }
 
@@ -493,8 +494,8 @@ namespace Brizbee.Api.Controllers
             var currentUser = CurrentUser();
 
             var projects = _context.Tasks
-                .Include(t => t.Job.Customer)
-                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Include(t => t.Job!.Customer)
+                .Where(t => t.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(t => t.JobId == projectId)
                 .OrderBy(t => t.Number)
                 .Select(t => new
@@ -508,7 +509,7 @@ namespace Brizbee.Api.Controllers
                     t.Order,
                     Job = new
                     {
-                        t.Job.CreatedAt,
+                        t.Job!.CreatedAt,
                         t.Job.CustomerId,
                         t.Job.CustomerPurchaseOrder,
                         t.Job.CustomerWorkOrder,
@@ -522,7 +523,7 @@ namespace Brizbee.Api.Controllers
                         t.Job.Taxability,
                         Customer = new
                         {
-                            t.Job.Customer.CreatedAt,
+                            t.Job!.Customer!.CreatedAt,
                             t.Job.Customer.Description,
                             t.Job.Customer.Id,
                             t.Job.Customer.Name,
