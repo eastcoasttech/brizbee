@@ -50,7 +50,7 @@ namespace Brizbee.Dashboard.Services
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<QBDInventoryConsumption>(responseContent);
+            return await JsonSerializer.DeserializeAsync<QBDInventoryConsumption>(responseContent, options);
         }
 
         public async Task<bool> DeleteQBDInventoryConsumptionAsync(long id)

@@ -489,7 +489,8 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/QBDInventoryConsumptions/5
-        public IActionResult GetQBDInventoryConsumption(long id)
+        [HttpGet("api/QBDInventoryConsumptions/{id}")]
+        public IActionResult Get(long id)
         {
             var currentUser = CurrentUser();
 
@@ -546,7 +547,8 @@ namespace Brizbee.Api.Controllers
         }
 
         // DELETE: api/QBDInventoryConsumptions/5
-        public IActionResult DeleteQBDInventoryConsumption(long id)
+        [HttpDelete("api/QBDInventoryConsumptions/{id}")]
+        public IActionResult Delete(long id)
         {
             var currentUser = CurrentUser();
 
