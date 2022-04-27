@@ -103,26 +103,22 @@ namespace Brizbee.Api.Controllers
 
             // Ensure task is in same organization.
             var isValidTaskId = _context.Tasks
-                .Include(t => t.Job.Customer)
-                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Include(t => t.Job)
+                .Include(t => t.Job!.Customer)
+                .Where(t => t.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(t => t.Id == punch.TaskId)
                 .Any();
 
             if (!isValidTaskId)
                 return BadRequest("You must specify a valid task.");
 
-            // Get the public address and hostname for the punch.
-            string sourceIpAddress = "UNKNOWN";
-            if (HttpContext.Connection.RemoteIpAddress != null)
-                sourceIpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
-            var sourceHostname = HttpContext.Request.Host.ToString();
-            punch.InAtSourceHostname = sourceHostname;
-            punch.InAtSourceIpAddress = sourceIpAddress;
+            // Attempt to get the client IP address.
+            punch.InAtSourceIpAddress = $"{HttpContext.Connection.RemoteIpAddress}";
+
             punch.InAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
             if (punch.OutAt.HasValue)
             {
-                punch.OutAtSourceHostname = sourceHostname;
-                punch.OutAtSourceIpAddress = sourceIpAddress;
+                punch.OutAtSourceIpAddress = $"{HttpContext.Connection.RemoteIpAddress}";
                 punch.OutAtSourceHardware = "Dashboard"; // Punches created this way are always dashboard
             }
 
@@ -139,8 +135,9 @@ namespace Brizbee.Api.Controllers
 
             // Ensure punch does not overlap existing punches.
             var doesOverlap = _context.Punches
-                .Include(p => p.Task.Job.Customer)
-                .Where(p => p.Task.Job.Customer.OrganizationId == currentUser.OrganizationId)
+                .Include(p => p.Task!.Job)
+                .Include(p => p.Task!.Job!.Customer)
+                .Where(p => p.Task!.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(p => p.UserId == punch.UserId)
                 .Where(p => p.InAt >= punch.InAt && p.OutAt <= punch.OutAt)
                 .Any();
