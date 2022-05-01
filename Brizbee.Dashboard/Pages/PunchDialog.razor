@@ -782,8 +782,24 @@
         }
 
         // Save the punch on the server and close the dialog.
-        await punchService.SavePunchAsync(punch);
-        dialogService.Close("punch.created");
+        var response = await punchService.SavePunchAsync(punch);
+
+        if (response.Item1)
+        {
+            dialogService.Close("punch.created");
+        }
+        else
+        {
+            await dialogService.OpenAsync("Oops!", ds =>
+                @<div>
+                    <p>@response.Item3</p>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog">OK</button>
+                        </div>
+                    </div>
+                </div>);
+        }
     }
 
     private void ToggleInAtMerdian()

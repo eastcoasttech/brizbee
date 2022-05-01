@@ -1,4 +1,5 @@
 ﻿using Brizbee.Blazor;
+using Brizbee.Core.Serialization;
 using Brizbee.Dashboard.Models;
 using Brizbee.Dashboard.Security;
 using Brizbee.Dashboard.Serialization;
@@ -113,7 +114,7 @@ namespace Brizbee.Dashboard.Services
             }
         }
 
-        public async Task<Punch> SavePunchAsync(Punch punch)
+        public async Task<(bool, Punch, string)> SavePunchAsync(Punch punch)
         {
             var url = punch.Id != 0 ? $"odata/Punches({punch.Id})" : "odata/Punches";
             var method = punch.Id != 0 ? HttpMethod.Patch : HttpMethod.Post;
@@ -176,23 +177,24 @@ namespace Brizbee.Dashboard.Services
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))
                     {
+                        using var responseContent = await response.Content.ReadAsStreamAsync();
+
                         if (response.IsSuccessStatusCode)
                         {
-                            using var responseContent = await response.Content.ReadAsStreamAsync();
-
                             if (response.StatusCode == HttpStatusCode.NoContent)
                             {
-                                return null;
+                                return (true, null, "");
                             }
                             else
                             {
                                 var deserialized = await JsonSerializer.DeserializeAsync<Punch>(responseContent, options);
-                                return deserialized;
+                                return (true, deserialized, "");
                             }
                         }
                         else
                         {
-                            return null;
+                            var deserialized = await JsonSerializer.DeserializeAsync<BadRequestODataMessage>(responseContent, options);
+                            return (false, null, deserialized.value);
                         }
                     }
                 }

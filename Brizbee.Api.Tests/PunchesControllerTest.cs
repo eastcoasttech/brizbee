@@ -225,6 +225,124 @@ namespace Brizbee.Api.Tests
             Assert.IsTrue(response.IsSuccessStatusCode);
         }
 
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreatePunch_Should_FailForOverlap()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Create a punch
+            // ----------------------------------------------------------------
+
+            var taskId = _context.Tasks
+                .Where(t => t.Number == "1000")
+                .Select(t => t.Id)
+                .FirstOrDefault();
+
+            var contentForFirstPunch = new
+            {
+                TaskId = taskId,
+                InAt = new DateTime(2022, 1, 2, 8, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 17, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                UserId = currentUser.Id
+            };
+            var jsonForFirstPunch = JsonSerializer.Serialize(contentForFirstPunch, options);
+            var bufferForFirstPunch = Encoding.UTF8.GetBytes(jsonForFirstPunch);
+            var byteContentForFirstPunch = new ByteArrayContent(bufferForFirstPunch);
+            byteContentForFirstPunch.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseForFirstPunch = await client.PostAsync($"odata/Punches", byteContentForFirstPunch);
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var contentForContainedOverlappingPunch = new
+            {
+                TaskId = taskId,
+                InAt = new DateTime(2022, 1, 2, 9, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 10, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                UserId = currentUser.Id
+            };
+            var jsonForContainedOverlappingPunch = JsonSerializer.Serialize(contentForContainedOverlappingPunch, options);
+            var bufferForContainedOverlappingPunch = Encoding.UTF8.GetBytes(jsonForContainedOverlappingPunch);
+            var byteContentForContainedOverlappingPunch = new ByteArrayContent(bufferForContainedOverlappingPunch);
+            byteContentForContainedOverlappingPunch.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseForContainedOverlappingPunch = await client.PostAsync($"odata/Punches", byteContentForContainedOverlappingPunch);
+
+
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            var contentForInAtOverlappingPunch = new
+            {
+                TaskId = taskId,
+                InAt = new DateTime(2022, 1, 2, 9, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 3, 9, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                UserId = currentUser.Id
+            };
+            var jsonForInAtOverlappingPunch = JsonSerializer.Serialize(contentForInAtOverlappingPunch, options);
+            var bufferForInAtOverlappingPunch = Encoding.UTF8.GetBytes(jsonForInAtOverlappingPunch);
+            var byteContentForInAtOverlappingPunch = new ByteArrayContent(bufferForInAtOverlappingPunch);
+            byteContentForInAtOverlappingPunch.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseForInAtOverlappingPunch = await client.PostAsync($"odata/Punches", byteContentForInAtOverlappingPunch);
+
+
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            var contentForOutAtOverlappingPunch = new
+            {
+                TaskId = taskId,
+                InAt = new DateTime(2022, 1, 1, 9, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 9, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                UserId = currentUser.Id
+            };
+            var jsonForOutAtOverlappingPunch = JsonSerializer.Serialize(contentForOutAtOverlappingPunch, options);
+            var bufferForOutAtOverlappingPunch = Encoding.UTF8.GetBytes(jsonForOutAtOverlappingPunch);
+            var byteContentForOutAtOverlappingPunch = new ByteArrayContent(bufferForOutAtOverlappingPunch);
+            byteContentForOutAtOverlappingPunch.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseForOutAtOverlappingPunch = await client.PostAsync($"odata/Punches", byteContentForOutAtOverlappingPunch);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsFalse(responseForContainedOverlappingPunch.IsSuccessStatusCode);
+            Assert.IsFalse(responseForInAtOverlappingPunch.IsSuccessStatusCode);
+            Assert.IsFalse(responseForOutAtOverlappingPunch.IsSuccessStatusCode);
+        }
+
         private string GenerateJSONWebToken(int userId, string emailAddress)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

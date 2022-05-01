@@ -139,7 +139,11 @@ namespace Brizbee.Api.Controllers
                 .Include(p => p.Task!.Job!.Customer)
                 .Where(p => p.Task!.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(p => p.UserId == punch.UserId)
-                .Where(p => p.InAt >= punch.InAt && p.OutAt <= punch.OutAt)
+                .Where(p =>
+                    (punch.InAt >= p.InAt && punch.OutAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 12pm - 1pm
+                    (punch.InAt >= p.InAt && punch.InAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 10am - 7pm
+                    (punch.InAt <= p.InAt && punch.OutAt >= p.InAt) // existing punch is 9am - 5pm and attempted is 7am - 10am
+                )
                 .Any();
 
             if (doesOverlap)
@@ -219,6 +223,22 @@ namespace Brizbee.Api.Controllers
             {
                 punch.OutAt = new DateTime(punch.OutAt.Value.Year, punch.OutAt.Value.Month, punch.OutAt.Value.Day, punch.OutAt.Value.Hour, punch.OutAt.Value.Minute, 0, 0);
             }
+
+            // Ensure punch does not overlap existing punches.
+            var doesOverlap = _context.Punches
+                .Include(p => p.Task!.Job)
+                .Include(p => p.Task!.Job!.Customer)
+                .Where(p => p.Task!.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
+                .Where(p => p.UserId == punch.UserId)
+                .Where(p =>
+                    (punch.InAt >= p.InAt && punch.OutAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 12pm - 1pm
+                    (punch.InAt >= p.InAt && punch.InAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 10am - 7pm
+                    (punch.InAt <= p.InAt && punch.OutAt >= p.InAt) // existing punch is 9am - 5pm and attempted is 7am - 10am
+                )
+                .Any();
+
+            if (doesOverlap)
+                return BadRequest("This punch overlaps with another punch.");
 
             // Validate the model.
             ModelState.ClearValidationState(nameof(punch));
