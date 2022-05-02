@@ -202,6 +202,10 @@
                 return;
             }
 
+            // Do not continue if the token was null.
+            if (string.IsNullOrEmpty(token))
+                throw new Exception();
+
             // Save token to local storage.
             await localStorageService.SetLocalStorage("Token", token);
 
@@ -232,7 +236,7 @@
 
             NavigationManager.NavigateTo("kiosk/status");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             working = false;
             StateHasChanged();

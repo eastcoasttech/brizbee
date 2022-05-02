@@ -343,6 +343,84 @@ namespace Brizbee.Api.Tests
             Assert.IsFalse(responseForOutAtOverlappingPunch.IsSuccessStatusCode);
         }
 
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreatePunch_Should_SucceedForBackToBackPunches()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Create a punch
+            // ----------------------------------------------------------------
+
+            var taskId = _context.Tasks
+                .Where(t => t.Number == "1000")
+                .Select(t => t.Id)
+                .FirstOrDefault();
+
+            var contentForFirstPunch = new
+            {
+                TaskId = taskId,
+                InAt = new DateTime(2022, 1, 2, 8, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 17, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                UserId = currentUser.Id
+            };
+            var jsonForFirstPunch = JsonSerializer.Serialize(contentForFirstPunch, options);
+            var bufferForFirstPunch = Encoding.UTF8.GetBytes(jsonForFirstPunch);
+            var byteContentForFirstPunch = new ByteArrayContent(bufferForFirstPunch);
+            byteContentForFirstPunch.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseForFirstPunch = await client.PostAsync($"odata/Punches", byteContentForFirstPunch);
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var contentForContainedOverlappingPunch = new
+            {
+                TaskId = taskId,
+                InAt = new DateTime(2022, 1, 2, 17, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                OutAt = new DateTime(2022, 1, 2, 20, 0, 0).ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                UserId = currentUser.Id
+            };
+            var jsonForContainedOverlappingPunch = JsonSerializer.Serialize(contentForContainedOverlappingPunch, options);
+            var bufferForContainedOverlappingPunch = Encoding.UTF8.GetBytes(jsonForContainedOverlappingPunch);
+            var byteContentForContainedOverlappingPunch = new ByteArrayContent(bufferForContainedOverlappingPunch);
+            byteContentForContainedOverlappingPunch.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseForContainedOverlappingPunch = await client.PostAsync($"odata/Punches", byteContentForContainedOverlappingPunch);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseForContainedOverlappingPunch.IsSuccessStatusCode);
+        }
+
         private string GenerateJSONWebToken(int userId, string emailAddress)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

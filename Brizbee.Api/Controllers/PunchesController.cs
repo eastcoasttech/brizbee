@@ -141,8 +141,8 @@ namespace Brizbee.Api.Controllers
                 .Where(p => p.UserId == punch.UserId)
                 .Where(p =>
                     (punch.InAt >= p.InAt && punch.OutAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 12pm - 1pm
-                    (punch.InAt >= p.InAt && punch.InAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 10am - 7pm
-                    (punch.InAt <= p.InAt && punch.OutAt >= p.InAt) // existing punch is 9am - 5pm and attempted is 7am - 10am
+                    (punch.InAt > p.InAt && punch.InAt < p.OutAt) || // existing punch is 9am - 5pm and attempted is 10am - 7pm
+                    (punch.InAt < p.InAt && punch.OutAt > p.InAt) // existing punch is 9am - 5pm and attempted is 7am - 10am
                 )
                 .Any();
 
@@ -230,10 +230,11 @@ namespace Brizbee.Api.Controllers
                 .Include(p => p.Task!.Job!.Customer)
                 .Where(p => p.Task!.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
                 .Where(p => p.UserId == punch.UserId)
+                .Where(p => p.Id != punch.Id)
                 .Where(p =>
                     (punch.InAt >= p.InAt && punch.OutAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 12pm - 1pm
-                    (punch.InAt >= p.InAt && punch.InAt <= p.OutAt) || // existing punch is 9am - 5pm and attempted is 10am - 7pm
-                    (punch.InAt <= p.InAt && punch.OutAt >= p.InAt) // existing punch is 9am - 5pm and attempted is 7am - 10am
+                    (punch.InAt > p.InAt && punch.InAt < p.OutAt) || // existing punch is 9am - 5pm and attempted is 10am - 7pm
+                    (punch.InAt < p.InAt && punch.OutAt > p.InAt) // existing punch is 9am - 5pm and attempted is 7am - 10am
                 )
                 .Any();
 
