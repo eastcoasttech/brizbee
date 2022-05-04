@@ -141,7 +141,8 @@ namespace Brizbee.Dashboard.Services
                     { "CanSyncInventoryItems", user.CanSyncInventoryItems },
                     { "CanViewInventoryConsumptions", user.CanViewInventoryConsumptions },
                     { "CanDeleteInventoryConsumptions", user.CanDeleteInventoryConsumptions },
-                    { "CanSyncInventoryConsumptions", user.CanSyncInventoryConsumptions }
+                    { "CanSyncInventoryConsumptions", user.CanSyncInventoryConsumptions },
+                    { "Role", "Standard" }
                 };
 
                 if (user.Id == 0)
