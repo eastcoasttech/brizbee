@@ -173,29 +173,29 @@ namespace Brizbee.Api.Controllers
 
             // Attempt to find an item based on the custom bar code
             var foundCustomItem = _context.QBDInventoryItems
-                .Where(i => i.OrganizationId == currentUser.OrganizationId)
-                .Where(i => i.CustomBarCodeValue == barCode)
-                .FirstOrDefault();
+                .FirstOrDefault(i => i.OrganizationId == currentUser.OrganizationId &&
+                                     i.CustomBarCodeValue == barCode.Trim());
 
             // Attempt to find an item based on the QuickBooks Enterprise bar code
             var foundQuickBooksItem = _context.QBDInventoryItems
-                .Where(i => i.OrganizationId == currentUser.OrganizationId)
-                .Where(i => i.BarCodeValue == barCode)
-                .FirstOrDefault();
+                .FirstOrDefault(i => i.OrganizationId == currentUser.OrganizationId &&
+                                     i.BarCodeValue == barCode.Trim());
 
             if (foundCustomItem == null && foundQuickBooksItem == null)
                 return NotFound();
 
             // Determine which item will be returned
             var chosenBarCodeValue = foundCustomItem != null ? foundCustomItem.CustomBarCodeValue : foundQuickBooksItem.BarCodeValue;
-            var chosenItem = foundCustomItem != null ? foundCustomItem : foundQuickBooksItem;
+            var chosenItem = foundCustomItem ?? foundQuickBooksItem;
+
+            if (chosenItem == null)
+                return NotFound();
 
             // Return item with units of measure
             if (chosenItem.QBDUnitOfMeasureSetId.HasValue)
             {
                 chosenItem.QBDUnitOfMeasureSet = _context.QBDUnitOfMeasureSets
-                    .Where(s => s.Id == chosenItem.QBDUnitOfMeasureSetId)
-                    .FirstOrDefault();
+                    .FirstOrDefault(s => s.Id == chosenItem.QBDUnitOfMeasureSetId);
 
                 return Ok(new
                 {
