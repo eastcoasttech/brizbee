@@ -53,7 +53,7 @@ namespace Brizbee.Dashboard.Services
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<QBDInventoryItem>(responseContent);
+            return await JsonSerializer.DeserializeAsync<QBDInventoryItem>(responseContent, options);
         }
 
         public async Task<(bool, string)> SaveQBDInventoryItemAsync(QBDInventoryItem inventoryItem)
