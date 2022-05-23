@@ -428,6 +428,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // GET: api/QBDInventoryItems/5
+        [HttpGet("api/QBDInventoryItems/{id}")]
         public IActionResult GetQBDInventoryItem(long id)
         {
             var currentUser = CurrentUser();
@@ -470,6 +471,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // PUT: api/QBDInventoryItems/5
+        [HttpPut("api/QBDInventoryItems/{id}")]
         public IActionResult PutQBDInventoryItem(long id, [FromBody] QBDInventoryItem inventoryItem)
         {
             var currentUser = CurrentUser();
