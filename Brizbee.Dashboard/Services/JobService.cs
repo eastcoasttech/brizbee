@@ -74,6 +74,18 @@ namespace Brizbee.Dashboard.Services
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
+        public async Task<(List<Job>, long?)> GetClosedJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "Number", string sortDirection = "ASC")
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs/Closed()?$expand=Customer&$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
+            
+            if (!response.IsSuccessStatusCode)
+                return (new List<Job>(), 0);
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Job>>(responseContent, options);
+            return (odataResponse.Value.ToList(), odataResponse.Count);
+        }
+
         public async Task<Job> GetJobByIdAsync(int id)
         {
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs({id})");

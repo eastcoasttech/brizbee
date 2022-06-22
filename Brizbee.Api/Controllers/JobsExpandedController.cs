@@ -242,18 +242,29 @@ namespace Brizbee.Api.Controllers
 
         // GET: api/JobsExpanded/Export
         [HttpGet("api/JobsExpanded/Export")]
-        public IActionResult Export()
+        public IActionResult Export([FromQuery] string filterStatus)
         {
             var currentUser = CurrentUser();
 
+            string[] statusFilters;
+
+            switch (filterStatus.ToUpperInvariant())
+            {
+                case "OPEN":
+                    statusFilters = new string[] { "Open", "Needs Invoice" };
+                    break;
+                default:
+                    statusFilters = new string[] { "Merged", "Closed" };
+                    break;
+            }
+
             var jobs = _context.Jobs
-                .Include("Customer")
-                .Where(j => j.Customer.OrganizationId == currentUser.OrganizationId)
-                .Where(j => j.Status != "Closed")
-                .Where(j => j.Status != "Merged")
+                .Include(j => j.Customer)
+                .Where(j => j.Customer!.OrganizationId == currentUser.OrganizationId)
+                .Where(j => statusFilters.Contains(j.Status))
                 .Select(j => new
                 {
-                    CustomerNumber = j.Customer.Number,
+                    CustomerNumber = j.Customer!.Number,
                     CustomerName = j.Customer.Name,
                     ProjectNumber = j.Number,
                     ProjectName = j.Name,
@@ -275,7 +286,7 @@ namespace Brizbee.Api.Controllers
                 csv.WriteRecords(jobs);
 
                 var bytes = Encoding.UTF8.GetBytes(writer.ToString());
-                return File(bytes, "text/csv", fileDownloadName: "Open Projects.csv");
+                return File(bytes, "text/csv", fileDownloadName: $"{filterStatus.ToUpperInvariant()} PROJECTS - {DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.csv");
             }
         }
 

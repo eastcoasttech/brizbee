@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Api", "Brizbee.Api\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Core", "Brizbee.Core\Brizbee.Core.csproj", "{C058FA36-E5C8-4962-B751-51EE0DC46B4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Api.Tests", "Brizbee.Api.Tests\Brizbee.Api.Tests.csproj", "{CF1B19A5-EA3E-4A1E-A051-8CA7397BAB55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Api.Tests", "Brizbee.Api.Tests\Brizbee.Api.Tests.csproj", "{CF1B19A5-EA3E-4A1E-A051-8CA7397BAB55}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

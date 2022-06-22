@@ -1,4 +1,4 @@
-﻿@page "/dialogs/download-open-projects"
+﻿@page "/dialogs/download-projects"
 
 @using Brizbee.Dashboard.Services
 
@@ -25,13 +25,15 @@
 <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
 
 @code {
+    [Parameter] public string FilterStatus { get; set; }
+
     private string downloadUrl = "";
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         var accessToken = await localStorageService.GetFromLocalStorage("Token");
 
-        downloadUrl = $"{apiService.GetBaseUrl()}api/JobsExpanded/Export?access_token={accessToken}";
+        downloadUrl = $"{apiService.GetBaseUrl()}api/JobsExpanded/Export?filterStatus={FilterStatus}&access_token={accessToken}";
     }
 
     private void CloseDialog(MouseEventArgs e)

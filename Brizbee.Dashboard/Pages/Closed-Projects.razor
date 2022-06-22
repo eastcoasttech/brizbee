@@ -1,4 +1,4 @@
-﻿@page "/open-projects"
+﻿@page "/closed-projects"
 
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Models
@@ -107,8 +107,8 @@
 
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
-        <li role="presentation" class="active"><NavLink href="open-projects">Open Projects</NavLink></li>
-        <li role="presentation"><NavLink href="closed-projects">Closed Projects</NavLink></li>
+        <li role="presentation"><NavLink href="open-projects">Open Projects</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="closed-projects">Closed Projects</NavLink></li>
         <li role="presentation"><NavLink href="customers">Everything</NavLink></li>
     </ul>
 
@@ -118,7 +118,7 @@
         <div class="col-md-12 col-sm-12 col-xs-12">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadOpenProjectsDialog())"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadClosedProjectsDialog())"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
                 </div>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => RefreshProjects())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
@@ -274,7 +274,7 @@
             @if (!loadingProjects && projects.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="9">No Open Projects</td>
+                    <td colspan="9">No Closed Projects</td>
                 </tr>
             }
         </tbody>
@@ -353,10 +353,10 @@
             await RefreshProjects();
     }
 
-    private void OpenDownloadOpenProjectsDialog()
+    private void OpenDownloadClosedProjectsDialog()
     {
-        dialogService.Open<DownloadProjectsDialog>("Download Open Projects",
-                                new Dictionary<string, object>() { { "FilterStatus", "OPEN" } },
+        dialogService.Open<DownloadProjectsDialog>("Download Closed Projects",
+                                new Dictionary<string, object>() { { "FilterStatus", "CLOSED" } },
                                 new DialogOptions() { Width = "600px" });
     }
 
@@ -374,7 +374,7 @@
         // Prevent stagnation.
         projects.Clear();
 
-        var result = await jobService.GetOpenJobsAsync(pageSize, projectsSkip, projectsSortBy, projectsSortDirection);
+        var result = await jobService.GetClosedJobsAsync(pageSize, projectsSkip, projectsSortBy, projectsSortDirection);
         projects = result.Item1;
         projectsCount = result.Item2.GetValueOrDefault();
         loadingProjects = false;

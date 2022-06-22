@@ -29,6 +29,12 @@ namespace Brizbee.Api
                 .Collection
                 .Function("Open")
                 .ReturnsCollectionFromEntitySet<Job>("Jobs");
+            
+            // Collection Function - Jobs/Closed
+            builder.EntityType<Job>()
+                .Collection
+                .Function("Closed")
+                .ReturnsCollectionFromEntitySet<Job>("Jobs");
 
             // Collection Function - Punches/Current
             builder.EntityType<Punch>()

@@ -71,9 +71,21 @@ namespace Brizbee.Api.Controllers
 
             return _context.Jobs
                 .Include(j => j.Customer)
-                .Where(j => j.Customer.OrganizationId == currentUser.OrganizationId)
-                .Where(j => j.Status != "Closed")
-                .Where(j => j.Status != "Merged");
+                .Where(j => j.Customer!.OrganizationId == currentUser.OrganizationId)
+                .Where(j => new string[] { "Open", "Needs Invoice" }.Contains(j.Status));
+        }
+
+        // GET: odata/Jobs/Closed
+        [HttpGet]
+        [EnableQuery(PageSize = 1000, MaxExpansionDepth = 1)]
+        public IQueryable<Job> Closed()
+        {
+            var currentUser = CurrentUser();
+
+            return _context.Jobs
+                .Include(j => j.Customer)
+                .Where(j => j.Customer!.OrganizationId == currentUser.OrganizationId)
+                .Where(j => new string[] { "Merged", "Closed" }.Contains(j.Status));
         }
 
         // GET: odata/Jobs(5)
