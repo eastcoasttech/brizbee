@@ -1,4 +1,5 @@
-﻿@using Microsoft.VisualStudio.TestTools.UnitTesting
+﻿@using Brizbee.Dashboard.Serialization
+@using Microsoft.VisualStudio.TestTools.UnitTesting
 @using Microsoft.Extensions.DependencyInjection
 @using Brizbee.Dashboard.Security
 @using Brizbee.Dashboard.Models
@@ -18,11 +19,12 @@
 
         // Prepare mock client.
         var mock = ctx.Services.AddMockHttpClient();
-        mock.When("/odata/Users/Default.Authenticate").RespondJson(new Credential() { AuthExpiration = "0", AuthToken = "0", AuthUserId = "1" });
-        mock.When("/odata/Users(1)?$expand=Organization").RespondJson(new User() { Id = 1, EmailAddress = "user@brizbee.com", Name = "BRIZBEE User" });
+        mock.When("/api/Auth/Authenticate").RespondJson(new Authentication() { Token = "0" });
+        mock.When("/api/Auth/Me").RespondJson(new User() { Id = 1, EmailAddress = "user@brizbee.com", Name = "BRIZBEE User" });
 
         // Configure additional services.
         ctx.Services.AddSingleton<ApiService>();
+        ctx.Services.AddSingleton<AuthService>();
         ctx.Services.AddSingleton<AuditService>();
         ctx.Services.AddSingleton<KioskService>();
         ctx.Services.AddSingleton<ExportService>();
