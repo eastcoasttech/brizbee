@@ -2,7 +2,7 @@
 //  SendLogViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2022 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //

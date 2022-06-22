@@ -2,7 +2,7 @@
 //  LoginPageViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2022 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -25,12 +25,10 @@ using Brizbee.Common.Models;
 using Brizbee.Common.Security;
 using Brizbee.Integration.Utility.Exceptions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows;
 
 namespace Brizbee.Integration.Utility.ViewModels
@@ -41,8 +39,8 @@ namespace Brizbee.Integration.Utility.ViewModels
         public bool IsEnabled { get; set; }
         public string Password { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
-        private RestClient client;
-        private JsonSerializerSettings settings = new JsonSerializerSettings()
+        private RestClient _client;
+        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings()
         {
             NullValueHandling = NullValueHandling.Ignore,
             StringEscapeHandling = StringEscapeHandling.EscapeHtml,
@@ -51,13 +49,13 @@ namespace Brizbee.Integration.Utility.ViewModels
 
         public async System.Threading.Tasks.Task Login()
         {
-            // Reintialize the HTTP client
-            client = new RestClient("https://app-brizbee-prod.azurewebsites.net/");
+            // Initialize the HTTP _client.
+            _client = new RestClient("https://app-brizbee-api-prod.azurewebsites.net/");
 
             // Configure JSON serializer.
-            client.UseNewtonsoftJson(settings);
+            _client.UseNewtonsoftJson(_settings);
 
-            Application.Current.Properties["Client"] = client;
+            Application.Current.Properties["Client"] = _client;
 
             await LoadCredentials();
         }
@@ -68,31 +66,24 @@ namespace Brizbee.Integration.Utility.ViewModels
             OnPropertyChanged("IsEnabled");
 
             // Build request to authenticate user
-            var request = new RestRequest("odata/Users/Default.Authenticate", Method.POST);
+            var request = new RestRequest("api/Auth/Authenticate", Method.POST);
             request.AddJsonBody(new
             {
-                Session = new
-                {
-                    Method = "email",
-                    EmailAddress = EmailAddress,
-                    EmailPassword = Password
-                }
+                Method = "EMAIL",
+                EmailAddress = EmailAddress,
+                EmailPassword = Password
             });
 
             // Execute request to authenticate user
-            var response = await client.ExecuteAsync<Credential>(request);
+            var response = await _client.ExecuteAsync<Authentication>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.Created))
             {
                 // Save the authentication credentials for later
-                Application.Current.Properties["AuthUserId"] = response.Data.AuthUserId;
-                Application.Current.Properties["AuthExpiration"] = response.Data.AuthExpiration;
-                Application.Current.Properties["AuthToken"] = response.Data.AuthToken;
+                Application.Current.Properties["Token"] = response.Data.Token;
 
-                // Add the client headers for authentication
-                client.AddDefaultHeader("AUTH_USER_ID", response.Data.AuthUserId);
-                client.AddDefaultHeader("AUTH_EXPIRATION", response.Data.AuthExpiration);
-                client.AddDefaultHeader("AUTH_TOKEN", response.Data.AuthToken);
+                // Add the _client headers for authentication
+                _client.AddDefaultHeader("Authorization", $"Bearer {response.Data.Token}");
 
                 await LoadUser();
             }
@@ -115,11 +106,10 @@ namespace Brizbee.Integration.Utility.ViewModels
         private async System.Threading.Tasks.Task LoadUser()
         {
             // Build request to retrieve authenticated user
-            var request = new RestRequest(string.Format("odata/Users({0})?$expand=Organization",
-                Application.Current.Properties["AuthUserId"]), Method.GET);
+            var request = new RestRequest("api/Auth/Me", Method.GET);
 
             // Execute request to retrieve authenticated user
-            var response = await client.ExecuteAsync<User>(request);
+            var response = await _client.ExecuteAsync<User>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {

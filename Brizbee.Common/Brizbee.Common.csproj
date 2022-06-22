@@ -84,6 +84,7 @@
     <Compile Include="Models\TimesheetEntry.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Security\Authentication.cs" />
     <Compile Include="Security\Credential.cs" />
     <Compile Include="Security\Registration.cs" />
     <Compile Include="Security\Session.cs" />
