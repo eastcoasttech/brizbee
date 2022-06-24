@@ -22,6 +22,8 @@
 
 using Brizbee.Api.Serialization.Expanded;
 using Brizbee.Core.Models;
+using Brizbee.Core.Serialization;
+using Brizbee.Core.Serialization.Statistics;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Dapper;
@@ -169,7 +171,7 @@ namespace Brizbee.Api.Controllers
                 var recordsSql = $@"
                     SELECT
                         [J].[Id] AS [Job_Id],
-	                    [J].[CreatedAt] AS [Job_CreatedAt],
+                        [J].[CreatedAt] AS [Job_CreatedAt],
                         [J].[Name] AS [Job_Name],
                         [J].[Number] AS [Job_Number],
                         [J].[Description] AS [Job_Description],
@@ -178,17 +180,17 @@ namespace Brizbee.Api.Controllers
                         [J].[CustomerId] AS [Job_CustomerId],
 
                         [C].[Id] AS [Customer_Id],
-	                    [C].[CreatedAt] AS [Customer_CreatedAt],
+                        [C].[CreatedAt] AS [Customer_CreatedAt],
                         [C].[Name] AS [Customer_Name],
                         [C].[Number] AS [Customer_Number],
                         [C].[Description] AS [Customer_Description],
                         [C].[OrganizationId] AS [Customer_OrganizationId]
                     FROM
-	                    [Jobs] AS [J]
+                        [Jobs] AS [J]
                     INNER JOIN
                         [Customers] AS [C] ON [J].[CustomerId] = [C].[Id]
                     WHERE
-	                    [C].[OrganizationId] = @OrganizationId {whereClauses}
+                        [C].[OrganizationId] = @OrganizationId {whereClauses}
                     ORDER BY
                         {orderByFormatted} {orderByDirectionFormatted}
                     OFFSET @Skip ROWS
@@ -288,6 +290,57 @@ namespace Brizbee.Api.Controllers
                 var bytes = Encoding.UTF8.GetBytes(writer.ToString());
                 return File(bytes, "text/csv", fileDownloadName: $"{filterStatus.ToUpperInvariant()} PROJECTS - {DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.csv");
             }
+        }
+        
+        // GET: api/JobsExpanded/5/Statistics
+        [HttpGet("api/JobsExpanded/{id:int}/Statistics")]
+        public IActionResult Statistics(int id)
+        {
+            var project = _context.Jobs.Find(id);
+
+            if (project == null)
+                return NotFound();
+
+            var projectMinutesCountSql = @"
+                SELECT
+                    SUM(DATEDIFF(MINUTE, [P].[InAt], [P].[OutAt]))
+                FROM [dbo].[Punches] AS [P]
+                INNER JOIN [dbo].[Tasks] AS [T]
+                    ON [T].[Id] = [P].[TaskId]
+                WHERE
+                    [T].[JobId] = @ProjectId;";
+
+            var projectMinutesCount = _context.Database.GetDbConnection().QuerySingle<long>(projectMinutesCountSql, new
+            {
+                ProjectId = id
+            });
+            
+            var taskMinutesCountsSql = @"
+                SELECT
+                    [P].[TaskId],
+                    [T].[Number] AS [TaskNumber],
+                    [T].[Name] AS [TaskName],
+                    SUM(DATEDIFF(MINUTE, [P].[InAt], [P].[OutAt])) AS [MinutesCount]
+                FROM [dbo].[Punches] AS [P]
+                INNER JOIN [dbo].[Tasks] AS [T]
+                    ON [T].[Id] = [P].[TaskId]
+                WHERE
+                    [T].[JobId] = @ProjectId
+                GROUP BY
+                    [P].[TaskId],
+                    [T].[Number],
+                    [T].[Name];";
+
+            var taskMinutesCounts = _context.Database.GetDbConnection().Query<TaskStatistics>(taskMinutesCountsSql, new
+            {
+                ProjectId = id
+            });
+
+            return Ok(new ProjectStatistics()
+            {
+                MinutesCount = projectMinutesCount,
+                TaskStatistics = taskMinutesCounts.ToList()
+            });
         }
 
         private User CurrentUser()

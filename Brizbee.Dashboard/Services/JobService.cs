@@ -1,4 +1,6 @@
 ﻿using Brizbee.Blazor;
+using Brizbee.Core.Serialization;
+using Brizbee.Core.Serialization.Statistics;
 using Brizbee.Dashboard.Models;
 using Brizbee.Dashboard.Security;
 using System.Collections.Generic;
@@ -88,11 +90,20 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<Job> GetJobByIdAsync(int id)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs({id})");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Jobs({id})?$expand=Customer");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<Job>(responseContent);
+            return await JsonSerializer.DeserializeAsync<Job>(responseContent, options);
+        }
+
+        public async Task<ProjectStatistics> GetStatisticsAsync(int id)
+        {
+            var response = await _apiService.GetHttpClient().GetAsync($"api/JobsExpanded/{id}/Statistics");
+            response.EnsureSuccessStatusCode();
+
+            using var responseContent = await response.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<ProjectStatistics>(responseContent, options);
         }
 
         public async Task<List<Job>> SearchJobsAsync(string query)

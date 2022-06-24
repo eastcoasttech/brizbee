@@ -315,6 +315,14 @@ li.text-highlight:hover a:hover {
     background-color: #373737;
 }
 
+ul.nav.nav-pills li {
+    margin-right: 1rem;
+}
+
+    ul.nav.nav-pills li a:not(.active) {
+        background-color: rgba(231, 231, 231, 0.45);
+    }
+
 
 
 .fadeIn {
