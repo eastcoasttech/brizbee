@@ -14,7 +14,7 @@
         {
             get
             {
-                return Math.Round(MinutesCount, 1);
+                return Math.Round(MinutesCount / 60.0m, 1);
             }
         }
 

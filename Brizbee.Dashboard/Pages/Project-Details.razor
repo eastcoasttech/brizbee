@@ -114,9 +114,13 @@
     
     <hr />
     
+    <!--Toolbar-->
     <div class="row row-toolbar">
         <div class="col-md-12 col-sm-12 col-xs-12">
             <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenModifyProjectDialog(_currentProject))"><i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 5px;"></i> Edit Project</button>
+                </div>
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadBarCodesDialog(_currentProject.Id))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
                 </div>
@@ -126,8 +130,8 @@
 
     @if (_currentProject != null)
     {
-        <h1>@_currentProject.Number &ndash; @_currentProject.Name</h1>
-        <h2>@_currentProject.Customer.Number &ndash; @_currentProject.Customer.Name</h2>
+        <h1 style="margin-top: 3rem; margin-bottom: 0; font-weight: bold; line-height: 2.5rem;">@_currentProject.Number &ndash; @_currentProject.Name<br /><span class="text-muted" style="font-size: 2rem;">Project</span></h1>
+        <h2 style="margin-top: 1rem; margin-bottom: 3rem; font-weight: bold; line-height: 2.5rem;">@_currentProject.Customer.Number &ndash; @_currentProject.Customer.Name<br /><span class="text-muted" style="font-size: 2rem;">Customer</span></h2>
         <div class="row">
             
             <!-- Column 1 -->
@@ -136,26 +140,67 @@
                     <li>
                         <div class="panel panel-default panel-condensed">
                             <div class="panel-body">
-                                <p style="font-size: 1.5rem;"><span class="text-muted" style="font-size: 6rem; font-weight: bold;">@decimal.Round(_statistics.MinutesCount / 60.0m, 1)</span> total hours</p>
+                                <div class="row" style="margin: 0; padding: 0;">
+                                    <div class="col-md-4">
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@decimal.Round(_statistics.MinutesCount / 60.0m, 1)</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Total Hours</span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@_statistics.WorkedDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Worked Days</span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@_statistics.DurationDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Days in Duration</span></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="panel panel-default panel-condensed">
                             <div class="panel-body">
-                                <RadzenChart>
-                                    <RadzenDonutSeries Data="@_statistics.TaskStatistics" CategoryProperty="TaskNumberWithName" ValueProperty="HoursCount">
-                                        <TitleTemplate>
-                                            <div class="rz-donut-content">
-                                                <div>Hours by Task</div>
-                                            </div>
-                                        </TitleTemplate>
-                                        <TooltipTemplate Context="data">
-                                            <div>
-                                                Hours for task <i>@data.TaskNumberWithName</i>:
-                                                <strong>@data.HoursCount</strong>
-                                            </div>
-                                        </TooltipTemplate>
-                                    </RadzenDonutSeries>
-                                </RadzenChart>
+                                <div>
+                                    <RadzenChart>
+                                        <RadzenDonutSeries Data="@_statistics.TaskStatistics" CategoryProperty="TaskNumberWithName" ValueProperty="HoursCount">
+                                            <TitleTemplate>
+                                                <div class="rz-donut-content">
+                                                    <div>Hours by Task</div>
+                                                </div>
+                                            </TitleTemplate>
+                                            <TooltipTemplate Context="data">
+                                                <div>
+                                                    Hours for task <i>@data.TaskNumberWithName</i>:
+                                                    <strong>@data.HoursCount</strong>
+                                                </div>
+                                            </TooltipTemplate>
+                                        </RadzenDonutSeries>
+                                    </RadzenChart>
+                                </div>
+                                <div>
+                                    <RadzenChart>
+                                        <RadzenDonutSeries Data="@_statistics.UserStatistics" CategoryProperty="UserName" ValueProperty="HoursCount">
+                                            <TitleTemplate>
+                                                <div class="rz-donut-content">
+                                                    <div>Hours by User</div>
+                                                </div>
+                                            </TitleTemplate>
+                                            <TooltipTemplate Context="data">
+                                                <div>
+                                                    Hours for user <i>@data.UserName</i>:
+                                                    <strong>@data.HoursCount</strong>
+                                                </div>
+                                            </TooltipTemplate>
+                                        </RadzenDonutSeries>
+                                    </RadzenChart>
+                                </div>
+                                <div>
+                                    <RadzenChart>
+                                        <RadzenLineSeries Data="@_statistics.DateStatistics" CategoryProperty="Date" LineType="LineType.Solid" ValueProperty="HoursCount" Title="Hours Per Day">
+                                            <RadzenMarkers MarkerType="MarkerType.None" />
+                                        </RadzenLineSeries>
+                                        <RadzenCategoryAxis Padding="20" Formatter="@FormatAsDay" />
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Hours" />
+                                        </RadzenValueAxis>
+                                    </RadzenChart>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -360,32 +405,20 @@
                                 new DialogOptions() { Width = "600px" });
     }
 
-    class DataItem
+    private void OpenModifyProjectDialog(Job project)
     {
-        public string Quarter { get; set; }
-        public double Revenue { get; set; }
+        dialogService.Open<ProjectDialog>("Edit Project",
+                                new Dictionary<string, object>() { { "Id", project.Id }, { "CustomerId", project.CustomerId } },
+                                new DialogOptions() { Width = "600px" });
     }
 
-    DataItem[] revenue = new DataItem[] {
-        new DataItem
+    private string FormatAsDay(object value)
+    {
+        if (value != null)
         {
-            Quarter = "Q1",
-            Revenue = 30000
-        },
-        new DataItem
-        {
-            Quarter = "Q2",
-            Revenue = 40000
-        },
-        new DataItem
-        {
-            Quarter = "Q3",
-            Revenue = 50000
-        },
-        new DataItem
-        {
-            Quarter = "Q4",
-            Revenue = 80000
+            return Convert.ToDateTime(value).ToString("MMM d");
         }
-    };
+
+        return string.Empty;
+    }
 }

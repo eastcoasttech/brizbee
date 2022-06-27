@@ -300,7 +300,8 @@ namespace Brizbee.Api.Controllers
 
             if (project == null)
                 return NotFound();
-
+            
+            // Collect the statistics counting total minutes.
             var projectMinutesCountSql = @"
                 SELECT
                     SUM(DATEDIFF(MINUTE, [P].[InAt], [P].[OutAt]))
@@ -315,6 +316,7 @@ namespace Brizbee.Api.Controllers
                 ProjectId = id
             });
             
+            // Collect the statistics counting minutes per task.
             var taskMinutesCountsSql = @"
                 SELECT
                     [P].[TaskId],
@@ -335,11 +337,93 @@ namespace Brizbee.Api.Controllers
             {
                 ProjectId = id
             });
+            
+            // Collect the statistics counting minutes per user.
+            var userMinutesCountsSql = @"
+                SELECT
+                    [P].[UserId],
+                    [U].[Name] AS [UserName],
+                    SUM(DATEDIFF(MINUTE, [P].[InAt], [P].[OutAt])) AS [MinutesCount]
+                FROM [dbo].[Punches] AS [P]
+                INNER JOIN [dbo].[Tasks] AS [T]
+                    ON [T].[Id] = [P].[TaskId]
+                INNER JOIN [dbo].[Users] AS [U]
+                    ON [U].[Id] = [P].[UserId]
+                WHERE
+                    [T].[JobId] = @ProjectId
+                GROUP BY
+                    [P].[UserId],
+                    [U].[Name];";
+
+            var userMinutesCounts = _context.Database.GetDbConnection().Query<UserStatistics>(userMinutesCountsSql, new
+            {
+                ProjectId = id
+            });
+            
+            // Collect the statistics counting minutes per date.
+            var dateMinutesCountsSql = @"
+                SELECT
+                    CAST([P].[InAt] AS DATE) AS [Date],
+                    SUM(DATEDIFF(MINUTE, [P].[InAt], [P].[OutAt])) AS [MinutesCount]
+                FROM [dbo].[Punches] AS [P]
+                INNER JOIN [dbo].[Tasks] AS [T]
+                    ON [T].[Id] = [P].[TaskId]
+                WHERE
+                    [T].[JobId] = @ProjectId
+                GROUP BY
+                    CAST([P].[InAt] AS DATE);";
+
+            var dateMinutesCounts = _context.Database.GetDbConnection().Query<DateStatistics>(dateMinutesCountsSql, new
+            {
+                ProjectId = id
+            });
+            
+            // Collect the nunber of days worked.
+            var workedDaysCountSql = @"
+                SELECT
+                    COUNT( [X].[TheDate] )
+                FROM
+                (
+                    SELECT
+                        [DTS].[TheDate]
+                    FROM [dbo].[Punches] AS [P]
+                    INNER JOIN [dbo].[Tasks] AS [T] ON
+                        [T].[Id] = [P].[TaskId]
+                    CROSS APPLY tvf_DatesInRange( CAST([P].[InAt] AS DATE), CAST([P].[OutAt] AS DATE)) AS [DTS]
+                    WHERE
+                        [T].[JobId] = @ProjectId
+                    GROUP BY
+                        [DTS].[TheDate]
+                ) AS [X];";
+            
+            var workedDaysCount = _context.Database.GetDbConnection().QuerySingleOrDefault<int>(workedDaysCountSql, new
+            {
+                ProjectId = id
+            });
+            
+            // Collect the nunber of days in the project duration.
+            var durationDaysCountSql = @"
+                SELECT
+                    DATEDIFF( DAY, CAST(MIN( [P].[InAt] ) AS DATE), DATEADD( DAY, 1, CAST(MAX( [P].[OutAt] ) AS DATE)))
+                FROM [dbo].[Punches] AS [P]
+                INNER JOIN [dbo].[Tasks] AS [T] ON
+                    [T].[Id] = [P].[TaskId]
+                WHERE
+                    [T].[JobId] = @ProjectId;";
+            
+            var durationDaysCount = _context.Database.GetDbConnection().QuerySingleOrDefault<int>(durationDaysCountSql, new
+            {
+                ProjectId = id
+            });
 
             return Ok(new ProjectStatistics()
             {
                 MinutesCount = projectMinutesCount,
-                TaskStatistics = taskMinutesCounts.ToList()
+                TaskStatistics = taskMinutesCounts.ToList(),
+                UserStatistics = userMinutesCounts.ToList(),
+                DateStatistics = dateMinutesCounts.ToList(),
+                WorkedDaysCount = workedDaysCount,
+                DurationDaysCount = durationDaysCount
             });
         }
 
