@@ -400,6 +400,7 @@ namespace Brizbee.Api.Controllers
                     u.CanViewTasks,
                     u.CanViewTimecards,
                     u.CanViewUsers,
+                    u.CanMergeProjects,
                     u.CreatedAt,
                     u.EmailAddress,
                     u.Id,

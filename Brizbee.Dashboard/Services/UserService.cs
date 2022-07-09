@@ -109,6 +109,7 @@ namespace Brizbee.Dashboard.Services
                     { "CanCreateProjects", user.CanCreateProjects },
                     { "CanModifyProjects", user.CanModifyProjects },
                     { "CanDeleteProjects", user.CanDeleteProjects },
+                    { "CanMergeProjects", user.CanMergeProjects },
                     { "CanViewTasks", user.CanViewTasks },
                     { "CanCreateTasks", user.CanCreateTasks },
                     { "CanModifyTasks", user.CanModifyTasks },

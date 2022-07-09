@@ -138,7 +138,8 @@
     <EmbeddedResource Include="Migrations\0016 Adding CustomBarCodeValue.sql" />
     <EmbeddedResource Include="Migrations\0017 Adding Column to Users.sql" />
     <EmbeddedResource Include="Migrations\0018 Adding DatesInRange Function.sql" />
-    <Content Include="Migrations\0020 Removing NULL.sql" />
+    <EmbeddedResource Include="Migrations\0020 Adding Permission for Merging Projects.sql" />
+    <Content Include="Migrations\0021 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

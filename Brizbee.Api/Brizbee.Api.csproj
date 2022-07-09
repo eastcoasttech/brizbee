@@ -8,6 +8,17 @@
 
 	<ItemGroup>
 		<None Remove="Controllers\kzkdnhwq.qqw~" />
+		<None Remove="Sql\INVENTORY CONSUMPTION\COUNT SYNCED CONSUMPTION FOR PROJECT.sql" />
+		<None Remove="Sql\INVENTORY CONSUMPTION\MIGRATE CONSUMPTION FOR TASK.sql" />
+		<None Remove="Sql\MIGRATE PUNCHES FOR TASK.sql" />
+		<None Remove="Sql\PROJECTS\MIGRATE TIME CARDS FOR TASK.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Sql\INVENTORY CONSUMPTION\COUNT SYNCED CONSUMPTION FOR PROJECT.sql" />
+	  <EmbeddedResource Include="Sql\INVENTORY CONSUMPTION\MIGRATE CONSUMPTION FOR TASK.sql" />
+	  <EmbeddedResource Include="Sql\PROJECTS\MIGRATE PUNCHES FOR TASK.sql" />
+	  <EmbeddedResource Include="Sql\PROJECTS\MIGRATE TIME CARDS FOR TASK.sql" />
 	</ItemGroup>
 
 	<ItemGroup>

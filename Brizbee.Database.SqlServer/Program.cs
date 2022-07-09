@@ -2,7 +2,7 @@
 //  Program.cs
 //  BRIZBEE Database Management
 //
-//  Copyright (C) 2020 East Coast Technology Services, LLC
+//  Copyright (C) 2018-2022 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Database Management.
 //

@@ -2,7 +2,7 @@
 //  JobsExpandedController.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2022 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,9 +20,10 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Api.Serialization;
 using Brizbee.Api.Serialization.Expanded;
+using Brizbee.Api.Sql;
 using Brizbee.Core.Models;
-using Brizbee.Core.Serialization;
 using Brizbee.Core.Serialization.Statistics;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -30,6 +31,7 @@ using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Globalization;
 using System.Net;
 using System.Text;
@@ -291,7 +293,7 @@ namespace Brizbee.Api.Controllers
                 return File(bytes, "text/csv", fileDownloadName: $"{filterStatus.ToUpperInvariant()} PROJECTS - {DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.csv");
             }
         }
-        
+
         // GET: api/JobsExpanded/5/Statistics
         [HttpGet("api/JobsExpanded/{id:int}/Statistics")]
         public IActionResult Statistics(int id)
@@ -300,7 +302,7 @@ namespace Brizbee.Api.Controllers
 
             if (project == null)
                 return NotFound();
-            
+
             // Collect the statistics counting total minutes.
             var projectMinutesCountSql = @"
                 SELECT
@@ -315,7 +317,7 @@ namespace Brizbee.Api.Controllers
             {
                 ProjectId = id
             });
-            
+
             // Collect the statistics counting minutes per task.
             var taskMinutesCountsSql = @"
                 SELECT
@@ -337,7 +339,7 @@ namespace Brizbee.Api.Controllers
             {
                 ProjectId = id
             });
-            
+
             // Collect the statistics counting minutes per user.
             var userMinutesCountsSql = @"
                 SELECT
@@ -359,7 +361,7 @@ namespace Brizbee.Api.Controllers
             {
                 ProjectId = id
             });
-            
+
             // Collect the statistics counting minutes per date.
             var dateMinutesCountsSql = @"
                 SELECT
@@ -377,7 +379,7 @@ namespace Brizbee.Api.Controllers
             {
                 ProjectId = id
             });
-            
+
             // Collect the nunber of days worked.
             var workedDaysCountSql = @"
                 SELECT
@@ -395,12 +397,12 @@ namespace Brizbee.Api.Controllers
                     GROUP BY
                         [DTS].[TheDate]
                 ) AS [X];";
-            
+
             var workedDaysCount = _context.Database.GetDbConnection().QuerySingleOrDefault<int>(workedDaysCountSql, new
             {
                 ProjectId = id
             });
-            
+
             // Collect the nunber of days in the project duration.
             var durationDaysCountSql = @"
                 SELECT
@@ -410,7 +412,7 @@ namespace Brizbee.Api.Controllers
                     [T].[Id] = [P].[TaskId]
                 WHERE
                     [T].[JobId] = @ProjectId;";
-            
+
             var durationDaysCount = _context.Database.GetDbConnection().QuerySingleOrDefault<int>(durationDaysCountSql, new
             {
                 ProjectId = id
@@ -425,6 +427,159 @@ namespace Brizbee.Api.Controllers
                 WorkedDaysCount = workedDaysCount,
                 DurationDaysCount = durationDaysCount
             });
+        }
+
+        // GET: api/JobsExpanded/Merge
+        [HttpPost("api/JobsExpanded/Merge")]
+        public async Task<IActionResult> Merge(int sourceProjectId, int destinationProjectId)
+        {
+            var currentUser = CurrentUser();
+            
+            // Ensure that user is authorized.
+            if (!currentUser.CanMergeProjects)
+                return Forbid();
+
+            var sourceProject = await _context.Jobs.FindAsync(sourceProjectId);
+            var destinationProject = await _context.Jobs.FindAsync(destinationProjectId);
+
+            if (sourceProject == null || destinationProject == null)
+                return BadRequest("The source project or destination project does not exist.");
+
+            try
+            {
+                using var transaction = await _context.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // Collect a one-to-one mapping of tasks from the source
+                    // project to the destination project.
+                    var taskMappingsSql = @"
+                        SELECT
+                            [ST].[Id] AS [SourceTaskId],
+                            [ST].[Name] AS [SourceTaskName],
+                            [DT].[Id] AS [DestinationTaskId],
+                            [DT].[Name] AS [DestinationTaskName]
+                        FROM [dbo].[Tasks] AS [ST]
+                        LEFT JOIN [dbo].[Tasks] AS [DT] ON
+                            [DT].[Name] = [ST].[Name]
+                            AND [DT].[JobId] = @DestinationProjectId
+                        WHERE
+                            [ST].[JobId] = @SourceProjectId;";
+
+                    var taskMappings = await _context.Database.GetDbConnection().QueryAsync<TaskMapping>(
+                        taskMappingsSql,
+                        new
+                        {
+                            SourceProjectId = sourceProjectId,
+                            DestinationProjectId = destinationProjectId
+                        }
+                    );
+
+                    // Verify that there are no missing mappings.
+                    if (taskMappings.Where(t => !t.DestinationTaskId.HasValue).Any())
+                    {
+                        await transaction.DisposeAsync();
+                    
+                        return BadRequest("Tasks do not match between source and destination project to be merged.");
+                    }
+                
+                    // Update all the punches and time cards by task from the source
+                    // project so that they belong to the tasks on the destination project.
+                    foreach (var taskMapping in taskMappings)
+                    {
+                        // Update the punches.
+                        var updatePunchesSql = SqlHelper.SqlFromFile("PROJETS", "MIGRATE PUNCHES FOR TASK");
+                        await _context.Database.GetDbConnection().ExecuteAsync(
+                            updatePunchesSql,
+                            new
+                            {
+                                SourceTaskId = taskMapping.SourceTaskId,
+                                DestinationTaskId = taskMapping.DestinationTaskId
+                            },
+                            transaction: transaction as IDbTransaction
+                        );
+                    
+                        // Update the time cards.
+                        var updateTimeCardsSql = SqlHelper.SqlFromFile("PROJETS", "MIGRATE TIME CARDS FOR TASK");
+                        await _context.Database.GetDbConnection().ExecuteAsync(
+                            updateTimeCardsSql,
+                            new
+                            {
+                                SourceTaskId = taskMapping.SourceTaskId,
+                                DestinationTaskId = taskMapping.DestinationTaskId
+                            },
+                            transaction: transaction as IDbTransaction
+                        );
+                        
+                        // Update all the unsynced inventory consumption to the destination tasks
+                        var updateInventoryConsumptionSql = SqlHelper.SqlFromFile("INVENTORY CONSUMPTION", "MIGRATE CONSUMPTION FOR TASK");
+                        await _context.Database.GetDbConnection().ExecuteAsync(
+                            updateInventoryConsumptionSql,
+                            new
+                            {
+                                SourceTaskId = taskMapping.SourceTaskId,
+                                DestinationTaskId = taskMapping.DestinationTaskId
+                            },
+                            transaction: transaction as IDbTransaction
+                        );
+                    }
+
+                    // Count how many synced inventory consumptions belong to the
+                    // source project. We cannot delete the project if there are any.
+                    var countSyncedInventoryConsumptionSql = SqlHelper.SqlFromFile("INVENTORY CONSUMPTION", "COUNT SYNCED CONSUMPTION FOR PROJECT");
+                    var countSyncedInventoryConsumption = await _context.Database.GetDbConnection().QueryFirstAsync<int>(
+                        countSyncedInventoryConsumptionSql,
+                        new
+                        {
+                            ProjectId = sourceProjectId
+                        },
+                        transaction: transaction as IDbTransaction
+                    );
+
+                    // Delete the project and its tasks, if possible.
+                    if (countSyncedInventoryConsumption == 0)
+                    {
+                        var removeTasks = _context.Tasks.Where(t => t.JobId == sourceProjectId);
+                        _context.Tasks.RemoveRange(removeTasks);
+
+                        _context.Jobs.Remove(sourceProject);
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return Ok();
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    await transaction.DisposeAsync();
+                    
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                }
+                catch (DbUpdateException ex)
+                {
+                    await transaction.DisposeAsync();
+                    
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    await transaction.DisposeAsync();
+                    
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                }
+                catch (SqlException ex)
+                {
+                    await transaction.DisposeAsync();
+                    
+                    return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                }
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         private User CurrentUser()

@@ -310,6 +310,11 @@ namespace Brizbee.Core.Models
         /// Indicates whether or not the user can delete projects.
         /// </summary>
         public bool CanDeleteProjects { get; set; }
+        
+        /// <summary>
+        /// Indicates whether or not the user can merge projects.
+        /// </summary>
+        public bool CanMergeProjects { get; set; }
 
         /// <summary>
         /// Indicates whether or not the user can view tasks.
