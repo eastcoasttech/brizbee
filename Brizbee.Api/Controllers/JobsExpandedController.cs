@@ -438,6 +438,9 @@ namespace Brizbee.Api.Controllers
             // Ensure that user is authorized.
             if (!currentUser.CanMergeProjects)
                 return Forbid();
+            
+            if (sourceProjectId == destinationProjectId)
+                return BadRequest("The source project and destination project cannot be the same.");
 
             var sourceProject = await _context.Jobs.FindAsync(sourceProjectId);
             var destinationProject = await _context.Jobs.FindAsync(destinationProjectId);

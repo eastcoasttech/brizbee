@@ -197,6 +197,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: odata/Tasks/NextNumber
+        [HttpPost]
         public IActionResult NextNumber()
         {
             var organizationId = CurrentUser().OrganizationId;

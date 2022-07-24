@@ -1,0 +1,98 @@
+﻿@page "/dialogs/merge"
+
+@using System.Timers
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Models
+
+@inject DialogService dialogService
+@inject JobService projectService
+
+<form>
+    <div class="form-group">
+        <label>Search for Destination Project</label>
+        <input type="text" class="form-control" @bind="projectQuery" @onkeyup="SearchProjects" @oninput="@((e) => { projectQuery = (string)e.Value; })" placeholder="Search and Select a Project" />
+        <i class="@((searchProjectsWorking == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+        @if (projectResults.Count > 0)
+        {
+            <p style="margin-top: 10px; margin-bottom: 0;"><strong>Search Results</strong></p>
+            <ul class="list-unstyled" style="margin-top: 5px; margin-bottom: 5px;">
+                @foreach (var project in projectResults)
+                {
+                    <li>@project.Number &ndash; @project.Name / @project.Customer.Number &ndash; @project.Customer.Name  <a href="javascript:void(0)" @onclick="@((e) => { projectFilters.Add(project); projectResults.Clear(); projectQuery = ""; })">Select</a></li>
+                }
+            </ul>
+        }
+
+        @if (projectFilters.Count > 0)
+        {
+            <p style="margin-top: 10px; margin-bottom: 0;"><strong>Selected Jobs</strong></p>
+            <ul class="list-unstyled" style="margin-top: 5px; margin-bottom: 5px;">
+                @foreach (var project in projectFilters)
+                {
+                    <li>@project.Number &ndash; @project.Name <a href="javascript:void(0)" @onclick="@((e) => projectFilters.Remove(project))">Remove</a></li>
+                }
+            </ul>
+        }
+    </div>
+
+    <hr />
+
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">Merge</button>
+</form>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private List<Job> projectFilters = new List<Job>();
+    private List<Job> projectResults = new List<Job>();
+    private string projectQuery = "";
+    private bool searchProjectsWorking = false;
+    private Timer projectQueryTimer;
+    private bool loading = false;
+    private bool working = false;
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void SearchProjects(KeyboardEventArgs args)
+    {
+        // Reset the timer if already counting.
+        if (projectQueryTimer != null)
+            projectQueryTimer.Stop();
+
+        // Create a new timer if one does not exist.
+        if (projectQueryTimer == null || projectQueryTimer.Interval != 500)
+        {
+            projectQueryTimer = new Timer();
+            projectQueryTimer.Elapsed += NotifyProjectQueryTimerElapsed;
+            projectQueryTimer.Interval = 500;
+        }
+
+        projectQueryTimer.Start();
+    }
+
+    private async void NotifyProjectQueryTimerElapsed(Object source, ElapsedEventArgs e)
+    {
+        // Stop the timer.
+        projectQueryTimer.Stop();
+
+        if (projectQuery.Length <= 2)
+            return;
+
+        searchProjectsWorking = true;
+        StateHasChanged();
+
+        projectResults.Clear();
+        StateHasChanged();
+
+        projectResults = await projectService.SearchJobsAsync(projectQuery);
+        StateHasChanged();
+
+        searchProjectsWorking = false;
+        StateHasChanged();
+    }
+}
