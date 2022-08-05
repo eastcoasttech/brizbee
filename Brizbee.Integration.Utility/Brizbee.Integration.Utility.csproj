@@ -33,7 +33,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>5</ApplicationRevision>
     <ApplicationVersion>2.3.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -214,6 +214,7 @@
     <Compile Include="ViewModels\InventoryConsumptions\SyncViewModel.cs" />
     <Compile Include="ViewModels\InventoryItems\OptionsViewModel.cs" />
     <Compile Include="ViewModels\InventoryItems\SyncViewModel.cs" />
+    <Compile Include="ViewModels\Projects\OptionsViewModel.cs" />
     <Compile Include="ViewModels\Projects\SyncViewModel.cs" />
     <Compile Include="ViewModels\Reverse\ConfirmReverseConsumptionsViewModel.cs" />
     <Compile Include="ViewModels\Reverse\ConfirmReversePunchesViewModel.cs" />
@@ -246,6 +247,9 @@
     <Compile Include="ViewModels\Punches\ViewPunchesViewModel.cs" />
     <Compile Include="Views\Projects\ConfirmPage.xaml.cs">
       <DependentUpon>ConfirmPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Projects\OptionsPage.xaml.cs">
+      <DependentUpon>OptionsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Projects\SyncPage.xaml.cs">
       <DependentUpon>SyncPage.xaml</DependentUpon>
@@ -290,6 +294,10 @@
     <Page Include="Views\Projects\ConfirmPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Projects\OptionsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Projects\SyncPage.xaml">
       <Generator>MSBuild:Compile</Generator>

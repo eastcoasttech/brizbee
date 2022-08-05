@@ -30,7 +30,6 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -39,24 +38,34 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
 {
     public class SyncViewModel : INotifyPropertyChanged
     {
-        #region Public Fields
         public bool IsExitEnabled { get; set; }
-        public bool IsTryEnabled { get; set; }
-        public bool IsStartOverEnabled { get; set; }
-        public string StatusText { get; set; }
-        public int AddErrorCount { get; set; }
-        public int ValidationErrorCount { get; set; }
-        public int SaveErrorCount { get; set; }
-        public event PropertyChangedEventHandler PropertyChanged;
-        #endregion
 
-        #region Private Fields
+        public bool IsTryEnabled { get; set; }
+
+        public bool IsStartOverEnabled { get; set; }
+
+        public string StatusText { get; set; }
+
+        public int AddErrorCount { get; set; }
+
+        public int ValidationErrorCount { get; set; }
+
+        public int SaveErrorCount { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
         private RestClient client = Application.Current.Properties["Client"] as RestClient;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        #endregion
+        private string[] selectedStatuses = Application.Current.Properties["SelectedStatuses"] as string[];
 
         public void Sync()
         {
+            if (selectedStatuses.Length == 0)
+            {
+                StatusText = string.Format("{0} - No project status filter has been selected.\r\n", DateTime.Now.ToString());
+                OnPropertyChanged("StatusText");
+                return;
+            }
+
             // Disable the buttons.
             IsExitEnabled = false;
             IsTryEnabled = false;
@@ -250,8 +259,17 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
             StatusText += string.Format("{0} - Getting projects from server.\r\n", DateTime.Now.ToString());
             OnPropertyChanged("StatusText");
 
+            var statusFilters = new string[selectedStatuses.Length];
+
+            for (int i = 0; i < selectedStatuses.Length; i++) 
+            {
+                statusFilters[i] = $"Status eq '{selectedStatuses[i]}'";
+            }
+
+            var joinedStatusFilters = string.Join(" or ", statusFilters);
+
             // Build request.
-            var request = new RestRequest("odata/Jobs?$select=QuickBooksCustomerJob&$filter=(QuickBooksCustomerJob ne null)", Method.GET);
+            var request = new RestRequest($"odata/Jobs?$select=QuickBooksCustomerJob&$filter=(QuickBooksCustomerJob ne null and ({joinedStatusFilters}))", Method.GET);
 
             // Execute request.
             var response = client.Execute<ODataResponse<Job>>(request);

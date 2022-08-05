@@ -71,7 +71,7 @@ namespace Brizbee.Integration.Utility.Views
 
         private void SyncProjectsButton_Click(object sender, RoutedEventArgs e)
         {
-            NavigationService.Navigate(new Uri("Views/Projects/ConfirmPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("Views/Projects/OptionsPage.xaml", UriKind.Relative));
         }
     }
 }

@@ -23,7 +23,7 @@
 
 using System.ComponentModel;
 
-namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
+namespace Brizbee.Integration.Utility.ViewModels.Projects
 {
     public class OptionsViewModel : INotifyPropertyChanged
     {
