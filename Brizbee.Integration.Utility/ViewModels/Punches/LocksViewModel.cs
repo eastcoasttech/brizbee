@@ -60,7 +60,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             OnPropertyChanged("IsContinueEnabled");
 
             // Build request to retrieve commits
-            var request = new RestRequest("api/Locks?orderBy=LOCK/INAT&orderByDirection=DESC", Method.GET);
+            var request = new RestRequest("api/Locks?orderBy=LOCK/INAT&orderByDirection=DESC", Method.Get);
 
             // Execute request to retrieve authenticated user
             var response = await client.ExecuteAsync<List<Commit>>(request);

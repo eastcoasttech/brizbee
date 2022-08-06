@@ -177,7 +177,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             var commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
             // Build request to retrieve punches
-            var request = new RestRequest("odata/Punches", Method.GET);
+            var request = new RestRequest("odata/Punches", Method.Get);
             request.AddParameter("$count", "true");
             request.AddParameter("$expand", "User,Task($expand=Job($expand=Customer))");
             request.AddParameter("$filter", string.Format("CommitId eq {0}", commit.Id));
@@ -186,7 +186,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             request.AddParameter("$orderby", string.Format("{0} {1}", PunchesSortColumn, PunchesSortDirection));
 
             // Execute request to retrieve punches
-            var response = await client.ExecuteTaskAsync(request);
+            var response = await client.ExecuteAsync(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                 (response.StatusCode == System.Net.HttpStatusCode.OK))
             {

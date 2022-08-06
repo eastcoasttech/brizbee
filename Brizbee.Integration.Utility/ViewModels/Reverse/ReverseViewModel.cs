@@ -162,7 +162,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                 // Build the request.
                 if (reverseTransactionType == "Consumption")
                 {
-                    var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptionSyncs/Reverse", Method.POST);
+                    var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptionSyncs/Reverse", Method.Post);
                     syncHttpRequest.AddQueryParameter("id", syncId);
 
                     // Execute request.

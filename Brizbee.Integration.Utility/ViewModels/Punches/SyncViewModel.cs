@@ -218,7 +218,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 };
 
                 // Build the request to send the export details.
-                var syncHttpRequest = new RestRequest("odata/QuickBooksDesktopExports", Method.POST);
+                var syncHttpRequest = new RestRequest("odata/QuickBooksDesktopExports", Method.Post);
                 syncHttpRequest.AddJsonBody(payload);
 
                 // Execute request.
@@ -322,7 +322,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             OnPropertyChanged("StatusText");
 
             // Build request to retrieve punches
-            var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.GET);
+            var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.Get);
 
             // Execute request to retrieve punches
             var response = client.Execute<List<Punch>>(request);

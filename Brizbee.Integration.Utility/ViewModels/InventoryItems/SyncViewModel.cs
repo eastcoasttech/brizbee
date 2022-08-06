@@ -194,7 +194,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
                 };
 
                 // Build the request to send the sync details.
-                var syncHttpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.POST);
+                var syncHttpRequest = new RestRequest("api/QBDInventoryItems/Sync", Method.Post);
                 syncHttpRequest.AddJsonBody(payload);
                 syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
                 syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);

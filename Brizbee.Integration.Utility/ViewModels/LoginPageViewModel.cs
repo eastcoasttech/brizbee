@@ -66,7 +66,7 @@ namespace Brizbee.Integration.Utility.ViewModels
             OnPropertyChanged("IsEnabled");
 
             // Build request to authenticate user
-            var request = new RestRequest("api/Auth/Authenticate", Method.POST);
+            var request = new RestRequest("api/Auth/Authenticate", Method.Post);
             request.AddJsonBody(new
             {
                 Method = "EMAIL",
@@ -106,7 +106,7 @@ namespace Brizbee.Integration.Utility.ViewModels
         private async System.Threading.Tasks.Task LoadUser()
         {
             // Build request to retrieve authenticated user
-            var request = new RestRequest("api/Auth/Me", Method.GET);
+            var request = new RestRequest("api/Auth/Me", Method.Get);
 
             // Execute request to retrieve authenticated user
             var response = await _client.ExecuteAsync<User>(request);

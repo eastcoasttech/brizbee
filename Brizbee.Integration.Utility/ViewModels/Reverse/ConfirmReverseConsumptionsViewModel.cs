@@ -55,7 +55,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
             OnPropertyChanged("IsContinueEnabled");
 
             // Build request to get syncs.
-            var request = new RestRequest("api/QBDInventoryConsumptionSyncs?orderby=QBDINVENTORYCONSUMPTIONSYNCS/CREATEDAT&orderByDirection=DESC", Method.GET);
+            var request = new RestRequest("api/QBDInventoryConsumptionSyncs?orderby=QBDINVENTORYCONSUMPTIONSYNCS/CREATEDAT&orderByDirection=DESC", Method.Get);
 
             // Execute request.
             var response = await client.ExecuteAsync<List<QBDInventoryConsumptionSync>>(request);

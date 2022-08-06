@@ -269,7 +269,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
             var joinedStatusFilters = string.Join(" or ", statusFilters);
 
             // Build request.
-            var request = new RestRequest($"odata/Jobs?$select=QuickBooksCustomerJob&$filter=(QuickBooksCustomerJob ne null and ({joinedStatusFilters}))", Method.GET);
+            var request = new RestRequest($"odata/Jobs?$select=QuickBooksCustomerJob&$filter=(QuickBooksCustomerJob ne null and ({joinedStatusFilters}))", Method.Get);
 
             // Execute request.
             var response = client.Execute<ODataResponse<Job>>(request);

@@ -284,7 +284,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         };
 
                         // Build the request to send the sync details.
-                        var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.POST);
+                        var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.Post);
                         syncHttpRequest.AddJsonBody(payload);
                         syncHttpRequest.AddQueryParameter("recordingMethod", selectedMethod);
                         syncHttpRequest.AddQueryParameter("valueMethod", selectedValue);
@@ -370,7 +370,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             OnPropertyChanged("StatusText");
 
             // Build the request to get unsynced consumption.
-            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.GET);
+            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.Get);
             request.AddHeader("X-Paging-PageNumber", "1");
             request.AddHeader("X-Paging-PageSize", "1000");
 
