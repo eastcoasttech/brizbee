@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Testing\WARNING DROP OBJECTS.sql" />
+    <EmbeddedResource Include="Testing\WARNING DROP OBJECTS.sql" />
   </ItemGroup>
 
 </Project>

@@ -1,14 +1,17 @@
 ﻿
 -- Drop Tables
-DROP TABLE [dbo].[Punches];
-DROP TABLE [dbo].[Commits];
-DROP TABLE [dbo].[TimesheetEntries];
-DROP TABLE [dbo].[Tasks];
-DROP TABLE [dbo].[Jobs];
-DROP TABLE [dbo].[Customers];
-DROP TABLE [dbo].[QuickBooksDesktopExports];
-DROP TABLE [dbo].[QuickBooksOnlineExports];
-DROP TABLE [dbo].[Rates];
-DROP TABLE [dbo].[TaskTemplates];
-DROP TABLE [dbo].[Users];
-DROP TABLE [dbo].[Organizations];
+DROP TABLE IF EXISTS [dbo].[Entries];
+DROP TABLE IF EXISTS [dbo].[Transactions];
+DROP TABLE IF EXISTS [dbo].[Accounts];
+DROP TABLE IF EXISTS [dbo].[Punches];
+DROP TABLE IF EXISTS [dbo].[Commits];
+DROP TABLE IF EXISTS [dbo].[TimesheetEntries];
+DROP TABLE IF EXISTS [dbo].[Tasks];
+DROP TABLE IF EXISTS [dbo].[Jobs];
+DROP TABLE IF EXISTS [dbo].[Customers];
+DROP TABLE IF EXISTS [dbo].[QuickBooksDesktopExports];
+DROP TABLE IF EXISTS [dbo].[QuickBooksOnlineExports];
+DROP TABLE IF EXISTS [dbo].[Rates];
+DROP TABLE IF EXISTS [dbo].[TaskTemplates];
+DROP TABLE IF EXISTS [dbo].[Users];
+DROP TABLE IF EXISTS [dbo].[Organizations];

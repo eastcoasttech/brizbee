@@ -1,4 +1,7 @@
 ﻿ALTER TABLE [dbo].[QBDInventoryItems]
+	ADD [OrganizationId] INT NULL;
+
+ALTER TABLE [dbo].[QBDInventoryItems]
 ADD
     CONSTRAINT [FK_QBDInventoryItems_OrganizationId]
     FOREIGN KEY ([OrganizationId])

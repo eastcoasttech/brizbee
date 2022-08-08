@@ -31,26 +31,50 @@ namespace Brizbee.Api.Tests
             : base(options)
         {
         }
+        
+        public DbSet<Account>? Accounts { get; set; }
 
-        public DbSet<Commit> Commits { get; set; }
-        public DbSet<Customer> Customers { get; set; }
-        public DbSet<Job> Jobs { get; set; }
-        public DbSet<Organization> Organizations { get; set; }
-        public DbSet<Punch> Punches { get; set; }
-        public DbSet<QuickBooksDesktopExport> QuickBooksDesktopExports { get; set; }
-        public DbSet<QuickBooksOnlineExport> QuickBooksOnlineExports { get; set; }
-        public DbSet<QBDInventoryConsumption> QBDInventoryConsumptions { get; set; }
-        public DbSet<QBDInventoryConsumptionSync> QBDInventoryConsumptionSyncs { get; set; }
-        public DbSet<QBDInventoryItem> QBDInventoryItems { get; set; }
-        public DbSet<QBDInventoryItemSync> QBDInventoryItemSyncs { get; set; }
-        public DbSet<QBDInventorySite> QBDInventorySites { get; set; }
-        public DbSet<QBDUnitOfMeasureSet> QBDUnitOfMeasureSets { get; set; }
-        public DbSet<PopulateTemplate> PopulateTemplates { get; set; }
-        public DbSet<Rate> Rates { get; set; }
-        public DbSet<Brizbee.Core.Models.Task> Tasks { get; set; }
-        public DbSet<TaskTemplate> TaskTemplates { get; set; }
-        public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<Commit>? Commits { get; set; }
+
+        public DbSet<Customer>? Customers { get; set; }
+        
+        public DbSet<Entry>? Entries { get; set; }
+
+        public DbSet<Job>? Jobs { get; set; }
+
+        public DbSet<Organization>? Organizations { get; set; }
+
+        public DbSet<Punch>? Punches { get; set; }
+
+        public DbSet<QuickBooksDesktopExport>? QuickBooksDesktopExports { get; set; }
+
+        public DbSet<QuickBooksOnlineExport>? QuickBooksOnlineExports { get; set; }
+
+        public DbSet<QBDInventoryConsumption>? QBDInventoryConsumptions { get; set; }
+
+        public DbSet<QBDInventoryConsumptionSync>? QBDInventoryConsumptionSyncs { get; set; }
+
+        public DbSet<QBDInventoryItem>? QBDInventoryItems { get; set; }
+
+        public DbSet<QBDInventoryItemSync>? QBDInventoryItemSyncs { get; set; }
+
+        public DbSet<QBDInventorySite>? QBDInventorySites { get; set; }
+
+        public DbSet<QBDUnitOfMeasureSet>? QBDUnitOfMeasureSets { get; set; }
+
+        public DbSet<PopulateTemplate>? PopulateTemplates { get; set; }
+
+        public DbSet<Rate>? Rates { get; set; }
+
+        public DbSet<Core.Models.Task>? Tasks { get; set; }
+
+        public DbSet<TaskTemplate>? TaskTemplates { get; set; }
+
+        public DbSet<TimesheetEntry>? TimesheetEntries { get; set; }
+
+        public DbSet<Transaction>? Transactions { get; set; }
+
+        public DbSet<User>? Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -74,6 +98,11 @@ namespace Brizbee.Api.Tests
 
             modelBuilder.Entity<QBDInventoryItem>()
                 .Property(o => o.PurchaseCost)
+                .HasColumnType("decimal(10,2)")
+                .HasPrecision(10, 2);
+            
+            modelBuilder.Entity<Entry>()
+                .Property(x => x.Amount)
                 .HasColumnType("decimal(10,2)")
                 .HasPrecision(10, 2);
         }
