@@ -47,7 +47,7 @@ namespace Brizbee.Api.Tests
 
             var dropSql = "";
             
-            var assembly = Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetAssembly(typeof(Core.Models.Account));
 
             var resourceName = assembly!.GetManifestResourceNames()
                 .Single(str => str.EndsWith("WARNING DROP OBJECTS.sql"));

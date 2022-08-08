@@ -252,6 +252,9 @@ namespace Brizbee.Api.Tests
 
         public void Cleanup()
         {
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Entries]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Transactions]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Accounts]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Punches]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Commits]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TimesheetEntries]");
