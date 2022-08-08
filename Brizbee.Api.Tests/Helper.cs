@@ -250,7 +250,9 @@ namespace Brizbee.Api.Tests
                     Number = "10000",
                     Type = "Bank",
                     Name = "Capital One Spark Checking",
-                    Description = "The business bank account."
+                    Description = "The business bank account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
                 };
                 _context.Accounts!.Add(account);
                 _context.SaveChanges();

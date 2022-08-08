@@ -69,7 +69,7 @@ namespace Brizbee.Api.Controllers
             {
                 return BadRequest();
             }
-
+            
             var account = await _context.Accounts!.FindAsync(id);
             if (account == null)
             {
@@ -141,7 +141,7 @@ namespace Brizbee.Api.Controllers
 
         // DELETE api/Accounts/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAccount(int id)
+        public async Task<IActionResult> DeleteAccount(long id)
         {
             var account = await _context.Accounts!.FindAsync(id);
 

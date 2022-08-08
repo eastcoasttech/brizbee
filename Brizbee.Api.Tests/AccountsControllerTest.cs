@@ -151,8 +151,8 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             var accountId = _context.Accounts!
-                .Where(c => c.Number == "10000")
-                .Select(c => c.Id)
+                .Where(x => x.Number == "10000")
+                .Select(x => x.Id)
                 .FirstOrDefault();
 
             var response = await client.GetAsync($"api/Accounts/{accountId}");
@@ -199,9 +199,9 @@ namespace Brizbee.Api.Tests
 
             var content = new
             {
-                Number = "10000",
+                Number = "1000",
                 Type = "Bank",
-                Name = "Capital One Spark Checking",
+                Name = "Truliant Checking",
                 Description = ""
             };
             var json = JsonSerializer.Serialize(content, options);
@@ -271,6 +271,143 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             Assert.IsFalse(response.IsSuccessStatusCode);
+        }
+        
+        [TestMethod]
+        public async System.Threading.Tasks.Task UpdateAccount_Valid_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var accountId = _context.Accounts!
+                .Where(x => x.Number == "10000")
+                .Select(x => x.Id)
+                .FirstOrDefault();
+
+            var changes = new
+            {
+                Id = accountId,
+                Name = "Wells Fargo Checking",
+                Number = "1001",
+                Description = "My updated description."
+            };
+            var jsonChanges = JsonSerializer.Serialize(changes, options);
+            var bufferChanges = Encoding.UTF8.GetBytes(jsonChanges);
+            var byteContentChanges = new ByteArrayContent(bufferChanges);
+            byteContentChanges.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseUpdate = await client.PutAsync($"api/Accounts/{accountId}", byteContentChanges);
+
+
+            // ----------------------------------------------------------------
+            // Assert again
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseUpdate.IsSuccessStatusCode);
+
+            var updatedAccount = await _context.Accounts!.FindAsync(accountId);
+
+            Assert.AreEqual("Wells Fargo Checking", updatedAccount!.Name);
+            Assert.AreEqual("1001", updatedAccount.Number);
+            Assert.AreEqual("My updated description.", updatedAccount.Description);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task DeleteAccount_Valid_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var content = new
+            {
+                Number = "1000",
+                Type = "Bank",
+                Name = "Truliant Checking",
+                Description = ""
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var responseCreate = await client.PostAsync($"api/Accounts", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseCreate.IsSuccessStatusCode);
+
+
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            var accountId = _context.Accounts!
+                .Where(x => x.Number == "10000")
+                .Select(x => x.Id)
+                .FirstOrDefault();
+
+            var responseDelete = await client.DeleteAsync($"api/Accounts/{accountId}");
+
+
+            // ----------------------------------------------------------------
+            // Assert again
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseDelete.IsSuccessStatusCode);
         }
 
         private string GenerateJSONWebToken(int userId, string emailAddress)
