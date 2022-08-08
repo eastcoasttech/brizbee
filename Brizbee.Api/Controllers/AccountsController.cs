@@ -49,7 +49,7 @@ namespace Brizbee.Api.Controllers
 
         // GET api/Accounts/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Account>> GetAccount(int id)
+        public async Task<ActionResult<Account>> GetAccount(long id)
         {
             var account = await _context.Accounts!.FindAsync(id);
 
@@ -78,6 +78,7 @@ namespace Brizbee.Api.Controllers
 
             account.Name = accountDTO.Name;
             account.Number = accountDTO.Number;
+            account.Description = accountDTO.Description;
 
             try
             {
@@ -95,9 +96,38 @@ namespace Brizbee.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Account>> CreateAccount([FromBody] Account accountDTO)
         {
+            var currentUser = CurrentUser();
+
+            var validTypes = new string[]
+            {
+                "Bank",
+                "Accounts Receivable",
+                "Other Current Asset",
+                "Fixed Asset",
+                "Other Asset",
+                "Expense",
+                "Other Expense",
+                "Accounts Payable",
+                "Credit Card",
+                "Other Current Liability",
+                "Long Term Liability",
+                "Equity",
+                "Income",
+                "Cost of Goods Sold",
+                "Other Income"
+            };
+
+            if (!validTypes.Contains(accountDTO.Type))
+                return BadRequest();
+
             var account = new Account
             {
-                Name = accountDTO.Name
+                Name = accountDTO.Name,
+                Description = accountDTO.Description,
+                CreatedAt = DateTime.UtcNow,
+                Number = accountDTO.Number,
+                OrganizationId = currentUser.OrganizationId,
+                Type = accountDTO.Type
             };
 
             _context.Accounts!.Add(account);

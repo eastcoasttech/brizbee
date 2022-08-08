@@ -49,7 +49,7 @@ namespace Brizbee.Api.Controllers
 
         // GET api/Transactions/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Transaction>> GetTransaction(int id)
+        public async Task<ActionResult<Transaction>> GetTransaction(long id)
         {
             var transaction = await _context.Transactions!.FindAsync(id);
 

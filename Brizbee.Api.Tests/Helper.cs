@@ -71,7 +71,7 @@ namespace Brizbee.Api.Tests
                     ShowProjectNumber = true,
                     ShowTaskNumber = true
                 };
-                _context.Organizations.Add(organization);
+                _context.Organizations!.Add(organization);
                 _context.SaveChanges();
 
                 // ----------------------------------------------------------------
@@ -119,7 +119,7 @@ namespace Brizbee.Api.Tests
                     CanModifyPunches = true,
                     CanViewPunches = true
                 };
-                _context.Users.Add(user);
+                _context.Users!.Add(user);
                 _context.SaveChanges();
 
 
@@ -134,7 +134,7 @@ namespace Brizbee.Api.Tests
                     Name = "General Electric",
                     OrganizationId = organization.Id
                 };
-                _context.Customers.Add(customer);
+                _context.Customers!.Add(customer);
                 _context.SaveChanges();
 
 
@@ -156,7 +156,7 @@ namespace Brizbee.Api.Tests
                     CustomerId = customerId,
                     Status = "Open"
                 };
-                _context.Jobs.Add(project);
+                _context.Jobs!.Add(project);
                 _context.SaveChanges();
 
 
@@ -175,7 +175,7 @@ namespace Brizbee.Api.Tests
                     Name = "Installation",
                     JobId = jobId
                 };
-                _context.Tasks.Add(task);
+                _context.Tasks!.Add(task);
                 _context.SaveChanges();
 
 
@@ -192,7 +192,7 @@ namespace Brizbee.Api.Tests
                     Guid = Guid.NewGuid(),
                     UserId = user.Id
                 };
-                _context.Punches.Add(punch);
+                _context.Punches!.Add(punch);
                 _context.SaveChanges();
 
 
@@ -214,7 +214,7 @@ namespace Brizbee.Api.Tests
                     HostProductName = "PRODUCT NAME",
                     HostSupportedQBXMLVersion = "12"
                 };
-                _context.QBDInventoryItemSyncs.Add(inventoryItemSync);
+                _context.QBDInventoryItemSyncs!.Add(inventoryItemSync);
                 _context.SaveChanges();
 
 
@@ -237,7 +237,22 @@ namespace Brizbee.Api.Tests
                     ManufacturerPartNumber = "28828221",
                     QBDInventoryItemSyncId = inventoryItemSync.Id
                 };
-                _context.QBDInventoryItems.Add(inventoryItem);
+                _context.QBDInventoryItems!.Add(inventoryItem);
+                _context.SaveChanges();
+
+
+                // ----------------------------------------------------------------
+                // Scaffold some accounts.
+                // ----------------------------------------------------------------
+
+                var account = new Account()
+                {
+                    Number = "10000",
+                    Type = "Bank",
+                    Name = "Capital One Spark Checking",
+                    Description = "The business bank account."
+                };
+                _context.Accounts!.Add(account);
                 _context.SaveChanges();
             }
             catch (DbUpdateException ex)
@@ -255,12 +270,35 @@ namespace Brizbee.Api.Tests
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Entries]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Transactions]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Accounts]");
+
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Punches]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[PunchAudits]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Commits]");
+
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TimesheetEntries]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TimeCardAudits]");
+
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Tasks]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Jobs]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Customers]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QBDInventoryConsumptionSyncs]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QBDInventoryConsumptions]");
+
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QBDInventoryItemSyncs]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QBDInventoryItems]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QBDInventorySites]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QBDUnitOfMeasureSets]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QuickBooksDesktopExports]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[QuickBooksOnlineExports]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Rates]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TaskTemplates]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[PopulateTemplates]");
+
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Users]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Organizations]");
         }

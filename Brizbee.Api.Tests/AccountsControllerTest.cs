@@ -77,7 +77,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task GetAccounts_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task GetAccounts_Vaild_Succeeds()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -119,7 +119,54 @@ namespace Brizbee.Api.Tests
         }
         
         [TestMethod]
-        public async System.Threading.Tasks.Task CreateAccount_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task GetAccount_Vaild_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var accountId = _context.Accounts!
+                .Where(c => c.Number == "10000")
+                .Select(c => c.Id)
+                .FirstOrDefault();
+
+            var response = await client.GetAsync($"api/Accounts/{accountId}");
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateAccount_Valid_Succeeds()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -170,6 +217,60 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             Assert.IsTrue(response.IsSuccessStatusCode);
+        }
+        
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateAccount_InvalidType_Fails()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var content = new
+            {
+                Number = "10000",
+                Type = "Invalid Type",
+                Name = "Capital One Spark Checking",
+                Description = ""
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Accounts", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsFalse(response.IsSuccessStatusCode);
         }
 
         private string GenerateJSONWebToken(int userId, string emailAddress)
