@@ -120,6 +120,12 @@ namespace Brizbee.Api.Controllers
             if (!validTypes.Contains(accountDTO.Type))
                 return BadRequest();
 
+            if (DuplicateNameExists(accountDTO.Name))
+                return BadRequest();
+            
+            if (DuplicateNumberExists(accountDTO.Number))
+                return BadRequest();
+
             var account = new Account
             {
                 Name = accountDTO.Name,
@@ -159,6 +165,16 @@ namespace Brizbee.Api.Controllers
         private bool AccountExists(long id)
         {
             return _context.Accounts!.Any(x => x.Id == id);
+        }
+
+        private bool DuplicateNameExists(string name)
+        {
+            return _context.Accounts!.Any(x => x.Name == name);
+        }
+
+        private bool DuplicateNumberExists(int number)
+        {
+            return _context.Accounts!.Any(x => x.Number == number);
         }
 
         private User CurrentUser()

@@ -247,7 +247,7 @@ namespace Brizbee.Api.Tests
 
                 var account = new Account()
                 {
-                    Number = "10000",
+                    Number = 10000,
                     Type = "Bank",
                     Name = "Capital One Spark Checking",
                     Description = "The business bank account.",
@@ -275,7 +275,6 @@ namespace Brizbee.Api.Tests
 
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Punches]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[PunchAudits]");
-            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Commits]");
 
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TimesheetEntries]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TimeCardAudits]");
@@ -300,7 +299,8 @@ namespace Brizbee.Api.Tests
             
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[TaskTemplates]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[PopulateTemplates]");
-
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Commits]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Users]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Organizations]");
         }

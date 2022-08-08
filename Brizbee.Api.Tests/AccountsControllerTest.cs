@@ -151,7 +151,7 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             var accountId = _context.Accounts!
-                .Where(x => x.Number == "10000")
+                .Where(x => x.Number == 10000)
                 .Select(x => x.Id)
                 .FirstOrDefault();
 
@@ -305,7 +305,7 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             var accountId = _context.Accounts!
-                .Where(x => x.Number == "10000")
+                .Where(x => x.Number == 10000)
                 .Select(x => x.Id)
                 .FirstOrDefault();
 
@@ -333,7 +333,7 @@ namespace Brizbee.Api.Tests
             var updatedAccount = await _context.Accounts!.FindAsync(accountId);
 
             Assert.AreEqual("Wells Fargo Checking", updatedAccount!.Name);
-            Assert.AreEqual("1001", updatedAccount.Number);
+            Assert.AreEqual(1001, updatedAccount.Number);
             Assert.AreEqual("My updated description.", updatedAccount.Description);
         }
 
@@ -396,7 +396,7 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             var accountId = _context.Accounts!
-                .Where(x => x.Number == "10000")
+                .Where(x => x.Number == 10000)
                 .Select(x => x.Id)
                 .FirstOrDefault();
 

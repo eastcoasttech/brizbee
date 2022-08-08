@@ -43,8 +43,7 @@ namespace Brizbee.Core.Models
         public string Name { get; set; } = string.Empty;
         
         [Required]
-        [StringLength(20)]
-        public string Number { get; set; } = string.Empty;
+        public int Number { get; set; }
 
         [Required]
         public int OrganizationId { get; set; }

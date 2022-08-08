@@ -5,7 +5,7 @@ CREATE TABLE [dbo].[Accounts]
         [Description]    VARCHAR (120) NOT NULL,
         [Id]             BIGINT        IDENTITY (1, 1) NOT NULL,
         [Name]           VARCHAR (40)  NOT NULL,
-        [Number]         VARCHAR (20)  NOT NULL,
+        [Number]         INT           NOT NULL,
         [OrganizationId] INT           NOT NULL,
         [Type]           VARCHAR (30)  NOT NULL,
         CONSTRAINT [PK_Accounts]
