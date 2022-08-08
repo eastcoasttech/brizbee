@@ -43,6 +43,8 @@ namespace Brizbee.Core.Models
         public string Name { get; set; } = string.Empty;
         
         [Required]
+        [MinLength(1000)]
+        [MaxLength(100000)]
         public int Number { get; set; }
 
         [Required]
@@ -61,40 +63,29 @@ namespace Brizbee.Core.Models
             {
                 switch (Type)
                 {
+                    // Types with normal debit balance
                     case "Bank":
-                        return "Debit";
                     case "Accounts Receivable":
-                        return "Debit";
                     case "Other Current Asset":
-                        return "Debit";
                     case "Fixed Asset":
-                        return "Debit";
                     case "Other Asset":
-                        return "Debit";
                     case "Expense":
-                        return "Debit";
                     case "Other Expense":
                         return "Debit";
 
+                    // Types with normal credit balance
                     case "Accounts Payable":
-                        return "Credit";
                     case "Credit Card":
-                        return "Credit";
                     case "Other Current Liability":
-                        return "Credit";
                     case "Long Term Liability":
-                        return "Credit";
                     case "Equity":
-                        return "Credit";
                     case "Income":
-                        return "Credit";
                     case "Cost of Goods Sold":
-                        return "Credit";
                     case "Other Income":
                         return "Credit";
 
                     default:
-                        return "";
+                        return string.Empty;
                 }
             }
         }
