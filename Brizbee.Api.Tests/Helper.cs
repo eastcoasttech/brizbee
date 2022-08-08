@@ -245,7 +245,7 @@ namespace Brizbee.Api.Tests
                 // Scaffold some accounts.
                 // ----------------------------------------------------------------
 
-                var account = new Account()
+                var bankAccount = new Account()
                 {
                     Number = 10000,
                     Type = "Bank",
@@ -254,7 +254,55 @@ namespace Brizbee.Api.Tests
                     OrganizationId = organization.Id,
                     CreatedAt = DateTime.UtcNow
                 };
-                _context.Accounts!.Add(account);
+                _context.Accounts!.Add(bankAccount);
+                _context.SaveChanges();
+                
+                var arAccount = new Account()
+                {
+                    Number = 10100,
+                    Type = "Accounts Receivable",
+                    Name = "Accounts Receivable",
+                    Description = "The receivables account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(arAccount);
+                _context.SaveChanges();
+                
+                var salesAccount = new Account()
+                {
+                    Number = 40000,
+                    Type = "Income",
+                    Name = "Sales",
+                    Description = "The sales account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(salesAccount);
+                _context.SaveChanges();
+                
+                var apAccount = new Account()
+                {
+                    Number = 20000,
+                    Type = "Accounts Payable",
+                    Name = "Accounts Payable",
+                    Description = "The payables account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(apAccount);
+                _context.SaveChanges();
+                
+                var phoneExpenseAccount = new Account()
+                {
+                    Number = 60000,
+                    Type = "Expense",
+                    Name = "Phone Expense",
+                    Description = "The phone expense account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(phoneExpenseAccount);
                 _context.SaveChanges();
             }
             catch (DbUpdateException ex)

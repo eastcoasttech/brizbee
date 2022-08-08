@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Core.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,6 +29,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -107,6 +110,74 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             var response = await client.GetAsync($"api/Transactions");
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+        }
+        
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateTransaction_PhoneExpense_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var phoneExpenseAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Phone Expense");
+            var apAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Payable");
+
+            var content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Phone Bill",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = phoneExpenseAccount!.Id,
+                        Amount = 109.57M
+                    },
+                    new Entry()
+                    {
+                        AccountId = apAccount!.Id,
+                        Amount = 109.57M
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
