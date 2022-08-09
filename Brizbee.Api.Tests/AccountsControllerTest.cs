@@ -199,7 +199,7 @@ namespace Brizbee.Api.Tests
 
             var content = new
             {
-                Number = "1000",
+                Number = 1000,
                 Type = "Bank",
                 Name = "Truliant Checking",
                 Description = ""
@@ -371,7 +371,7 @@ namespace Brizbee.Api.Tests
 
             var content = new
             {
-                Number = "1000",
+                Number = 1000,
                 Type = "Bank",
                 Name = "Truliant Checking",
                 Description = ""

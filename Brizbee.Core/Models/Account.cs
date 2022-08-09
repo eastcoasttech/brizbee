@@ -43,8 +43,7 @@ namespace Brizbee.Core.Models
         public string Name { get; set; } = string.Empty;
         
         [Required]
-        [MinLength(1000)]
-        [MaxLength(100000)]
+        [Range(1000, 100000)]
         public int Number { get; set; }
 
         [Required]

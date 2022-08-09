@@ -77,6 +77,8 @@ namespace Brizbee.Api.Controllers
             }
 
             transaction.EnteredOn = transactionDTO.EnteredOn;
+            transaction.ReferenceNumber = transactionDTO.ReferenceNumber;
+            transaction.Description = transactionDTO.Description;
 
             try
             {
@@ -96,12 +98,24 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
+            // Validate that all the debits and credits equal
+            // and do not add up to zero.
+            var creditSum = transactionDTO.Entries!.Where(e => e.Type == "C").Sum(e => e.Amount);
+            var debitSum = transactionDTO.Entries!.Where(e => e.Type == "D").Sum(e => e.Amount);
+            
+            if (creditSum != debitSum)
+                return BadRequest();
+            
+            if (creditSum == 0.00M)
+                return BadRequest();
+
             var transaction = new Transaction
             {
                 EnteredOn = transactionDTO.EnteredOn,
                 Description = transactionDTO.Description,
                 CreatedAt = DateTime.UtcNow,
-                OrganizationId = currentUser.OrganizationId
+                OrganizationId = currentUser.OrganizationId,
+                ReferenceNumber = transactionDTO.ReferenceNumber
             };
             
             _context.Transactions!.Add(transaction);
@@ -113,7 +127,9 @@ namespace Brizbee.Api.Controllers
                     AccountId = entryDTO.AccountId,
                     Amount = entryDTO.Amount,
                     CreatedAt = DateTime.UtcNow,
-                    TransactionId = transaction.Id
+                    TransactionId = transaction.Id,
+                    Description = entryDTO.Description,
+                    Type = entryDTO.Type
                 };
                 
                 _context.Entries!.Add(entry);

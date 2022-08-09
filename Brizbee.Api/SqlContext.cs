@@ -93,23 +93,23 @@ namespace Brizbee.Api
             // Configure decimal precision.
             modelBuilder.Entity<QBDInventoryItem>()
                 .Property(o => o.SalesPrice)
-                .HasColumnType("decimal(10,2)")
+                .HasColumnType("DECIMAL (10,2)")
                 .HasPrecision(10, 2);
 
             modelBuilder.Entity<QBDInventoryItem>()
                 .Property(o => o.PurchaseCost)
-                .HasColumnType("decimal(10,2)")
+                .HasColumnType("DECIMAL (10,2)")
                 .HasPrecision(10, 2);
             
             modelBuilder.Entity<Entry>()
                 .Property(x => x.Amount)
-                .HasColumnType("decimal(12,2)")
+                .HasColumnType("DECIMAL (12,2)")
                 .HasPrecision(10, 2);
 
             // Configure computed columns.
             modelBuilder.Entity<Account>()
                 .Property(x => x.NormalBalance)
-                .HasColumnType("decimal(10,2)")
+                .HasColumnType("CHAR (6)")
                 .HasComputedColumnSql();
         }
     }

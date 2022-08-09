@@ -78,7 +78,7 @@ namespace Brizbee.Api.Tests
         }
 
         [TestMethod]
-        public async System.Threading.Tasks.Task GetTransactions_Should_ReturnSuccessfully()
+        public async System.Threading.Tasks.Task GetTransactions_Valid_Succeeds()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -120,7 +120,80 @@ namespace Brizbee.Api.Tests
         }
         
         [TestMethod]
-        public async System.Threading.Tasks.Task CreateTransaction_PhoneExpense_Succeeds()
+        public async System.Threading.Tasks.Task CreateTransaction_ValidPhoneExpense_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var phoneExpenseAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Phone Expense");
+            var apAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Payable");
+
+            var content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Phone Bill",
+                ReferenceNumber = "DEBIT",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = phoneExpenseAccount!.Id,
+                        Amount = 109.57M,
+                        Description = "",
+                        Type = "D"
+                    },
+                    new Entry()
+                    {
+                        AccountId = apAccount!.Id,
+                        Amount = 109.57M,
+                        Description = "",
+                        Type = "C"
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Transactions", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+        }
+        
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateTransaction_ZeroDebitsAndCredits_Fails()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -163,12 +236,12 @@ namespace Brizbee.Api.Tests
                     new Entry()
                     {
                         AccountId = phoneExpenseAccount!.Id,
-                        Amount = 109.57M
+                        Amount = 0.00M
                     },
                     new Entry()
                     {
                         AccountId = apAccount!.Id,
-                        Amount = 109.57M
+                        Amount = 0.00M
                     }
                 }
             };
@@ -184,9 +257,75 @@ namespace Brizbee.Api.Tests
             // Assert
             // ----------------------------------------------------------------
 
-            Assert.IsTrue(response.IsSuccessStatusCode);
+            Assert.IsFalse(response.IsSuccessStatusCode);
+        }
+        
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateTransaction_MismatchingDebitAndCredits_Fails()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
 
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var phoneExpenseAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Phone Expense");
+            var apAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Payable");
+
+            var content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Phone Bill",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = phoneExpenseAccount!.Id,
+                        Amount = 10.00M
+                    },
+                    new Entry()
+                    {
+                        AccountId = apAccount!.Id,
+                        Amount = 20.00M
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Transactions", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsFalse(response.IsSuccessStatusCode);
         }
         
         private string GenerateJSONWebToken(int userId, string emailAddress)
