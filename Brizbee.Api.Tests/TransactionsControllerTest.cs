@@ -21,6 +21,7 @@
 //
 
 using Brizbee.Core.Models;
+using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -174,6 +175,91 @@ namespace Brizbee.Api.Tests
                         Amount = 109.57M,
                         Description = "",
                         Type = "C"
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Transactions", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+
+            var balanceSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+            var balance = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = phoneExpenseAccount!.Id
+                });
+
+            Assert.AreEqual(109.57M, balance);
+        }
+        
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateTransaction_ValidSale_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var salesAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Sales");
+            var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+
+            var content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Sale of Product",
+                ReferenceNumber = "1001",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = salesAccount!.Id,
+                        Amount = 1001.00M,
+                        Description = "",
+                        Type = "C"
+                    },
+                    new Entry()
+                    {
+                        AccountId = arAccount!.Id,
+                        Amount = 1001.00M,
+                        Description = "",
+                        Type = "D"
                     }
                 }
             };

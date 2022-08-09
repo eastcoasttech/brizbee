@@ -145,6 +145,13 @@ AS
         FROM [dbo].[Accounts]
         WHERE
             [Id] = @AccountId;
+            
+        -- Remove nulls from calculation.
+        IF @CreditSum IS NULL
+            SET @CreditSum = 0;
+            
+        IF @DebitSum IS NULL
+            SET @DebitSum = 0;
 
         -- Direction of subtraction depends on normal balance.
         IF @NormalBalance = 'CREDIT'

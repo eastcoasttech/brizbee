@@ -120,6 +120,8 @@ namespace Brizbee.Api.Controllers
             
             _context.Transactions!.Add(transaction);
 
+            await _context.SaveChangesAsync();
+
             foreach (var entryDTO in transactionDTO.Entries!)
             {
                 var entry = new Entry()
