@@ -185,6 +185,8 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             Assert.IsTrue(response.IsSuccessStatusCode);
+
+
         }
         
         private string GenerateJSONWebToken(int userId, string emailAddress)

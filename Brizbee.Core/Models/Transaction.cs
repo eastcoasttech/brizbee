@@ -48,5 +48,9 @@ namespace Brizbee.Core.Models
 
         [ForeignKey("OrganizationId")]
         public virtual Organization? Organization { get; set; }
+        
+        [Required]
+        [StringLength(20)]
+        public string ReferenceNumber { get; set; } = string.Empty;
     }
 }

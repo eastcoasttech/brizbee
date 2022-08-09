@@ -57,37 +57,6 @@ namespace Brizbee.Core.Models
         [StringLength(30)]
         public string Type { get; set; } = string.Empty;
 
-        public string NormalBalance
-        {
-            get
-            {
-                switch (Type)
-                {
-                    // Types with normal debit balance
-                    case "Bank":
-                    case "Accounts Receivable":
-                    case "Other Current Asset":
-                    case "Fixed Asset":
-                    case "Other Asset":
-                    case "Expense":
-                    case "Other Expense":
-                        return "Debit";
-
-                    // Types with normal credit balance
-                    case "Accounts Payable":
-                    case "Credit Card":
-                    case "Other Current Liability":
-                    case "Long Term Liability":
-                    case "Equity":
-                    case "Income":
-                    case "Cost of Goods Sold":
-                    case "Other Income":
-                        return "Credit";
-
-                    default:
-                        return string.Empty;
-                }
-            }
-        }
+        public string NormalBalance { get; set; } = string.Empty;
     }
 }

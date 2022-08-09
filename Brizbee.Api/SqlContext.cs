@@ -78,11 +78,11 @@ namespace Brizbee.Api
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Password is not a column, so should be ignored
+            // Password is not a column, so should be ignored.
             modelBuilder.Entity<User>()
                 .Ignore(u => u.Password);
 
-            // Organization codes should be universally unique
+            // Organization codes should be universally unique.
             modelBuilder.Entity<Organization>()
                 .HasIndex(o => o.Code)
                 .IsUnique();
@@ -90,7 +90,7 @@ namespace Brizbee.Api
             modelBuilder.Entity<Job>()
                 .Ignore(j => j.TaskTemplateId);
 
-            // Configure decimal precision
+            // Configure decimal precision.
             modelBuilder.Entity<QBDInventoryItem>()
                 .Property(o => o.SalesPrice)
                 .HasColumnType("decimal(10,2)")
@@ -103,8 +103,14 @@ namespace Brizbee.Api
             
             modelBuilder.Entity<Entry>()
                 .Property(x => x.Amount)
-                .HasColumnType("decimal(10,2)")
+                .HasColumnType("decimal(12,2)")
                 .HasPrecision(10, 2);
+
+            // Configure computed columns.
+            modelBuilder.Entity<Account>()
+                .Property(x => x.NormalBalance)
+                .HasColumnType("decimal(10,2)")
+                .HasComputedColumnSql();
         }
     }
 }

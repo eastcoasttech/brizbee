@@ -28,17 +28,24 @@ namespace Brizbee.Core.Models
     public class Entry
     {
         [Required]
+        public long AccountId { get; set; }
+
+        [ForeignKey("AccountId")]
+        public virtual Account? Account { get; set; }
+
+        [Required]
         public decimal Amount { get; set; }
 
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
         
+        [StringLength(60)]
+        public string Description { get; set; } = string.Empty;
+        
         [Required]
-        public long AccountId { get; set; }
-
-        [ForeignKey("AccountId")]
-        public virtual Account? Account { get; set; }
+        [StringLength(1)]
+        public string Type { get; set; } = string.Empty;
         
         [Required]
         public long TransactionId { get; set; }
