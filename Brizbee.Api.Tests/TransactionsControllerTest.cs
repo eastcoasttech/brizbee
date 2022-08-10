@@ -154,6 +154,7 @@ namespace Brizbee.Api.Tests
 
             var phoneExpenseAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Phone Expense");
             var apAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Payable");
+            var bankAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Capital One Spark Checking");
 
             var content = new
             {
@@ -192,9 +193,10 @@ namespace Brizbee.Api.Tests
 
             Assert.IsTrue(response.IsSuccessStatusCode);
 
-            var balanceSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
-            var balance = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
-                balanceSql,
+            var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+
+            var balanceOfPhoneExpense = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
                 param: new
                 {
                     MinDate = new DateTime(2022, 8, 1),
@@ -202,7 +204,83 @@ namespace Brizbee.Api.Tests
                     AccountId = phoneExpenseAccount!.Id
                 });
 
-            Assert.AreEqual(109.57M, balance);
+            Assert.AreEqual(109.57M, balanceOfPhoneExpense);
+            
+            var balanceOfAccountsPayable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = apAccount!.Id
+                });
+
+            Assert.AreEqual(109.57M, balanceOfAccountsPayable);
+
+            
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Phone Bill",
+                ReferenceNumber = "DEBIT",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = apAccount!.Id,
+                        Amount = 109.57M,
+                        Description = "",
+                        Type = "D"
+                    },
+                    new Entry()
+                    {
+                        AccountId = bankAccount!.Id,
+                        Amount = 109.57M,
+                        Description = "",
+                        Type = "C"
+                    }
+                }
+            };
+            json = JsonSerializer.Serialize(content, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Transactions", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert again
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+
+            balanceOfAccountsPayable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = apAccount!.Id
+                });
+
+            Assert.AreEqual(0.00M, balanceOfAccountsPayable);
+            
+            var balanceOfBankAccount = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = bankAccount!.Id
+                });
+            
+            Assert.AreNotEqual(0.00M, balanceOfBankAccount);
+            Assert.AreEqual(-109.57M, balanceOfBankAccount);
         }
         
         [TestMethod]
