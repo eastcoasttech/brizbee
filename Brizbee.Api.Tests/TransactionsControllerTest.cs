@@ -27,6 +27,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Stripe;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -317,6 +318,7 @@ namespace Brizbee.Api.Tests
 
             var salesAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Sales");
             var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+            var bankAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Capital One Spark Checking");
 
             var content = new
             {
@@ -354,8 +356,306 @@ namespace Brizbee.Api.Tests
             // ----------------------------------------------------------------
 
             Assert.IsTrue(response.IsSuccessStatusCode);
+
+            var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+
+            var balanceOfSalesAccount = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = salesAccount!.Id
+                });
+
+            Assert.AreEqual(1001.00M, balanceOfSalesAccount);
+            
+            var balanceOfAccountsReceivable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = arAccount!.Id
+                });
+
+            Assert.AreEqual(1001.00M, balanceOfAccountsReceivable);
+
+            
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Deposit",
+                ReferenceNumber = "1001",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = arAccount!.Id,
+                        Amount = 1001.00M,
+                        Description = "",
+                        Type = "C"
+                    },
+                    new Entry()
+                    {
+                        AccountId = bankAccount!.Id,
+                        Amount = 1001.00M,
+                        Description = "",
+                        Type = "D"
+                    }
+                }
+            };
+            json = JsonSerializer.Serialize(content, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Transactions", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Assert again
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+
+            balanceOfAccountsReceivable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = arAccount!.Id
+                });
+
+            Assert.AreEqual(0.00M, balanceOfAccountsReceivable);
+            
+            var balanceOfBankAccount = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = bankAccount!.Id
+                });
+            
+            Assert.AreNotEqual(0.00M, balanceOfBankAccount);
+            Assert.AreEqual(1001.00M, balanceOfBankAccount);
         }
         
+        [TestMethod]
+        public async System.Threading.Tasks.Task CreateTransaction_DifferentDates_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var salesAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Sales");
+            var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+            var bankAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Capital One Spark Checking");
+            var phoneExpenseAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Phone Expense");
+            var apAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Payable");
+
+            // Record a sale.
+            var content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Sale of Product",
+                ReferenceNumber = "1001",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = salesAccount!.Id,
+                        Amount = 5000.00M,
+                        Description = "",
+                        Type = "C"
+                    },
+                    new Entry()
+                    {
+                        AccountId = arAccount!.Id,
+                        Amount = 5000.00M,
+                        Description = "",
+                        Type = "D"
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(content, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Transactions", byteContent);
+
+            
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+            
+            // Make a deposit.
+            content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Deposit",
+                ReferenceNumber = "1001",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = arAccount!.Id,
+                        Amount = 5000.00M,
+                        Description = "",
+                        Type = "C"
+                    },
+                    new Entry()
+                    {
+                        AccountId = bankAccount!.Id,
+                        Amount = 5000.00M,
+                        Description = "",
+                        Type = "D"
+                    }
+                }
+            };
+            json = JsonSerializer.Serialize(content, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Transactions", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+            
+            // Enter a bill.
+            content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                Description = "Phone Bill",
+                ReferenceNumber = "DEBIT",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = phoneExpenseAccount!.Id,
+                        Amount = 500.00M,
+                        Description = "",
+                        Type = "D"
+                    },
+                    new Entry()
+                    {
+                        AccountId = apAccount!.Id,
+                        Amount = 500.00M,
+                        Description = "",
+                        Type = "C"
+                    }
+                }
+            };
+            json = JsonSerializer.Serialize(content, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Transactions", byteContent);
+
+            
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            // Pay the bill.
+            content = new
+            {
+                EnteredOn = new DateTime(2022, 8, 30),
+                Description = "Phone Bill",
+                ReferenceNumber = "DEBIT",
+                Entries = new Entry[]
+                {
+                    new Entry()
+                    {
+                        AccountId = apAccount!.Id,
+                        Amount = 500.00M,
+                        Description = "",
+                        Type = "D"
+                    },
+                    new Entry()
+                    {
+                        AccountId = bankAccount!.Id,
+                        Amount = 500.00M,
+                        Description = "",
+                        Type = "C"
+                    }
+                }
+            };
+            json = JsonSerializer.Serialize(content, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Transactions", byteContent);
+
+            
+            // ----------------------------------------------------------------
+            // Assert
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(response.IsSuccessStatusCode);
+
+            var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+
+            var balanceOfBankAccountOnAugustFirst = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(1753, 1, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = bankAccount!.Id
+                });
+            
+            Assert.AreEqual(5000.00M, balanceOfBankAccountOnAugustFirst);
+            
+            var balanceOfBankAccountOnSeptemberFirst = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(1753, 1, 1),
+                    MaxDate = new DateTime(2022, 9, 1),
+                    AccountId = bankAccount!.Id
+                });
+            
+            Assert.AreEqual(4500.00M, balanceOfBankAccountOnSeptemberFirst);
+        }
+
         [TestMethod]
         public async System.Threading.Tasks.Task CreateTransaction_ZeroDebitsAndCredits_Fails()
         {
