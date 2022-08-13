@@ -1,5 +1,5 @@
 ﻿//
-//  InvoicesControllerTest.cs
+//  PaymentsControllerTest.cs
 //  BRIZBEE API
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -39,7 +39,7 @@ using Dapper;
 namespace Brizbee.Api.Tests
 {
     [TestClass]
-    public class InvoicesControllerTest
+    public class PaymentsControllerTest
     {
         public IConfiguration _configuration { get; set; }
 
@@ -52,7 +52,7 @@ namespace Brizbee.Api.Tests
             PropertyNameCaseInsensitive = true
         };
 
-        public InvoicesControllerTest()
+        public PaymentsControllerTest()
         {
             // Setup configuration
             var configurationBuilder = new ConfigurationBuilder();
@@ -77,9 +77,9 @@ namespace Brizbee.Api.Tests
         {
             helper.Cleanup();
         }
-
+        
         [TestMethod]
-        public async System.Threading.Tasks.Task CreateInvoice_Valid_Succeeds()
+        public async System.Threading.Tasks.Task CreatePayment_Valid_Succeeds()
         {
             // ----------------------------------------------------------------
             // Arrange
@@ -107,13 +107,13 @@ namespace Brizbee.Api.Tests
 
 
             // ----------------------------------------------------------------
-            // Act
+            // Prepare
             // ----------------------------------------------------------------
 
-            var salesAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Sales");
             var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+            var undepositedAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
 
-            var content = new
+            var contentInvoice = new
             {
                 EnteredOn = new DateTime(2022, 8, 1),
                 ReferenceNumber = "EC100",
@@ -133,12 +133,30 @@ namespace Brizbee.Api.Tests
                     }
                 }
             };
-            var json = JsonSerializer.Serialize(content, options);
+            var json = JsonSerializer.Serialize(contentInvoice, options);
             var buffer = Encoding.UTF8.GetBytes(json);
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             var response = await client.PostAsync($"api/Invoices", byteContent);
+            
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var contentPayment = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                ReferenceNumber = "1000",
+                Amount = 382.05M
+            };
+            json = JsonSerializer.Serialize(contentPayment, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Payments", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -149,17 +167,6 @@ namespace Brizbee.Api.Tests
 
             var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
 
-            var balanceOfSalesAccount = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
-                balanceOfAccountSql,
-                param: new
-                {
-                    MinDate = new DateTime(2022, 8, 1),
-                    MaxDate = new DateTime(2022, 8, 1),
-                    AccountId = salesAccount!.Id
-                });
-
-            Assert.AreEqual(382.05M, balanceOfSalesAccount);
-            
             var balanceOfAccountsReceivable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
                 balanceOfAccountSql,
                 param: new
@@ -169,7 +176,18 @@ namespace Brizbee.Api.Tests
                     AccountId = arAccount!.Id
                 });
 
-            Assert.AreEqual(382.05M, balanceOfAccountsReceivable);
+            Assert.AreEqual(0.00M, balanceOfAccountsReceivable);
+            
+            var balanceOfUndepositedFunds = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+                balanceOfAccountSql,
+                param: new
+                {
+                    MinDate = new DateTime(2022, 8, 1),
+                    MaxDate = new DateTime(2022, 8, 1),
+                    AccountId = undepositedAccount!.Id
+                });
+
+            Assert.AreEqual(382.05M, balanceOfUndepositedFunds);
         }
         
         private string GenerateJSONWebToken(int userId, string emailAddress)

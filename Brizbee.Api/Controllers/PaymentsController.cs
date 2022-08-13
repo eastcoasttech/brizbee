@@ -1,5 +1,5 @@
 ﻿//
-//  InvoicesController.cs
+//  PaymentsController.cs
 //  BRIZBEE API
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -28,47 +28,45 @@ namespace Brizbee.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class InvoicesController : ControllerBase
+    public class PaymentsController : ControllerBase
     {
         private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
 
-        public InvoicesController(IConfiguration configuration, SqlContext context)
+        public PaymentsController(IConfiguration configuration, SqlContext context)
         {
             _configuration = configuration;
             _context = context;
         }
 
-        // GET: api/Invoices
+        // GET: api/Payments
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Invoice>>> GetInvoices()
+        public async Task<ActionResult<IEnumerable<Payment>>> GetPayments()
         {
-            return await _context.Invoices!
+            return await _context.Payments!
                 .ToListAsync();
         }
 
-        // GET api/Invoices/5
+        // GET api/Payments/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Invoice>> GetInvoice(long id)
+        public async Task<ActionResult<Payment>> GetPayment(long id)
         {
-            var invoice = await _context.Invoices!.FindAsync(id);
+            var payment = await _context.Payments!.FindAsync(id);
 
-            if (invoice == null)
+            if (payment == null)
             {
                 return NotFound();
             }
 
-            return invoice;
+            return payment;
         }
 
-        // POST api/Invoices
+        // POST api/Payments
         [HttpPost]
-        public async Task<ActionResult<Invoice>> CreateInvoice([FromBody] Invoice invoiceDTO)
+        public async Task<ActionResult<Payment>> CreatePayment([FromBody] Payment paymentDTO)
         {
             var currentUser = CurrentUser();
             var nowUtc = DateTime.UtcNow;
-
-            var totalAmount = invoiceDTO.LineItems!.Sum(x => x.UnitAmount * x.Quantity);
 
             using var databaseTransaction = _context.Database.BeginTransaction();
 
@@ -78,12 +76,12 @@ namespace Brizbee.Api.Controllers
                 // Record the transaction and entries for this invoice.
                 // ------------------------------------------------------------
 
-                var salesAccount = _context.Accounts!.FirstOrDefault(x => x.Name == "Sales");
+                var undepositedAccount = _context.Accounts!.FirstOrDefault(x => x.Name == "Undeposited Funds");
                 var arAccount = _context.Accounts!.FirstOrDefault(x => x.Name == "Accounts Receivable");
 
                 var transaction = new Transaction()
                 {
-                    EnteredOn = invoiceDTO.EnteredOn,
+                    EnteredOn = paymentDTO.EnteredOn,
                     CreatedAt = nowUtc,
                     Description = "",
                     OrganizationId = currentUser.OrganizationId,
@@ -96,8 +94,8 @@ namespace Brizbee.Api.Controllers
 
                 var debitEntry = new Entry()
                 {
-                    AccountId = arAccount!.Id,
-                    Amount = totalAmount,
+                    AccountId = undepositedAccount!.Id,
+                    Amount = paymentDTO.Amount,
                     CreatedAt = nowUtc,
                     TransactionId = transaction.Id,
                     Description = "",
@@ -106,8 +104,8 @@ namespace Brizbee.Api.Controllers
                 
                 var creditEntry = new Entry()
                 {
-                    AccountId = salesAccount!.Id,
-                    Amount = totalAmount,
+                    AccountId = arAccount!.Id,
+                    Amount = paymentDTO.Amount,
                     CreatedAt = nowUtc,
                     TransactionId = transaction.Id,
                     Description = "",
@@ -121,43 +119,20 @@ namespace Brizbee.Api.Controllers
                 
 
                 // ------------------------------------------------------------
-                // Record the invoice.
+                // Record the payment.
                 // ------------------------------------------------------------
 
-                var invoice = new Invoice
+                var payment = new Payment
                 {
-                    EnteredOn = invoiceDTO.EnteredOn,
+                    EnteredOn = paymentDTO.EnteredOn,
                     CreatedAt = nowUtc,
-                    OrganizationId = currentUser.OrganizationId,
-                    Number = invoiceDTO.Number,
-                    CustomerId = invoiceDTO.CustomerId,
-                    TotalAmount = totalAmount,
+                    ReferenceNumber = paymentDTO.ReferenceNumber,
+                    InvoiceId = paymentDTO.InvoiceId,
+                    Amount = paymentDTO.Amount,
                     TransactionId = transaction.Id
                 };
             
-                _context.Invoices!.Add(invoice);
-
-                await _context.SaveChangesAsync();
-                
-                
-                // ------------------------------------------------------------
-                // Record the line items for the invoice.
-                // ------------------------------------------------------------
-
-                foreach (var lineItemDTO in invoiceDTO.LineItems!)
-                {
-                    var lineItem = new LineItem()
-                    {
-                        InvoiceId = invoice.Id,
-                        Quantity = lineItemDTO.Quantity,
-                        UnitAmount = lineItemDTO.UnitAmount,
-                        TotalAmount = lineItemDTO.UnitAmount * lineItemDTO.Quantity,
-                        CreatedAt = nowUtc,
-                        Description = lineItemDTO.Description
-                    };
-                
-                    _context.LineItems!.Add(lineItem);
-                }
+                _context.Payments!.Add(payment);
 
                 await _context.SaveChangesAsync();
                 
@@ -169,9 +144,9 @@ namespace Brizbee.Api.Controllers
                 await databaseTransaction.CommitAsync();
 
                 return CreatedAtAction(
-                    nameof(GetInvoice),
-                    new { id = invoice.Id },
-                    invoice);
+                    nameof(GetPayment),
+                    new { id = payment.Id },
+                    payment);
             }
             catch (Exception ex)
             {
@@ -181,26 +156,26 @@ namespace Brizbee.Api.Controllers
             }
         }
 
-        // DELETE api/Invoices/5
+        // DELETE api/Payments/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteInvoice(int id)
+        public async Task<IActionResult> DeletePayment(long id)
         {
-            var invoice = await _context.Invoices!.FindAsync(id);
+            var payment = await _context.Payments!.FindAsync(id);
 
-            if (invoice == null)
+            if (payment == null)
             {
                 return NotFound();
             }
 
-            _context.Invoices.Remove(invoice);
+            _context.Payments.Remove(payment);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool InvoiceExists(long id)
+        private bool PaymentExists(long id)
         {
-            return _context.Invoices!.Any(x => x.Id == id);
+            return _context.Payments!.Any(x => x.Id == id);
         }
 
         private User CurrentUser()

@@ -262,11 +262,23 @@ namespace Brizbee.Api.Tests
                     Number = 10100,
                     Type = "Accounts Receivable",
                     Name = "Accounts Receivable",
-                    Description = "The receivables account.",
+                    Description = "Unpaid or unapplied customer invoices and credits.",
                     OrganizationId = organization.Id,
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.Accounts!.Add(arAccount);
+                _context.SaveChanges();
+                
+                var undepositedAccount = new Account()
+                {
+                    Number = 12000,
+                    Type = "Other Current Asset",
+                    Name = "Undeposited Funds",
+                    Description = "Funds received, but not yet deposited to a bank account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(undepositedAccount);
                 _context.SaveChanges();
                 
                 var salesAccount = new Account()
@@ -286,7 +298,7 @@ namespace Brizbee.Api.Tests
                     Number = 20000,
                     Type = "Accounts Payable",
                     Name = "Accounts Payable",
-                    Description = "The payables account.",
+                    Description = "Unpaid or unapplied vendor bills or credits.",
                     OrganizationId = organization.Id,
                     CreatedAt = DateTime.UtcNow
                 };
