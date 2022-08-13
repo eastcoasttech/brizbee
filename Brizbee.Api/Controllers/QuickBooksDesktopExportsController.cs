@@ -2,7 +2,7 @@
 //  QuickBooksDesktopExportsController.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2022 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -20,7 +20,6 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Api;
 using Brizbee.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
@@ -33,33 +32,33 @@ namespace Brizbee.Api.Controllers
 {
     public class QuickBooksDesktopExportsController : ODataController
     {
-        private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
 
         public QuickBooksDesktopExportsController(IConfiguration configuration, SqlContext context)
         {
-            _configuration = configuration;
             _context = context;
         }
 
         // GET: odata/QuickBooksDesktopExports
+        [HttpGet]
         [EnableQuery(PageSize = 20)]
         public IQueryable<QuickBooksDesktopExport> GetQuickBooksDesktopExports()
         {
             var currentUser = CurrentUser();
 
-            return _context.QuickBooksDesktopExports
+            return _context.QuickBooksDesktopExports!
                 .Include(q => q.Commit)
                 .Where(q => q.Commit!.OrganizationId == currentUser.OrganizationId);
         }
 
         // GET: odata/QuickBooksDesktopExports(5)
+        [HttpGet]
         [EnableQuery]
         public SingleResult<QuickBooksDesktopExport> GetQuickBooksDesktopExport([FromODataUri] int key)
         {
             var currentUser = CurrentUser();
 
-            var quickBooksDesktopExport = _context.QuickBooksDesktopExports
+            var quickBooksDesktopExport = _context.QuickBooksDesktopExports!
                 .Include(q => q.Commit)
                 .Where(q => q.Commit!.OrganizationId == currentUser.OrganizationId)
                 .Where(q => q.Id == key);
@@ -68,6 +67,7 @@ namespace Brizbee.Api.Controllers
         }
 
         // POST: odata/QuickBooksDesktopExports
+        [HttpPost]
         public IActionResult Post([FromBody] QuickBooksDesktopExport quickBooksDesktopExport)
         {
             var currentUser = CurrentUser();
@@ -82,7 +82,7 @@ namespace Brizbee.Api.Controllers
                 if (!TryValidateModel(quickBooksDesktopExport, nameof(quickBooksDesktopExport)))
                     return BadRequest();
 
-                _context.QuickBooksDesktopExports.Add(quickBooksDesktopExport);
+                _context.QuickBooksDesktopExports!.Add(quickBooksDesktopExport);
 
                 _context.SaveChanges();
 
@@ -97,11 +97,10 @@ namespace Brizbee.Api.Controllers
         private User CurrentUser()
         {
             var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
-            var sub = HttpContext.User.Claims.FirstOrDefault(c => c.Type == type).Value;
-            var currentUserId = int.Parse(sub);
-            return _context.Users
-                .Where(u => u.Id == currentUserId)
-                .FirstOrDefault();
+            var claim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == type)!.Value;
+            var currentUserId = int.Parse(claim);
+            return _context.Users!
+                .FirstOrDefault(u => u.Id == currentUserId)!;
         }
     }
 }
