@@ -23,6 +23,7 @@
 using Brizbee.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace Brizbee.Api.Controllers
 {
@@ -147,6 +148,54 @@ namespace Brizbee.Api.Controllers
                     nameof(GetDeposit),
                     new { id = deposit.Id },
                     deposit);
+            }
+            catch (Exception ex)
+            {
+                await databaseTransaction.RollbackAsync();
+
+                return  StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+        
+        // DELETE api/Deposits/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDeposit(long id)
+        {
+            var deposit = await _context.Deposits!.FindAsync(id);
+
+            if (deposit == null)
+            {
+                return NotFound();
+            }
+
+            using var databaseTransaction = _context.Database.BeginTransaction();
+
+            try
+            {
+                // ------------------------------------------------------------
+                // Delete the transaction for the deposit.
+                // ------------------------------------------------------------
+
+                var transaction = await _context.Transactions!.FindAsync(deposit.TransactionId);
+                _context.Transactions.Remove(transaction!);
+                await _context.SaveChangesAsync();
+
+
+                // ------------------------------------------------------------
+                // Delete the deposit.
+                // ------------------------------------------------------------
+
+                _context.Deposits.Remove(deposit);
+                await _context.SaveChangesAsync();
+                
+
+                // ------------------------------------------------------------
+                // Commit the transaction.
+                // ------------------------------------------------------------
+
+                await databaseTransaction.CommitAsync();
+
+                return NoContent();
             }
             catch (Exception ex)
             {

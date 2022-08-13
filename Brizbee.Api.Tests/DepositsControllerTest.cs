@@ -206,6 +206,122 @@ namespace Brizbee.Api.Tests
             Assert.AreEqual(382.05M, balanceOfBankAccount);
         }
         
+        [TestMethod]
+        public async System.Threading.Tasks.Task DeleteDeposit_Valid_Succeeds()
+        {
+            // ----------------------------------------------------------------
+            // Arrange
+            // ----------------------------------------------------------------
+
+            var application = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    {
+                        configurationBuilder.AddJsonFile("appsettings.json");
+                    });
+                });
+
+            var client = application.CreateClient();
+
+            // User will be authenticated
+            var currentUser = _context.Users!
+                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
+                .FirstOrDefault();
+
+            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+            // ----------------------------------------------------------------
+            // Prepare
+            // ----------------------------------------------------------------
+
+            var bankAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Capital One Spark Checking");
+            var undepositedAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
+
+            // Create an invoice.
+            var contentInvoice = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                ReferenceNumber = "EC100",
+                LineItems = new LineItem[]
+                {
+                    new LineItem()
+                    {
+                        UnitAmount = 12.53M,
+                        Quantity = 2M,
+                        Description = "Some Item"
+                    },
+                    new LineItem()
+                    {
+                        UnitAmount = 356.99M,
+                        Quantity = 1M,
+                        Description = "Some Item"
+                    }
+                }
+            };
+            var json = JsonSerializer.Serialize(contentInvoice, options);
+            var buffer = Encoding.UTF8.GetBytes(json);
+            var byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await client.PostAsync($"api/Invoices", byteContent);
+            
+            // Create a payment.
+            var contentPayment = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                ReferenceNumber = "1000",
+                Amount = 382.05M
+            };
+            json = JsonSerializer.Serialize(contentPayment, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Payments", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Act
+            // ----------------------------------------------------------------
+
+            var contentDeposit = new
+            {
+                EnteredOn = new DateTime(2022, 8, 1),
+                ReferenceNumber = "DEP1000",
+                Amount = 382.05M,
+                BankAccountId = bankAccount!.Id
+            };
+            json = JsonSerializer.Serialize(contentDeposit, options);
+            buffer = Encoding.UTF8.GetBytes(json);
+            byteContent = new ByteArrayContent(buffer);
+            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            response = await client.PostAsync($"api/Deposits", byteContent);
+
+
+            // ----------------------------------------------------------------
+            // Act again
+            // ----------------------------------------------------------------
+
+            var depositId = _context.Deposits!
+                .Where(x => x.ReferenceNumber == "DEP1000")
+                .Select(x => x.Id)
+                .FirstOrDefault();
+
+            var responseDelete = await client.DeleteAsync($"api/Deposits/{depositId}");
+
+
+            // ----------------------------------------------------------------
+            // Assert again
+            // ----------------------------------------------------------------
+
+            Assert.IsTrue(responseDelete.IsSuccessStatusCode);
+        }
+
         private string GenerateJSONWebToken(int userId, string emailAddress)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

@@ -114,6 +114,36 @@ namespace Brizbee.Api
                 .HasColumnType("DECIMAL (12,2)")
                 .HasPrecision(10, 2);
 
+            modelBuilder.Entity<Deposit>()
+                .Property(x => x.Amount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Payment>()
+                .Property(x => x.Amount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<LineItem>()
+                .Property(x => x.Quantity)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<LineItem>()
+                .Property(x => x.UnitAmount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<LineItem>()
+                .Property(x => x.TotalAmount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(x => x.TotalAmount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
             // Configure computed columns.
             modelBuilder.Entity<Account>()
                 .Property(x => x.NormalBalance)

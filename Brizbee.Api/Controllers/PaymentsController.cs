@@ -167,10 +167,41 @@ namespace Brizbee.Api.Controllers
                 return NotFound();
             }
 
-            _context.Payments.Remove(payment);
-            await _context.SaveChangesAsync();
+            using var databaseTransaction = _context.Database.BeginTransaction();
 
-            return NoContent();
+            try
+            {
+                // ------------------------------------------------------------
+                // Delete the transaction for the payment.
+                // ------------------------------------------------------------
+
+                var transaction = await _context.Transactions!.FindAsync(payment.TransactionId);
+                _context.Transactions.Remove(transaction!);
+                await _context.SaveChangesAsync();
+
+
+                // ------------------------------------------------------------
+                // Delete the payment.
+                // ------------------------------------------------------------
+
+                _context.Payments.Remove(payment);
+                await _context.SaveChangesAsync();
+                
+
+                // ------------------------------------------------------------
+                // Commit the transaction.
+                // ------------------------------------------------------------
+
+                await databaseTransaction.CommitAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                await databaseTransaction.RollbackAsync();
+
+                return  StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         private bool PaymentExists(long id)

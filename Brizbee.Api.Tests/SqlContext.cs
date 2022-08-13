@@ -37,12 +37,18 @@ namespace Brizbee.Api.Tests
         public DbSet<Commit>? Commits { get; set; }
 
         public DbSet<Customer>? Customers { get; set; }
+
+        public DbSet<Deposit>? Deposits { get; set; }
         
         public DbSet<Entry>? Entries { get; set; }
 
         public DbSet<Job>? Jobs { get; set; }
 
+        public DbSet<LineItem>? LineItems { get; set; }
+
         public DbSet<Organization>? Organizations { get; set; }
+
+        public DbSet<Payment>? Payments { get; set; }
 
         public DbSet<Punch>? Punches { get; set; }
 
@@ -103,6 +109,36 @@ namespace Brizbee.Api.Tests
             
             modelBuilder.Entity<Entry>()
                 .Property(x => x.Amount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+            
+            modelBuilder.Entity<Deposit>()
+                .Property(x => x.Amount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Payment>()
+                .Property(x => x.Amount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<LineItem>()
+                .Property(x => x.Quantity)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<LineItem>()
+                .Property(x => x.UnitAmount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<LineItem>()
+                .Property(x => x.TotalAmount)
+                .HasColumnType("DECIMAL (12,2)")
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(x => x.TotalAmount)
                 .HasColumnType("DECIMAL (12,2)")
                 .HasPrecision(10, 2);
 
