@@ -14,7 +14,6 @@ CREATE TABLE [dbo].[Accounts]
 
 CREATE NONCLUSTERED INDEX [IX_Accounts_Name]
     ON [dbo].[Accounts] ([Name]);
-GO
 
 ALTER TABLE [dbo].[Accounts]
 ADD
@@ -68,10 +67,9 @@ CREATE TABLE [dbo].[Transactions]
             PRIMARY KEY CLUSTERED ([Id])
     );
 
-CREATE NONCLUSTERED INDEX [IX_Transactions_OrganizationId]
+CREATE NONCLUSTERED INDEX [IX_Transactions_OrganizationIdEnteredOn]
     ON [dbo].[Transactions] ([OrganizationId], [EnteredOn])
     INCLUDE ([ReferenceNumber], [Description]);
-GO
 
 
 -- Entries Table
@@ -91,76 +89,77 @@ CREATE TABLE [dbo].[Entries]
 CREATE NONCLUSTERED INDEX [IX_Entries_TransactionId]
     ON [dbo].[Entries] ([TransactionId])
     INCLUDE ([AccountId], [Type], [Amount]);
-GO
 
 CREATE NONCLUSTERED INDEX [IX_Entries_AccountId]
     ON [dbo].[Entries] ([AccountId])
     INCLUDE ([TransactionId], [Type], [Amount]);
-GO
 
 
--- Account Balance Function
-DROP FUNCTION IF EXISTS [udf_AccountBalance];
-GO
-
-CREATE FUNCTION [udf_AccountBalance]
+-- Invoices Table
+CREATE TABLE [dbo].[Invoices]
     (
-        @MinDate   DATETIME,
-        @MaxDate   DATETIME,
-        @AccountId BIGINT
-    )
-RETURNS DECIMAL (12, 2)
-AS
-    BEGIN
-        DECLARE @CreditSum DECIMAL (12, 2);
-        DECLARE @DebitSum DECIMAL (12, 2);
-        DECLARE @Balance DECIMAL (12, 2);
-        DECLARE @NormalBalance CHAR (6);
+        [CreatedAt]      DATETIME2 (7)   NOT NULL,
+        [CustomerId]     INT             NOT NULL,
+        [Id]             BIGINT          IDENTITY (1, 1) NOT NULL,
+        [Number]         VARCHAR (20)    NOT NULL,
+        [OrganizationId] INT             NOT NULL,
+        [TotalAmount]    DECIMAL (12, 2) NOT NULL,
+        [EnteredOn]      DATE            NOT NULL,
+        [TransactionId]  BIGINT          NOT NULL,
+        CONSTRAINT [PK_Invoices]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
 
-        -- Sum all of the credits.
-        SELECT
-            @CreditSum = SUM( [E].[Amount] )
-        FROM [dbo].[Entries] AS [E]
-        INNER JOIN [dbo].[Transactions] AS [T] ON
-            [T].[Id] = [E].[TransactionId]
-        WHERE
-            [E].[AccountId] = @AccountId
-            AND [T].[EnteredOn] BETWEEN @MinDate AND @MaxDate
-            AND [E].[Type] = 'C';
+CREATE NONCLUSTERED INDEX [IX_Invoices_OrganizationId]
+    ON [dbo].[Invoices] ([OrganizationId])
+    INCLUDE ([CustomerId], [TransactionId], [Number], [TotalAmount], [EnteredOn]);
 
-        -- Sum all of the debits.
-        SELECT
-            @DebitSum = SUM( [E].[Amount] )
-        FROM [dbo].[Entries] AS [E]
-        INNER JOIN [dbo].[Transactions] AS [T] ON
-            [T].[Id] = [E].[TransactionId]
-        WHERE
-            [E].[AccountId] = @AccountId
-            AND [T].[EnteredOn] BETWEEN @MinDate AND @MaxDate
-            AND [E].[Type] = 'D';
+CREATE NONCLUSTERED INDEX [IX_Invoices_CustomerId]
+    ON [dbo].[Invoices] ([CustomerId])
+    INCLUDE ([OrganizationId], [TransactionId], [Number], [TotalAmount], [EnteredOn]);
 
-        -- Determine the normal balance depending on type of account.
-        SELECT
-            @NormalBalance = [NormalBalance]
-        FROM [dbo].[Accounts]
-        WHERE
-            [Id] = @AccountId;
-            
-        -- Remove nulls from calculation.
-        IF @CreditSum IS NULL
-            SET @CreditSum = 0;
-            
-        IF @DebitSum IS NULL
-            SET @DebitSum = 0;
+CREATE NONCLUSTERED INDEX [IX_Invoices_TransactionId]
+    ON [dbo].[Invoices] ([TransactionId])
+    INCLUDE ([OrganizationId], [CustomerId], [Number], [TotalAmount], [EnteredOn]);
 
-        -- Direction of subtraction depends on normal balance.
-        IF @NormalBalance = 'CREDIT'
-            SELECT
-                @Balance = @CreditSum - @DebitSum;
-        ELSE
-            SELECT
-                @Balance = @DebitSum - @CreditSum;
 
-        RETURN @Balance;
-    END;
-GO
+-- LineItems Table
+CREATE TABLE [dbo].[LineItems]
+    (
+        [CreatedAt]   DATETIME2 (7)   NOT NULL,
+        [Description] VARCHAR (120)   NOT NULL,
+        [InvoiceId]   BIGINT          NOT NULL,
+        [Id]          BIGINT          IDENTITY (1, 1) NOT NULL,
+        [Quantity]    DECIMAL (12, 2) NOT NULL,
+        [TotalAmount] DECIMAL (12, 2) NOT NULL,
+        [UnitAmount]  DECIMAL (12, 2) NOT NULL,
+        CONSTRAINT [PK_LineItems]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+CREATE NONCLUSTERED INDEX [IX_LineItems_InvoiceId]
+    ON [dbo].[LineItems] ([InvoiceId])
+    INCLUDE ([Description], [Quantity], [TotalAmount], [UnitAmount]);
+
+
+-- Payments Table
+CREATE TABLE [dbo].[Payments]
+    (
+        [Amount]          DECIMAL (12, 2) NOT NULL,
+        [CreatedAt]       DATETIME2 (7)   NOT NULL,
+        [EnteredOn]       DATE            NOT NULL,
+        [InvoiceId]       BIGINT          NOT NULL,
+        [Id]              BIGINT          IDENTITY (1, 1) NOT NULL,
+        [ReferenceNumber] VARCHAR (20)    NOT NULL,
+        [TransactionId]   BIGINT          NOT NULL,
+        CONSTRAINT [PK_Payments]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+CREATE NONCLUSTERED INDEX [IX_Payments_InvoiceId]
+    ON [dbo].[Payments] ([InvoiceId])
+    INCLUDE ([Amount], [EnteredOn], [ReferenceNumber], [TransactionId]);
+
+CREATE NONCLUSTERED INDEX [IX_Payments_TransactionId]
+    ON [dbo].[Payments] ([TransactionId])
+    INCLUDE ([Amount], [EnteredOn], [ReferenceNumber], [InvoiceId]);
