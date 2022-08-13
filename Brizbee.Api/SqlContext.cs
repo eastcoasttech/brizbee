@@ -40,9 +40,15 @@ namespace Brizbee.Api
         
         public DbSet<Entry>? Entries { get; set; }
 
+        public DbSet<Invoice>? Invoices { get; set; }
+
         public DbSet<Job>? Jobs { get; set; }
 
+        public DbSet<LineItem>? LineItems { get; set; }
+
         public DbSet<Organization>? Organizations { get; set; }
+
+        public DbSet<Payment>? Payments { get; set; }
 
         public DbSet<Punch>? Punches { get; set; }
 
