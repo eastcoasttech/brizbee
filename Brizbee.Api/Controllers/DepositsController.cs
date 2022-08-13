@@ -1,5 +1,5 @@
 ﻿//
-//  PaymentsController.cs
+//  DepositsController.cs
 //  BRIZBEE API
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -28,42 +28,42 @@ namespace Brizbee.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PaymentsController : ControllerBase
+    public class DepositsController : ControllerBase
     {
         private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
 
-        public PaymentsController(IConfiguration configuration, SqlContext context)
+        public DepositsController(IConfiguration configuration, SqlContext context)
         {
             _configuration = configuration;
             _context = context;
         }
-
-        // GET: api/Payments
+        
+        // GET: api/Deposits
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPayments()
+        public async Task<ActionResult<IEnumerable<Deposit>>> GetDeposits()
         {
-            return await _context.Payments!
+            return await _context.Deposits!
                 .ToListAsync();
         }
 
-        // GET api/Payments/5
+        // GET api/Deposits/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Payment>> GetPayment(long id)
+        public async Task<ActionResult<Deposit>> GetDeposit(long id)
         {
-            var payment = await _context.Payments!.FindAsync(id);
+            var deposit = await _context.Deposits!.FindAsync(id);
 
-            if (payment == null)
+            if (deposit == null)
             {
                 return NotFound();
             }
 
-            return payment;
+            return deposit;
         }
 
-        // POST api/Payments
+        // POST api/Deposits
         [HttpPost]
-        public async Task<ActionResult<Payment>> CreatePayment([FromBody] Payment paymentDTO)
+        public async Task<ActionResult<Payment>> CreateDeposit([FromBody] Deposit depositDTO)
         {
             var currentUser = CurrentUser();
             var nowUtc = DateTime.UtcNow;
@@ -73,15 +73,15 @@ namespace Brizbee.Api.Controllers
             try
             {
                 // ------------------------------------------------------------
-                // Record the transaction and entries for this payment.
+                // Record the transaction and entries for this deposit.
                 // ------------------------------------------------------------
 
                 var undepositedAccount = _context.Accounts!.FirstOrDefault(x => x.Name == "Undeposited Funds");
-                var arAccount = _context.Accounts!.FirstOrDefault(x => x.Name == "Accounts Receivable");
+                var bankAccount = _context.Accounts!.FirstOrDefault(x => x.Id == depositDTO.BankAccountId);
 
                 var transaction = new Transaction()
                 {
-                    EnteredOn = paymentDTO.EnteredOn,
+                    EnteredOn = depositDTO.EnteredOn,
                     CreatedAt = nowUtc,
                     Description = "",
                     OrganizationId = currentUser.OrganizationId,
@@ -94,8 +94,8 @@ namespace Brizbee.Api.Controllers
 
                 var debitEntry = new Entry()
                 {
-                    AccountId = undepositedAccount!.Id,
-                    Amount = paymentDTO.Amount,
+                    AccountId = bankAccount!.Id,
+                    Amount = depositDTO.Amount,
                     CreatedAt = nowUtc,
                     TransactionId = transaction.Id,
                     Description = "",
@@ -104,8 +104,8 @@ namespace Brizbee.Api.Controllers
                 
                 var creditEntry = new Entry()
                 {
-                    AccountId = arAccount!.Id,
-                    Amount = paymentDTO.Amount,
+                    AccountId = undepositedAccount!.Id,
+                    Amount = depositDTO.Amount,
                     CreatedAt = nowUtc,
                     TransactionId = transaction.Id,
                     Description = "",
@@ -119,20 +119,20 @@ namespace Brizbee.Api.Controllers
                 
 
                 // ------------------------------------------------------------
-                // Record the payment.
+                // Record the deposit.
                 // ------------------------------------------------------------
 
-                var payment = new Payment
+                var deposit = new Deposit
                 {
-                    EnteredOn = paymentDTO.EnteredOn,
+                    EnteredOn = depositDTO.EnteredOn,
                     CreatedAt = nowUtc,
-                    ReferenceNumber = paymentDTO.ReferenceNumber,
-                    InvoiceId = paymentDTO.InvoiceId,
-                    Amount = paymentDTO.Amount,
-                    TransactionId = transaction.Id
+                    ReferenceNumber = depositDTO.ReferenceNumber,
+                    Amount = depositDTO.Amount,
+                    TransactionId = transaction.Id,
+                    BankAccountId = depositDTO.BankAccountId
                 };
             
-                _context.Payments!.Add(payment);
+                _context.Deposits!.Add(deposit);
 
                 await _context.SaveChangesAsync();
                 
@@ -144,9 +144,9 @@ namespace Brizbee.Api.Controllers
                 await databaseTransaction.CommitAsync();
 
                 return CreatedAtAction(
-                    nameof(GetPayment),
-                    new { id = payment.Id },
-                    payment);
+                    nameof(GetDeposit),
+                    new { id = deposit.Id },
+                    deposit);
             }
             catch (Exception ex)
             {
@@ -154,28 +154,6 @@ namespace Brizbee.Api.Controllers
 
                 return  StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
-        }
-
-        // DELETE api/Payments/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePayment(long id)
-        {
-            var payment = await _context.Payments!.FindAsync(id);
-
-            if (payment == null)
-            {
-                return NotFound();
-            }
-
-            _context.Payments.Remove(payment);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool PaymentExists(long id)
-        {
-            return _context.Payments!.Any(x => x.Id == id);
         }
 
         private User CurrentUser()

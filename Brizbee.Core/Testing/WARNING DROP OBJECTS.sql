@@ -2,6 +2,7 @@
 DROP FUNCTION IF EXISTS [dbo].[tvf_DatesInRange];
 
 -- Drop Tables
+DROP TABLE IF EXISTS [dbo].[Deposits];
 DROP TABLE IF EXISTS [dbo].[LineItems];
 DROP TABLE IF EXISTS [dbo].[Payments];
 DROP TABLE IF EXISTS [dbo].[Invoices];

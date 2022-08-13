@@ -37,6 +37,8 @@ namespace Brizbee.Api
         public DbSet<Commit>? Commits { get; set; }
 
         public DbSet<Customer>? Customers { get; set; }
+
+        public DbSet<Deposit>? Deposits { get; set; }
         
         public DbSet<Entry>? Entries { get; set; }
 

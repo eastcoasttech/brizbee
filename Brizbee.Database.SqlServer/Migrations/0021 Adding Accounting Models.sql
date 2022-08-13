@@ -163,3 +163,22 @@ CREATE NONCLUSTERED INDEX [IX_Payments_InvoiceId]
 CREATE NONCLUSTERED INDEX [IX_Payments_TransactionId]
     ON [dbo].[Payments] ([TransactionId])
     INCLUDE ([Amount], [EnteredOn], [ReferenceNumber], [InvoiceId]);
+
+
+-- Deposits Table
+CREATE TABLE [dbo].[Deposits]
+    (
+        [Amount]          DECIMAL (12, 2) NOT NULL,
+        [BankAccountId]   BIGINT          NOT NULL,
+        [CreatedAt]       DATETIME2 (7)   NOT NULL,
+        [EnteredOn]       DATE            NOT NULL,
+        [Id]              BIGINT          IDENTITY (1, 1) NOT NULL,
+        [ReferenceNumber] VARCHAR (20)    NOT NULL,
+        [TransactionId]   BIGINT          NOT NULL,
+        CONSTRAINT [PK_Deposits]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+CREATE NONCLUSTERED INDEX [IX_Deposits_BankAccountId]
+    ON [dbo].[Deposits] ([BankAccountId])
+    INCLUDE ([Amount], [EnteredOn], [ReferenceNumber], [TransactionId]);
