@@ -33,8 +33,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Brizbee.Core.Models;
 using Dapper;
+using Brizbee.Core.Models.Accounting;
 
 namespace Brizbee.Api.Tests
 {

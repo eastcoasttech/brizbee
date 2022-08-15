@@ -1,5 +1,5 @@
 ﻿//
-//  Entry.cs
+//  Invoice.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -23,37 +23,48 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brizbee.Core.Models
+namespace Brizbee.Core.Models.Accounting
 {
-    public class Entry
+    public class Invoice
     {
-        [Required]
-        public long AccountId { get; set; }
-
-        [ForeignKey("AccountId")]
-        public virtual Account? Account { get; set; }
-
-        [Required]
-        public decimal Amount { get; set; }
-
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-        
-        [StringLength(60)]
-        public string Description { get; set; } = string.Empty;
-        
+
         [Required]
-        [StringLength(1)]
-        public string Type { get; set; } = string.Empty;
-        
+        public int CustomerId { get; set; }
+
+        [ForeignKey("CustomerId")]
+        public virtual Customer? Customer { get; set; }
+
+        [Required]
+        [Column(TypeName = "date")]
+        public DateTime EnteredOn { get; set; }
+
+        [Key]
+        public long Id { get; set; }
+
+        public virtual ICollection<LineItem>? LineItems { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string Number { get; set; } = string.Empty;
+
+        [Required]
+        public int OrganizationId { get; set; }
+
+        [ForeignKey("OrganizationId")]
+        public virtual Organization? Organization { get; set; }
+
+        public virtual ICollection<Payment>? Payments { get; set; }
+
+        [Required]
+        public decimal TotalAmount { get; set; }
+
         [Required]
         public long TransactionId { get; set; }
 
         [ForeignKey("TransactionId")]
         public virtual Transaction? Transaction { get; set; }
-        
-        [Key]
-        public long Id { get; set; }
     }
 }

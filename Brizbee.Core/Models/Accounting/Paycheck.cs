@@ -1,5 +1,5 @@
 ﻿//
-//  Account.cs
+//  Paycheck.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -23,27 +23,28 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brizbee.Core.Models
+namespace Brizbee.Core.Models.Accounting
 {
-    public class Account
+    public class Paycheck
     {
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-        
+
         [Required]
-        [StringLength(120)]
-        public string Description { get; set; } = string.Empty;
+        [Column(TypeName = "date")]
+        public DateTime EnteredOn { get; set; }
+
+        [Required]
+        public decimal GrossAmount { get; set; }
 
         [Key]
         public long Id { get; set; }
-        
+
         [Required]
-        [StringLength(40)]
-        public string Name { get; set; } = string.Empty;
-        
+        public decimal NetAmount { get; set; }
+
         [Required]
-        [Range(1000, 100000)]
         public int Number { get; set; }
 
         [Required]
@@ -51,11 +52,11 @@ namespace Brizbee.Core.Models
 
         [ForeignKey("OrganizationId")]
         public virtual Organization? Organization { get; set; }
-        
-        [Required]
-        [StringLength(30)]
-        public string Type { get; set; } = string.Empty;
 
-        public string NormalBalance { get; set; } = string.Empty;
+        [Required]
+        public long UserId { get; set; }
+
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
     }
 }

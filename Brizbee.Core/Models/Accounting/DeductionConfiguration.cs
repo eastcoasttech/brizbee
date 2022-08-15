@@ -1,5 +1,5 @@
 ﻿//
-//  LineItem.cs
+//  DeductionConfiguration.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -23,33 +23,33 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brizbee.Core.Models
+namespace Brizbee.Core.Models.Accounting
 {
-    public class LineItem
+    public class DeductionConfiguration
     {
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-        
-        [StringLength(120)]
-        public string Description { get; set; } = string.Empty;
-        
-        [Required]
-        public long InvoiceId { get; set; }
-
-        [ForeignKey("InvoiceId")]
-        public virtual Invoice? Invoice { get; set; }
-        
-        [Key]
-        public long Id { get; set; }
 
         [Required]
-        public decimal Quantity { get; set; }
+        [StringLength(40)]
+        public string Name { get; set; } = string.Empty;
 
         [Required]
-        public decimal TotalAmount { get; set; }
+        public int OrganizationId { get; set; }
+
+        [ForeignKey("OrganizationId")]
+        public virtual Organization? Organization { get; set; }
 
         [Required]
-        public decimal UnitAmount { get; set; }
+        public decimal RateAmount { get; set; }
+
+        [Required]
+        [StringLength(7)]
+        public string RateType { get; set; } = string.Empty; // PERCENT or FLAT
+
+        [Required]
+        [StringLength(4)]
+        public string RelationToTaxation { get; set; } = string.Empty; // PRE or POST
     }
 }

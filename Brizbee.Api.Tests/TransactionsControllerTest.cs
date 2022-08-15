@@ -20,7 +20,7 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Core.Models;
+using Brizbee.Core.Models.Accounting;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

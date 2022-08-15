@@ -21,6 +21,7 @@
 //
 
 using Brizbee.Core.Models;
+using Brizbee.Core.Models.Accounting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;

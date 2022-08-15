@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Brizbee.Core.Models.Accounting;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -47,7 +48,7 @@ namespace Brizbee.Api.Tests
 
             var dropSql = "";
             
-            var assembly = Assembly.GetAssembly(typeof(Core.Models.Account));
+            var assembly = Assembly.GetAssembly(typeof(Account));
 
             var resourceName = assembly!.GetManifestResourceNames()
                 .Single(str => str.EndsWith("WARNING DROP OBJECTS.sql"));

@@ -21,6 +21,7 @@
 //
 
 using Brizbee.Core.Models;
+using Brizbee.Core.Models.Accounting;
 using Microsoft.EntityFrameworkCore;
 
 namespace Brizbee.Api

@@ -1,5 +1,5 @@
 ﻿//
-//  Payment.cs
+//  Account.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -23,38 +23,39 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brizbee.Core.Models
+namespace Brizbee.Core.Models.Accounting
 {
-    public class Payment
+    public class Account
     {
-        [Required]
-        public decimal Amount { get; set; }
-
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
         [Required]
-        [Column(TypeName = "date")]
-        public DateTime EnteredOn { get; set; }
-        
-        [Required]
-        public long InvoiceId { get; set; }
+        [StringLength(120)]
+        public string Description { get; set; } = string.Empty;
 
-        [ForeignKey("InvoiceId")]
-        public virtual Invoice? Invoice { get; set; }
-        
         [Key]
         public long Id { get; set; }
-        
-        [Required]
-        [StringLength(20)]
-        public string ReferenceNumber { get; set; } = string.Empty;
-        
-        [Required]
-        public long TransactionId { get; set; }
 
-        [ForeignKey("TransactionId")]
-        public virtual Transaction? Transaction { get; set; }
+        [Required]
+        [StringLength(40)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [Range(1000, 100000)]
+        public int Number { get; set; }
+
+        [Required]
+        public int OrganizationId { get; set; }
+
+        [ForeignKey("OrganizationId")]
+        public virtual Organization? Organization { get; set; }
+
+        [Required]
+        [StringLength(30)]
+        public string Type { get; set; } = string.Empty;
+
+        public string NormalBalance { get; set; } = string.Empty;
     }
 }

@@ -1,5 +1,5 @@
 ﻿//
-//  Deposit.cs
+//  CalculatedTaxation.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -23,38 +23,21 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brizbee.Core.Models
+namespace Brizbee.Core.Models.Accounting
 {
-    public class Deposit
+    public class CalculatedTaxation
     {
         [Required]
         public decimal Amount { get; set; }
-        
-        [Required]
-        public long BankAccountId { get; set; }
-
-        [ForeignKey("BankAccountId")]
-        public virtual Account? BankAccount { get; set; }
 
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
+        
+        [Required]
+        public long PaycheckId { get; set; }
 
-        [Required]
-        [Column(TypeName = "date")]
-        public DateTime EnteredOn { get; set; }
-        
-        [Key]
-        public long Id { get; set; }
-        
-        [Required]
-        [StringLength(20)]
-        public string ReferenceNumber { get; set; } = string.Empty;
-        
-        [Required]
-        public long TransactionId { get; set; }
-
-        [ForeignKey("TransactionId")]
-        public virtual Transaction? Transaction { get; set; }
+        [ForeignKey("PaycheckId")]
+        public virtual Paycheck? Paycheck { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//
-//  Invoice.cs
+//  Transaction.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -23,48 +23,34 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Brizbee.Core.Models
+namespace Brizbee.Core.Models.Accounting
 {
-    public class Invoice
+    public class Transaction
     {
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-        
-        [Required]
-        public int CustomerId { get; set; }
 
-        [ForeignKey("CustomerId")]
-        public virtual Customer? Customer { get; set; }
-        
+        [StringLength(60)]
+        public string Description { get; set; } = string.Empty;
+
         [Required]
         [Column(TypeName = "date")]
         public DateTime EnteredOn { get; set; }
 
+        public virtual ICollection<Entry>? Entries { get; set; }
+
         [Key]
         public long Id { get; set; }
-        
-        public virtual ICollection<LineItem>? LineItems { get; set; }
-
-        [Required]
-        [StringLength(20)]
-        public string Number { get; set; } = string.Empty;
 
         [Required]
         public int OrganizationId { get; set; }
 
         [ForeignKey("OrganizationId")]
         public virtual Organization? Organization { get; set; }
-        
-        public virtual ICollection<Payment>? Payments { get; set; }
 
         [Required]
-        public decimal TotalAmount { get; set; }
-        
-        [Required]
-        public long TransactionId { get; set; }
-
-        [ForeignKey("TransactionId")]
-        public virtual Transaction? Transaction { get; set; }
+        [StringLength(20)]
+        public string ReferenceNumber { get; set; } = string.Empty;
     }
 }
