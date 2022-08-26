@@ -27,6 +27,12 @@ namespace Brizbee.Core.Models.Accounting
 {
     public class Paycheck
     {
+        public virtual ICollection<CalculatedDeduction>? CalculatedDeductions { get; set; }
+        
+        public virtual ICollection<CalculatedTaxation>? CalculatedTaxations { get; set; }
+        
+        public virtual ICollection<CalculatedWithholding>? CalculatedWithholdings { get; set; }
+
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }

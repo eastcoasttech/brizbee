@@ -20,10 +20,15 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Api.Serialization.Dto;
 using Brizbee.Core.Models;
 using Brizbee.Core.Models.Accounting;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Net;
 
 namespace Brizbee.Api.Controllers
 {
@@ -42,17 +47,151 @@ namespace Brizbee.Api.Controllers
 
         // GET: api/Invoices
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Invoice>>> GetInvoices()
+        public async Task<ActionResult<IEnumerable<Invoice>>> GetInvoices(
+            [FromQuery] int skip = 0, [FromQuery] int pageSize = 1000,
+            [FromQuery] string orderBy = "INVOICES/ENTEREDON", [FromQuery] string orderByDirection = "ASC")
         {
-            return await _context.Invoices!
-                .ToListAsync();
+            if (pageSize > 1000)
+            {
+                BadRequest();
+            }
+            
+            var currentUser = CurrentUser();
+            
+            var invoices = new List<Invoice>();
+            using var connection = new SqlConnection(_configuration.GetConnectionString("SqlContext"));
+
+            connection.Open();
+
+            // Determine the order by columns.
+            var orderByFormatted = "";
+            switch (orderBy.ToUpperInvariant())
+            {
+                case "INVOICES/ENTEREDON":
+                    orderByFormatted = "[I].[EnteredOn]";
+                    break;
+                case "INVOICES/NUMBER":
+                    orderByFormatted = "[I].[Number]";
+                    break;
+                default:
+                    orderByFormatted = "[I].[Number]";
+                    break;
+            }
+
+            // Determine the order direction.
+            var orderByDirectionFormatted = "";
+            switch (orderByDirection.ToUpperInvariant())
+            {
+                case "ASC":
+                    orderByDirectionFormatted = "ASC";
+                    break;
+                case "DESC":
+                    orderByDirectionFormatted = "DESC";
+                    break;
+                default:
+                    orderByDirectionFormatted = "ASC";
+                    break;
+            }
+
+            var whereClauses = "";
+            var parameters = new DynamicParameters();
+
+            // Common clause.
+            parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+            // Get the count.
+            var countSql = $@"
+                SELECT
+                    COUNT(*)
+                FROM [dbo].[Invoices] AS [I]
+                WHERE
+                    [I].[OrganizationId] = @OrganizationId {whereClauses};";
+
+            var total = await connection.QuerySingleAsync<int>(countSql, parameters);
+
+            // Paging parameters.
+            parameters.Add("@Skip", skip);
+            parameters.Add("@PageSize", pageSize);
+
+            // Get the records.
+            var recordsSql = $@"
+                SELECT
+                    [I].[CreatedAt] AS [Invoice_CreatedAt],
+                    [I].[CustomerId] AS [Invoice_CustomerId],
+                    [I].[EnteredOn] AS [Invoice_EnteredOn],
+                    [I].[Id] AS [Invoice_Id],
+                    [I].[Number] AS [Invoice_Number],
+                    [I].[OrganizationId] AS [Invoice_OrganizationId],
+                    [I].[TotalAmount] AS [Invoice_TotalAmount],
+                    [I].[TransactionId] AS [Invoice_TransactionId],
+
+                    [C].[CreatedAt] AS [Customer_CreatedAt],
+                    [C].[Description] AS [Customer_Description],
+                    [C].[Id] AS [Customer_Id],
+                    [C].[Name] AS [Customer_Name],
+                    [C].[Number] AS [Customer_Number],
+                    [C].[OrganizationId] AS [Customer_OrganizationId]
+                FROM [dbo].[Invoices] AS [I]
+                INNER JOIN [dbo].[Customers] AS [C]
+                    ON [C].[Id] = [I].[CustomerId]
+                WHERE
+                    [I].[OrganizationId] = @OrganizationId {whereClauses}
+                ORDER BY
+                    {orderByFormatted} {orderByDirectionFormatted}
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;";
+
+            var results = await connection.QueryAsync<InvoiceDto>(recordsSql, parameters);
+            
+            foreach (var result in results)
+            {
+                invoices.Add(new Invoice()
+                {
+                    CreatedAt = result.Invoice_CreatedAt,
+                    CustomerId = result.Invoice_CustomerId,
+                    EnteredOn = result.Invoice_EnteredOn,
+                    Id = result.Invoice_Id,
+                    Number = result.Invoice_Number,
+                    OrganizationId = result.Invoice_OrganizationId,
+                    TotalAmount = result.Invoice_TotalAmount,
+                    TransactionId = result.Invoice_TransactionId,
+
+                    Customer = new Customer()
+                    {
+                        CreatedAt = result.Customer_CreatedAt,
+                        Description = result.Customer_Description,
+                        Id = result.Customer_Id,
+                        Name = result.Customer_Name,
+                        Number = result.Customer_Number,
+                        OrganizationId = result.Customer_OrganizationId
+                    }
+                });
+            }
+
+            // Determine page count.
+            int pageCount = total > 0
+                ? (int)Math.Ceiling(total / (double)pageSize)
+                : 0;
+
+            // Set headers for paging.
+            HttpContext.Response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
+            HttpContext.Response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
+            HttpContext.Response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
+
+            return new JsonResult(invoices)
+            {
+                StatusCode = (int)HttpStatusCode.OK
+            };
         }
 
         // GET api/Invoices/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Invoice>> GetInvoice(long id)
         {
-            var invoice = await _context.Invoices!.FindAsync(id);
+            var invoice = await _context.Invoices!
+                .Include(x => x.Customer!)
+                .Include(x => x.LineItems!)
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (invoice == null)
             {
@@ -192,11 +331,42 @@ namespace Brizbee.Api.Controllers
             {
                 return NotFound();
             }
+            
+            using var databaseTransaction = _context.Database.BeginTransaction();
 
-            _context.Invoices.Remove(invoice);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // ------------------------------------------------------------
+                // Delete the transaction for the invoice.
+                // ------------------------------------------------------------
 
-            return NoContent();
+                var transaction = await _context.Transactions!.FindAsync(invoice.TransactionId);
+                _context.Transactions.Remove(transaction!);
+                await _context.SaveChangesAsync();
+
+
+                // ------------------------------------------------------------
+                // Delete the invoice.
+                // ------------------------------------------------------------
+
+                _context.Invoices.Remove(invoice);
+                await _context.SaveChangesAsync();
+
+
+                // ------------------------------------------------------------
+                // Commit the transaction.
+                // ------------------------------------------------------------
+
+                await databaseTransaction.CommitAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                await databaseTransaction.RollbackAsync();
+
+                return  StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         private bool InvoiceExists(long id)

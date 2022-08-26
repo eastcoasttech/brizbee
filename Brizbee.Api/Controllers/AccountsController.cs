@@ -22,8 +22,12 @@
 
 using Brizbee.Core.Models;
 using Brizbee.Core.Models.Accounting;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Net;
 
 namespace Brizbee.Api.Controllers
 {
@@ -42,10 +46,109 @@ namespace Brizbee.Api.Controllers
 
         // GET: api/Accounts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
+        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts(
+            [FromQuery] int skip = 0, [FromQuery] int pageSize = 1000,
+            [FromQuery] string orderBy = "ACCOUNTS/NAME", [FromQuery] string orderByDirection = "ASC")
         {
-            return await _context.Accounts!
-                .ToListAsync();
+            if (pageSize > 1000)
+            {
+                BadRequest();
+            }
+            
+            var currentUser = CurrentUser();
+            
+            var accounts = new List<Account>();
+            using var connection = new SqlConnection(_configuration.GetConnectionString("SqlContext"));
+
+            connection.Open();
+
+            // Determine the order by columns.
+            var orderByFormatted = "";
+            switch (orderBy.ToUpperInvariant())
+            {
+                case "ACCOUNTS/NUMBER":
+                    orderByFormatted = "[A].[Number]";
+                    break;
+                case "ACCOUNTS/NAME":
+                    orderByFormatted = "[A].[Name]";
+                    break;
+                default:
+                    orderByFormatted = "[A].[Name]";
+                    break;
+            }
+
+            // Determine the order direction.
+            var orderByDirectionFormatted = "";
+            switch (orderByDirection.ToUpperInvariant())
+            {
+                case "ASC":
+                    orderByDirectionFormatted = "ASC";
+                    break;
+                case "DESC":
+                    orderByDirectionFormatted = "DESC";
+                    break;
+                default:
+                    orderByDirectionFormatted = "ASC";
+                    break;
+            }
+
+            var whereClauses = "";
+            var parameters = new DynamicParameters();
+
+            // Common clause.
+            parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+            // Get the count.
+            var countSql = $@"
+                SELECT
+                    COUNT(*)
+                FROM [dbo].[Accounts] AS [A]
+                WHERE
+                    [A].[OrganizationId] = @OrganizationId {whereClauses};";
+
+            var total = await connection.QuerySingleAsync<int>(countSql, parameters);
+
+            // Paging parameters.
+            parameters.Add("@Skip", skip);
+            parameters.Add("@PageSize", pageSize);
+
+            // Get the records.
+            var recordsSql = $@"
+                SELECT
+                    [A].[CreatedAt],
+                    [A].[Description],
+                    [A].[Id],
+                    [A].[Name],
+                    [A].[Number],
+                    [A].[OrganizationId],
+                    [A].[Type],
+                    [A].[NormalBalance]
+                FROM [dbo].[Accounts] AS [A]
+                WHERE
+                    [A].[OrganizationId] = @OrganizationId {whereClauses}
+                ORDER BY
+                    {orderByFormatted} {orderByDirectionFormatted}
+                OFFSET @Skip ROWS
+                FETCH NEXT @PageSize ROWS ONLY;";
+
+            var results = await connection.QueryAsync<Account>(recordsSql, parameters);
+
+            accounts.AddRange(results);
+
+            // Determine page count.
+            int pageCount = total > 0
+                ? (int)Math.Ceiling(total / (double)pageSize)
+                : 0;
+
+            // Set headers for paging.
+            HttpContext.Response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
+            HttpContext.Response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
+            HttpContext.Response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
+
+            return new JsonResult(accounts)
+            {
+                StatusCode = (int)HttpStatusCode.OK
+            };
         }
 
         // GET api/Accounts/5

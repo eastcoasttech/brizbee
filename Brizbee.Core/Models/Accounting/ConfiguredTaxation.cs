@@ -1,5 +1,5 @@
 ﻿//
-//  WithholdingConfiguration.cs
+//  ConfiguredTaxation.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -25,24 +25,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Core.Models.Accounting
 {
-    public class WithholdingConfiguration
+    public class ConfiguredTaxation
     {
+        [Required]
+        public long AvailableTaxationId { get; set; }
+
+        [ForeignKey("AvailableTaxationId")]
+        public virtual AvailableTaxation? AvailableTaxation { get; set; }
+
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-
+        
         [Required]
-        [StringLength(7)]
-        public string Level { get; set; } = string.Empty; // FEDERAL, STATE, or LOCAL
+        public long UserId { get; set; }
 
-        [Required]
-        [StringLength(40)]
-        public string Name { get; set; } = string.Empty;
-
-        [Required]
-        public int OrganizationId { get; set; }
-
-        [ForeignKey("OrganizationId")]
-        public virtual Organization? Organization { get; set; }
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
     }
 }

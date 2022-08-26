@@ -1,5 +1,5 @@
 ﻿//
-//  CalculatedTaxation.cs
+//  AvailableDeduction.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -25,25 +25,34 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Core.Models.Accounting
 {
-    public class CalculatedTaxation
+    public class AvailableDeduction
     {
-        [Required]
-        public decimal Amount { get; set; }
-        
-        [Required]
-        public long AvailableTaxationId { get; set; }
-
-        [ForeignKey("AvailableTaxationId")]
-        public virtual AvailableTaxation? AvailableTaxation { get; set; }
-
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
         
-        [Required]
-        public long PaycheckId { get; set; }
+        [Key]
+        public long Id { get; set; }
 
-        [ForeignKey("PaycheckId")]
-        public virtual Paycheck? Paycheck { get; set; }
+        [Required]
+        [StringLength(40)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public int OrganizationId { get; set; }
+
+        [ForeignKey("OrganizationId")]
+        public virtual Organization? Organization { get; set; }
+
+        [Required]
+        public decimal RateAmount { get; set; }
+
+        [Required]
+        [StringLength(7)]
+        public string RateType { get; set; } = string.Empty; // PERCENT or FLAT
+
+        [Required]
+        [StringLength(4)]
+        public string RelationToTaxation { get; set; } = string.Empty; // PRE or POST
     }
 }

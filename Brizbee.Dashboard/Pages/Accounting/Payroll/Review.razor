@@ -1,0 +1,349 @@
+﻿@page "/accounting/payroll/review"
+
+@using Brizbee.Core.Models.Accounting
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Models
+
+@inject SharedService sharedService
+@inject DialogService dialogService
+@inject PaycheckService paycheckService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                <li class="active">
+                    <NavLink class="nav-link" href="accounting/payroll/paycheck">
+                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Accounting
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation" class="active"><NavLink href="accounting/invoices">Invoices</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/consumption-syncs">Receive Payments</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/items">Deposits</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Vendors</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Bills</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Payroll</NavLink></li>
+        <li role="presentation"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="PreviousPaycheck"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="NextPaycheck"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (selectedPaycheck != null)
+    {
+        <RadzenCard class="col-md-6">
+            <h2>@selectedPaycheck.User.Name</h2>
+
+            <div class="row">
+                <div class="col-md-9">
+                    <h3>Earnings</h3>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Other Payroll Items</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Amount</th>
+                            <th></th>
+                        </tr>
+                        @foreach (var calculatedDeduction in calculatedDeductions)
+                        {
+                            <tr>
+                                <td>
+                                    <select class="form-control input-sm" @bind="calculatedDeduction.AvailableDeductionId">
+                                        @foreach (var deduction in availableDeductions)
+                                        {
+                                            <option value="@deduction.Id">@deduction.Name</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control input-sm" @bind="calculatedDeduction.Amount" /></td>
+                                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                                    <a href="javascript:void(0)" @onclick="@(e => calculatedDeductions.Remove(calculatedDeduction))" title="Remove Deduction"><i class="fas fa-trash-alt" aria-hidden="true"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                    <button type="button" class="btn btn-default" @onclick="AddCalculatedDeductionAsync">Add Line</button>
+                    <br />
+                    <h3>Company Summary</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Amount</th>
+                            <th></th>
+                        </tr>
+                        @foreach (var calculatedTaxation in calculatedTaxations.Where(x => x.AvailableTaxation.Entity == "EMPLOYER"))
+                        {
+                            <tr>
+                                <td>
+                                    <select class="form-control input-sm" @bind="calculatedTaxation.AvailableTaxationId">
+                                        @foreach (var taxation in availableTaxations)
+                                        {
+                                            <option value="@taxation.Id">@taxation.Name</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control input-sm" @bind="calculatedTaxation.Amount" /></td>
+                                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                                    <a href="javascript:void(0)" @onclick="@(e => calculatedTaxations.Remove(calculatedTaxation))" title="Remove Deduction"><i class="fas fa-trash-alt" aria-hidden="true"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                    <button type="button" class="btn btn-default" @onclick="AddCalculatedTaxationAsync">Add Line</button>
+                </div>
+                <div class="col-md-6">
+                    <h3>Employee Summary</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Amount</th>
+                            <th></th>
+                        </tr>
+                        @foreach (var calculatedTaxation in calculatedTaxations.Where(x => x.AvailableTaxation.Entity == "EMPLOYEE"))
+                        {
+                            <tr>
+                                <td>
+                                    <select class="form-control input-sm" @bind="calculatedTaxation.AvailableTaxationId">
+                                        @foreach (var taxation in availableTaxations)
+                                        {
+                                            <option value="@taxation.Id">@taxation.Name</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control input-sm" @bind="calculatedTaxation.Amount" /></td>
+                                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                                    <a href="javascript:void(0)" @onclick="@(e => calculatedTaxations.Remove(calculatedTaxation))" title="Remove Deduction"><i class="fas fa-trash-alt" aria-hidden="true"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                    <button type="button" class="btn btn-default" @onclick="AddCalculatedTaxationAsync">Add Line</button>
+                </div>
+            </div>
+        </RadzenCard>
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool loading = false;
+    private bool working = false;
+    private User currentUser;
+    private List<Paycheck> paychecks = new();
+    private Paycheck selectedPaycheck;
+    private int? selectedPaycheckIndex = null;
+    private List<CalculatedDeduction> calculatedDeductions = new();
+    private List<AvailableDeduction> availableDeductions = new();
+    private List<CalculatedTaxation> calculatedTaxations = new();
+    private List<AvailableTaxation> availableTaxations = new();
+    private List<CalculatedWithholding> calculatedWithholdings = new();
+    private List<AvailableWithholding> availableWithholdings = new();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+
+        paychecks.Add(new Paycheck()
+        {
+            CreatedAt = DateTime.UtcNow,
+            EnteredOn = DateTime.Today,
+            GrossAmount = 0.00M,
+            NetAmount = 0.00M,
+            Number = 1000,
+            OrganizationId = currentUser.OrganizationId,
+            UserId = currentUser.Id
+        });
+
+        NextPaycheck();
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    private async System.Threading.Tasks.Task SavePaycheck()
+    {
+    }
+
+    private void NextPaycheck()
+    {
+        if (!selectedPaycheckIndex.HasValue)
+            selectedPaycheckIndex = 0;
+        else
+        {
+            if (selectedPaycheckIndex != paychecks.Count)
+                return;
+            else
+                // Move to the next one.
+                selectedPaycheckIndex++;
+        }
+
+        selectedPaycheck = paychecks[selectedPaycheckIndex.Value];
+    }
+
+    private void PreviousPaycheck()
+    {
+        if (!selectedPaycheckIndex.HasValue || selectedPaycheckIndex == 0)
+            return;
+
+        // Move to the next one.
+        selectedPaycheckIndex--;
+
+        selectedPaycheck = paychecks[selectedPaycheckIndex.Value];
+    }
+
+    private async System.Threading.Tasks.Task AddCalculatedDeductionAsync()
+    {
+        await System.Threading.Tasks.Task.Run(() =>
+        {
+            calculatedDeductions.Add(new CalculatedDeduction()
+                {
+                    AvailableDeduction = new AvailableDeduction()
+                    {
+                        Name = "Health Savings Account Contribution",
+                        RateType = "FLAT",
+                        RateAmount = 10.0M
+                    }
+                });
+        });
+    }
+
+    private async System.Threading.Tasks.Task AddCalculatedTaxationAsync()
+    {
+        await System.Threading.Tasks.Task.Run(() =>
+        {
+            calculatedTaxations.Add(new CalculatedTaxation()
+                {
+                    AvailableTaxation = new AvailableTaxation()
+                    {
+                        Name = "Social Security Employer",
+                        Entity = "EMPLOYER"
+                    }
+                });
+        });
+    }
+
+    private void Recalculate()
+    {
+
+    }
+
+    private void DoStuff(ChangeEventArgs e)
+    {
+        var selectedString = e.Value.ToString();
+    }
+}

@@ -50,6 +50,8 @@ namespace Brizbee.Api
         public DbSet<LineItem>? LineItems { get; set; }
 
         public DbSet<Organization>? Organizations { get; set; }
+        
+        public DbSet<Paycheck>? Paychecks { get; set; }
 
         public DbSet<Payment>? Payments { get; set; }
 

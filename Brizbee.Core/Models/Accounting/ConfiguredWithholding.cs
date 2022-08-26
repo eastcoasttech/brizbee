@@ -1,5 +1,5 @@
 ﻿//
-//  CalculatedTaxation.cs
+//  ConfiguredWithholding.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -25,25 +25,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Core.Models.Accounting
 {
-    public class CalculatedTaxation
+    public class ConfiguredWithholding
     {
         [Required]
-        public decimal Amount { get; set; }
-        
-        [Required]
-        public long AvailableTaxationId { get; set; }
+        public long AvailableWithholdingId { get; set; }
 
-        [ForeignKey("AvailableTaxationId")]
-        public virtual AvailableTaxation? AvailableTaxation { get; set; }
+        [ForeignKey("AvailableWithholdingId")]
+        public virtual AvailableWithholding? AvailableWithholding { get; set; }
 
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
         
         [Required]
-        public long PaycheckId { get; set; }
+        public long UserId { get; set; }
 
-        [ForeignKey("PaycheckId")]
-        public virtual Paycheck? Paycheck { get; set; }
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
     }
 }

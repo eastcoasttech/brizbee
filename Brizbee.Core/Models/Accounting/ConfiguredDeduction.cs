@@ -1,5 +1,5 @@
 ﻿//
-//  DeductionConfiguration.cs
+//  ConfiguredDeduction.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -25,31 +25,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Core.Models.Accounting
 {
-    public class DeductionConfiguration
+    public class ConfiguredDeduction
     {
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-
+        
         [Required]
-        [StringLength(40)]
-        public string Name { get; set; } = string.Empty;
+        public long UserId { get; set; }
 
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
+        
         [Required]
-        public int OrganizationId { get; set; }
+        public long AvailableDeductionId { get; set; }
 
-        [ForeignKey("OrganizationId")]
-        public virtual Organization? Organization { get; set; }
-
-        [Required]
-        public decimal RateAmount { get; set; }
-
-        [Required]
-        [StringLength(7)]
-        public string RateType { get; set; } = string.Empty; // PERCENT or FLAT
-
-        [Required]
-        [StringLength(4)]
-        public string RelationToTaxation { get; set; } = string.Empty; // PRE or POST
+        [ForeignKey("AvailableDeductionId")]
+        public virtual AvailableDeduction? AvailableDeduction { get; set; }
     }
 }

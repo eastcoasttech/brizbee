@@ -12,8 +12,13 @@ CREATE TABLE [dbo].[Accounts]
             PRIMARY KEY CLUSTERED ([Id])
     );
 
-CREATE NONCLUSTERED INDEX [IX_Accounts_Name]
-    ON [dbo].[Accounts] ([Name]);
+CREATE NONCLUSTERED INDEX [IX_Accounts_OrganizationIdName]
+    ON [dbo].[Accounts] ([OrganizationId], [Name])
+    INCLUDE ([Number], [Description], [Type], [CreatedAt]);
+
+CREATE NONCLUSTERED INDEX [IX_Accounts_OrganizationIdNumber]
+    ON [dbo].[Accounts] ([OrganizationId], [Number])
+    INCLUDE ([Name], [Description], [Type], [CreatedAt]);
 
 ALTER TABLE [dbo].[Accounts]
 ADD

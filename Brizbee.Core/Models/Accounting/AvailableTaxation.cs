@@ -1,5 +1,5 @@
 ﻿//
-//  TaxationConfiguration.cs
+//  AvailableTaxation.cs
 //  BRIZBEE Common Library
 //
 //  Copyright (C) 2019-2022 East Coast Technology Services, LLC
@@ -25,15 +25,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Brizbee.Core.Models.Accounting
 {
-    public class TaxationConfiguration
+    public class AvailableTaxation
     {
         [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
-
+        
+        /// <summary>
+        /// Indicates the entity responsible for the tax. Should be EMPLOYEE or EMPLOYER.
+        /// </summary>
         [Required]
         [StringLength(8)]
-        public string Entity { get; set; } = string.Empty; // EMPLOYEE or EMPLOYER
+        public string Entity { get; set; } = string.Empty;
+        
+        [Key]
+        public long Id { get; set; }
+        
+        [Required]
+        public decimal LimitAmount { get; set; }
 
         [Required]
         [StringLength(40)]
@@ -48,8 +57,11 @@ namespace Brizbee.Core.Models.Accounting
         [Required]
         public decimal RateAmount { get; set; }
 
+        /// <summary>
+        /// Indicates the method for calculating the rate. Should be PERCENT or FLAT.
+        /// </summary>
         [Required]
         [StringLength(7)]
-        public string RateType { get; set; } = string.Empty; // PERCENT or FLAT
+        public string RateType { get; set; } = string.Empty;
     }
 }

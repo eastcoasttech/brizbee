@@ -31,6 +31,12 @@ namespace Brizbee.Core.Models.Accounting
         public decimal Amount { get; set; }
 
         [Required]
+        public long AvailableDeductionId { get; set; }
+
+        [ForeignKey("AvailableDeductionId")]
+        public virtual AvailableDeduction? AvailableDeduction { get; set; }
+
+        [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
         
