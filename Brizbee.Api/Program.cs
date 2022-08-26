@@ -29,6 +29,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Stripe;
 using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -101,6 +102,9 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<AuthorizationHeaderOperation>();
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Brizbee.Api", Version = "v1" });
 });
+
+// Configure Stripe key
+StripeConfiguration.ApiKey = builder.Configuration["StripeSecretKey"];
 
 var app = builder.Build();
 
