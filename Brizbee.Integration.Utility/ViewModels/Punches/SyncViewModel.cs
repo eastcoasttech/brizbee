@@ -224,7 +224,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 // Execute request.
                 var syncHttpResponse = client.Execute(syncHttpRequest);
                 if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
-                        (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.Created))
+                        (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                 {
                     StatusText += string.Format("{0} - Synced successfully.\r\n", DateTime.Now.ToString());
                     OnPropertyChanged("StatusText");
