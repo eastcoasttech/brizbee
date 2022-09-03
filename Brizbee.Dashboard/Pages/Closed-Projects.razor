@@ -248,6 +248,7 @@
                         }
                     </a>
                 </th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -263,18 +264,19 @@
                     <td @onclick="@(e => OpenModifyProjectDialog(project))"><a href="javascript:void(0)">@formatString(project.CustomerWorkOrder)</a></td>
                     <td @onclick="@(e => OpenModifyProjectDialog(project))"><a href="javascript:void(0)">@formatString(project.CustomerPurchaseOrder)</a></td>
                     <td @onclick="@(e => OpenModifyProjectDialog(project))"><a href="javascript:void(0)">@formatString(project.InvoiceNumber)</a></td>
+                    <td><a href="/project-details/@(project.Id)">Details</a></td>
                 </tr>
             }
             @if (loadingProjects)
             {
                 <tr class="fadeIn">
-                    <td colspan="9"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    <td colspan="10"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
             @if (!loadingProjects && projects.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="9">No Closed Projects</td>
+                    <td colspan="10">No Closed Projects</td>
                 </tr>
             }
         </tbody>
