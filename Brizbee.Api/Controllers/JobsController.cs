@@ -62,6 +62,19 @@ namespace Brizbee.Api.Controllers
                 .Where(j => customerIds.Contains(j.CustomerId));
         }
 
+        // GET: odata/Jobs/Proposed
+        [HttpGet]
+        [EnableQuery(PageSize = 1000, MaxExpansionDepth = 1)]
+        public IQueryable<Job> Proposed()
+        {
+            var currentUser = CurrentUser();
+
+            return _context.Jobs
+                .Include(j => j.Customer)
+                .Where(j => j.Customer!.OrganizationId == currentUser.OrganizationId)
+                .Where(j => j.Status == "Proposed");
+        }
+
         // GET: odata/Jobs/Open
         [HttpGet]
         [EnableQuery(PageSize = 1000, MaxExpansionDepth = 1)]
@@ -72,7 +85,7 @@ namespace Brizbee.Api.Controllers
             return _context.Jobs
                 .Include(j => j.Customer)
                 .Where(j => j.Customer!.OrganizationId == currentUser.OrganizationId)
-                .Where(j => new string[] { "Open", "Needs Invoice" }.Contains(j.Status));
+                .Where(j => new [] { "Open", "Needs Invoice" }.Contains(j.Status));
         }
 
         // GET: odata/Jobs/Closed
@@ -85,7 +98,7 @@ namespace Brizbee.Api.Controllers
             return _context.Jobs
                 .Include(j => j.Customer)
                 .Where(j => j.Customer!.OrganizationId == currentUser.OrganizationId)
-                .Where(j => new string[] { "Merged", "Closed" }.Contains(j.Status));
+                .Where(j => new [] { "Merged", "Closed" }.Contains(j.Status));
         }
 
         // GET: odata/Jobs(5)

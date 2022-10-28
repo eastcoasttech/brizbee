@@ -399,6 +399,14 @@ table.table-exceptions tr td p.input-group-sm {
 /* RADZEN MODIFICATIONS */
 /* ------------------------------------------------------------------------- */
 
+.rz-tick-text {
+    font-size: 13px;
+}
+
+.rz-axis-title {
+    font-size: 13px;
+}
+
 .rz-tooltip-content {
     background-color: #444;
     color: #fff;

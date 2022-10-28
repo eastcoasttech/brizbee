@@ -22,44 +22,44 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Integration.Utility.Services;
 using Brizbee.Integration.Utility.Exceptions;
+using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
+using NLog;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Configuration;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Configuration;
-using NLog;
 
 namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 {
     public class SyncViewModel : INotifyPropertyChanged
     {
-        #region Public Fields
         public bool IsExitEnabled { get; set; }
+
         public bool IsTryEnabled { get; set; }
+
         public bool IsStartOverEnabled { get; set; }
+
         public string StatusText { get; set; }
-        public int AddErrorCount { get; set; }
+
         public int ValidationErrorCount { get; set; }
+
         public int SaveErrorCount { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
-        #endregion
 
-        #region Private Fields
-        private RestClient client = Application.Current.Properties["Client"] as RestClient;
-        private string selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
-        private string selectedValue = Application.Current.Properties["SelectedValue"] as string;
-        private string vendorFullName = ConfigurationManager.AppSettings["InventoryConsumptionVendorName"].ToString();
-        private string refNumber = "Materials";
+        private readonly RestClient _client = Application.Current.Properties["Client"] as RestClient;
+        private readonly string _selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
+        private readonly string _selectedValue = Application.Current.Properties["SelectedValue"] as string;
+        private readonly string _vendorFullName = ConfigurationManager.AppSettings["InventoryConsumptionVendorName"];
+        private const string ReferenceNumber = "Materials";
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        #endregion
-
+        
         public void Sync()
         {
             // Disable the buttons.
@@ -74,7 +74,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             ValidationErrorCount = 0;
             SaveErrorCount = 0;
 
-            StatusText = string.Format("{0} - Starting.\r\n", DateTime.Now.ToString());
+            StatusText = $"{DateTime.Now} - Starting.\r\n";
             OnPropertyChanged("StatusText");
 
 
@@ -82,9 +82,10 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             // Ensure the vendor name is specified.
             // ------------------------------------------------------------
 
-            if (string.IsNullOrEmpty(vendorFullName))
+            if (string.IsNullOrEmpty(_vendorFullName))
             {
-                StatusText = string.Format("{0} - Must specify the InventoryConsumptionVendorName in the configuration.\r\n", DateTime.Now.ToString());
+                StatusText =
+                    $"{DateTime.Now} - Must specify the InventoryConsumptionVendorName in the configuration.\r\n";
                 OnPropertyChanged("StatusText");
 
                 // Enable the buttons.
@@ -105,7 +106,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
             var service = new QuickBooksService();
 
-            StatusText += string.Format("{0} - Connecting to QuickBooks.\r\n", DateTime.Now.ToString());
+            StatusText += $"{DateTime.Now} - Connecting to QuickBooks.\r\n";
             OnPropertyChanged("StatusText");
 
             // QBXML request processor must always be closed after use.
@@ -117,24 +118,25 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 var ticket = req.BeginSession("", QBFileMode.qbFileOpenDoNotCare);
                 var companyFileName = req.GetCurrentCompanyFileName(ticket);
 
-                StatusText += string.Format("{0} - Syncing.\r\n", DateTime.Now.ToString());
+                StatusText += $"{DateTime.Now} - Syncing.\r\n";
                 OnPropertyChanged("StatusText");
 
                 // Determine the method of recording consumption.
-                if (selectedMethod == "Inventory Adjustment")
+                if (_selectedMethod == "Inventory Adjustment")
                 {
-                    StatusText += string.Format("{0} - Using {1} method.\r\n", DateTime.Now.ToString(), selectedMethod);
+                    StatusText += $"{DateTime.Now} - Using {_selectedMethod} method.\r\n";
                     OnPropertyChanged("StatusText");
                 }
-                else if (selectedMethod == "Sales Receipt")
+                else if (_selectedMethod == "Sales Receipt")
                 {
-                    StatusText += string.Format("{0} - Using {1} method and {2} value.\r\n", DateTime.Now.ToString(), selectedMethod, selectedValue);
+                    StatusText +=
+                        $"{DateTime.Now} - Using {_selectedMethod} method and {_selectedValue} value.\r\n";
                     OnPropertyChanged("StatusText");
                 }
-                else if (selectedMethod == "Bill")
+                else if (_selectedMethod == "Bill")
                 {
-                    StatusText += string.Format("{0} - Using {1} method and {2} value with {3} vendor.\r\n",
-                        DateTime.Now.ToString(), selectedMethod, selectedValue, vendorFullName);
+                    StatusText +=
+                        $"{DateTime.Now} - Using {_selectedMethod} method and {_selectedValue} value with {_vendorFullName} vendor.\r\n";
                     OnPropertyChanged("StatusText");
                 }
 
@@ -144,9 +146,9 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                 // ------------------------------------------------------------
 
                 // Prepare a new QBXML document.
-                var hostQBXML = service.MakeQBXMLDocument();
-                var hostDocument = hostQBXML.Item1;
-                var hostElement = hostQBXML.Item2;
+                var hostQbxml = service.MakeQBXMLDocument();
+                var hostDocument = hostQbxml.Item1;
+                var hostElement = hostQbxml.Item2;
                 service.BuildHostQueryRq(hostDocument, hostElement);
 
                 // Make the request.
@@ -168,7 +170,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
                 if (consumptions.Count == 0)
                 {
-                    StatusText += string.Format("{0} - There is no inventory consumption to sync.\r\n", DateTime.Now.ToString());
+                    StatusText += $"{DateTime.Now} - There is no inventory consumption to sync.\r\n";
                     OnPropertyChanged("StatusText");
                 }
                 else
@@ -178,14 +180,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                     // ------------------------------------------------------------
 
                     // Build the request to store consumptions.
-                    if (selectedMethod == "Sales Receipt")
+                    if (_selectedMethod == "Sales Receipt")
                     {
                         // Prepare a new QBXML document.
-                        var consQBXML = service.MakeQBXMLDocument();
-                        var consDocument = consQBXML.Item1;
-                        var consElement = consQBXML.Item2;
+                        var (consDocument, consElement) = service.MakeQBXMLDocument();
 
-                        service.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
+                        service.BuildSalesReceiptAddRq(consDocument, consElement, consumptions, _selectedValue.ToUpperInvariant());
 
                         // Make the request.
                         Logger.Debug(consDocument.OuterXml);
@@ -193,19 +193,17 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         Logger.Debug(consResponse);
 
                         // Then walk the response.
-                        var walkReponse = service.WalkSalesReceiptAddRs(consResponse);
-                        txnIds = walkReponse.Item3;
+                        var (_, _, transactionIds) = service.WalkSalesReceiptAddRs(consResponse);
+                        txnIds = txnIds.Concat(transactionIds).ToList();
                     }
-                    else if (selectedMethod == "Bill")
+                    else if (_selectedMethod == "Bill")
                     {
                         foreach (var consumption in consumptions)
                         {
                             // Prepare a new QBXML document.
-                            var consQBXML = service.MakeQBXMLDocument();
-                            var consDocument = consQBXML.Item1;
-                            var consElement = consQBXML.Item2;
+                            var (consDocument, consElement) = service.MakeQBXMLDocument();
 
-                            service.BuildBillAddRq(consDocument, consElement, consumption, vendorFullName, refNumber, selectedValue.ToUpperInvariant());
+                            service.BuildBillAddRq(consDocument, consElement, consumption, _vendorFullName, ReferenceNumber, _selectedValue.ToUpperInvariant());
 
                             // Make the request.
                             Logger.Debug(consDocument.OuterXml);
@@ -213,18 +211,16 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                             Logger.Debug(consResponse);
 
                             // Then walk the response.
-                            var walkReponse = service.WalkBillAddRs(consResponse);
-                            txnIds = txnIds.Concat(walkReponse.Item3).ToList();
+                            var (_, _, transactionIds) = service.WalkBillAddRs(consResponse);
+                            txnIds = txnIds.Concat(transactionIds).ToList();
                         }
                     }
-                    else if (selectedMethod == "Inventory Adjustment")
+                    else if (_selectedMethod == "Inventory Adjustment")
                     {
                         // Prepare a new QBXML document.
-                        var consQBXML = service.MakeQBXMLDocument();
-                        var consDocument = consQBXML.Item1;
-                        var consElement = consQBXML.Item2;
+                        var (consDocument, consElement) = service.MakeQBXMLDocument();
 
-                        service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, selectedValue.ToUpperInvariant());
+                        service.BuildInventoryAdjustmentAddRq(consDocument, consElement, consumptions, _selectedValue.ToUpperInvariant());
 
                         // Make the request.
                         Logger.Debug(consDocument.OuterXml);
@@ -232,46 +228,42 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         Logger.Debug(consResponse);
 
                         // Then walk the response.
-                        var walkReponse = service.WalkInventoryAdjustmentAddRs(consResponse);
-                        txnIds = walkReponse.Item3;
+                        var (_, _, transactionIds) = service.WalkInventoryAdjustmentAddRs(consResponse);
+                        txnIds = txnIds.Concat(transactionIds).ToList();
+                    }
+                    
+                    var transactionType = string.Empty;
+
+                    switch (_selectedMethod)
+                    {
+                        case "Sales Receipt":
+                            transactionType = "SalesReceipt";
+                            break;
+                        case "Bill":
+                            transactionType = "Bill";
+                            break;
+                        case "Inventory Adjustment":
+                            transactionType = "InventoryAdjustment";
+                            break;
                     }
 
                     if (SaveErrorCount > 0)
                     {
-                        StatusText += string.Format("{0} - Sync failed. Please correct the {1} errors first.\r\n", DateTime.Now.ToString(), SaveErrorCount);
+                        StatusText +=
+                            $"{DateTime.Now} - Sync failed. Please correct the {SaveErrorCount} errors first.\r\n";
                         OnPropertyChanged("StatusText");
-
-                        var transactionType = "";
-
-                        switch (selectedMethod)
-                        {
-                            case "Sales Receipt":
-                                transactionType = "SalesReceipt";
-                                break;
-                            case "Bill":
-                                transactionType = "Bill";
-                                break;
-                            case "Inventory Adjustment":
-                                transactionType = "InventoryAdjustment";
-                                break;
-                        }
-
+                        
                         // Reverse the transactions.
                         foreach (var txnId in txnIds)
                         {
                             // Prepare a new QBXML document.
-                            var delQBXML = service.MakeQBXMLDocument();
-                            var delDocument = delQBXML.Item1;
-                            var delElement = delQBXML.Item2;
+                            var (delDocument, delElement) = service.MakeQBXMLDocument();
                             service.BuildTxnDelRq(delDocument, delElement, transactionType, txnId); // InventoryAdjustment, SalesReceipt, or Bill
 
                             // Make the request.
                             Logger.Debug(delDocument.OuterXml);
                             var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
                             Logger.Debug(delResponse);
-
-                            // Then walk the response.
-                            var delWalkResponse = service.WalkTxnDelRs(delResponse);
                         }
                     }
                     else
@@ -286,8 +278,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         // Build the request to send the sync details.
                         var syncHttpRequest = new RestRequest("api/QBDInventoryConsumptions/Sync", Method.Post);
                         syncHttpRequest.AddJsonBody(payload);
-                        syncHttpRequest.AddQueryParameter("recordingMethod", selectedMethod);
-                        syncHttpRequest.AddQueryParameter("valueMethod", selectedValue);
+                        syncHttpRequest.AddQueryParameter("recordingMethod", _selectedMethod);
+                        syncHttpRequest.AddQueryParameter("valueMethod", _selectedValue);
                         syncHttpRequest.AddQueryParameter("productName", hostDetails.QBProductName);
                         syncHttpRequest.AddQueryParameter("majorVersion", hostDetails.QBMajorVersion);
                         syncHttpRequest.AddQueryParameter("minorVersion", hostDetails.QBMinorVersion);
@@ -297,17 +289,30 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
                         syncHttpRequest.AddQueryParameter("companyFilePath", companyFileName);
 
                         // Execute request.
-                        var syncHttpResponse = client.Execute(syncHttpRequest);
+                        var syncHttpResponse = _client.Execute(syncHttpRequest);
                         if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
                                 (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                         {
-                            StatusText += string.Format("{0} - Synced Successfully.\r\n", DateTime.Now.ToString());
+                            StatusText += $"{DateTime.Now} - Synced Successfully.\r\n";
                             OnPropertyChanged("StatusText");
                         }
                         else
                         {
+                            // Reverse the transactions.
+                            foreach (var txnId in txnIds)
+                            {
+                                // Prepare a new QBXML document.
+                                var (delDocument, delElement) = service.MakeQBXMLDocument();
+                                service.BuildTxnDelRq(delDocument, delElement, transactionType, txnId); // InventoryAdjustment, SalesReceipt, or Bill
+
+                                // Make the request.
+                                Logger.Debug(delDocument.OuterXml);
+                                var delResponse = req.ProcessRequest(ticket, delDocument.OuterXml);
+                                Logger.Debug(delResponse);
+                            }
+
                             StatusText += $"{DateTime.Now} - {syncHttpResponse.Content}";
-                            StatusText += string.Format("{0} - Sync failed.\r\n", DateTime.Now.ToString());
+                            StatusText += $"{DateTime.Now} - Sync failed.\r\n";
                             OnPropertyChanged("StatusText");
                         }
                     }
@@ -320,7 +325,8 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             }
             catch (DownloadFailedException)
             {
-                StatusText += string.Format("{0} - Sync failed. Could not download consumption from the server.\r\n", DateTime.Now.ToString());
+                StatusText +=
+                    $"{DateTime.Now} - Sync failed. Could not download consumption from the server.\r\n";
                 OnPropertyChanged("StatusText");
             }
             catch (COMException cex)
@@ -329,12 +335,12 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
                 if ((uint)cex.ErrorCode == 0x80040408)
                 {
-                    StatusText += string.Format("{0} - Sync failed. QuickBooks Desktop is not open.\r\n", DateTime.Now.ToString());
+                    StatusText += $"{DateTime.Now} - Sync failed. QuickBooks Desktop is not open.\r\n";
                     OnPropertyChanged("StatusText");
                 }
                 else
                 {
-                    StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), cex.Message);
+                    StatusText += $"{DateTime.Now} - Sync failed. {cex.Message}\r\n";
                     OnPropertyChanged("StatusText");
                 }
             }
@@ -342,7 +348,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
             {
                 Logger.Error(ex.ToString());
 
-                StatusText += string.Format("{0} - Sync failed. {1}\r\n", DateTime.Now.ToString(), ex.Message);
+                StatusText += $"{DateTime.Now} - Sync failed. {ex.Message}\r\n";
                 OnPropertyChanged("StatusText");
             }
             finally
@@ -366,16 +372,16 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 
         private List<QBDInventoryConsumption> GetConsumption()
         {
-            StatusText += string.Format("{0} - Getting unsynced consumption.\r\n", DateTime.Now.ToString());
+            StatusText += $"{DateTime.Now} - Getting unsynced consumption.\r\n";
             OnPropertyChanged("StatusText");
 
             // Build the request to get unsynced consumption.
-            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynced", Method.Get);
+            var request = new RestRequest("api/QBDInventoryConsumptions/Unsynced");
             request.AddHeader("X-Paging-PageNumber", "1");
             request.AddHeader("X-Paging-PageSize", "1000");
 
             // Execute request.
-            var response = client.Execute<List<QBDInventoryConsumption>>(request);
+            var response = _client.Execute<List<QBDInventoryConsumption>>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {

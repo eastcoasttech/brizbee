@@ -569,15 +569,15 @@ namespace Brizbee.Integration.Utility.Services
             itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
 
             // ------------------------------------------------------------
-            // ItemLineAdd 1 > ClassRef
+            // ItemLineAdd 1 > InventorySiteRef
             // ------------------------------------------------------------
 
-            if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
+            if (consumption.QBDInventorySiteId.HasValue && consumption.QBDInventorySiteId != 0) // Optional, not always available
             {
-                XmlElement classRef = doc.CreateElement("ClassRef");
-                line1.AppendChild(classRef);
+                XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                line1.AppendChild(inventorySiteRef);
 
-                classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
+                inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
             }
 
             // ------------------------------------------------------------
@@ -598,18 +598,6 @@ namespace Brizbee.Integration.Utility.Services
             // ------------------------------------------------------------
 
             line1.AppendChild(MakeSimpleElement(doc, "Cost", cost.ToString()));
-
-            // ------------------------------------------------------------
-            // ItemLineAdd 1 > InventorySiteRef
-            // ------------------------------------------------------------
-
-            if (consumption.QBDInventorySiteId.HasValue && consumption.QBDInventorySiteId != 0) // Optional, not always available
-            {
-                XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
-                line1.AppendChild(inventorySiteRef);
-
-                inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
-            }
 
 
             // ------------------------------------------------------------
@@ -652,6 +640,18 @@ namespace Brizbee.Integration.Utility.Services
             // ------------------------------------------------------------
 
             line2.AppendChild(MakeSimpleElement(doc, "Cost", cost.ToString()));
+
+            // ------------------------------------------------------------
+            // ItemLineAdd 2 > ClassRef
+            // ------------------------------------------------------------
+
+            if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
+            {
+                XmlElement classRef = doc.CreateElement("ClassRef");
+                line2.AppendChild(classRef);
+
+                classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
+            }
 
             // ------------------------------------------------------------
             // ItemLineAdd 2 > CustomerRef

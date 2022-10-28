@@ -314,10 +314,11 @@ namespace Brizbee.Api.Controllers
 
                     // Save the organization and user.
                     _context.Organizations.Add(organization);
+                    _context.SaveChanges();
+
                     user.OrganizationId = organization.Id;
 
                     _context.Users.Add(user);
-
                     _context.SaveChanges();
 
                     _telemetryClient.TrackEvent("Registration:Succeeded");

@@ -20,6 +20,7 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using System.Collections;
 using Brizbee.Api.Serialization;
 using Brizbee.Api.Serialization.Expanded;
 using Brizbee.Api.Sql;
@@ -250,17 +251,12 @@ namespace Brizbee.Api.Controllers
         {
             var currentUser = CurrentUser();
 
-            string[] statusFilters;
-
-            switch (filterStatus.ToUpperInvariant())
+            var statusFilters = filterStatus.ToUpperInvariant() switch
             {
-                case "OPEN":
-                    statusFilters = new string[] { "Open", "Needs Invoice" };
-                    break;
-                default:
-                    statusFilters = new string[] { "Merged", "Closed" };
-                    break;
-            }
+                "OPEN" => new[] { "Open", "Needs Invoice" },
+                "PROPOSED" => new[] { "Proposed" },
+                _ => new[] { "Merged", "Closed" }
+            };
 
             var jobs = _context.Jobs
                 .Include(j => j.Customer)
@@ -284,14 +280,15 @@ namespace Brizbee.Api.Controllers
             {
                 Delimiter = ","
             };
-            using (var writer = new StringWriter())
-            using (var csv = new CsvWriter(writer, configuration))
-            {
-                csv.WriteRecords(jobs);
 
-                var bytes = Encoding.UTF8.GetBytes(writer.ToString());
-                return File(bytes, "text/csv", fileDownloadName: $"{filterStatus.ToUpperInvariant()} PROJECTS - {DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.csv");
-            }
+            using var writer = new StringWriter();
+            using var csv = new CsvWriter(writer, configuration);
+
+            csv.WriteRecords((IEnumerable)jobs);
+
+            var bytes = Encoding.UTF8.GetBytes(writer.ToString());
+
+            return File(bytes, "text/csv", fileDownloadName: $"{filterStatus.ToUpperInvariant()} PROJECTS - {DateTime.UtcNow:yyyy-MM-dd_HH-mm-ss}.csv");
         }
 
         // GET: api/JobsExpanded/5/Statistics
