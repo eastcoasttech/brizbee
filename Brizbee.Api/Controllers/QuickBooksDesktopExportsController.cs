@@ -34,7 +34,7 @@ namespace Brizbee.Api.Controllers
     {
         private readonly SqlContext _context;
 
-        public QuickBooksDesktopExportsController(IConfiguration configuration, SqlContext context)
+        public QuickBooksDesktopExportsController(SqlContext context)
         {
             _context = context;
         }
@@ -96,7 +96,7 @@ namespace Brizbee.Api.Controllers
 
         private User CurrentUser()
         {
-            var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+            const string type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
             var claim = HttpContext.User.Claims.FirstOrDefault(c => c.Type == type)!.Value;
             var currentUserId = int.Parse(claim);
             return _context.Users!
