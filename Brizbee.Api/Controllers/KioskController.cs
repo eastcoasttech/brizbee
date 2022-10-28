@@ -64,18 +64,17 @@ namespace Brizbee.Api.Controllers
 
             var currentUser = CurrentUser();
 
-            var task = _context.Tasks
-                .Include(t => t.Job.Customer)
-                .Where(t => t.Job.Customer.OrganizationId == currentUser.OrganizationId)
-                .Where(t => t.Id == taskId)
-                .FirstOrDefault();
+            var task = _context.Tasks!
+                .Include(t => t.Job!.Customer)
+                .Where(t => t.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
+                .FirstOrDefault(t => t.Id == taskId);
 
             // Ensure that task was found.
             if (task == null) return NotFound();
-
+            
             // Ensure job is open.
-            if (task.Job.Status != "Open")
-                return BadRequest("Cannot punch in on tasks for projects that are not open.");
+            if (!new [] { "Open", "Proposed" }.Contains(task.Job!.Status))
+                return BadRequest("Cannot punch in on tasks for projects that are not open or proposed.");
 
             // Prevent double submission.
             var submission = _memoryCache.Get($"submission.punchin.{currentUser.Id}") as bool?;
