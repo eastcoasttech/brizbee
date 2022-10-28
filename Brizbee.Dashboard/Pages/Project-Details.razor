@@ -1,20 +1,19 @@
 ﻿@page "/project-details/{ProjectId:int}"
 
-@using Brizbee.Core.Serialization
 @using Brizbee.Core.Serialization.Statistics
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Models
 
 @inject NavigationManager NavigationManager
-@inject LocalStorageService localStorageService
-@inject SharedService sharedService
-@inject ApiService apiService
-@inject UserService userService
-@inject PunchService punchService
-@inject CustomerService customerService
-@inject JobService jobService
-@inject TaskService taskService
-@inject DialogService dialogService
+@inject LocalStorageService LocalStorageService
+@inject SharedService SharedService
+@inject ApiService ApiService
+@inject UserService UserService
+@inject PunchService PunchService
+@inject CustomerService CustomerService
+@inject JobService JobService
+@inject TaskService TaskService
+@inject DialogService DialogService
 
 @implements IDisposable
 
@@ -130,11 +129,32 @@
 
     @if (_currentProject != null)
     {
-        <h1 style="margin-top: 3rem; margin-bottom: 0; font-weight: bold; line-height: 2.5rem;">@_currentProject.Number &ndash; @_currentProject.Name<br /><span class="text-muted" style="font-size: 2rem;">Project</span></h1>
-        <h2 style="margin-top: 1rem; margin-bottom: 3rem; font-weight: bold; line-height: 2.5rem;">@_currentProject.Customer.Number &ndash; @_currentProject.Customer.Name<br /><span class="text-muted" style="font-size: 2rem;">Customer</span></h2>
+        <h1 style="margin-top: 3rem; margin-bottom: 0; font-weight: bold; line-height: 3rem; font-size: 3em;">@_currentProject.Name <span class="text-muted"><small>Project Number @_currentProject.Number</small></span></h1>
+        <h2 style="margin-top: 2rem; margin-bottom: 3rem; font-weight: bold; line-height: 3rem;">@_currentProject.Customer.Name <span class="text-muted"><small>Customer Number @_currentProject.Customer.Number</small></span></h2>
         <div class="row">
             
             <!-- Column 1 -->
+            <div class="col-md-4">
+                <div class="panel panel-default panel-condensed">
+                    <div class="panel-body">
+                        <div class="row" style="margin: 0; padding: 0;">
+                            <div class="col-md-6">
+                                <p>Quote <strong>@_currentProject.QuoteNumber</strong></p>
+                                <p>Work Order <strong>@_currentProject.CustomerWorkOrder</strong></p>
+                                <p>Purchase Order <strong>@_currentProject.CustomerPurchaseOrder</strong></p>
+                                <p>Invoice <strong>@_currentProject.InvoiceNumber</strong></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>Status <strong>@_currentProject.Status</strong></p>
+                                <p>Taxability <strong>@_currentProject.Taxability</strong></p>
+                                <p>Description<br/> <strong>@_currentProject.Description</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2 -->
             <div class="col-md-4">
                 <ul class="list-unstyled">
                     <li>
@@ -142,13 +162,13 @@
                             <div class="panel-body">
                                 <div class="row" style="margin: 0; padding: 0;">
                                     <div class="col-md-4">
-                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@decimal.Round(_statistics.MinutesCount / 60.0m, 1)</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Total Hours</span></p>
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@decimal.Round(Statistics.MinutesCount / 60.0m, 1)</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Total Hours</span></p>
                                     </div>
                                     <div class="col-md-4">
-                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@_statistics.WorkedDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Worked Days</span></p>
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@Statistics.WorkedDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Worked Days</span></p>
                                     </div>
                                     <div class="col-md-4">
-                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@_statistics.DurationDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Days in Duration</span></p>
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@Statistics.DurationDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Days in Duration</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -157,42 +177,44 @@
                             <div class="panel-body">
                                 <div>
                                     <RadzenChart>
-                                        <RadzenDonutSeries Data="@_statistics.TaskStatistics" CategoryProperty="TaskNumberWithName" ValueProperty="HoursCount">
-                                            <TitleTemplate>
-                                                <div class="rz-donut-content">
-                                                    <div>Hours by Task</div>
-                                                </div>
-                                            </TitleTemplate>
+                                        <RadzenBarSeries Data="@Statistics.TaskStatistics" CategoryProperty="TaskNumberWithName" ValueProperty="HoursCount">
                                             <TooltipTemplate Context="data">
                                                 <div>
                                                     Hours for task <i>@data.TaskNumberWithName</i>:
                                                     <strong>@data.HoursCount</strong>
                                                 </div>
                                             </TooltipTemplate>
-                                        </RadzenDonutSeries>
+                                        </RadzenBarSeries>
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Hours by Task" />
+                                        </RadzenValueAxis>
+                                        <RadzenLegend Visible="false" />
+                                        <RadzenBarOptions Height="20" />
                                     </RadzenChart>
                                 </div>
                                 <div>
                                     <RadzenChart>
-                                        <RadzenDonutSeries Data="@_statistics.UserStatistics" CategoryProperty="UserName" ValueProperty="HoursCount">
-                                            <TitleTemplate>
-                                                <div class="rz-donut-content">
-                                                    <div>Hours by User</div>
-                                                </div>
-                                            </TitleTemplate>
+                                        <RadzenBarSeries Data="@Statistics.UserStatistics" CategoryProperty="UserName" ValueProperty="HoursCount">
                                             <TooltipTemplate Context="data">
                                                 <div>
                                                     Hours for user <i>@data.UserName</i>:
                                                     <strong>@data.HoursCount</strong>
                                                 </div>
                                             </TooltipTemplate>
-                                        </RadzenDonutSeries>
+                                        </RadzenBarSeries>
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Hours by User" />
+                                        </RadzenValueAxis>
+                                        <RadzenLegend Visible="false" />
+                                        <RadzenBarOptions Height="20" />
                                     </RadzenChart>
                                 </div>
                                 <div>
                                     <RadzenChart>
-                                        <RadzenLineSeries Data="@_statistics.DateStatistics" CategoryProperty="Date" LineType="LineType.Solid" ValueProperty="HoursCount" Title="Hours Per Day">
-                                            <RadzenMarkers MarkerType="MarkerType.None" />
+                                        <RadzenLineSeries Data="@Statistics.DateStatistics" CategoryProperty="Date" LineType="LineType.Solid" ValueProperty="HoursCount" Title="Hours Per Day">
+                                            <RadzenMarkers MarkerType="MarkerType.Circle" />
                                         </RadzenLineSeries>
                                         <RadzenCategoryAxis Padding="20" Formatter="@FormatAsDay" />
                                         <RadzenValueAxis>
@@ -207,7 +229,7 @@
                 </ul>
             </div>
             
-            <!-- Column 2 -->
+            <!-- Column 3 -->
             <div class="col-md-4">
                 <ul class="list-unstyled">
                     <li>
@@ -264,7 +286,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (var task in _tasks)
+                                        @foreach (var task in Tasks)
                                         {
                                             <tr class="selectable @(task.Id == _selectedTaskId ? "selected" : "")">
                                                 <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Number</a></td>
@@ -281,7 +303,7 @@
                                                 <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                                             </tr>
                                         }
-                                        @if (!_loadingTasks && _tasks.Count == 0)
+                                        @if (!_loadingTasks && Tasks.Count == 0)
                                         {
                                             <tr class="fadeIn">
                                                 <td colspan="4">No Tasks for Selected Job</td>
@@ -295,10 +317,6 @@
                     </li>
                 </ul>
             </div>
-            
-            <!-- Column 3 -->
-            <div class="col-md-4">
-            </div>
         </div>
     }
 </div>
@@ -308,11 +326,13 @@
 
     [CascadingParameter]
     public EventCallback SignOutClicked { get; set; }
+    
+    private ProjectStatistics Statistics { get; set; } = new ();
+
+    private List<Brizbee.Dashboard.Models.Task> Tasks { get; set; } = new ();
 
     private User _currentUser;
     private Job _currentProject;
-    private ProjectStatistics _statistics { get; set; } = new ();
-    private List<Brizbee.Dashboard.Models.Task> _tasks { get; set; } = new ();
     private string _tasksSortBy = "Number";
     private string _tasksSortDirection = "ASC";
     private bool _loadingTasks = false;
@@ -321,9 +341,9 @@
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // Subscribe to the events
-        sharedService.OnChange += StateHasChanged;
+        SharedService.OnChange += StateHasChanged;
 
-        _currentUser = sharedService.CurrentUser;
+        _currentUser = SharedService.CurrentUser;
 
         await RefreshProject();
         await RefreshStatistics();
@@ -333,18 +353,18 @@
     void IDisposable.Dispose()
     {
         // Unsubscribe to the events
-        sharedService.OnChange -= StateHasChanged;
+        SharedService.OnChange -= StateHasChanged;
     }
 
     private async System.Threading.Tasks.Task RefreshProject()
     {
-        _currentProject = await jobService.GetJobByIdAsync(ProjectId);
+        _currentProject = await JobService.GetJobByIdAsync(ProjectId);
         StateHasChanged();
     }
 
     private void OpenDownloadBarCodesDialog(int? projectId)
     {
-        dialogService.Open<DownloadBarCodesDialog>("Download Bar Codes",
+        DialogService.Open<DownloadBarCodesDialog>("Download Bar Codes",
                                 new Dictionary<string, object>() { { "Id", projectId } },
                                 new DialogOptions() { Width = "500px" });
     }
@@ -371,17 +391,17 @@
         StateHasChanged();
 
         // Prevent stagnation.
-        _tasks.Clear();
+        Tasks.Clear();
 
-        var result = await taskService.GetTasksAsync(ProjectId, 100, 0, _tasksSortBy, _tasksSortDirection);
-        _tasks = result.Item1;
+        var result = await TaskService.GetTasksAsync(ProjectId, 100, 0, _tasksSortBy, _tasksSortDirection);
+        Tasks = result.Item1;
         _loadingTasks = false;
         StateHasChanged();
     }
 
     private async System.Threading.Tasks.Task RefreshStatistics()
     {
-        _statistics = await jobService.GetStatisticsAsync(ProjectId);
+        Statistics = await JobService.GetStatisticsAsync(ProjectId);
         StateHasChanged();
     }
 
@@ -393,28 +413,28 @@
 
     private void OpenNewTaskDialog()
     {
-        dialogService.Open<TaskDialog>("New Task",
+        DialogService.Open<TaskDialog>("New Task",
                                 new Dictionary<string, object>() { { "Id", null }, { "ProjectId", ProjectId } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenModifyTaskDialog(Brizbee.Dashboard.Models.Task task)
     {
-        dialogService.Open<TaskDialog>("Edit Task",
+        DialogService.Open<TaskDialog>("Edit Task",
                                 new Dictionary<string, object>() { { "Id", task.Id }, { "ProjectId", ProjectId } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenMergeProjectDialog(Job project)
     {
-        dialogService.Open<MergeProjectDialog>("Merge Project",
+        DialogService.Open<MergeProjectDialog>("Merge Project",
                                 new Dictionary<string, object>() { { "Id", project.Id } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenModifyProjectDialog(Job project)
     {
-        dialogService.Open<ProjectDialog>("Edit Project",
+        DialogService.Open<ProjectDialog>("Edit Project",
                                 new Dictionary<string, object>() { { "Id", project.Id }, { "CustomerId", project.CustomerId } },
                                 new DialogOptions() { Width = "600px" });
     }

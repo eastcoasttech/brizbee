@@ -23,6 +23,12 @@ namespace Brizbee.Api
             builder.EntitySet<TaskTemplate>("TaskTemplates");
             builder.EntitySet<TimesheetEntry>("TimesheetEntries");
             builder.EntitySet<User>("Users");
+            
+            // Collection Function - Jobs/Proposed
+            builder.EntityType<Job>()
+                .Collection
+                .Function("Proposed")
+                .ReturnsCollectionFromEntitySet<Job>("Jobs");
 
             // Collection Function - Jobs/Open
             builder.EntityType<Job>()
