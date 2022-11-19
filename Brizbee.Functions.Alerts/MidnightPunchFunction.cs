@@ -157,7 +157,7 @@ namespace Brizbee.Functions.Alerts
                     try
                     {
                         var tos = new List<EmailAddress>();
-                        foreach (var recipient in recipientsList)
+                        foreach (var recipient in recipientsList.Where(r => !string.IsNullOrEmpty(r.EmailAddress)))
                             tos.Add(new EmailAddress() { Email = recipient.EmailAddress, Name = recipient.Name });
 
                         var apiKey = Environment.GetEnvironmentVariable("SendGridApiKey");
