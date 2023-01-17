@@ -61,7 +61,7 @@ namespace Brizbee.Integration.Utility.ViewModels
                     Scheme = "https",
                     Host = string.Format("{0}.blob.core.windows.net", "ects1"),
                     Path = string.Format("{0}/{1}", "log-uploads", $"{now}_{version}_{hostname}.txt"),
-                    Query = "sv=2020-08-04&ss=b&srt=o&sp=w&se=2022-09-01T04:00:00Z&st=2021-09-01T04:00:00Z&spr=https&sig=VCRkJLHLx41cadrggMXbE78l9I5hLX%2B1EzQJGI%2Fh5hs%3D"
+                    Query = "sp=racw&st=2023-01-16T05:00:00Z&se=2024-01-01T05:00:00Z&spr=https&sv=2021-06-08&sr=c&sig=O%2BHmmj94Q%2FpK9iTRy98uAiMdHJc4V9IYZScWv3y0VHI%3D"
                 };
 
                 var blobClient = new BlobClient(fullUri.Uri, null);
