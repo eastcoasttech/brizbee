@@ -201,7 +201,7 @@ namespace Brizbee.Api.Controllers
                         U.[OrganizationId] = @OrganizationId AND
                         P.[InAt] BETWEEN @Min AND @Max {whereClause};";
 
-                total = connection.QuerySingle<int>(countSql, parameters);
+                total = connection.QuerySingle<int>(countSql, parameters, commandTimeout: 600);
 
                 // Paging parameters.
                 parameters.Add("@Skip", skip);
@@ -335,7 +335,7 @@ namespace Brizbee.Api.Controllers
                     OFFSET @Skip ROWS
                     FETCH NEXT @PageSize ROWS ONLY;";
 
-                var results = connection.Query<PunchExpanded>(recordsSql, parameters);
+                var results = connection.Query<PunchExpanded>(recordsSql, parameters, commandTimeout: 600);
 
                 foreach (var result in results)
                 {
@@ -554,7 +554,7 @@ namespace Brizbee.Api.Controllers
                     ORDER BY
                         [InAt] DESC;";
 
-                var results = connection.Query<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
+                var results = connection.Query<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id }, commandTimeout: 600);
 
                 if (results.Any())
                 {
