@@ -233,7 +233,7 @@ namespace Brizbee.Api.Services
                     var punchesForDay = filtered
                         .Where(p => p.InAt.Date == date.Date)
                         .ToList();
-                    var count = 0;
+                    long count = 0;
                     foreach (var punch in punchesForDay)
                     {
                         var task = _context.Tasks.Find(punch.TaskId);
@@ -272,7 +272,7 @@ namespace Brizbee.Api.Services
                 var filtered = punches
                     .Where(p => p.UserId == userId)
                     .OrderBy(p => p.InAt);
-                var count = 0;
+                long count = 0;
                 foreach (var punch in filtered)
                 {
                     var task = _context.Tasks.Find(punch.TaskId);
@@ -625,7 +625,7 @@ namespace Brizbee.Api.Services
                             .Where(p => p.InAt.Date == date.Date)
                             .ToList();
 
-                        var count = 0;
+                        long count = 0;
                         var split = false;
                         foreach (var punch in punchesForDay) // 10:15am - 4:30pm = 375 minutes
                         {
@@ -738,7 +738,7 @@ namespace Brizbee.Api.Services
                 // Split at count of minutes total
                 else if (minutesPerSpan.HasValue)
                 {
-                    var count = 0;
+                    long count = 0;
                     var split = false;
                     foreach (var punch in filtered) // 10:15am - 4:30pm = 375 minutes
                     {

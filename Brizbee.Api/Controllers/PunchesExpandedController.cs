@@ -243,9 +243,9 @@ namespace Brizbee.Api.Controllers
                         P.[ServiceRateId] AS Punch_ServiceRateId,
                         P.[PayrollRateId] AS Punch_PayrollRateId,
 
-                        DATEDIFF(minute, P.[InAt], P.[OutAt]) AS Punch_Minutes,
+                        DATEDIFF_BIG(minute, P.[InAt], P.[OutAt]) AS Punch_Minutes,
                         
-                        SUM(DATEDIFF(minute, P.[InAt], P.[OutAt])) OVER(PARTITION BY UserId ORDER BY InAt ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS Punch_CumulativeMinutes,
+                        SUM(DATEDIFF_BIG(minute, P.[InAt], P.[OutAt])) OVER(PARTITION BY UserId ORDER BY InAt ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS Punch_CumulativeMinutes,
 
                         C.[Id] AS Customer_Id,
                         C.[CreatedAt] AS Customer_CreatedAt,
