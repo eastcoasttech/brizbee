@@ -449,6 +449,9 @@ namespace Brizbee.Api.Controllers
             if (currentPunch == null)
                 return BadRequest("Cannot consume inventory without being punched in.");
 
+            if (quantity < 1)
+                return BadRequest("Cannot consume inventory with negative or zero quantity.");
+
             long? siteId = null;
             if (inventorySiteEnabled)
             {
