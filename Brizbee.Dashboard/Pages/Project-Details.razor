@@ -358,8 +358,15 @@
 
     private async System.Threading.Tasks.Task RefreshProject()
     {
-        _currentProject = await JobService.GetJobByIdAsync(ProjectId);
-        StateHasChanged();
+        try
+        {
+            _currentProject = await JobService.GetJobByIdAsync(ProjectId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
     }
 
     private void OpenDownloadBarCodesDialog(int? projectId)
@@ -387,22 +394,36 @@
 
     private async System.Threading.Tasks.Task RefreshTasks()
     {
-        _loadingTasks = true;
-        StateHasChanged();
+        try
+        {
+            _loadingTasks = true;
+            StateHasChanged();
 
-        // Prevent stagnation.
-        Tasks.Clear();
+            // Prevent stagnation.
+            Tasks.Clear();
 
-        var result = await TaskService.GetTasksAsync(ProjectId, 100, 0, _tasksSortBy, _tasksSortDirection);
-        Tasks = result.Item1;
-        _loadingTasks = false;
-        StateHasChanged();
+            var result = await TaskService.GetTasksAsync(ProjectId, 100, 0, _tasksSortBy, _tasksSortDirection);
+            Tasks = result.Item1;
+            _loadingTasks = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
     }
 
     private async System.Threading.Tasks.Task RefreshStatistics()
     {
-        Statistics = await JobService.GetStatisticsAsync(ProjectId);
-        StateHasChanged();
+        try
+        {
+            Statistics = await JobService.GetStatisticsAsync(ProjectId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
     }
 
     private void SelectTask(Brizbee.Dashboard.Models.Task task)
