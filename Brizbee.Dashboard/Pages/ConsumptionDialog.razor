@@ -105,6 +105,9 @@
         if (confirm != true)
             return;
 
+        working = true;
+        StateHasChanged();
+
         // Save on the server and close the dialog.
         await consumptionService.SaveQbdInventoryConsumptionAsync(consumption);
         dialogService.Close("consumption.updated");
