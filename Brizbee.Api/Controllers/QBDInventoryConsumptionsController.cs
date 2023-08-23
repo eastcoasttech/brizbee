@@ -548,6 +548,32 @@ namespace Brizbee.Api.Controllers
 
             return Ok(consumption);
         }
+        
+        // PUT: api/QBDInventoryConsumptions/5
+        [HttpPut("api/QBDInventoryConsumptions/{id}")]
+        public IActionResult PutQbdInventoryConsumption(long id, [FromBody] QBDInventoryConsumption inventoryConsumption)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteInventoryConsumptions)
+                return Forbid();
+
+            var entity = _context.QBDInventoryConsumptions!
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .FirstOrDefault(c => c.Id == id);
+
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            entity.Quantity = inventoryConsumption.Quantity;
+
+            _context.SaveChanges();
+
+            return Ok();
+        }
 
         // DELETE: api/QBDInventoryConsumptions/5
         [HttpDelete("api/QBDInventoryConsumptions/{id}")]

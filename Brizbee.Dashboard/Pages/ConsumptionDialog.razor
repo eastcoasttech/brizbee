@@ -6,7 +6,7 @@
 @inject DialogService dialogService
 @inject QBDInventoryConsumptionService consumptionService
 
-<EditForm Model="@consumption" class="form-horizontal" autocomplete="off">
+<EditForm Model="@consumption" OnValidSubmit="SaveInventoryConsumption" class="form-horizontal" autocomplete="off">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -27,7 +27,7 @@
     <div class="form-group">
         <label for="consumption_quantity" class="col-sm-3 control-label">Quantity</label>
         <div class="col-sm-9">
-            <p class="form-control-static">@consumption.Quantity</p>
+            <InputNumber class="form-control" id="consumption_quantity" @bind-Value="consumption.Quantity" disabled="@(working || loading)" min="0" max="10000" />
         </div>
     </div>
 
@@ -93,5 +93,20 @@
     private void CloseDialog(MouseEventArgs e)
     {
         dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task SaveInventoryConsumption()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this consumption?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Save on the server and close the dialog.
+        await consumptionService.SaveQbdInventoryConsumptionAsync(consumption);
+        dialogService.Close("consumption.updated");
     }
 }
