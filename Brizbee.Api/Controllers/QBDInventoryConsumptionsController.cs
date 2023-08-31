@@ -437,7 +437,7 @@ namespace Brizbee.Api.Controllers
         public IActionResult PostConsume([FromQuery] long qbdInventoryItemId, [FromQuery] int quantity, [FromQuery] string hostname, [FromQuery] string unitOfMeasure = "")
         {
             var currentUser = CurrentUser();
-            var inventorySiteEnabled = false;
+            const bool inventorySiteEnabled = false;
 
             // Find the current punch.
             var currentPunch = _context.Punches
@@ -485,7 +485,7 @@ namespace Brizbee.Api.Controllers
                 UnitOfMeasure = unitOfMeasure
             };
 
-            _context.QBDInventoryConsumptions.Add(consumption);
+            _context.QBDInventoryConsumptions!.Add(consumption);
             _context.SaveChanges();
 
             return Ok(consumption);
@@ -566,6 +566,11 @@ namespace Brizbee.Api.Controllers
             if (entity == null)
             {
                 return NotFound();
+            }
+
+            if (entity.Quantity < 1)
+            {
+                return BadRequest("Cannot consume inventory with negative or zero quantity.");
             }
 
             entity.Quantity = inventoryConsumption.Quantity;
