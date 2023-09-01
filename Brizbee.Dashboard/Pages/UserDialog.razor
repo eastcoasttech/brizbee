@@ -306,6 +306,13 @@
         </div>
     </div>
 
+    <div class="form-group">
+        <label for="user_quickbooks_vendor" class="col-sm-3 control-label">QuickBooks Vendor</label>
+        <div class="col-sm-9">
+            <InputText id="user_quickbooks_vendor" @bind-Value="user.QuickBooksVendor" class="form-control" disabled="@(working || loading)" />
+        </div>
+    </div>
+
     <hr />
 
     <div class="form-group">

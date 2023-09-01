@@ -99,6 +99,7 @@ namespace Brizbee.Dashboard.Services
                     { "NotificationMobileNumbers", user.NotificationMobileNumbers },
                     { "Pin", user.Pin },
                     { "QuickBooksEmployee", user.QuickBooksEmployee },
+                    { "QuickBooksVendor", user.QuickBooksVendor },
                     { "RequiresLocation", user.RequiresLocation },
                     { "IsActive", user.IsActive },
                     { "CanViewCustomers", user.CanViewCustomers },

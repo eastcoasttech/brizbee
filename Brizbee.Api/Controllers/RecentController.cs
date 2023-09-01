@@ -172,7 +172,8 @@ namespace Brizbee.Api.Controllers
                             QBOMiddleName = result.User_QBOMiddleName,
                             QBOFamilyName = result.User_QBOFamilyName,
                             AllowedPhoneNumbers = result.User_AllowedPhoneNumbers,
-                            QuickBooksEmployee = result.User_QuickBooksEmployee
+                            QuickBooksEmployee = result.User_QuickBooksEmployee,
+                            QuickBooksVendor = result.User_QuickBooksVendor
                         }
                     });
                 }

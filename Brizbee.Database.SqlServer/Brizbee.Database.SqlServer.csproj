@@ -127,6 +127,7 @@
     <EmbeddedResource Include="Migrations\0008 Adding Populate Templates.sql" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Migrations\0022 Adding QuickBooks Vendor.sql" />
     <EmbeddedResource Include="Migrations\0019 Adding OrganizationId Foreign Key.sql" />
     <EmbeddedResource Include="Migrations\0013 Adding Indexes to Punches.sql" />
     <EmbeddedResource Include="Migrations\0009 Adding IsActive and Permissions.sql" />
@@ -140,7 +141,7 @@
     <EmbeddedResource Include="Migrations\0018 Adding DatesInRange Function.sql" />
     <EmbeddedResource Include="Migrations\0020 Adding Permission for Merging Projects.sql" />
     <EmbeddedResource Include="Migrations\0021 Adding Indexes.sql" />
-    <Content Include="Migrations\0022 Removing NULL.sql" />
+    <Content Include="Migrations\0023 Removing NULL.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -65,7 +65,9 @@ namespace Brizbee.Common.Models
         [Required]
         public string Pin { get; set; }
 
-        public string QuickBooksEmployee { get; set; } // DEPRECATED
+        public string QuickBooksEmployee { get; set; }
+        
+        public string QuickBooksVendor { get; set; }
 
         public string QBOGivenName { get; set; }
 

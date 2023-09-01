@@ -190,6 +190,8 @@ namespace Brizbee.Api.Serialization.Expanded
 
         public string User_QuickBooksEmployee { get; set; }
 
+        public string User_QuickBooksVendor { get; set; }
+
 
         // Payroll Rate Details
 
