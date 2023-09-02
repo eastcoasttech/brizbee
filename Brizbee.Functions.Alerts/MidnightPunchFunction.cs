@@ -2,7 +2,7 @@
 //  MidnightPunchFunction.cs
 //  BRIZBEE Alerts Function
 //
-//  Copyright (C) 2021 East Coast Technology Services, LLC
+//  Copyright (C) 2021-2022 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE Alerts Function.
 //
@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace Brizbee.Functions.Alerts
 {
@@ -41,46 +42,46 @@ namespace Brizbee.Functions.Alerts
         private ILogger logger;
 
         [FunctionName("MidnightPunchFunction")]
-        public void Run([TimerTrigger("0 30 6 * * *")]TimerInfo myTimer, ILogger log)
+        public async Task RunAsync([TimerTrigger("0 30 6 * * *")]TimerInfo myTimer, ILogger log)
         {
             logger = log;
             log.LogInformation($"MidnightPunchFunction executed at: {DateTime.Now}");
 
-            GenerateMidnightPunchEmails();
+            await GenerateMidnightPunchEmailsAsync();
         }
 
-        private void GenerateMidnightPunchEmails()
+        private async Task GenerateMidnightPunchEmailsAsync()
         {
             try
             {
                 var instant = SystemClock.Instance.GetCurrentInstant();
-                var systemZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-                var zonedDateTime = instant.InZone(systemZone);
+                var systemZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull("America/New_York");
+                var zonedDateTime = instant.InZone(systemZone!);
                 var localDateTime = zonedDateTime.LocalDateTime;
 
                 var midnight = new DateTime(localDateTime.Year, localDateTime.Month, localDateTime.Day, 0, 0, 0);
 
                 logger.LogInformation($"{midnight.ToShortDateString()} {midnight.ToShortTimeString()}");
 
-                var connectionString = Environment.GetEnvironmentVariable("SqlContext").ToString();
+                var connectionString = Environment.GetEnvironmentVariable("SqlContext");
 
                 logger.LogInformation("Connecting to database");
 
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
+                await using var connection = new SqlConnection(connectionString);
 
-                    var organizationsSql = @"
+                await connection.OpenAsync();
+
+                const string organizationsSql = @"
                         SELECT
                             [O].[Id]
                         FROM
                             [Organizations] AS [O];";
-                    var organizations = connection.Query<Organization>(organizationsSql);
+                var organizations = await connection.QueryAsync<Organization>(organizationsSql);
 
-                    foreach (var organization in organizations)
-                    {
-                        // Collect the recipients for this Email.
-                        var recipientsSql = @"
+                foreach (var organization in organizations)
+                {
+                    // Collect the recipients for this Email.
+                    const string recipientsSql = @"
                             SELECT
                                 [U].[Id],
                                 [U].[Name],
@@ -91,17 +92,19 @@ namespace Brizbee.Functions.Alerts
                                 [U].[IsDeleted] = 0 AND
                                 [U].[ShouldSendMidnightPunchEmail] = 1 AND
                                 [U].[OrganizationId] = @OrganizationId;";
-                        var recipients = connection.Query<User>(recipientsSql, new
-                        {
-                            OrganizationId = organization.Id
-                        });
+                    var recipients = await connection.QueryAsync<User>(recipientsSql, new
+                    {
+                        OrganizationId = organization.Id
+                    });
 
-                        // No need to continue if no one should receive the Email.
-                        if (!recipients.Any())
-                            continue;
+                    var recipientsList = recipients.ToList();
 
-                        // Find punches that were still open through last midnight.
-                        var midnightPunchesSql = @"
+                    // No need to continue if no one should receive the Email.
+                    if (!recipientsList.Any())
+                        continue;
+
+                    // Find punches that were still open through last midnight.
+                    const string midnightPunchesSql = @"
                             SELECT
                                 [U].[Name] AS [User_Name],
 
@@ -137,45 +140,46 @@ namespace Brizbee.Functions.Alerts
                                 [U].[IsDeleted] = 0 AND
                                 [U].[OrganizationId] = @OrganizationId;";
 
-                        var midnightPunches = connection.Query<MidnightPunch>(midnightPunchesSql, new
+                    var midnightPunches = await connection.QueryAsync<MidnightPunch>(midnightPunchesSql, new
+                    {
+                        Midnight = midnight,
+                        OrganizationId = organization.Id
+                    });
+
+                    var midnightPunchesList = midnightPunches.ToList();
+
+                    logger.LogInformation($"{midnightPunchesList.Count} punches through midnight");
+
+                    // Do not continue if there are no punches.
+                    if (!midnightPunchesList.Any())
+                        continue;
+
+                    try
+                    {
+                        var tos = new List<EmailAddress>();
+                        foreach (var recipient in recipientsList.Where(r => !string.IsNullOrEmpty(r.EmailAddress)))
+                            tos.Add(new EmailAddress() { Email = recipient.EmailAddress, Name = recipient.Name });
+
+                        var apiKey = Environment.GetEnvironmentVariable("SendGridApiKey");
+                        var templateId = Environment.GetEnvironmentVariable("SendGridMidnightPunchTemplateId");
+
+                        var dynamicTemplateData = new DynamicTemplateData()
                         {
-                            Midnight = midnight,
-                            OrganizationId = organization.Id
-                        });
+                            MidnightPunches = midnightPunchesList.ToList()
+                        };
 
-                        logger.LogInformation($"{midnightPunches.Count()} punches through midnight");
-
-                        // Do not continue if there are no punches.
-                        if (!midnightPunches.Any())
-                            continue;
-
-                        try
-                        {
-                            var tos = new List<EmailAddress>();
-                            foreach (var recipient in recipients)
-                                tos.Add(new EmailAddress() { Email = recipient.EmailAddress, Name = recipient.Name });
-
-                            var apiKey = Environment.GetEnvironmentVariable("SendGridApiKey").ToString();
-                            var templateId = Environment.GetEnvironmentVariable("SendGridMidnightPunchTemplateId").ToString();
-
-                            var dynamicTemplateData = new DynamicTemplateData()
-                            {
-                                MidnightPunches = midnightPunches.ToList()
-                            };
-
-                            var client = new SendGridClient(apiKey);
-                            var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
-                            var msg = MailHelper.CreateSingleTemplateEmailToMultipleRecipients(from, tos, templateId, dynamicTemplateData);
-                            var response = client.SendEmailAsync(msg);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex.Message);
-                        }
+                        var client = new SendGridClient(apiKey);
+                        var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
+                        var msg = MailHelper.CreateSingleTemplateEmailToMultipleRecipients(from, tos, templateId, dynamicTemplateData);
+                        await client.SendEmailAsync(msg);
                     }
-
-                    connection.Close();
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex.Message);
+                    }
                 }
+
+                connection.Close();
             }
             catch (Exception ex)
             {
@@ -184,7 +188,7 @@ namespace Brizbee.Functions.Alerts
         }
     }
 
-    class DynamicTemplateData
+    internal class DynamicTemplateData
     {
         [JsonProperty("midnight_punches")]
         [JsonPropertyName("midnight_punches")]

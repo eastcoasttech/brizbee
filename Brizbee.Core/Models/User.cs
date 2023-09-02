@@ -29,7 +29,6 @@ namespace Brizbee.Core.Models
 {
     public class User
     {
-        [Required]
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
 
@@ -40,14 +39,11 @@ namespace Brizbee.Core.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
-        [Required]
         [StringLength(128)]
         public string? Name { get; set; }
 
-        [Required]
         public int OrganizationId { get; set; }
 
         [ForeignKey("OrganizationId")]
@@ -62,10 +58,11 @@ namespace Brizbee.Core.Models
         [IgnoreDataMember]
         public string? PasswordHash { get; set; }
 
-        [Required]
         public string? Pin { get; set; }
-
-        public string? QuickBooksEmployee { get; set; } // DEPRECATED
+        
+        public string? QuickBooksEmployee { get; set; }
+        
+        public string? QuickBooksVendor { get; set; }
 
         public string? QBOGivenName { get; set; }
 
@@ -73,30 +70,22 @@ namespace Brizbee.Core.Models
 
         public string? QBOFamilyName { get; set; }
 
-        [Required]
-        public bool RequiresLocation { get; set; }
+        public bool RequiresLocation { get; set; } = false;
 
-        [Required]
-        public bool RequiresPhoto { get; set; }
+        public bool RequiresPhoto { get; set; } = false;
 
-        [Required]
         [StringLength(128)]
-        public string? Role { get; set; }
+        public string? Role { get; set; } = "Standard";
 
-        [Required]
-        public string? TimeZone { get; set; }
+        public string? TimeZone { get; set; } = "America/New_York";
 
-        [Required]
-        public bool UsesMobileClock { get; set; }
+        public bool UsesMobileClock { get; set; } = false;
 
-        [Required]
-        public bool UsesTouchToneClock { get; set; }
+        public bool UsesTouchToneClock { get; set; } = false;
 
-        [Required]
-        public bool UsesWebClock { get; set; }
+        public bool UsesWebClock { get; set; } = false;
 
-        [Required]
-        public bool UsesTimesheets { get; set; }
+        public bool UsesTimesheets { get; set; } = false;
 
         /// <summary>
         /// Indicates whether or not to send an Email every day
@@ -108,9 +97,8 @@ namespace Brizbee.Core.Models
         /// Comma-separated list of phone numbers that are
         /// allowed to use the touch-tone telephone clock.
         /// </summary>
-        [Required]
         [StringLength(260)]
-        public string? AllowedPhoneNumbers { get; set; }
+        public string? AllowedPhoneNumbers { get; set; } = "*";
 
         /// <summary>
         /// Comma-separated list of phone numbers to send

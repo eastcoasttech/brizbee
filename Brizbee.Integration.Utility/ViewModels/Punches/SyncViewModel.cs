@@ -22,44 +22,45 @@
 //
 
 using Brizbee.Common.Models;
-using Brizbee.Integration.Utility.Services;
 using Brizbee.Integration.Utility.Exceptions;
+using Brizbee.Integration.Utility.Services;
 using Interop.QBXMLRP2;
-using Newtonsoft.Json;
+using NLog;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
-using NLog;
 
 namespace Brizbee.Integration.Utility.ViewModels.Punches
 {
     public class SyncViewModel : INotifyPropertyChanged
     {
-        #region Public Fields
         public bool IsExitEnabled { get; set; }
-        public bool IsTryEnabled { get; set; }
-        public bool IsStartOverEnabled { get; set; }
-        public string StatusText { get; set; }
-        public int AddErrorCount { get; set; }
-        public int ValidationErrorCount { get; set; }
-        public int SaveErrorCount { get; set; }
-        public event PropertyChangedEventHandler PropertyChanged;
-        #endregion
 
-        #region Private Fields
-        private Commit commit;
-        private RestClient client = Application.Current.Properties["Client"] as RestClient;
-        private List<Punch> punches;
+        public bool IsTryEnabled { get; set; }
+
+        public bool IsStartOverEnabled { get; set; }
+
+        public string StatusText { get; set; }
+
+        public int ValidationErrorCount { get; set; }
+
+        public int SaveErrorCount { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private Commit _commit;
+
+        private readonly RestClient _client = Application.Current.Properties["Client"] as RestClient;
+
+        private List<Punch> _punches;
+
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        #endregion
 
         public void Export()
         {
@@ -118,9 +119,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 // ------------------------------------------------------------
 
                 var ids = new List<string>();
-                punches = GetPunches();
+                _punches = GetPunches();
 
-                StatusText += string.Format("{0} - Preparing sync of {1} punches.\r\n", DateTime.Now.ToString(), punches.Count);
+                StatusText += string.Format("{0} - Preparing sync of {1} punches.\r\n", DateTime.Now.ToString(), _punches.Count);
                 OnPropertyChanged("StatusText");
 
 
@@ -157,12 +158,12 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     // ------------------------------------------------------------
 
                     // Add an element for each punch to be synced
-                    foreach (var punch in punches)
+                    foreach (var punch in _punches)
                     {
                         // Prepare a new QBXML document.
-                        var punchQBXML = service.MakeQBXMLDocument();
-                        var punchDocument = punchQBXML.Item1;
-                        var punchElement = punchQBXML.Item2;
+                        var punchQbxml = service.MakeQBXMLDocument();
+                        var punchDocument = punchQbxml.Item1;
+                        var punchElement = punchQbxml.Item2;
 
                         BuildTimeTrackingAddRq(punchDocument, punchElement, punch);
 
@@ -172,8 +173,8 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                         Logger.Debug(punchResponse);
 
                         // Then walk the response.
-                        var walkReponse = WalkTimeTrackingAddRs(punchResponse);
-                        ids = ids.Concat(walkReponse.Item3).ToList();
+                        var walkResponse = WalkTimeTrackingAddRs(punchResponse);
+                        ids = ids.Concat(walkResponse.Item3).ToList();
                     }
 
                     if (SaveErrorCount > 0)
@@ -210,9 +211,9 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                     QBMinorVersion = hostDetails.QBMinorVersion,
                     QBSupportedQBXMLVersions = hostDetails.QBSupportedQBXMLVersions,
                     CreatedAt = new DateTimeOffset(DateTime.UtcNow),
-                    CommitId = commit.Id,
-                    InAt = new DateTimeOffset(commit.InAt),
-                    OutAt = new DateTimeOffset(commit.OutAt),
+                    CommitId = _commit.Id,
+                    InAt = new DateTimeOffset(_commit.InAt),
+                    OutAt = new DateTimeOffset(_commit.OutAt),
                     Log = StatusText,
                     TxnIDs = string.Join(",", ids)
                 };
@@ -222,7 +223,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
                 syncHttpRequest.AddJsonBody(payload);
 
                 // Execute request.
-                var syncHttpResponse = client.Execute(syncHttpRequest);
+                var syncHttpResponse = _client.Execute(syncHttpRequest);
                 if ((syncHttpResponse.ResponseStatus == ResponseStatus.Completed) &&
                         (syncHttpResponse.StatusCode == System.Net.HttpStatusCode.OK))
                 {
@@ -316,16 +317,16 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
 
         private List<Punch> GetPunches()
         {
-            commit = Application.Current.Properties["SelectedCommit"] as Commit;
+            _commit = Application.Current.Properties["SelectedCommit"] as Commit;
 
-            StatusText += string.Format("{0} - Getting punches for {1} thru {2}.\r\n", DateTime.Now.ToString(), commit.InAt.ToString("yyyy-MM-dd"), commit.OutAt.ToString("yyyy-MM-dd"));
+            StatusText += string.Format("{0} - Getting punches for {1} thru {2}.\r\n", DateTime.Now.ToString(), _commit.InAt.ToString("yyyy-MM-dd"), _commit.OutAt.ToString("yyyy-MM-dd"));
             OnPropertyChanged("StatusText");
 
             // Build request to retrieve punches
-            var request = new RestRequest(string.Format("odata/Punches/Default.Download(CommitId={0})", commit.Id), Method.Get);
+            var request = new RestRequest($"odata/Punches/Default.Download(CommitId={_commit.Id})");
 
             // Execute request to retrieve punches
-            var response = client.Execute<List<Punch>>(request);
+            var response = _client.Execute<List<Punch>>(request);
             if ((response.ResponseStatus == ResponseStatus.Completed) &&
                     (response.StatusCode == System.Net.HttpStatusCode.OK))
             {
@@ -338,11 +339,11 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             }
         }
 
-        private XmlElement MakeSimpleElem(XmlDocument doc, string tagName, string tagVal)
+        private static XmlElement MakeSimpleElem(XmlDocument doc, string tagName, string tagVal)
         {
-            XmlElement elem = doc.CreateElement(tagName);
-            elem.InnerText = tagVal;
-            return elem;
+            var element = doc.CreateElement(tagName);
+            element.InnerText = tagVal;
+            return element;
         }
 
         private string ReplaceCharacters(string value = "")
@@ -397,7 +398,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             return replaced;
         }
 
-        private void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
+        private static void BuildTimeTrackingAddRq(XmlDocument doc, XmlElement parent, Punch punch)
         {
             var date = punch.InAt.ToString("yyyy-MM-dd");
 
@@ -409,164 +410,165 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             var customerName = punch.Task.Job.QuickBooksCustomerJob;
             var className = punch.Task.Job.QuickBooksClass;
             var employeeName = punch.User.QuickBooksEmployee;
+            var vendorName = punch.User.QuickBooksVendor;
             var span = punch.OutAt.Value.Subtract(punch.InAt);
-            var duration = string.Format("PT{0}H{1}M", span.Hours, span.Minutes);
-            var guid = string.Format("{{{0}}}", punch.Guid.ToString());
+            var duration = $"PT{span.Hours}H{span.Minutes}M";
+            var guid = $"{{{punch.Guid}}}";
             var payrollItem = punch.PayrollRate.QBDPayrollItem;
             var serviceItem = punch.ServiceRate.QBDServiceItem;
 
-            // Create TimeTrackingAddRq aggregate and fill in field values for it
-            XmlElement TimeTrackingAddRq = doc.CreateElement("TimeTrackingAddRq");
-            parent.AppendChild(TimeTrackingAddRq);
+            // Build the request to add a time tracking entry.
+            var timeTrackingAddRq = doc.CreateElement("TimeTrackingAddRq");
+            parent.AppendChild(timeTrackingAddRq);
 
-            // Create TimeTrackingAdd aggregate and fill in field values for it
-            XmlElement TimeTrackingAdd = doc.CreateElement("TimeTrackingAdd");
-            TimeTrackingAddRq.AppendChild(TimeTrackingAdd);
-            // Set field value for TxnDate
-            TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "TxnDate", date));
+            // Add date for the time tracking entry.
+            var timeTrackingAdd = doc.CreateElement("TimeTrackingAdd");
+            timeTrackingAddRq.AppendChild(timeTrackingAdd);
+            timeTrackingAdd.AppendChild(MakeSimpleElem(doc, "TxnDate", date));
 
-            // Create EntityRef aggregate and fill in field values for it
-            XmlElement EntityRef = doc.CreateElement("EntityRef");
-            TimeTrackingAdd.AppendChild(EntityRef);
-            // Set field value for FullName
-            EntityRef.AppendChild(MakeSimpleElem(doc, "FullName", employeeName));
+            // Entity can be either a vendor or employee, depending on what has been specified.
+            string entityName;
+            if (!string.IsNullOrEmpty(employeeName))
+            {
+                entityName = employeeName;
+            }
+            else if (!string.IsNullOrEmpty(vendorName))
+            {
+                entityName = vendorName;
+            }
+            else
+            {
+                return;
+            }
+            
+            // Add the entity.
+            var entityRef = doc.CreateElement("EntityRef");
+            timeTrackingAdd.AppendChild(entityRef);
+            entityRef.AppendChild(MakeSimpleElem(doc, "FullName", entityName));
 
+            // Add customer name if it is available.
             if (!string.IsNullOrEmpty(customerName))
             {
-                // Create CustomerRef aggregate and fill in field values for it
-                XmlElement CustomerRef = doc.CreateElement("CustomerRef");
-                TimeTrackingAdd.AppendChild(CustomerRef);
-                // Set field value for FullName
-                CustomerRef.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
+                var customerRef = doc.CreateElement("CustomerRef");
+                timeTrackingAdd.AppendChild(customerRef);
+                customerRef.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
             }
 
+            // Add service item for employee or vendor.
             if (!string.IsNullOrEmpty(serviceItem))
             {
-                // Create ItemServiceRef aggregate and fill in field values for it
-                XmlElement ItemServiceRef = doc.CreateElement("ItemServiceRef");
-                TimeTrackingAdd.AppendChild(ItemServiceRef);
-                // Set field value for FullName
-                ItemServiceRef.AppendChild(MakeSimpleElem(doc, "FullName", serviceItem));
+                var itemServiceRef = doc.CreateElement("ItemServiceRef");
+                timeTrackingAdd.AppendChild(itemServiceRef);
+                itemServiceRef.AppendChild(MakeSimpleElem(doc, "FullName", serviceItem));
             }
 
-            // Set field value for Duration
-            TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "Duration", duration));
-
-            // Create ClassRef aggregate and fill in field values for it
+            // Add duration in minutes.
+            timeTrackingAdd.AppendChild(MakeSimpleElem(doc, "Duration", duration));
+            
+            // Add class reference.
             if (!string.IsNullOrEmpty(className))
             {
-                XmlElement ClassRef = doc.CreateElement("ClassRef");
-                TimeTrackingAdd.AppendChild(ClassRef);
-                // Set field value for FullName
-                ClassRef.AppendChild(MakeSimpleElem(doc, "FullName", className));
+                var classRef = doc.CreateElement("ClassRef");
+                timeTrackingAdd.AppendChild(classRef);
+                classRef.AppendChild(MakeSimpleElem(doc, "FullName", className));
             }
 
-            if (!string.IsNullOrEmpty(payrollItem))
+            // Add a payroll item if there is one AND no vendor has been specified.
+            if (!string.IsNullOrEmpty(payrollItem) && string.IsNullOrEmpty(vendorName))
             {
-                // Create PayrollItemWageRef aggregate and fill in field values for it
-                XmlElement PayrollItemWageRef = doc.CreateElement("PayrollItemWageRef");
-                TimeTrackingAdd.AppendChild(PayrollItemWageRef);
-                // Set field value for FullName
-                PayrollItemWageRef.AppendChild(MakeSimpleElem(doc, "FullName", payrollItem));
+                var payrollItemWageRef = doc.CreateElement("PayrollItemWageRef");
+                timeTrackingAdd.AppendChild(payrollItemWageRef);
+                payrollItemWageRef.AppendChild(MakeSimpleElem(doc, "FullName", payrollItem));
             }
 
-            //// Set field value for Notes <!-- optional -->
-            //TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "Notes", "ab"));
-            //// Set field value for BillableStatus <!-- optional -->
-            //TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "BillableStatus", "Billable"));
-            //// Set field value for IsBillable <!-- optional -->
-            //TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "IsBillable", "1"));
-            // Set field value for ExternalGUID <!-- optional -->
-            TimeTrackingAdd.AppendChild(MakeSimpleElem(doc, "ExternalGUID", guid));
-
-            // Set field value for IncludeRetElement <!-- optional, may repeat -->
-            //TimeTrackingAddRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "ab"));
+            // External GUID allows for deleting the time tracking element later.
+            timeTrackingAdd.AppendChild(MakeSimpleElem(doc, "ExternalGUID", guid));
         }
 
         private void BuildEmployeeQueryRq(XmlDocument doc, XmlElement parent, string employeeFullName)
         {
             // Create EmployeeQueryRq aggregate and fill in field values for it
-            XmlElement EmployeeQueryRq = doc.CreateElement("EmployeeQueryRq");
-            parent.AppendChild(EmployeeQueryRq);
+            var employeeQueryRq = doc.CreateElement("EmployeeQueryRq");
+            parent.AppendChild(employeeQueryRq);
 
             // Populate the FullName field
-            EmployeeQueryRq.AppendChild(MakeSimpleElem(doc, "FullName", employeeFullName));
+            employeeQueryRq.AppendChild(MakeSimpleElem(doc, "FullName", employeeFullName));
 
             // Only include certain fields
-            EmployeeQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+            employeeQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
         private void BuildItemServiceQueryRq(XmlDocument doc, XmlElement parent, string serviceItemName)
         {
             // Create ItemServiceQueryRq aggregate and fill in field values for it
-            XmlElement ItemServiceQuery = doc.CreateElement("ItemServiceQueryRq");
-            parent.AppendChild(ItemServiceQuery);
+            var itemServiceQuery = doc.CreateElement("ItemServiceQueryRq");
+            parent.AppendChild(itemServiceQuery);
 
             // Populate the FullName field
-            ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
+            itemServiceQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
 
             // Only include certain fields
-            ItemServiceQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+            itemServiceQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
         private void BuildPayrollItemWageQueryRq(XmlDocument doc, XmlElement parent, string serviceItemName)
         {
             // Create PayrollItemWageQueryRq aggregate and fill in field values for it
-            XmlElement PayrollItemWageQuery = doc.CreateElement("PayrollItemWageQueryRq");
-            parent.AppendChild(PayrollItemWageQuery);
+            var payrollItemWageQuery = doc.CreateElement("PayrollItemWageQueryRq");
+            parent.AppendChild(payrollItemWageQuery);
 
             // Populate the FullName field
-            PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
+            payrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "FullName", serviceItemName));
 
             // Only include certain fields
-            PayrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+            payrollItemWageQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
         private void BuildCustomerQueryRq(XmlDocument doc, XmlElement parent, string customerName)
         {
             // Create CustomerQueryRq aggregate and fill in field values for it
-            XmlElement CustomerQuery = doc.CreateElement("CustomerQueryRq");
-            parent.AppendChild(CustomerQuery);
+            var customerQuery = doc.CreateElement("CustomerQueryRq");
+            parent.AppendChild(customerQuery);
 
             // Populate the FullName field
-            CustomerQuery.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
+            customerQuery.AppendChild(MakeSimpleElem(doc, "FullName", customerName));
 
             // Only include certain fields
-            CustomerQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+            customerQuery.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
         private void BuildClassQueryRq(XmlDocument doc, XmlElement parent, string className)
         {
             // Create ClassQueryRq aggregate and fill in field values for it
-            XmlElement ClassQueryRq = doc.CreateElement("ClassQueryRq");
-            parent.AppendChild(ClassQueryRq);
+            var classQueryRq = doc.CreateElement("ClassQueryRq");
+            parent.AppendChild(classQueryRq);
 
             // Populate the FullName field
-            ClassQueryRq.AppendChild(MakeSimpleElem(doc, "FullName", className));
+            classQueryRq.AppendChild(MakeSimpleElem(doc, "FullName", className));
 
             // Only include certain fields
-            ClassQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
+            classQueryRq.AppendChild(MakeSimpleElem(doc, "IncludeRetElement", "Name"));
         }
 
         private (bool, string, List<string>) WalkTimeTrackingAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("TimeTrackingAddRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             //Check the status code, info, and severity
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -1000,7 +1002,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var employees = punches.GroupBy(p => p.User.QuickBooksEmployee).Select(g => g.Key);
+            var employees = _punches.GroupBy(p => p.User.QuickBooksEmployee).Select(g => g.Key);
             foreach (var name in employees)
             {
                 BuildEmployeeQueryRq(doc, inner, name);
@@ -1033,7 +1035,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var serviceItems = punches.GroupBy(p => p.Task.QuickBooksServiceItem).Select(g => g.Key);
+            var serviceItems = _punches.GroupBy(p => p.Task.QuickBooksServiceItem).Select(g => g.Key);
             foreach (var name in serviceItems)
             {
                 BuildItemServiceQueryRq(doc, inner, name);
@@ -1066,7 +1068,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var payrollItems = punches.GroupBy(p => p.Task.QuickBooksPayrollItem).Select(g => g.Key);
+            var payrollItems = _punches.GroupBy(p => p.Task.QuickBooksPayrollItem).Select(g => g.Key);
             foreach (var name in payrollItems)
             {
                 BuildPayrollItemWageQueryRq(doc, inner, name);
@@ -1099,7 +1101,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var customers = punches.GroupBy(p => p.Task.Job.QuickBooksCustomerJob).Select(g => g.Key);
+            var customers = _punches.GroupBy(p => p.Task.Job.QuickBooksCustomerJob).Select(g => g.Key);
 
             // Do not continue if there are no customers.
             if (!customers.Any())
@@ -1130,14 +1132,14 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
-            var classes = punches.GroupBy(p => p.Task.Job.QuickBooksClass).Select(g => g.Key);
+            var classes = _punches.GroupBy(p => p.Task.Job.QuickBooksClass).Select(g => g.Key);
 
             // Do not continue if there are no classes.
             if (!classes.Any())

@@ -92,9 +92,9 @@ namespace Brizbee.Api.Serialization.Expanded
 
         public int? Punch_PayrollRateId { get; set; }
 
-        public int Punch_Minutes { get; set; }
+        public long Punch_Minutes { get; set; }
 
-        public int Punch_CumulativeMinutes { get; set; }
+        public long Punch_CumulativeMinutes { get; set; }
 
 
         // Customer Details
@@ -189,6 +189,8 @@ namespace Brizbee.Api.Serialization.Expanded
         public string User_AllowedPhoneNumbers { get; set; }
 
         public string User_QuickBooksEmployee { get; set; }
+
+        public string User_QuickBooksVendor { get; set; }
 
 
         // Payroll Rate Details

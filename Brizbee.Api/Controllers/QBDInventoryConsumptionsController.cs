@@ -437,7 +437,7 @@ namespace Brizbee.Api.Controllers
         public IActionResult PostConsume([FromQuery] long qbdInventoryItemId, [FromQuery] int quantity, [FromQuery] string hostname, [FromQuery] string unitOfMeasure = "")
         {
             var currentUser = CurrentUser();
-            var inventorySiteEnabled = false;
+            const bool inventorySiteEnabled = false;
 
             // Find the current punch.
             var currentPunch = _context.Punches
@@ -448,6 +448,9 @@ namespace Brizbee.Api.Controllers
 
             if (currentPunch == null)
                 return BadRequest("Cannot consume inventory without being punched in.");
+
+            if (quantity < 1)
+                return BadRequest("Cannot consume inventory with negative or zero quantity.");
 
             long? siteId = null;
             if (inventorySiteEnabled)
@@ -482,7 +485,7 @@ namespace Brizbee.Api.Controllers
                 UnitOfMeasure = unitOfMeasure
             };
 
-            _context.QBDInventoryConsumptions.Add(consumption);
+            _context.QBDInventoryConsumptions!.Add(consumption);
             _context.SaveChanges();
 
             return Ok(consumption);
@@ -544,6 +547,37 @@ namespace Brizbee.Api.Controllers
                 return NotFound();
 
             return Ok(consumption);
+        }
+        
+        // PUT: api/QBDInventoryConsumptions/5
+        [HttpPut("api/QBDInventoryConsumptions/{id}")]
+        public IActionResult PutQbdInventoryConsumption(long id, [FromBody] QBDInventoryConsumption inventoryConsumption)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteInventoryConsumptions)
+                return Forbid();
+
+            var entity = _context.QBDInventoryConsumptions!
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .FirstOrDefault(c => c.Id == id);
+
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            if (entity.Quantity < 1)
+            {
+                return BadRequest("Cannot consume inventory with negative or zero quantity.");
+            }
+
+            entity.Quantity = inventoryConsumption.Quantity;
+
+            _context.SaveChanges();
+
+            return Ok();
         }
 
         // DELETE: api/QBDInventoryConsumptions/5

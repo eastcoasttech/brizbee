@@ -2,6 +2,9 @@
 using Brizbee.Dashboard.Security;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -64,6 +67,38 @@ namespace Brizbee.Dashboard.Services
             {
                 return false;
             }
+        }
+
+        public async Task<(bool, string)> SaveQbdInventoryConsumptionAsync(QBDInventoryConsumption inventoryConsumption)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Put, $"api/QBDInventoryConsumptions/{inventoryConsumption.Id}");
+
+            var payload = new Dictionary<string, object>() {
+                { "Quantity", inventoryConsumption.Quantity }
+            };
+
+            var json = JsonSerializer.Serialize(payload, options);
+
+            using var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Content = stringContent;
+
+            using var response = await _apiService
+                .GetHttpClient()
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
+            await using var responseContent = await response.Content.ReadAsStreamAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    return (true, "");
+                }
+
+                return (false, responseContent.ToString());
+            }
+            
+            return (false, responseContent.ToString());
         }
     }
 }

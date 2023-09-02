@@ -293,11 +293,12 @@ namespace Brizbee.Api.Controllers
             if (!currentUser.CanViewPunches)
                 return Forbid();
 
-            var punches = _context.Punches
+            var punches = _context.Punches!
                 .Include(p => p.User)
                 .Include(p => p.Task.Job.Customer)
                 .Include(p => p.PayrollRate)
                 .Include(p => p.ServiceRate)
+                .Where(p => p.User!.IsActive)
                 .Where(p => p.CommitId == CommitId)
                 .OrderBy(p => p.InAt)
                 .ToList();

@@ -2,7 +2,7 @@
 //  GenerateFunction.cs
 //  BRIZBEE Alerts Function
 //
-//  Copyright (C) 2021 East Coast Technology Services, LLC
+//  Copyright (C) 2021-2022 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE Alerts Function.
 //
@@ -32,6 +32,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Brizbee.Functions.Alerts
 {
@@ -40,15 +41,15 @@ namespace Brizbee.Functions.Alerts
         private ILogger logger;
 
         [FunctionName("GenerateFunction")]
-        public void Run([TimerTrigger("0 */30 * * * *", RunOnStartup = true)]TimerInfo myTimer, ILogger log)
+        public async Task RunAsync([TimerTrigger("0 */30 * * * *", RunOnStartup = true)]TimerInfo myTimer, ILogger log)
         {
             logger = log;
             log.LogInformation($"GenerateFunction executed at: {DateTime.Now}");
 
-            GenerateExceededAlerts();
+            await GenerateExceededAlertsAsync();
         }
 
-        private void GenerateExceededAlerts()
+        private async Task GenerateExceededAlertsAsync()
         {
             try
             {
@@ -62,26 +63,26 @@ namespace Brizbee.Functions.Alerts
 
                 logger.LogInformation($"{monday.ToDateTimeUnspecified().ToShortDateString()} thru {sunday.ToDateTimeUnspecified().ToShortDateString()}");
                 
-                var connectionString = Environment.GetEnvironmentVariable("SqlContext").ToString();
+                var connectionString = Environment.GetEnvironmentVariable("SqlContext");
 
                 logger.LogInformation("Connecting to database");
 
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
+                await using var connection = new SqlConnection(connectionString);
 
-                    var alerts = new List<Alert>(0);
+                await connection.OpenAsync();
 
-                    var organizationsSql = @"
+                var alerts = new List<Alert>(0);
+
+                var organizationsSql = @"
                         SELECT
                             [O].[Id]
                         FROM
                             [Organizations] AS [O];";
-                    var organizations = connection.Query<Organization>(organizationsSql);
+                var organizations = await connection.QueryAsync<Organization>(organizationsSql);
 
-                    foreach (var organization in organizations)
-                    {
-                        var usersSql = @"
+                foreach (var organization in organizations)
+                {
+                    var usersSql = @"
                             SELECT
                                 [U].[Id],
                                 [U].[Name]
@@ -90,19 +91,19 @@ namespace Brizbee.Functions.Alerts
                             WHERE
                                 [U].[IsDeleted] = 0 AND
                                 [U].[OrganizationId] = @OrganizationId;";
-                        var users = connection.Query<User>(usersSql, new
-                        {
-                            OrganizationId = organization.Id
-                        });
+                    var users = await connection.QueryAsync<User>(usersSql, new
+                    {
+                        OrganizationId = organization.Id
+                    });
 
-                        foreach (var user in users)
-                        {
-                            // ----------------------------------------------------
-                            // Check for a total that exceeds the threshold.
-                            // ----------------------------------------------------
+                    foreach (var user in users)
+                    {
+                        // ----------------------------------------------------
+                        // Check for a total that exceeds the threshold.
+                        // ----------------------------------------------------
 
-                            var totalThreshold = 2100; // Minutes
-                            var totalSql = $@"
+                        const int totalThreshold = 2100; // Minutes
+                        var totalSql = @"
                                 SELECT
 	                                MAX ([X].[Punch_CumulativeMinutes])
                                 FROM
@@ -126,28 +127,28 @@ namespace Brizbee.Functions.Alerts
                                 WHERE
 	                                [X].[Punch_CumulativeMinutes] > @ExceededMinutes;";
 
-                            var total = connection.QuerySingle<long?>(totalSql, new
+                        var total = await connection.QuerySingleAsync<long?>(totalSql, new
+                        {
+                            Min = monday.ToDateTimeUnspecified(),
+                            Max = sunday.ToDateTimeUnspecified(),
+                            UserId = user.Id,
+                            ExceededMinutes = totalThreshold
+                        });
+
+                        if (total.HasValue)
+                            alerts.Add(new Alert()
                             {
-                                Min = monday.ToDateTimeUnspecified(),
-                                Max = sunday.ToDateTimeUnspecified(),
-                                UserId = user.Id,
-                                ExceededMinutes = totalThreshold
+                                Type = "total.exceeded",
+                                Value = total.Value,
+                                User = user
                             });
 
-                            if (total.HasValue)
-                                alerts.Add(new Alert()
-                                {
-                                    Type = "total.exceeded",
-                                    Value = total.Value,
-                                    User = user
-                                });
+                        // ----------------------------------------------------
+                        // Check for any punch that exceeds the threshold.
+                        // ----------------------------------------------------
 
-                            // ----------------------------------------------------
-                            // Check for any punch that exceeds the threshold.
-                            // ----------------------------------------------------
-
-                            var punchesThreshold = 600; // Minutes
-                            var punchesSql = $@"
+                        const int punchesThreshold = 600; // Minutes
+                        var punchesSql = @"
                                 SELECT
                                     [X].[Id],
 	                                [X].[Punch_Minutes]
@@ -167,47 +168,45 @@ namespace Brizbee.Functions.Alerts
                                 WHERE
 	                                [X].[Punch_Minutes] > @ExceededMinutes;";
 
-                            var punches = connection.Query<Exceeded>(punchesSql, new
+                        var punches = await connection.QueryAsync<Exceeded>(punchesSql, new
+                        {
+                            Min = monday.ToDateTimeUnspecified(),
+                            Max = sunday.ToDateTimeUnspecified(),
+                            UserId = user.Id,
+                            ExceededMinutes = punchesThreshold
+                        });
+
+                        foreach (var punch in punches)
+                            alerts.Add(new Alert()
                             {
-                                Min = monday.ToDateTimeUnspecified(),
-                                Max = sunday.ToDateTimeUnspecified(),
-                                UserId = user.Id,
-                                ExceededMinutes = punchesThreshold
+                                Type = "punch.exceeded",
+                                Value = punch.Punch_Minutes,
+                                User = user
                             });
-
-                            foreach (var punch in punches)
-                                alerts.Add(new Alert()
-                                {
-                                    Type = "punch.exceeded",
-                                    Value = punch.Punch_Minutes,
-                                    User = user
-                                });
-                        }
-
-                        try
-                        {
-                            var json = JsonSerializer.Serialize(alerts);
-
-                            // Prepare to upload the json.
-                            var azureConnectionString = Environment.GetEnvironmentVariable("AlertsAzureStorageConnectionString").ToString();
-                            BlobServiceClient blobServiceClient = new BlobServiceClient(azureConnectionString);
-                            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("alerts");
-                            BlobClient blobClient = containerClient.GetBlobClient($"{organization.Id}.json");
-
-                            // Perform the upload.
-                            using (var stream = new MemoryStream(Encoding.Default.GetBytes(json), false))
-                            {
-                                blobClient.Upload(stream, overwrite: true);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex.ToString());
-                        }
                     }
 
-                    connection.Close();
+                    try
+                    {
+                        var json = JsonSerializer.Serialize(alerts);
+
+                        // Prepare to upload the json.
+                        var azureConnectionString = Environment.GetEnvironmentVariable("AlertsAzureStorageConnectionString");
+                        var blobServiceClient = new BlobServiceClient(azureConnectionString);
+                        var containerClient = blobServiceClient.GetBlobContainerClient("alerts");
+                        var blobClient = containerClient.GetBlobClient($"{organization.Id}.json");
+
+                        // Perform the upload.
+                        using var stream = new MemoryStream(Encoding.Default.GetBytes(json), false);
+
+                        await blobClient.UploadAsync(stream, overwrite: true);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex.ToString());
+                    }
                 }
+
+                connection.Close();
             }
             catch (Exception ex)
             {

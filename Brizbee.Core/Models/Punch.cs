@@ -61,7 +61,7 @@ namespace Brizbee.Core.Models
         public string? LongitudeForOutAt { get; set; }
 
         [NotMapped]
-        public int Minutes
+        public long Minutes
         {
             get
             {
@@ -77,7 +77,7 @@ namespace Brizbee.Core.Models
         }
 
         [NotMapped]
-        public int CumulativeMinutes { get; set; }
+        public long CumulativeMinutes { get; set; }
 
         [Column(TypeName = "datetime2")]
         public DateTime? OutAt { get; set; }

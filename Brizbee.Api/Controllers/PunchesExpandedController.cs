@@ -201,7 +201,7 @@ namespace Brizbee.Api.Controllers
                         U.[OrganizationId] = @OrganizationId AND
                         P.[InAt] BETWEEN @Min AND @Max {whereClause};";
 
-                total = connection.QuerySingle<int>(countSql, parameters);
+                total = connection.QuerySingle<int>(countSql, parameters, commandTimeout: 600);
 
                 // Paging parameters.
                 parameters.Add("@Skip", skip);
@@ -243,9 +243,9 @@ namespace Brizbee.Api.Controllers
                         P.[ServiceRateId] AS Punch_ServiceRateId,
                         P.[PayrollRateId] AS Punch_PayrollRateId,
 
-                        DATEDIFF(minute, P.[InAt], P.[OutAt]) AS Punch_Minutes,
+                        DATEDIFF_BIG(minute, P.[InAt], P.[OutAt]) AS Punch_Minutes,
                         
-                        SUM(DATEDIFF(minute, P.[InAt], P.[OutAt])) OVER(PARTITION BY UserId ORDER BY InAt ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS Punch_CumulativeMinutes,
+                        SUM(DATEDIFF_BIG(minute, P.[InAt], P.[OutAt])) OVER(PARTITION BY UserId ORDER BY InAt ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS Punch_CumulativeMinutes,
 
                         C.[Id] AS Customer_Id,
                         C.[CreatedAt] AS Customer_CreatedAt,
@@ -335,7 +335,7 @@ namespace Brizbee.Api.Controllers
                     OFFSET @Skip ROWS
                     FETCH NEXT @PageSize ROWS ONLY;";
 
-                var results = connection.Query<PunchExpanded>(recordsSql, parameters);
+                var results = connection.Query<PunchExpanded>(recordsSql, parameters, commandTimeout: 600);
 
                 foreach (var result in results)
                 {
@@ -554,7 +554,7 @@ namespace Brizbee.Api.Controllers
                     ORDER BY
                         [InAt] DESC;";
 
-                var results = connection.Query<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id });
+                var results = connection.Query<PunchExpanded>(currentPunchSql, new { UserId = currentUser.Id }, commandTimeout: 600);
 
                 if (results.Any())
                 {
