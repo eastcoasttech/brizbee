@@ -40,10 +40,13 @@ namespace Brizbee.Core.Models.Accounting
         [Column(TypeName = "datetime2")]
         public DateTime CreatedAt { get; set; }
         
+        [Key]
+        public long Id { get; set; }
+        
         [Required]
-        public long PaycheckId { get; set; }
+        public long PayrollCheckId { get; set; }
 
-        [ForeignKey("PaycheckId")]
-        public virtual Paycheck? Paycheck { get; set; }
+        [ForeignKey("PayrollCheckId")]
+        public virtual Paycheck? PayrollCheck { get; set; }
     }
 }

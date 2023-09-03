@@ -60,7 +60,7 @@ namespace Brizbee.Core.Models.Accounting
         public virtual Organization? Organization { get; set; }
 
         [Required]
-        public long UserId { get; set; }
+        public int UserId { get; set; }
 
         [ForeignKey("UserId")]
         public virtual User? User { get; set; }

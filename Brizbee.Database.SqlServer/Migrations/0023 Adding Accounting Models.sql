@@ -64,28 +64,33 @@ CREATE TABLE [dbo].[Transactions]
     (
         [CreatedAt]       DATETIME2 (7) NOT NULL,
         [Description]     VARCHAR (60)  NOT NULL,
-        [ReferenceNumber] VARCHAR (20)  NOT NULL,
         [EnteredOn]       DATE          NOT NULL,
         [Id]              BIGINT        IDENTITY (1, 1) NOT NULL,
         [OrganizationId]  INT           NOT NULL,
+        [ReferenceNumber] VARCHAR (20)  NOT NULL,
+        [VoucherType]     VARCHAR (3)   NOT NULL,
         CONSTRAINT [PK_Transactions]
             PRIMARY KEY CLUSTERED ([Id])
     );
 
 CREATE NONCLUSTERED INDEX [IX_Transactions_OrganizationIdEnteredOn]
     ON [dbo].[Transactions] ([OrganizationId], [EnteredOn])
-    INCLUDE ([ReferenceNumber], [Description]);
+    INCLUDE ([ReferenceNumber], [Description], [VoucherType]);
+
+CREATE NONCLUSTERED INDEX [IX_Transactions_OrganizationIdVoucherType]
+    ON [dbo].[Transactions] ([OrganizationId], [VoucherType])
+    INCLUDE ([ReferenceNumber], [Description], [EnteredOn]);
 
 
 -- Entries Table
 CREATE TABLE [dbo].[Entries]
     (
+        [AccountId]     BIGINT          NOT NULL,
         [Amount]        DECIMAL (12, 2) NOT NULL,
         [CreatedAt]     DATETIME2 (7)   NOT NULL,
         [Description]   VARCHAR (60)    NOT NULL,
-        [AccountId]     BIGINT          NOT NULL,
-        [TransactionId] BIGINT          NOT NULL,
         [Type]          CHAR (1)        NOT NULL,
+        [TransactionId] BIGINT          NOT NULL,
         [Id]            BIGINT          IDENTITY (1, 1) NOT NULL,
         CONSTRAINT [PK_Entries]
             PRIMARY KEY CLUSTERED ([Id])
@@ -187,3 +192,107 @@ CREATE TABLE [dbo].[Deposits]
 CREATE NONCLUSTERED INDEX [IX_Deposits_BankAccountId]
     ON [dbo].[Deposits] ([BankAccountId])
     INCLUDE ([Amount], [EnteredOn], [ReferenceNumber], [TransactionId]);
+
+
+-- Paychecks Table
+CREATE TABLE [dbo].[Paychecks]
+    (
+        [CreatedAt]      DATETIME2 (7)   NOT NULL,
+        [EnteredOn]      DATE            NOT NULL,
+        [GrossAmount]    DECIMAL (12, 2) NOT NULL,
+        [Id]             BIGINT          IDENTITY (1, 1) NOT NULL,
+        [NetAmount]      DECIMAL (12, 2) NOT NULL,
+        [Number]         INT             NOT NULL,
+        [OrganizationId] INT             NOT NULL,
+        [UserId]         INT             NOT NULL,
+        CONSTRAINT [PK_Paychecks]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+CREATE NONCLUSTERED INDEX [IX_Paychecks_OrganizationId]
+    ON [dbo].[Paychecks] ([OrganizationId])
+    INCLUDE ([Number], [CreatedAt]);
+
+
+-- AvailableDeductions Table
+CREATE TABLE [dbo].[AvailableDeductions]
+    (
+        [CreatedAt]          DATETIME2 (7)   NOT NULL,
+        [Id]                 BIGINT          IDENTITY (1, 1) NOT NULL,
+        [Name]               VARCHAR (40)    NOT NULL,
+        [OrganizationId]     INT             NOT NULL,
+        [RateAmount]         DECIMAL (12, 2) NOT NULL,
+        [RateType]           VARCHAR (7)     NOT NULL,
+        [RelationToTaxation] VARCHAR (4)     NOT NULL,
+        CONSTRAINT [PK_AvailableDeductions]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+
+-- CalculatedDeductions Table
+CREATE TABLE [dbo].[CalculatedDeductions]
+    (
+        [Amount]               DECIMAL (12, 2) NOT NULL,
+        [AvailableDeductionId] INT             NOT NULL,
+        [CreatedAt]            DATETIME2 (7)   NOT NULL,
+        [Id]                   BIGINT          IDENTITY (1, 1) NOT NULL,
+        [PaycheckId]           BIGINT          NOT NULL,
+        CONSTRAINT [PK_CalculatedDeductions]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+
+-- AvailableTaxations Table
+CREATE TABLE [dbo].[AvailableTaxations]
+    (
+        [CreatedAt]      DATETIME2 (7)   NOT NULL,
+        [Entity]         VARCHAR (8)     NOT NULL,
+        [Id]             BIGINT          IDENTITY (1, 1) NOT NULL,
+        [LimitAmount]    DECIMAL (12, 2) NOT NULL,
+        [Name]           VARCHAR (40)    NOT NULL,
+        [OrganizationId] INT             NOT NULL,
+        [RateAmount]     DECIMAL (12, 2) NOT NULL,
+        [RateType]       VARCHAR (7)     NOT NULL,
+        CONSTRAINT [PK_AvailableTaxations]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+
+-- CalculatedTaxations Table
+CREATE TABLE [dbo].[CalculatedTaxations]
+    (
+        [Amount]              DECIMAL (12, 2) NOT NULL,
+        [AvailableTaxationId] INT             NOT NULL,
+        [CreatedAt]           DATETIME2 (7)   NOT NULL,
+        [Id]                  BIGINT          IDENTITY (1, 1) NOT NULL,
+        [PaycheckId]          BIGINT          NOT NULL,
+        CONSTRAINT [PK_CalculatedTaxations]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+
+-- AvailableWithholdings Table
+CREATE TABLE [dbo].[AvailableWithholdings]
+    (
+        [CreatedAt]      DATETIME2 (7) NOT NULL,
+        [Id]             BIGINT        IDENTITY (1, 1) NOT NULL,
+        [Level]          VARCHAR (7)   NOT NULL,
+        [Name]           VARCHAR (40)  NOT NULL,
+        [OrganizationId] INT           NOT NULL,
+        CONSTRAINT [PK_AvailableWithholdings]
+            PRIMARY KEY CLUSTERED ([Id])
+    );
+
+
+
+-- CalculatedWithholdings Table
+CREATE TABLE [dbo].[CalculatedWithholdings]
+    (
+        [Amount]                 DECIMAL (12, 2) NOT NULL,
+        [AvailableWithholdingId] INT             NOT NULL,
+        [CreatedAt]              DATETIME2 (7)   NOT NULL,
+        [Id]                     BIGINT          IDENTITY (1, 1) NOT NULL,
+        [PaycheckId]             BIGINT          NOT NULL,
+        CONSTRAINT [PK_CalculatedWithholdings]
+            PRIMARY KEY CLUSTERED ([Id])
+    );

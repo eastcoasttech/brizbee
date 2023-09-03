@@ -27,6 +27,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Brizbee.Core.Models.Accounting;
 
 namespace Brizbee.Api.Tests
 {
@@ -281,6 +282,18 @@ namespace Brizbee.Api.Tests
                 _context.Accounts!.Add(undepositedAccount);
                 _context.SaveChanges();
                 
+                var payrollLiabilitiesAccount = new Account()
+                {
+                    Number = 30000,
+                    Type = "Other Current Liability",
+                    Name = "Payroll Liabilities",
+                    Description = "",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(payrollLiabilitiesAccount);
+                _context.SaveChanges();
+                
                 var salesAccount = new Account()
                 {
                     Number = 40000,
@@ -316,6 +329,18 @@ namespace Brizbee.Api.Tests
                 };
                 _context.Accounts!.Add(phoneExpenseAccount);
                 _context.SaveChanges();
+                
+                var payrollExpenseAccount = new Account()
+                {
+                    Number = 61000,
+                    Type = "Expense",
+                    Name = "Payroll Expenses",
+                    Description = "The payroll expense account.",
+                    OrganizationId = organization.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Accounts!.Add(payrollExpenseAccount);
+                _context.SaveChanges();
             }
             catch (DbUpdateException ex)
             {
@@ -329,9 +354,20 @@ namespace Brizbee.Api.Tests
 
         public void Cleanup()
         {
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[CalculatedWithholdings]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[AvailableWithholdings]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[CalculatedTaxations]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[AvailableTaxations]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[CalculatedDeductions]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[AvailableDeductions]");
+            
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Paychecks]");
+
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Deposits]");
-            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[LineItems]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Payments]");
+            _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[LineItems]");
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Invoices]");
 
             _context.Database.GetDbConnection().Query("DELETE FROM [dbo].[Entries]");

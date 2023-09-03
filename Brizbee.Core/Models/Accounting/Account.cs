@@ -55,7 +55,12 @@ namespace Brizbee.Core.Models.Accounting
         [Required]
         [StringLength(30)]
         public string Type { get; set; } = string.Empty;
-
+        
+        /// <summary>
+        /// Either C or D to indicate normal balance.
+        /// </summary>
+        [Required]
+        [StringLength(1)]
         public string NormalBalance { get; set; } = string.Empty;
     }
 }

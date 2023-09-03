@@ -20,269 +20,303 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Core.Models.Accounting;
+using Dapper;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Dapper;
-using Brizbee.Core.Models.Accounting;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
-namespace Brizbee.Api.Tests
+namespace Brizbee.Api.Tests;
+
+[TestClass]
+public class PaychecksControllerTest
 {
-    [TestClass]
-    public class PaychecksControllerTest
+    public IConfiguration Configuration { get; set; }
+
+    public SqlContext Context { get; set; }
+
+    private readonly Helper _helper = new ();
+
+    private readonly JsonSerializerOptions _options = new()
     {
-        public IConfiguration _configuration { get; set; }
+        PropertyNameCaseInsensitive = true
+    };
 
-        public SqlContext _context { get; set; }
+    public PaychecksControllerTest()
+    {
+        // Setup configuration
+        var configurationBuilder = new ConfigurationBuilder();
+        configurationBuilder.AddJsonFile("appsettings.json");
+        Configuration = configurationBuilder.Build();
 
-        private Helper helper = new Helper();
+        // Setup database context
+        var options = new DbContextOptionsBuilder<SqlContext>()
+            .UseSqlServer(Configuration["ConnectionStrings:SqlContext"])
+            .Options;
+        Context = new SqlContext(options);
+    }
+    
+    [TestInitialize]
+    public void PrepareForTest()
+    {
+        _helper.Prepare();
+    }
 
-        JsonSerializerOptions options = new JsonSerializerOptions
+    [TestCleanup]
+    public void CleanupAfterTest()
+    {
+        _helper.Cleanup();
+    }
+    
+    [TestMethod]
+    public async System.Threading.Tasks.Task CreatePaycheck_Valid_Succeeds()
+    {
+        // ----------------------------------------------------------------
+        // Arrange
+        // ----------------------------------------------------------------
+
+        var application = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+                {
+                    configurationBuilder.AddJsonFile("appsettings.json");
+                });
+            });
+
+        var client = application.CreateClient();
+
+        // User will be authenticated
+        var currentUser = Context.Users!
+            .First(u => u.EmailAddress == "test.user.a@brizbee.com");
+
+        var token = GenerateJsonWebToken(currentUser.Id, currentUser.EmailAddress!);
+
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+        // ----------------------------------------------------------------
+        // Prepare
+        // ----------------------------------------------------------------
+
+        var hsaDeduction = new AvailableDeduction()
         {
-            PropertyNameCaseInsensitive = true
+            CreatedAt = DateTime.UtcNow,
+            OrganizationId = currentUser.OrganizationId,
+            Name = "Health Savings Account Deduction",
+            RateType = "FLAT",
+            RateAmount = 100.00M,
+            RelationToTaxation = "EMPLOYEE"
         };
 
-        public PaychecksControllerTest()
+        var employeeSsaTaxation = new AvailableTaxation()
         {
-            // Setup configuration
-            var configurationBuilder = new ConfigurationBuilder();
-            configurationBuilder.AddJsonFile("appsettings.json");
-            _configuration = configurationBuilder.Build();
-
-            // Setup database context
-            var options = new DbContextOptionsBuilder<SqlContext>()
-                .UseSqlServer(_configuration["ConnectionStrings:SqlContext"])
-                .Options;
-            _context = new SqlContext(options);
-        }
+            CreatedAt = DateTime.UtcNow,
+            OrganizationId = currentUser.OrganizationId,
+            Name = "Social Security Employee",
+            RateType = "PERCENT",
+            RateAmount = 6.2M,
+            Entity = "EMPLOYEE",
+            LimitAmount = 147000.00M
+        };
         
-        [TestInitialize]
-        public void PrepareForTest()
+        var employerSsaTaxation = new AvailableTaxation()
         {
-            helper.Prepare();
-        }
-
-        [TestCleanup]
-        public void CleanupAfterTest()
-        {
-            helper.Cleanup();
-        }
+            CreatedAt = DateTime.UtcNow,
+            OrganizationId = currentUser.OrganizationId,
+            Name = "Social Security Employer",
+            RateType = "PERCENT",
+            RateAmount = 6.2M,
+            Entity = "EMPLOYER",
+            LimitAmount = 147000.00M
+        };
         
-        [TestMethod]
-        public async System.Threading.Tasks.Task CreatePaycheck_Valid_Succeeds()
+        var employeeMedicareTaxation = new AvailableTaxation()
         {
-            // ----------------------------------------------------------------
-            // Arrange
-            // ----------------------------------------------------------------
+            CreatedAt = DateTime.UtcNow,
+            OrganizationId = currentUser.OrganizationId,
+            Name = "Medicare Employee",
+            RateType = "PERCENT",
+            RateAmount = 1.45M,
+            Entity = "EMPLOYEE",
+            LimitAmount = 147000.00M
+        };
+        
+        var employerMedicareTaxation = new AvailableTaxation()
+        {
+            CreatedAt = DateTime.UtcNow,
+            OrganizationId = currentUser.OrganizationId,
+            Name = "Medicare Employer",
+            RateType = "PERCENT",
+            RateAmount = 1.45M,
+            Entity = "EMPLOYER",
+            LimitAmount = 147000.00M
+        };
 
-            var application = new WebApplicationFactory<Program>()
-                .WithWebHostBuilder(builder =>
+        var federalWithholding = new AvailableWithholding()
+        {
+            CreatedAt = DateTime.UtcNow,
+            Level = "FEDERAL",
+            OrganizationId = currentUser.OrganizationId,
+            Name = "Federal Withholding"
+        };
+        
+        var stateWithholding = new AvailableWithholding()
+        {
+            CreatedAt = DateTime.UtcNow,
+            Level = "STATE",
+            OrganizationId = currentUser.OrganizationId,
+            Name = "State Withholding"
+        };
+
+
+
+
+
+        
+        var bankAccount = await Context.Accounts!.FirstAsync(x => x.Name == "Capital One Spark Checking");
+        var payrollExpenses = await Context.Accounts!.FirstAsync(x => x.Name == "Payroll Expenses");
+        var payrollLiabilities = await Context.Accounts!.FirstAsync(x => x.Name == "Payroll Liabilities");
+
+        
+
+        // ----------------------------------------------------------------
+        // Act
+        // ----------------------------------------------------------------
+
+        var contentPaycheck = new
+        {
+            GrossAmount = 4000.00M,
+            EnteredOn = new DateTime(2022, 8, 1),
+            Number = "1000",
+            UserId = currentUser.Id,
+            CalculatedDeductions = new[]
+            {
+                new
                 {
-                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    AvailableDeduction = new
                     {
-                        configurationBuilder.AddJsonFile("appsettings.json");
-                    });
-                });
-
-            var client = application.CreateClient();
-
-            // User will be authenticated
-            var currentUser = _context.Users!
-                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
-                .FirstOrDefault();
-
-            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
-
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-
-            // ----------------------------------------------------------------
-            // Prepare
-            // ----------------------------------------------------------------
-
-            var hsaDeduction = new AvailableDeduction()
-            {
-                CreatedAt = DateTime.UtcNow,
-                OrganizationId = currentUser.OrganizationId,
-                Name = "Health Savings Account Deduction",
-                RateType = "FLAT",
-                RateAmount = 100.00M,
-                RelationToTaxation = "EMPLOYEE"
-            };
-
-            var employeeSsaTaxation = new AvailableTaxation()
-            {
-                CreatedAt = DateTime.UtcNow,
-                OrganizationId = currentUser.OrganizationId,
-                Name = "Social Security Employee",
-                RateType = "PERCENT",
-                RateAmount = 6.2M,
-                Entity = "EMPLOYEE",
-                LimitAmount = 147000.00M
-            };
-            
-            var employerSsaTaxation = new AvailableTaxation()
-            {
-                CreatedAt = DateTime.UtcNow,
-                OrganizationId = currentUser.OrganizationId,
-                Name = "Social Security Employer",
-                RateType = "PERCENT",
-                RateAmount = 6.2M,
-                Entity = "EMPLOYER",
-                LimitAmount = 147000.00M
-            };
-            
-            var employeeMedicareTaxation = new AvailableTaxation()
-            {
-                CreatedAt = DateTime.UtcNow,
-                OrganizationId = currentUser.OrganizationId,
-                Name = "Medicare Employee",
-                RateType = "PERCENT",
-                RateAmount = 1.45M,
-                Entity = "EMPLOYEE",
-                LimitAmount = 147000.00M
-            };
-            
-            var employerMedicareTaxation = new AvailableTaxation()
-            {
-                CreatedAt = DateTime.UtcNow,
-                OrganizationId = currentUser.OrganizationId,
-                Name = "Medicare Employer",
-                RateType = "PERCENT",
-                RateAmount = 1.45M,
-                Entity = "EMPLOYER",
-                LimitAmount = 147000.00M
-            };
-
-            var federalWithholding = new AvailableWithholding()
-            {
-                CreatedAt = DateTime.UtcNow,
-                Level = "FEDERAL",
-                OrganizationId = currentUser.OrganizationId,
-                Name = "Federal Withholding"
-            };
-            
-            var stateWithholding = new AvailableWithholding()
-            {
-                CreatedAt = DateTime.UtcNow,
-                Level = "STATE",
-                OrganizationId = currentUser.OrganizationId,
-                Name = "State Withholding"
-            };
-
-
-
-
-
-
-            var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
-            var undepositedAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
-
-            var contentInvoice = new
-            {
-                EnteredOn = new DateTime(2022, 8, 1),
-                ReferenceNumber = "EC100",
-                LineItems = new LineItem[]
-                {
-                    new LineItem()
-                    {
-                        UnitAmount = 12.53M,
-                        Quantity = 2M,
-                        Description = "Some Item"
+                        RelationToTaxation = "PRE"
                     },
-                    new LineItem()
+                    Amount = 200.00M
+                },
+                new
+                {
+                    AvailableDeduction = new
                     {
-                        UnitAmount = 356.99M,
-                        Quantity = 1M,
-                        Description = "Some Item"
-                    }
+                        RelationToTaxation = "POST"
+                    },
+                    Amount = 200.00M
                 }
-            };
-            var json = JsonSerializer.Serialize(contentInvoice, options);
-            var buffer = Encoding.UTF8.GetBytes(json);
-            var byteContent = new ByteArrayContent(buffer);
-            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-            var response = await client.PostAsync($"api/Invoices", byteContent);
-            
-
-            // ----------------------------------------------------------------
-            // Act
-            // ----------------------------------------------------------------
-
-            var contentPayment = new
+            },
+            CalculatedTaxations = new[]
             {
-                EnteredOn = new DateTime(2022, 8, 1),
-                ReferenceNumber = "1000",
-                Amount = 382.05M
-            };
-            json = JsonSerializer.Serialize(contentPayment, options);
-            buffer = Encoding.UTF8.GetBytes(json);
-            byteContent = new ByteArrayContent(buffer);
-            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-            response = await client.PostAsync($"api/Payments", byteContent);
-
-
-            // ----------------------------------------------------------------
-            // Assert
-            // ----------------------------------------------------------------
-
-            Assert.IsTrue(response.IsSuccessStatusCode);
-
-            var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
-
-            var balanceOfAccountsReceivable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
-                balanceOfAccountSql,
-                param: new
+                new
                 {
-                    MinDate = new DateTime(2022, 8, 1),
-                    MaxDate = new DateTime(2022, 8, 1),
-                    AccountId = arAccount!.Id
-                });
-
-            Assert.AreEqual(0.00M, balanceOfAccountsReceivable);
-            
-            var balanceOfUndepositedFunds = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
-                balanceOfAccountSql,
-                param: new
+                    AvailableTaxation = new
+                    {
+                        Entity = "EMPLOYEE"
+                    },
+                    Amount = 100.00M
+                },
+                new
                 {
-                    MinDate = new DateTime(2022, 8, 1),
-                    MaxDate = new DateTime(2022, 8, 1),
-                    AccountId = undepositedAccount!.Id
-                });
+                    AvailableTaxation = new
+                    {
+                        Entity = "EMPLOYER"
+                    },
+                    Amount = 100.00M
+                }
+            },
+            CalculatedWithholdings = new[]
+            {
+                new
+                {
+                    AvailableWithholding = new
+                    {
+                        Level = "FEDERAL"
+                    },
+                    Amount = 500.00M
+                }
+            }
+        };
+        var json = JsonSerializer.Serialize(contentPaycheck, _options);
+        var buffer = Encoding.UTF8.GetBytes(json);
+        var byteContent = new ByteArrayContent(buffer);
+        byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            Assert.AreEqual(382.05M, balanceOfUndepositedFunds);
-        }
+        var response = await client.PostAsync($"api/Accounting/Paychecks?bankAccountId={bankAccount.Id}", byteContent);
+
+
+        // ----------------------------------------------------------------
+        // Assert
+        // ----------------------------------------------------------------
+
+        Assert.IsTrue(response.IsSuccessStatusCode);
+
+        const string balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+
+        var balanceOfBankAccount = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            balanceOfAccountSql,
+            param: new
+            {
+                MinDate = new DateTime(2022, 8, 1),
+                MaxDate = new DateTime(2022, 8, 1),
+                AccountId = bankAccount!.Id
+            });
+
+        Assert.AreEqual(-3000.00M, balanceOfBankAccount);
         
-        private string GenerateJSONWebToken(int userId, string emailAddress)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        var balanceOfPayrollExpenses = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            balanceOfAccountSql,
+            param: new
+            {
+                MinDate = new DateTime(2022, 8, 1),
+                MaxDate = new DateTime(2022, 8, 1),
+                AccountId = payrollExpenses!.Id
+            });
 
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, emailAddress),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+        Assert.AreEqual(4100.00M, balanceOfPayrollExpenses);
+        
+        var balanceOfPayrollLiabilities = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            balanceOfAccountSql,
+            param: new
+            {
+                MinDate = new DateTime(2022, 8, 1),
+                MaxDate = new DateTime(2022, 8, 1),
+                AccountId = payrollLiabilities!.Id
+            });
 
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-                _configuration["Jwt:Issuer"],
-                claims,
-                expires: DateTime.Now.AddMinutes(120),
-                signingCredentials: credentials);
+        Assert.AreEqual(1100.00M, balanceOfPayrollLiabilities);
+    }
+    
+    private string GenerateJsonWebToken(int userId, string emailAddress)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        var claims = new[] {
+            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, emailAddress),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var token = new JwtSecurityToken(Configuration["Jwt:Issuer"],
+            Configuration["Jwt:Issuer"],
+            claims,
+            expires: DateTime.Now.AddMinutes(120),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

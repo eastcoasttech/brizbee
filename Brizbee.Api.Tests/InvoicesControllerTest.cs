@@ -20,106 +20,105 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Dapper;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Dapper;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 using Brizbee.Core.Models.Accounting;
 
-namespace Brizbee.Api.Tests
+namespace Brizbee.Api.Tests;
+
+[TestClass]
+public class InvoicesControllerTest
 {
-    [TestClass]
-    public class InvoicesControllerTest
+    public IConfiguration Configuration { get; set; }
+
+    public SqlContext Context { get; set; }
+
+    private readonly Helper _helper = new();
+
+    private readonly JsonSerializerOptions _options = new()
     {
-        public IConfiguration _configuration { get; set; }
+        PropertyNameCaseInsensitive = true
+    };
 
-        public SqlContext _context { get; set; }
+    public InvoicesControllerTest()
+    {
+        // Setup configuration
+        var configurationBuilder = new ConfigurationBuilder();
+        configurationBuilder.AddJsonFile("appsettings.json");
+        Configuration = configurationBuilder.Build();
 
-        private Helper helper = new Helper();
+        // Setup database context
+        var options = new DbContextOptionsBuilder<SqlContext>()
+            .UseSqlServer(Configuration["ConnectionStrings:SqlContext"])
+            .Options;
+        Context = new SqlContext(options);
+    }
 
-        JsonSerializerOptions options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
+    [TestInitialize]
+    public void PrepareForTest()
+    {
+        _helper.Prepare();
+    }
 
-        public InvoicesControllerTest()
-        {
-            // Setup configuration
-            var configurationBuilder = new ConfigurationBuilder();
-            configurationBuilder.AddJsonFile("appsettings.json");
-            _configuration = configurationBuilder.Build();
+    [TestCleanup]
+    public void CleanupAfterTest()
+    {
+        _helper.Cleanup();
+    }
 
-            // Setup database context
-            var options = new DbContextOptionsBuilder<SqlContext>()
-                .UseSqlServer(_configuration["ConnectionStrings:SqlContext"])
-                .Options;
-            _context = new SqlContext(options);
-        }
-        
-        [TestInitialize]
-        public void PrepareForTest()
-        {
-            helper.Prepare();
-        }
+    [TestMethod]
+    public async System.Threading.Tasks.Task CreateInvoice_Valid_Succeeds()
+    {
+        // ----------------------------------------------------------------
+        // Arrange
+        // ----------------------------------------------------------------
 
-        [TestCleanup]
-        public void CleanupAfterTest()
-        {
-            helper.Cleanup();
-        }
-
-        [TestMethod]
-        public async System.Threading.Tasks.Task CreateInvoice_Valid_Succeeds()
-        {
-            // ----------------------------------------------------------------
-            // Arrange
-            // ----------------------------------------------------------------
-
-            var application = new WebApplicationFactory<Program>()
-                .WithWebHostBuilder(builder =>
-                {
-                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
-                    {
-                        configurationBuilder.AddJsonFile("appsettings.json");
-                    });
-                });
-
-            var client = application.CreateClient();
-
-            // User will be authenticated
-            var currentUser = _context.Users!
-                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
-                .FirstOrDefault();
-
-            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
-
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-
-            // ----------------------------------------------------------------
-            // Act
-            // ----------------------------------------------------------------
-
-            var salesAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Sales");
-            var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
-
-            var content = new
+        var application = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
             {
-                EnteredOn = new DateTime(2022, 8, 1),
-                ReferenceNumber = "EC100",
-                LineItems = new LineItem[]
+                builder.ConfigureAppConfiguration((_, configurationBuilder) =>
                 {
-                    new LineItem()
+                    configurationBuilder.AddJsonFile("appsettings.json");
+                });
+            });
+
+        var client = application.CreateClient();
+
+        // User will be authenticated
+        var currentUser = Context.Users!
+            .First(u => u.EmailAddress == "test.user.a@brizbee.com");
+
+        var token = GenerateJsonWebToken(currentUser.Id, currentUser.EmailAddress!);
+
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+
+        // ----------------------------------------------------------------
+        // Act
+        // ----------------------------------------------------------------
+
+        var salesAccount = await Context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Sales");
+        var arAccount = await Context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+
+        var content = new
+        {
+            EnteredOn = new DateTime(2022, 8, 1),
+            ReferenceNumber = "EC100",
+            LineItems = new[]
+            {
+                    new()
                     {
                         UnitAmount = 12.53M,
                         Quantity = 2M,
@@ -132,64 +131,63 @@ namespace Brizbee.Api.Tests
                         Description = "Some Item"
                     }
                 }
-            };
-            var json = JsonSerializer.Serialize(content, options);
-            var buffer = Encoding.UTF8.GetBytes(json);
-            var byteContent = new ByteArrayContent(buffer);
-            byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        };
+        var json = JsonSerializer.Serialize(content, _options);
+        var buffer = Encoding.UTF8.GetBytes(json);
+        var byteContent = new ByteArrayContent(buffer);
+        byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Invoices", byteContent);
+        var response = await client.PostAsync("api/Accounting/Invoices", byteContent);
 
 
-            // ----------------------------------------------------------------
-            // Assert
-            // ----------------------------------------------------------------
+        // ----------------------------------------------------------------
+        // Assert
+        // ----------------------------------------------------------------
 
-            Assert.IsTrue(response.IsSuccessStatusCode);
+        Assert.IsTrue(response.IsSuccessStatusCode);
 
-            var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+        const string balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
 
-            var balanceOfSalesAccount = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
-                balanceOfAccountSql,
-                param: new
-                {
-                    MinDate = new DateTime(2022, 8, 1),
-                    MaxDate = new DateTime(2022, 8, 1),
-                    AccountId = salesAccount!.Id
-                });
+        var balanceOfSalesAccount = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            balanceOfAccountSql,
+            param: new
+            {
+                MinDate = new DateTime(2022, 8, 1),
+                MaxDate = new DateTime(2022, 8, 1),
+                AccountId = salesAccount!.Id
+            });
 
-            Assert.AreEqual(382.05M, balanceOfSalesAccount);
-            
-            var balanceOfAccountsReceivable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
-                balanceOfAccountSql,
-                param: new
-                {
-                    MinDate = new DateTime(2022, 8, 1),
-                    MaxDate = new DateTime(2022, 8, 1),
-                    AccountId = arAccount!.Id
-                });
+        Assert.AreEqual(382.05M, balanceOfSalesAccount);
 
-            Assert.AreEqual(382.05M, balanceOfAccountsReceivable);
-        }
-        
-        private string GenerateJSONWebToken(int userId, string emailAddress)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        var balanceOfAccountsReceivable = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            balanceOfAccountSql,
+            param: new
+            {
+                MinDate = new DateTime(2022, 8, 1),
+                MaxDate = new DateTime(2022, 8, 1),
+                AccountId = arAccount!.Id
+            });
 
-            var claims = new[] {
+        Assert.AreEqual(382.05M, balanceOfAccountsReceivable);
+    }
+
+    private string GenerateJsonWebToken(int userId, string emailAddress)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, emailAddress),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-                _configuration["Jwt:Issuer"],
-                claims,
-                expires: DateTime.Now.AddMinutes(120),
-                signingCredentials: credentials);
+        var token = new JwtSecurityToken(Configuration["Jwt:Issuer"],
+            Configuration["Jwt:Issuer"],
+            claims,
+            expires: DateTime.Now.AddMinutes(120),
+            signingCredentials: credentials);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

@@ -89,7 +89,7 @@ namespace Brizbee.Api.Tests
             var application = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
-                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    builder.ConfigureAppConfiguration((_, configurationBuilder) =>
                     {
                         configurationBuilder.AddJsonFile("appsettings.json");
                     });
@@ -99,8 +99,7 @@ namespace Brizbee.Api.Tests
 
             // User will be authenticated
             var currentUser = _context.Users!
-                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
-                .FirstOrDefault();
+                .First(u => u.EmailAddress == "test.user.a@brizbee.com");
 
             var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
 
@@ -111,7 +110,7 @@ namespace Brizbee.Api.Tests
             // Act
             // ----------------------------------------------------------------
 
-            var response = await client.GetAsync($"api/Transactions");
+            var response = await client.GetAsync("api/accounting/Transactions");
 
 
             // ----------------------------------------------------------------
@@ -185,7 +184,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Transactions", byteContent);
+            var response = await client.PostAsync("api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -251,7 +250,7 @@ namespace Brizbee.Api.Tests
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Transactions", byteContent);
+            response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -348,7 +347,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Transactions", byteContent);
+            var response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -414,7 +413,7 @@ namespace Brizbee.Api.Tests
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Transactions", byteContent);
+            response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -514,7 +513,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Transactions", byteContent);
+            var response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
             
             // ----------------------------------------------------------------
@@ -550,7 +549,7 @@ namespace Brizbee.Api.Tests
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Transactions", byteContent);
+            response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -586,7 +585,7 @@ namespace Brizbee.Api.Tests
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Transactions", byteContent);
+            response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
             
             // ----------------------------------------------------------------
@@ -622,7 +621,7 @@ namespace Brizbee.Api.Tests
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Transactions", byteContent);
+            response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
             
             // ----------------------------------------------------------------
@@ -714,7 +713,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Transactions", byteContent);
+            var response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -782,7 +781,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Transactions", byteContent);
+            var response = await client.PostAsync($"api/Accounting/Transactions", byteContent);
 
 
             // ----------------------------------------------------------------

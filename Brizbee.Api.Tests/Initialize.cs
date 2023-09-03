@@ -64,16 +64,15 @@ namespace Brizbee.Api.Tests
 
             try
             {
-                using (var connection = new SqlConnection(DatabaseConnectionString))
-                {
-                    connection.Open();
+                using var connection = new SqlConnection(DatabaseConnectionString);
 
-                    Trace.TraceInformation("Dropping objects from the database");
+                connection.Open();
 
-                    connection.Execute(dropSql);
+                Trace.TraceInformation("Dropping objects from the database");
 
-                    Trace.TraceInformation("Objects have been dropped from the database");
-                }
+                connection.Execute(dropSql);
+
+                Trace.TraceInformation("Objects have been dropped from the database");
             }
             catch (SqlException sqlException)
             {

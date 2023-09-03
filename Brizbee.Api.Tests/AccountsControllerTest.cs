@@ -108,7 +108,7 @@ namespace Brizbee.Api.Tests
             // Act
             // ----------------------------------------------------------------
 
-            var response = await client.GetAsync($"api/Accounts");
+            var response = await client.GetAsync($"api/Accounting/Accounts");
 
 
             // ----------------------------------------------------------------
@@ -155,7 +155,7 @@ namespace Brizbee.Api.Tests
                 .Select(x => x.Id)
                 .FirstOrDefault();
 
-            var response = await client.GetAsync($"api/Accounts/{accountId}");
+            var response = await client.GetAsync($"api/Accounting/Accounts/{accountId}");
 
 
             // ----------------------------------------------------------------
@@ -209,7 +209,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Accounts", byteContent);
+            var response = await client.PostAsync($"api/Accounting/Accounts", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -263,7 +263,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Accounts", byteContent);
+            var response = await client.PostAsync($"api/Accounting/Accounts", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -321,7 +321,7 @@ namespace Brizbee.Api.Tests
             var byteContentChanges = new ByteArrayContent(bufferChanges);
             byteContentChanges.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var responseUpdate = await client.PutAsync($"api/Accounts/{accountId}", byteContentChanges);
+            var responseUpdate = await client.PutAsync($"api/Accounting/Accounts/{accountId}", byteContentChanges);
 
 
             // ----------------------------------------------------------------
@@ -381,7 +381,7 @@ namespace Brizbee.Api.Tests
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var responseCreate = await client.PostAsync($"api/Accounts", byteContent);
+            var responseCreate = await client.PostAsync($"api/Accounting/Accounts", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -400,7 +400,7 @@ namespace Brizbee.Api.Tests
                 .Select(x => x.Id)
                 .FirstOrDefault();
 
-            var responseDelete = await client.DeleteAsync($"api/Accounts/{accountId}");
+            var responseDelete = await client.DeleteAsync($"api/Accounting/Accounts/{accountId}");
 
 
             // ----------------------------------------------------------------

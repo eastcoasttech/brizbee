@@ -20,34 +20,34 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using Brizbee.Core.Models.Accounting;
+using Dapper;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Dapper;
-using Brizbee.Core.Models.Accounting;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
 namespace Brizbee.Api.Tests
 {
     [TestClass]
     public class PaymentsControllerTest
     {
-        public IConfiguration _configuration { get; set; }
+        public IConfiguration Configuration { get; set; }
 
-        public SqlContext _context { get; set; }
+        public SqlContext Context { get; set; }
 
-        private Helper helper = new Helper();
+        private readonly Helper _helper = new();
 
-        JsonSerializerOptions options = new JsonSerializerOptions
+        private readonly JsonSerializerOptions _options = new()
         {
             PropertyNameCaseInsensitive = true
         };
@@ -57,25 +57,25 @@ namespace Brizbee.Api.Tests
             // Setup configuration
             var configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddJsonFile("appsettings.json");
-            _configuration = configurationBuilder.Build();
+            Configuration = configurationBuilder.Build();
 
             // Setup database context
             var options = new DbContextOptionsBuilder<SqlContext>()
-                .UseSqlServer(_configuration["ConnectionStrings:SqlContext"])
+                .UseSqlServer(Configuration["ConnectionStrings:SqlContext"])
                 .Options;
-            _context = new SqlContext(options);
+            Context = new SqlContext(options);
         }
         
         [TestInitialize]
         public void PrepareForTest()
         {
-            helper.Prepare();
+            _helper.Prepare();
         }
 
         [TestCleanup]
         public void CleanupAfterTest()
         {
-            helper.Cleanup();
+            _helper.Cleanup();
         }
         
         [TestMethod]
@@ -88,7 +88,7 @@ namespace Brizbee.Api.Tests
             var application = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
-                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    builder.ConfigureAppConfiguration((_, configurationBuilder) =>
                     {
                         configurationBuilder.AddJsonFile("appsettings.json");
                     });
@@ -97,11 +97,10 @@ namespace Brizbee.Api.Tests
             var client = application.CreateClient();
 
             // User will be authenticated
-            var currentUser = _context.Users!
-                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
-                .FirstOrDefault();
+            var currentUser = Context.Users!
+                .First(u => u.EmailAddress == "test.user.a@brizbee.com");
 
-            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+            var token = GenerateJsonWebToken(currentUser.Id, currentUser.EmailAddress!);
 
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
@@ -110,14 +109,14 @@ namespace Brizbee.Api.Tests
             // Prepare
             // ----------------------------------------------------------------
 
-            var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
-            var undepositedAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
+            var arAccount = await Context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+            var undepositedAccount = await Context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
 
             var contentInvoice = new
             {
                 EnteredOn = new DateTime(2022, 8, 1),
                 ReferenceNumber = "EC100",
-                LineItems = new LineItem[]
+                LineItems = new[]
                 {
                     new LineItem()
                     {
@@ -133,12 +132,12 @@ namespace Brizbee.Api.Tests
                     }
                 }
             };
-            var json = JsonSerializer.Serialize(contentInvoice, options);
+            var json = JsonSerializer.Serialize(contentInvoice, _options);
             var buffer = Encoding.UTF8.GetBytes(json);
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Invoices", byteContent);
+            await client.PostAsync("api/Accounting/Invoices", byteContent);
             
 
             // ----------------------------------------------------------------
@@ -151,12 +150,12 @@ namespace Brizbee.Api.Tests
                 ReferenceNumber = "1000",
                 Amount = 382.05M
             };
-            json = JsonSerializer.Serialize(contentPayment, options);
+            json = JsonSerializer.Serialize(contentPayment, _options);
             buffer = Encoding.UTF8.GetBytes(json);
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Payments", byteContent);
+            var response = await client.PostAsync("api/Accounting/Payments", byteContent);
 
 
             // ----------------------------------------------------------------
@@ -165,9 +164,9 @@ namespace Brizbee.Api.Tests
 
             Assert.IsTrue(response.IsSuccessStatusCode);
 
-            var balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
+            const string balanceOfAccountSql = "SELECT [dbo].[udf_AccountBalance] (@MinDate, @MaxDate, @AccountId);";
 
-            var balanceOfAccountsReceivable = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            var balanceOfAccountsReceivable = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
                 balanceOfAccountSql,
                 param: new
                 {
@@ -178,7 +177,7 @@ namespace Brizbee.Api.Tests
 
             Assert.AreEqual(0.00M, balanceOfAccountsReceivable);
             
-            var balanceOfUndepositedFunds = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
+            var balanceOfUndepositedFunds = await Context.Database.GetDbConnection().QueryFirstOrDefaultAsync<decimal>(
                 balanceOfAccountSql,
                 param: new
                 {
@@ -200,7 +199,7 @@ namespace Brizbee.Api.Tests
             var application = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
-                    builder.ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+                    builder.ConfigureAppConfiguration((_, configurationBuilder) =>
                     {
                         configurationBuilder.AddJsonFile("appsettings.json");
                     });
@@ -209,11 +208,10 @@ namespace Brizbee.Api.Tests
             var client = application.CreateClient();
 
             // User will be authenticated
-            var currentUser = _context.Users!
-                .Where(u => u.EmailAddress == "test.user.a@brizbee.com")
-                .FirstOrDefault();
+            var currentUser = Context.Users!
+                .First(u => u.EmailAddress == "test.user.a@brizbee.com");
 
-            var token = GenerateJSONWebToken(currentUser!.Id, currentUser!.EmailAddress!);
+            var token = GenerateJsonWebToken(currentUser.Id, currentUser.EmailAddress!);
 
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
@@ -222,14 +220,14 @@ namespace Brizbee.Api.Tests
             // Prepare
             // ----------------------------------------------------------------
 
-            var arAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
-            var undepositedAccount = await _context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
+            var arAccount = await Context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+            var undepositedAccount = await Context.Accounts!.FirstOrDefaultAsync(x => x.Name == "Undeposited Funds");
 
             var contentInvoice = new
             {
                 EnteredOn = new DateTime(2022, 8, 1),
                 ReferenceNumber = "EC100",
-                LineItems = new LineItem[]
+                LineItems = new[]
                 {
                     new LineItem()
                     {
@@ -245,12 +243,12 @@ namespace Brizbee.Api.Tests
                     }
                 }
             };
-            var json = JsonSerializer.Serialize(contentInvoice, options);
+            var json = JsonSerializer.Serialize(contentInvoice, _options);
             var buffer = Encoding.UTF8.GetBytes(json);
             var byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await client.PostAsync($"api/Invoices", byteContent);
+            await client.PostAsync("api/Accounting/Invoices", byteContent);
             
 
             // ----------------------------------------------------------------
@@ -263,24 +261,24 @@ namespace Brizbee.Api.Tests
                 ReferenceNumber = "1000",
                 Amount = 382.05M
             };
-            json = JsonSerializer.Serialize(contentPayment, options);
+            json = JsonSerializer.Serialize(contentPayment, _options);
             buffer = Encoding.UTF8.GetBytes(json);
             byteContent = new ByteArrayContent(buffer);
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            response = await client.PostAsync($"api/Payments", byteContent);
+            await client.PostAsync("api/Accounting/Payments", byteContent);
 
 
             // ----------------------------------------------------------------
             // Act again
             // ----------------------------------------------------------------
 
-            var paymentId = _context.Payments!
+            var paymentId = Context.Payments!
                 .Where(x => x.ReferenceNumber == "1000")
                 .Select(x => x.Id)
                 .FirstOrDefault();
 
-            var responseDelete = await client.DeleteAsync($"api/Payments/{paymentId}");
+            var responseDelete = await client.DeleteAsync($"api/Accounting/Payments/{paymentId}");
 
 
             // ----------------------------------------------------------------
@@ -290,9 +288,9 @@ namespace Brizbee.Api.Tests
             Assert.IsTrue(responseDelete.IsSuccessStatusCode);
         }
 
-        private string GenerateJSONWebToken(int userId, string emailAddress)
+        private string GenerateJsonWebToken(int userId, string emailAddress)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[] {
@@ -301,8 +299,8 @@ namespace Brizbee.Api.Tests
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-                _configuration["Jwt:Issuer"],
+            var token = new JwtSecurityToken(Configuration["Jwt:Issuer"],
+                Configuration["Jwt:Issuer"],
                 claims,
                 expires: DateTime.Now.AddMinutes(120),
                 signingCredentials: credentials);

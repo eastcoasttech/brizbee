@@ -52,5 +52,13 @@ namespace Brizbee.Core.Models.Accounting
         [Required]
         [StringLength(20)]
         public string ReferenceNumber { get; set; } = string.Empty;
+
+        /// <summary>
+        /// INV for invoice, DEP or deposit, PMT for invoice payment,
+        /// GEN for general journal entry
+        /// </summary>
+        [Required]
+        [StringLength(3)]
+        public string VoucherType { get; set; } = string.Empty;
     }
 }
