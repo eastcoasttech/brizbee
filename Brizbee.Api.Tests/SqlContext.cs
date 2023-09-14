@@ -35,6 +35,10 @@ namespace Brizbee.Api.Tests
         
         public DbSet<Account>? Accounts { get; set; }
 
+        public DbSet<Check>? Checks { get; set; }
+        
+        public DbSet<CheckExpenseLine>? CheckExpenseLines { get; set; }
+
         public DbSet<Commit>? Commits { get; set; }
 
         public DbSet<Customer>? Customers { get; set; }
@@ -43,11 +47,15 @@ namespace Brizbee.Api.Tests
         
         public DbSet<Entry>? Entries { get; set; }
 
+        public DbSet<Invoice>? Invoices { get; set; }
+
         public DbSet<Job>? Jobs { get; set; }
 
         public DbSet<LineItem>? LineItems { get; set; }
 
         public DbSet<Organization>? Organizations { get; set; }
+        
+        public DbSet<Paycheck>? Paychecks { get; set; }
 
         public DbSet<Payment>? Payments { get; set; }
 
@@ -82,6 +90,8 @@ namespace Brizbee.Api.Tests
         public DbSet<Transaction>? Transactions { get; set; }
 
         public DbSet<User>? Users { get; set; }
+
+        public DbSet<Vendor>? Vendors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

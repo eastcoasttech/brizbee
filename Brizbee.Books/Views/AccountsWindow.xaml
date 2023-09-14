@@ -1,0 +1,73 @@
+﻿<Window x:Class="Brizbee.Books.Views.AccountsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Brizbee.Books"
+        xmlns:views="clr-namespace:Brizbee.Books.Views"
+        Loaded="Window_Loaded"
+        mc:Ignorable="d"
+        Height="600" MinHeight="480" Width="800" MinWidth="640"
+        WindowStartupLocation="CenterScreen"
+        Title="Chart Of Accounts">
+    <FrameworkElement.Resources>
+        <!--DataGrid Cell Vertical Centering-->
+        <Style x:Key="DataGridCellCentering"
+               TargetType="{x:Type DataGridCell}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                        <Grid Background="{TemplateBinding Background}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!--DataGrid Cell ElementStyle-->
+        <Style x:Key="DataGridTextTrimmingEllipsis"
+               TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Padding" Value="3"/>
+        </Style>
+    </FrameworkElement.Resources>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Bottom">
+            <StackPanel Orientation="Horizontal" Margin="0 0 0 4">
+                <Button Margin="4,0" Content="Add Account" Padding="10 3"/>
+                <Button Margin="4,0" Content="Edit Account" Padding="10 3"/>
+                <Button Margin="4,0" Content="Delete Account" Padding="10 3"/>
+            </StackPanel>
+            <StatusBar>
+                <StatusBarItem>
+                    <TextBlock Text="{Binding Status}" />
+                </StatusBarItem>
+            </StatusBar>
+        </StackPanel>
+        <DataGrid ItemsSource="{Binding Accounts}" AutoGenerateColumns="False"
+                  IsReadOnly="True" CanUserResizeRows="False" CanUserAddRows="False" CanUserReorderColumns="False"
+                  HeadersVisibility="Column" RowHeight="26" ColumnHeaderHeight="26"
+                  HorizontalContentAlignment="Center" Name="DataGridAccounts" Margin="5 0 5 5"
+                  Sorting="DataGridAccounts_OnSorting"
+                  CellStyle="{StaticResource DataGridCellCentering}" IsEnabled="{Binding IsEnabled}"
+                  CanUserDeleteRows="False" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="LightGray"
+                  MouseDoubleClick="DataGridAccounts_OnMouseDoubleClick">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Number" Binding="{Binding Number}" Width="1*"
+                                    SortMemberPath="Number"
+                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"
+                                    SortMemberPath="Name"
+                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"
+                                    SortMemberPath="Type"
+                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="3*"
+                                    SortMemberPath="Description"
+                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

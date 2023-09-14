@@ -35,6 +35,10 @@ namespace Brizbee.Api
         
         public DbSet<Account>? Accounts { get; set; }
 
+        public DbSet<Check>? Checks { get; set; }
+        
+        public DbSet<CheckExpenseLine>? CheckExpenseLines { get; set; }
+
         public DbSet<Commit>? Commits { get; set; }
 
         public DbSet<Customer>? Customers { get; set; }
@@ -86,6 +90,8 @@ namespace Brizbee.Api
         public DbSet<Transaction>? Transactions { get; set; }
 
         public DbSet<User>? Users { get; set; }
+
+        public DbSet<Vendor>? Vendors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

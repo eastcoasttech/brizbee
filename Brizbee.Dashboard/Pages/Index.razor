@@ -5,30 +5,32 @@
 @using Brizbee.Dashboard.Security
 
 @inject NavigationManager NavigationManager
-@inject LocalStorageService localStorageService
-@inject SharedService sharedService
-@inject AuditService auditService
-@inject AuthService authService
-@inject KioskService kioskService
-@inject UserService userService
-@inject LockService lockService
-@inject PunchService punchService
-@inject CustomerService customerService
-@inject TaskService taskService
-@inject TaskTemplateService taskTemplateService
-@inject PopulateTemplateService populateTemplateService
-@inject JobService jobService
-@inject RateService rateService
-@inject OrganizationService organizationService
-@inject TimesheetEntryService timesheetEntryService
-@inject QBDInventoryItemService qbdInventoryItemService
-@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
-@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
-@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
-@inject ExportService exportService
-@inject IJSRuntime JSRuntime
+@inject LocalStorageService LocalStorageService
+@inject SharedService SharedService
+@inject AccountService AccountService
+@inject AuditService AuditService
+@inject AuthService AuthService
+@inject EntryService EntryService
+@inject KioskService KioskService
+@inject UserService UserService
+@inject LockService LockService
+@inject PunchService PunchService
+@inject CustomerService CustomerService
+@inject TaskService TaskService
+@inject TaskTemplateService TaskTemplateService
+@inject PopulateTemplateService PopulateTemplateService
+@inject JobService JobService
+@inject RateService RateService
+@inject OrganizationService OrganizationService
+@inject TimesheetEntryService TimesheetEntryService
+@inject QBDInventoryItemService QbdInventoryItemService
+@inject QBDInventoryItemSyncService QbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService QbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService QbdInventoryConsumptionSyncService
+@inject ExportService ExportService
+@inject IJSRuntime JsRuntime
 
-@if (loading == true)
+@if (_loading == true)
 {
     <div class="spinner-background">
         <div class="spinner"></div>
@@ -36,7 +38,7 @@
 }
 
 <div class="container-fluid fadeIn" style="min-height: 50vh;">
-    @if (confirmed == true)
+    @if (_confirmed == true)
     {
         <div class="alert alert-info">Your account is now confirmed! Please sign in to continue.</div>
     }
@@ -49,50 +51,50 @@
                         <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
                     </p>
 
-                    @if (method == "pin")
+                    @if (_method == "pin")
                     {
                         <div class="panel panel-default panel-login">
                             <div class="panel-heading">Login with Your PIN</div>
                             <div class="panel-body">
-                                <EditForm Model="@pinSession" OnValidSubmit="AuthenticateAsync" id="formPin" autocomplete="off">
+                                <EditForm Model="@_pinSession" OnValidSubmit="AuthenticateAsync" id="formPin" autocomplete="off">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary />
 
                                     <div class="form-group form-group-lg">
                                         <label class="control-label" for="inputOrganizationCode">Organization Code</label>
-                                        <InputText id="inputOrganizationCode" @bind-Value="pinSession.OrganizationCode" class="form-control" disabled="@working" />
+                                        <InputText id="inputOrganizationCode" @bind-Value="_pinSession.OrganizationCode" class="form-control" disabled="@_working" />
                                     </div>
                                     <div class="form-group form-group-lg">
                                         <label class="control-label" for="inputUserPin">PIN Number</label>
-                                        <InputText id="inputUserPin" @bind-Value="pinSession.UserPin" class="form-control" type="password" disabled="@working" />
+                                        <InputText id="inputUserPin" @bind-Value="_pinSession.UserPin" class="form-control" type="password" disabled="@_working" />
                                     </div>
-                                    <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
+                                    <i class="@(_working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@_working">Login</button>
                                 </EditForm>
                             </div>
                         </div>
                         <p class="text-right" style="font-size: 1.25em;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with Email Address Instead</a></p>
                     }
 
-                    @if (method == "email")
+                    @if (_method == "email")
                     {
                         <div class="panel panel-default panel-login">
                             <div class="panel-heading">Login with Email Address</div>
                             <div class="panel-body">
-                                <EditForm Model="@emailSession" OnValidSubmit="AuthenticateAsync" id="formEmail" autocomplete="off">
+                                <EditForm Model="@_emailSession" OnValidSubmit="AuthenticateAsync" id="formEmail" autocomplete="off">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary />
 
                                     <div class="form-group form-group-lg">
                                         <label class="control-label" for="inputEmailAddress">Email Address</label>
-                                        <InputText id="inputEmailAddress" @bind-Value="emailSession.EmailAddress" class="form-control" type="email" disabled="@working" />
+                                        <InputText id="inputEmailAddress" @bind-Value="_emailSession.EmailAddress" class="form-control" type="email" disabled="@_working" />
                                     </div>
                                     <div class="form-group form-group-lg">
                                         <label class="control-label" for="inputPassword">Password</label>
-                                        <InputText id="inputPassword" @bind-Value="emailSession.EmailPassword" class="form-control" type="password" disabled="@working" />
+                                        <InputText id="inputPassword" @bind-Value="_emailSession.EmailPassword" class="form-control" type="password" disabled="@_working" />
                                     </div>
-                                    <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
+                                    <i class="@(_working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@_working">Login</button>
                                 </EditForm>
                             </div>
                         </div>
@@ -120,50 +122,52 @@
 </div>
 
 @code {
-    private bool loading = true;
-    private bool working = false;
-    private bool confirmed = false;
-    private string method = "pin";
-    private PinSession pinSession = new PinSession();
-    private EmailSession emailSession = new EmailSession();
+    private bool _loading = true;
+    private bool _working = false;
+    private bool _confirmed = false;
+    private string _method = "pin";
+    private PinSession _pinSession = new PinSession();
+    private EmailSession _emailSession = new EmailSession();
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // Get token from local storage.
-        var token = await localStorageService.GetFromLocalStorage("Token");
+        var token = await LocalStorageService.GetFromLocalStorage("Token");
 
         if (!string.IsNullOrEmpty(token))
         {
             // Update headers on services.
-            auditService.ConfigureHeadersWithToken(token);
-            authService.ConfigureHeadersWithToken(token);
-            kioskService.ConfigureHeadersWithToken(token);
-            userService.ConfigureHeadersWithToken(token);
-            punchService.ConfigureHeadersWithToken(token);
-            lockService.ConfigureHeadersWithToken(token);
-            customerService.ConfigureHeadersWithToken(token);
-            taskService.ConfigureHeadersWithToken(token);
-            taskTemplateService.ConfigureHeadersWithToken(token);
-            populateTemplateService.ConfigureHeadersWithToken(token);
-            jobService.ConfigureHeadersWithToken(token);
-            rateService.ConfigureHeadersWithToken(token);
-            organizationService.ConfigureHeadersWithToken(token);
-            timesheetEntryService.ConfigureHeadersWithToken(token);
-            qbdInventoryItemService.ConfigureHeadersWithToken(token);
-            qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
-            qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
-            qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
-            exportService.ConfigureHeadersWithToken(token);
+            AccountService.ConfigureHeadersWithToken(token);
+            AuditService.ConfigureHeadersWithToken(token);
+            AuthService.ConfigureHeadersWithToken(token);
+            EntryService.ConfigureHeadersWithToken(token);
+            KioskService.ConfigureHeadersWithToken(token);
+            UserService.ConfigureHeadersWithToken(token);
+            PunchService.ConfigureHeadersWithToken(token);
+            LockService.ConfigureHeadersWithToken(token);
+            CustomerService.ConfigureHeadersWithToken(token);
+            TaskService.ConfigureHeadersWithToken(token);
+            TaskTemplateService.ConfigureHeadersWithToken(token);
+            PopulateTemplateService.ConfigureHeadersWithToken(token);
+            JobService.ConfigureHeadersWithToken(token);
+            RateService.ConfigureHeadersWithToken(token);
+            OrganizationService.ConfigureHeadersWithToken(token);
+            TimesheetEntryService.ConfigureHeadersWithToken(token);
+            QbdInventoryItemService.ConfigureHeadersWithToken(token);
+            QbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+            QbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+            QbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+            ExportService.ConfigureHeadersWithToken(token);
 
             // Configure shared service.
-            sharedService.CurrentUser = await authService.GetMeAsync();
-            sharedService.Token = token;
+            SharedService.CurrentUser = await AuthService.GetMeAsync();
+            SharedService.Token = token;
 
             NavigationManager.NavigateTo("kiosk/status");
         }
         else
         {
-            loading = false;
+            _loading = false;
         }
     }
 
@@ -174,7 +178,7 @@
             try
             {
                 await Task.Delay(100);
-                await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+                await JsRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
             }
             catch (Exception) { }
         }
@@ -182,20 +186,20 @@
 
     private async System.Threading.Tasks.Task AuthenticateAsync()
     {
-        working = true;
+        _working = true;
         StateHasChanged();
 
         try
         {
             string token;
 
-            if (method == "pin")
+            if (_method == "pin")
             {
-                token = await authService.AuthenticateWithPinAsync(pinSession);
+                token = await AuthService.AuthenticateWithPinAsync(_pinSession);
             }
-            else if (method == "email")
+            else if (_method == "email")
             {
-                token = await authService.AuthenticateWithEmailAsync(emailSession);
+                token = await AuthService.AuthenticateWithEmailAsync(_emailSession);
             }
             else
             {
@@ -207,63 +211,65 @@
                 throw new Exception();
 
             // Save token to local storage.
-            await localStorageService.SetLocalStorage("Token", token);
+            await LocalStorageService.SetLocalStorage("Token", token);
 
             // Update headers on services.
-            auditService.ConfigureHeadersWithToken(token);
-            authService.ConfigureHeadersWithToken(token);
-            kioskService.ConfigureHeadersWithToken(token);
-            userService.ConfigureHeadersWithToken(token);
-            punchService.ConfigureHeadersWithToken(token);
-            lockService.ConfigureHeadersWithToken(token);
-            customerService.ConfigureHeadersWithToken(token);
-            taskService.ConfigureHeadersWithToken(token);
-            taskTemplateService.ConfigureHeadersWithToken(token);
-            populateTemplateService.ConfigureHeadersWithToken(token);
-            jobService.ConfigureHeadersWithToken(token);
-            rateService.ConfigureHeadersWithToken(token);
-            organizationService.ConfigureHeadersWithToken(token);
-            timesheetEntryService.ConfigureHeadersWithToken(token);
-            qbdInventoryItemService.ConfigureHeadersWithToken(token);
-            qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
-            qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
-            qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
-            exportService.ConfigureHeadersWithToken(token);
+            AccountService.ConfigureHeadersWithToken(token);
+            AuditService.ConfigureHeadersWithToken(token);
+            AuthService.ConfigureHeadersWithToken(token);
+            EntryService.ConfigureHeadersWithToken(token);
+            KioskService.ConfigureHeadersWithToken(token);
+            UserService.ConfigureHeadersWithToken(token);
+            PunchService.ConfigureHeadersWithToken(token);
+            LockService.ConfigureHeadersWithToken(token);
+            CustomerService.ConfigureHeadersWithToken(token);
+            TaskService.ConfigureHeadersWithToken(token);
+            TaskTemplateService.ConfigureHeadersWithToken(token);
+            PopulateTemplateService.ConfigureHeadersWithToken(token);
+            JobService.ConfigureHeadersWithToken(token);
+            RateService.ConfigureHeadersWithToken(token);
+            OrganizationService.ConfigureHeadersWithToken(token);
+            TimesheetEntryService.ConfigureHeadersWithToken(token);
+            QbdInventoryItemService.ConfigureHeadersWithToken(token);
+            QbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+            QbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+            QbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+            ExportService.ConfigureHeadersWithToken(token);
 
             // Configure shared service.
-            sharedService.CurrentUser = await authService.GetMeAsync();
-            sharedService.Token = token;
+            SharedService.CurrentUser = await AuthService.GetMeAsync();
+            SharedService.Token = token;
 
             NavigationManager.NavigateTo("kiosk/status");
         }
         catch (Exception)
         {
-            working = false;
+            _working = false;
             StateHasChanged();
         }
     }
 
     private async System.Threading.Tasks.Task ToggleMethodAsync()
     {
-        if (method == "email")
+        if (_method == "email")
         {
-            method = "pin";
+            _method = "pin";
 
             try
             {
                 await Task.Delay(50);
-                await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+                await JsRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
             }
             catch (Exception) { }
         }
-        else if (method == "pin")
+        else if (_method == "pin")
         {
-            method = "email";
+            _method = "email";
 
             try
             {
                 await Task.Delay(50);
-                await JSRuntime.InvokeVoidAsync("focusElement", "inputEmailAddress");
+                await JsRuntime.InvokeVoidAsync("focusElement", "inputEmailAddress");
             }
             catch (Exception) { }
         }

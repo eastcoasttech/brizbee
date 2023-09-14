@@ -30,9 +30,10 @@
 		<None Remove="Migrations\0019 Adding OrganizationId Foreign Key.sql" />
 		<None Remove="Migrations\0020 Adding Permission for Merging Projects.sql" />
 		<None Remove="Migrations\0021 Adding Indexes.sql" />
-		<None Remove="Migrations\0022 Adding Balance Function.sql" />
 		<None Remove="Migrations\0022 Adding QuickBooks Vendor.sql" />
 		<None Remove="Migrations\0023 Adding Accounting Models.sql" />
+		<None Remove="Migrations\0024 Adding Balance Function.sql" />
+		<None Remove="Migrations\0025 Adding More Accounting Models.sql" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -66,8 +67,9 @@
 		<EmbeddedResource Include="Migrations\0020 Adding Permission for Merging Projects.sql" />
 		<EmbeddedResource Include="Migrations\0023 Adding Accounting Models.sql" />
 		<EmbeddedResource Include="Migrations\0021 Adding Indexes.sql" />
-		<EmbeddedResource Include="Migrations\0022 Adding Balance Function.sql" />
+		<EmbeddedResource Include="Migrations\0024 Adding Balance Function.sql" />
 		<EmbeddedResource Include="Migrations\0022 Adding QuickBooks Vendor.sql" />
+		<EmbeddedResource Include="Migrations\0025 Adding More Accounting Models.sql" />
 	</ItemGroup>
 
 	<ItemGroup>

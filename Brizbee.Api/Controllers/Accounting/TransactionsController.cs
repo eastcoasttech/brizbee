@@ -22,8 +22,13 @@
 
 using Brizbee.Core.Models;
 using Brizbee.Core.Models.Accounting;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Net;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Brizbee.Api.Controllers.Accounting;
 
@@ -32,18 +37,116 @@ namespace Brizbee.Api.Controllers.Accounting;
 public class TransactionsController : ControllerBase
 {
     private readonly SqlContext _context;
+    private readonly IConfiguration _configuration;
 
-    public TransactionsController(SqlContext context)
+    public TransactionsController(IConfiguration configuration, SqlContext context)
     {
+        _configuration = configuration;
         _context = context;
     }
 
     // GET: api/Accounting/Transactions
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions()
+    public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions(
+        [FromQuery] int skip = 0, [FromQuery] int pageSize = 1000,
+        [FromQuery] string orderBy = "TRANSACTIONS/ENTERED_ON", [FromQuery] string orderByDirection = "ASC",
+        [FromQuery] string? filterByVoucherType = null)
     {
-        return await _context.Transactions!
-            .ToListAsync();
+        if (pageSize > 1000)
+        {
+            BadRequest();
+        }
+
+        var currentUser = CurrentUser();
+
+        var transactions = new List<Transaction>();
+        await using var connection = new SqlConnection(_configuration.GetConnectionString("SqlContext"));
+
+        connection.Open();
+
+        // Determine the order by columns.
+        var orderByFormatted = orderBy.ToUpperInvariant() switch
+        {
+            "TRANSACTIONS/ENTERED_ON" => "[EnteredOn]",
+            _ => "[EnteredOn]"
+        };
+
+        // Determine the order direction.
+        var orderByDirectionFormatted = orderByDirection.ToUpperInvariant() switch
+        {
+            "ASC" => "ASC",
+            "DESC" => "DESC",
+            _ => "ASC"
+        };
+
+        var whereClause = string.Empty;
+        var parameters = new DynamicParameters();
+
+        // Common clause.
+        parameters.Add("@OrganizationId", currentUser.OrganizationId);
+
+        // Optionally filter by voucher type.
+        if (!filterByVoucherType.IsNullOrEmpty() &&
+            filterByVoucherType!.ToUpper() == "CHK")
+        {
+            parameters.Add("@VoucherType", "CHK");
+            whereClause += " AND [T].[VoucherType] = @VoucherType";
+        }
+
+        // Get the count.
+        var countSql = $"""
+                        SELECT
+                            COUNT(*)
+                        FROM [dbo].[Transactions] AS [T]
+                        WHERE
+                            [T].[OrganizationId] = @OrganizationId
+                            {whereClause};
+                        """;
+
+        var total = await connection.QuerySingleAsync<int>(countSql, parameters);
+
+        // Paging parameters.
+        parameters.Add("@Skip", skip);
+        parameters.Add("@PageSize", pageSize);
+
+        // Get the records.
+        var recordsSql = $"""
+                          SELECT
+                              [T].[CreatedAt],
+                              [T].[Description],
+                              [T].[EnteredOn],
+                              [T].[Id],
+                              [T].[OrganizationId],
+                              [T].[ReferenceNumber],
+                              [T].[VoucherType]
+                          FROM [dbo].[Transactions] AS [T]
+                          WHERE
+                              [T].[OrganizationId] = @OrganizationId
+                              {whereClause}
+                          ORDER BY
+                              [T].{orderByFormatted} {orderByDirectionFormatted}
+                          OFFSET @Skip ROWS
+                          FETCH NEXT @PageSize ROWS ONLY;
+                          """;
+
+        var results = await connection.QueryAsync<Transaction>(recordsSql, parameters);
+
+        transactions.AddRange(results);
+
+        // Determine page count.
+        var pageCount = total > 0
+            ? (int)Math.Ceiling(total / (double)pageSize)
+            : 0;
+
+        // Set headers for paging.
+        HttpContext.Response.Headers.Add("X-Paging-PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
+        HttpContext.Response.Headers.Add("X-Paging-PageCount", pageCount.ToString(CultureInfo.InvariantCulture));
+        HttpContext.Response.Headers.Add("X-Paging-TotalRecordCount", total.ToString(CultureInfo.InvariantCulture));
+
+        return new JsonResult(transactions)
+        {
+            StatusCode = (int)HttpStatusCode.OK
+        };
     }
 
     // GET api/Accounting/Transactions/5

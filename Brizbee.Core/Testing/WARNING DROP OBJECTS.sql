@@ -13,6 +13,8 @@ DROP TABLE IF EXISTS [dbo].[AvailableDeductions];
 
 DROP TABLE IF EXISTS [dbo].[Paychecks];
 
+DROP TABLE IF EXISTS [dbo].[CheckExpenseLines];
+DROP TABLE IF EXISTS [dbo].[Checks];
 DROP TABLE IF EXISTS [dbo].[Deposits];
 DROP TABLE IF EXISTS [dbo].[Payments];
 DROP TABLE IF EXISTS [dbo].[LineItems];
@@ -21,6 +23,7 @@ DROP TABLE IF EXISTS [dbo].[Invoices];
 DROP TABLE IF EXISTS [dbo].[Entries];
 DROP TABLE IF EXISTS [dbo].[Transactions];
 DROP TABLE IF EXISTS [dbo].[Accounts];
+DROP TABLE IF EXISTS [dbo].[Vendors];
 
 DROP TABLE IF EXISTS [dbo].[Punches];
 DROP TABLE IF EXISTS [dbo].[PunchAudits];

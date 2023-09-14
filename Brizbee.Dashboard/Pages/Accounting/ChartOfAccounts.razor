@@ -4,9 +4,10 @@
 @using Brizbee.Dashboard.Services
 @using Brizbee.Dashboard.Models
 
-@inject SharedService sharedService
-@inject AccountService accountService
-@inject DialogService dialogService
+@inject NavigationManager NavigationManager
+@inject SharedService SharedService
+@inject AccountService AccountService
+@inject DialogService DialogService
 
 @implements IDisposable
 
@@ -30,7 +31,7 @@
                         <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
                     </NavLink>
                 </li>
-                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
                 {
                         <li>
                             <NavLink class="nav-link" href="punches">
@@ -38,7 +39,7 @@
                             </NavLink>
                         </li>
                 }
-                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
                 {
                         <li>
                             <NavLink class="nav-link" href="customers">
@@ -46,7 +47,7 @@
                             </NavLink>
                         </li>
                 }
-                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
                 {
                         <li>
                             <NavLink class="nav-link" href="inventory/consumption">
@@ -59,7 +60,7 @@
                         <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Accounting
                     </NavLink>
                 </li>
-                @if (currentUser.CanViewReports)
+                @if (_currentUser.CanViewReports)
                 {
                         <li>
                             <NavLink class="nav-link" href="reports">
@@ -67,7 +68,7 @@
                             </NavLink>
                         </li>
                 }
-                @if (currentUser.CanViewUsers)
+                @if (_currentUser.CanViewUsers)
                 {
                         <li>
                             <NavLink class="nav-link" href="users">
@@ -79,14 +80,14 @@
             <ul class="nav navbar-nav navbar-right">
                 <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
                 <li class="dropdown">
-                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li>
                             <NavLink class="nav-link" href="user-details">
                                 Account Details
                             </NavLink>
                         </li>
-                        @if (currentUser.CanViewOrganizationDetails)
+                        @if (_currentUser.CanViewOrganizationDetails)
                         {
                                 <li role="separator" class="divider"></li>
                                 <li>
@@ -107,11 +108,10 @@
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
         <li role="presentation"><NavLink href="accounting/invoices">Invoices</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/consumption-syncs">Receive Payments</NavLink></li>
+        @*         <li role="presentation"><NavLink href="inventory/consumption-syncs">Receive Payments</NavLink></li>
         <li role="presentation"><NavLink href="inventory/items">Deposits</NavLink></li>
         <li role="presentation"><NavLink href="inventory/item-syncs">Vendors</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Bills</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Payroll</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Payroll</NavLink></li> *@
         <li role="presentation" class="active"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
     </ul>
 
@@ -135,11 +135,11 @@
                 <th>
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/NUMBER"))">
                         Name
-                        @if (sortBy == "ACCOUNTS/NUMBER" && sortDirection == "ASC")
+                        @if (_sortBy == "ACCOUNTS/NUMBER" && _sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "ACCOUNTS/NUMBER" && sortDirection == "DESC")
+                        else if (_sortBy == "ACCOUNTS/NUMBER" && _sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
@@ -148,11 +148,11 @@
                 <th>
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/NAME"))">
                         Name
-                        @if (sortBy == "ACCOUNTS/NAME" && sortDirection == "ASC")
+                        @if (_sortBy == "ACCOUNTS/NAME" && _sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "ACCOUNTS/NAME" && sortDirection == "DESC")
+                        else if (_sortBy == "ACCOUNTS/NAME" && _sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
@@ -161,11 +161,11 @@
                 <th>
                     <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/TYPE"))">
                         Name
-                        @if (sortBy == "ACCOUNTS/TYPE" && sortDirection == "ASC")
+                        @if (_sortBy == "ACCOUNTS/TYPE" && _sortDirection == "ASC")
                         {
                             <span class="fa fa-caret-up"></span>
                         }
-                        else if (sortBy == "ACCOUNTS/TYPE" && sortDirection == "DESC")
+                        else if (_sortBy == "ACCOUNTS/TYPE" && _sortDirection == "DESC")
                         {
                             <span class="fa fa-caret-down"></span>
                         }
@@ -174,21 +174,21 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var account in accounts)
+            @foreach (var account in _accounts)
             {
-                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyAccountDialog(account))">
+                <tr class="fadeIn selectable" @onclick="@(e => NavigateToEntries(account))">
                     <td><a href="javascript:void(0)">@account.Number</a></td>
                     <td><a href="javascript:void(0)">@account.Name</a></td>
                     <td><a href="javascript:void(0)">@account.Type</a></td>
                 </tr>
             }
-            @if (working)
+            @if (_working)
             {
                 <tr class="fadeIn">
                     <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
-            @if (!working && accounts.Count == 0)
+            @if (!_working && _accounts.Count == 0)
             {
                 <tr class="fadeIn">
                     <td colspan="3">No accounts have been added.</td>
@@ -199,7 +199,7 @@
 
     <div class="row">
         <div class="col-md-6">
-            @if (accountsCount > pageSize)
+            @if (_accountsCount > PageSize)
             {
                 <div class="pull-left" style="margin-right: 1rem;">
                     <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
@@ -207,9 +207,9 @@
                 </div>
             }
 
-            @if (accountsCount > 0 && !working)
+            @if (_accountsCount > 0 && !_working)
             {
-                <p class="form-control-static pull-left">@(accountsPageStart + 1) to @(accountsPageStart + pageSize < accountsCount ? accountsPageStart + pageSize : accountsCount) of @accountsCount</p>
+                <p class="form-control-static pull-left">@(_accountsPageStart + 1) to @(_accountsPageStart + PageSize < _accountsCount ? _accountsPageStart + PageSize : _accountsCount) of @_accountsCount</p>
             }
         </div>
     </div>
@@ -219,47 +219,47 @@
     [CascadingParameter]
     public EventCallback SignOutClicked { get; set; }
 
-    private bool working = false;
-    private User currentUser;
-    private List<Account> accounts = new List<Account>();
-    private string sortBy = "ACCOUNTS/NUMBER";
-    private string sortDirection = "ASC";
-    private int pageSize = 100;
-    private int skip = 0;
-    private long accountsCount = 0;
-    private int accountsPageStart = 0;
+    private bool _working = false;
+    private User _currentUser;
+    private List<Account> _accounts = new List<Account>();
+    private string _sortBy = "ACCOUNTS/NUMBER";
+    private string _sortDirection = "ASC";
+    private const int PageSize = 100;
+    private int _skip = 0;
+    private long _accountsCount = 0;
+    private int _accountsPageStart = 0;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // Subscribe to the events
-        sharedService.OnChange += StateHasChanged;
+        SharedService.OnChange += StateHasChanged;
 
-        currentUser = sharedService.CurrentUser;
+        _currentUser = SharedService.CurrentUser;
 
         await RefreshAccounts();
 
-        dialogService.OnClose += Close;
+        DialogService.OnClose += Close;
     }
 
     void IDisposable.Dispose()
     {
         // Unsubscribe to the events
-        sharedService.OnChange -= StateHasChanged;
+        SharedService.OnChange -= StateHasChanged;
 
-        dialogService.OnClose -= Close;
+        DialogService.OnClose -= Close;
     }
 
     private async void NextPage(MouseEventArgs e)
     {
-        accountsPageStart = accountsPageStart + pageSize;
-        skip = accountsPageStart;
+        _accountsPageStart = _accountsPageStart + PageSize;
+        _skip = _accountsPageStart;
         await RefreshAccounts();
     }
 
     private async void PreviousPage(MouseEventArgs e)
     {
-        accountsPageStart = accountsPageStart - pageSize;
-        skip = accountsPageStart;
+        _accountsPageStart = _accountsPageStart - PageSize;
+        _skip = _accountsPageStart;
         await RefreshAccounts();
     }
 
@@ -273,26 +273,26 @@
 
     private async System.Threading.Tasks.Task RefreshAccounts()
     {
-        working = true;
-        accounts.Clear();
-        var result = await accountService.GetAccountsAsync(pageSize, skip, sortBy, sortDirection);
-        accounts = result.Item1;
-        accountsCount = result.Item2.GetValueOrDefault();
-        working = false;
+        _working = true;
+        _accounts.Clear();
+        var result = await AccountService.GetAccountsAsync(PageSize, _skip, _sortBy, _sortDirection);
+        _accounts = result.Item1;
+        _accountsCount = result.Item2.GetValueOrDefault();
+        _working = false;
         StateHasChanged();
     }
 
     private async void ChangeSortBy(string column)
     {
-        sortBy = column;
+        _sortBy = column;
 
-        if (sortDirection == "ASC")
+        if (_sortDirection == "ASC")
         {
-            sortDirection = "DESC";
+            _sortDirection = "DESC";
         }
         else
         {
-            sortDirection = "ASC";
+            _sortDirection = "ASC";
         }
 
         await RefreshAccounts();
@@ -300,8 +300,13 @@
 
     private void OpenModifyAccountDialog(Account account)
     {
-        dialogService.Open<InventoryItemDialog>("Edit Account",
+        DialogService.Open<InventoryItemDialog>("Edit Account",
                                 new Dictionary<string, object>() { { "Id", account.Id } },
                                 new DialogOptions() { Width = "600px" });
+    }
+
+    private void NavigateToEntries(Account account)
+    {
+        NavigationManager.NavigateTo($"accounting/accounts/{account.Id}/entries");
     }
 }

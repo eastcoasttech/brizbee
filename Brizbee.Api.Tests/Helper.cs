@@ -341,6 +341,21 @@ namespace Brizbee.Api.Tests
                 };
                 _context.Accounts!.Add(payrollExpenseAccount);
                 _context.SaveChanges();
+
+
+                // ----------------------------------------------------------------
+                // Scaffold a vendor.
+                // ----------------------------------------------------------------
+
+                var vendor = new Vendor()
+                {
+                    CreatedAt = DateTime.UtcNow,
+                    Number = "1000",
+                    Name = "Verizon",
+                    OrganizationId = organization.Id
+                };
+                _context.Vendors!.Add(vendor);
+                _context.SaveChanges();
             }
             catch (DbUpdateException ex)
             {

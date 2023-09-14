@@ -1,0 +1,67 @@
+﻿<Window x:Class="Brizbee.Books.Views.HomeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Brizbee.Books"
+        xmlns:views="clr-namespace:Brizbee.Books.Views"
+        mc:Ignorable="d"
+        Height="600" MinHeight="480" Width="800" MinWidth="640"
+        WindowStartupLocation="CenterScreen"
+        Title="Home">
+    <DockPanel>
+        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="75"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Button Grid.Column="1" Grid.Row="1" Name="ButtonInvoices" Margin="10" Background="Transparent">Create Invoices</Button>
+                <Button Grid.Column="2" Grid.Row="1" Name="ButtonReceivePayments" Margin="10" Background="Transparent">Receive Payments</Button>
+                <Button Grid.Column="3" Grid.Row="1" Name="ButtonRecordDeposits" Margin="10" Background="Transparent">Record Deposits</Button>
+            </Grid>
+            
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="75"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Button Grid.Column="1" Grid.Row="1" Name="ButtonWriteChecks" Click="ButtonWriteChecks_OnClick" Margin="10" Background="Transparent">Write Checks</Button>
+                <Button Grid.Column="2" Grid.Row="1" Name="ButtonCheckRegister" Margin="10" Background="Transparent">Check Register</Button>
+                <Button Grid.Column="3" Grid.Row="1" Name="ButtonCreditCard" Margin="10" Background="Transparent">Enter Credit Card Charges</Button>
+            </Grid>
+            
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="125" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="75"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Button Grid.Column="1" Grid.Row="1" Name="ButtonPayroll" Margin="10" Background="Transparent">Payroll</Button>
+            </Grid>
+        </StackPanel>
+    </DockPanel>
+</Window>
