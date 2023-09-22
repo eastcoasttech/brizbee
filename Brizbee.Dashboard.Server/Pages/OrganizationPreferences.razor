@@ -1,0 +1,280 @@
+﻿@page "/organization-preferences"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject OrganizationService organizationService
+@inject DialogService dialogService
+@inject IJSRuntime JSRuntime
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 col-sm-12">
+            <ul class="nav nav-pills">
+                <li role="presentation"><NavLink href="organization-details">Organization Details</NavLink></li>
+                <li role="presentation"><NavLink href="billing-details">Billing Details</NavLink></li>
+                <li role="presentation"><NavLink href="task-templates">Task Templates</NavLink></li>
+                <li role="presentation" class="active"><NavLink href="organization-preferences">Organization Preferences</NavLink></li>
+            </ul>
+
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 col-sm-12">
+            <EditForm Model="@organization" OnValidSubmit="SaveOrganization" class="form" autocomplete="off">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row" style="padding-bottom: 1em;">
+                    <div class="form-group form-group-lg">
+                        <div class="col-md-6">
+                            <div class="checkbox">
+                                <label>
+                                    <InputCheckbox @bind-Value="organization.ShowCustomerNumber" disabled="@working" /> Show Customer Number?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-lg">
+                    <label for="organization_sort_customers_by_column">Sort Customers by Column</label>
+                    <InputSelect class="form-control" id="organization_sort_customers_by_column" disabled="@working"
+                                 ValueChanged="@( (string x) => SelectedSortCustomersByColumnValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedSortCustomersByColumn )"
+                                 Value="@selectedSortCustomersByColumn">
+                        <option value="Number">Number</option>
+                        <option value="Name">Name</option>
+                    </InputSelect>
+                </div>
+
+                <hr />
+
+                <div class="row" style="padding-bottom: 1em;">
+                    <div class="form-group form-group-lg">
+                        <div class="col-md-6">
+                            <div class="checkbox">
+                                <label>
+                                    <InputCheckbox @bind-Value="organization.ShowProjectNumber" disabled="@working" /> Show Project Number?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-lg">
+                    <label for="organization_sort_projects_by_column">Sort Projects by Column</label>
+                    <InputSelect class="form-control" id="organization_sort_projects_by_column" disabled="@working"
+                                 ValueChanged="@( (string x) => SelectedSortProjectsByColumnValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedSortProjectsByColumn )"
+                                 Value="@selectedSortProjectsByColumn">
+                        <option value="Number">Number</option>
+                        <option value="Name">Name</option>
+                    </InputSelect>
+                </div>
+
+                <hr />
+
+                <div class="row" style="padding-bottom: 1em;">
+                    <div class="form-group form-group-lg">
+                        <div class="col-md-6">
+                            <div class="checkbox">
+                                <label>
+                                    <InputCheckbox @bind-Value="organization.ShowTaskNumber" disabled="@working" /> Show Task Number?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-group-lg">
+                    <label for="organization_sort_tasks_by_column">Sort Tasks by Column</label>
+                    <InputSelect class="form-control" id="organization_sort_tasks_by_column" disabled="@working"
+                                 ValueChanged="@( (string x) => SelectedSortTasksByColumnValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedSortTasksByColumn )"
+                                 Value="@selectedSortTasksByColumn">
+                        <option value="Number">Number</option>
+                        <option value="Name">Name</option>
+                    </InputSelect>
+                </div>
+
+                <hr />
+
+                <button class="btn btn-primary btn-lg" type="submit" disabled="@working"><i class="fas fa-check" aria-hidden="true" style="margin-right: 5px;"></i> Save Changes</button>
+            </EditForm>
+
+            <div class="alert alert-warning">
+                <p>Please sign out and back in after making changes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private Organization organization = new Organization();
+    private string selectedSortCustomersByColumn = "Number";
+    private string selectedSortProjectsByColumn = "Number";
+    private string selectedSortTasksByColumn = "Number";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events.
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+
+        organization = await organizationService.GetOrganizationByIdAsync(currentUser.OrganizationId);
+
+        // Prepare the select.
+        selectedSortCustomersByColumn = organization.SortCustomersByColumn;
+        SelectedSortCustomersByColumnValueChangeHandler(selectedSortCustomersByColumn);
+
+        // Prepare the select.
+        selectedSortProjectsByColumn = organization.SortProjectsByColumn;
+        SelectedSortProjectsByColumnValueChangeHandler(selectedSortProjectsByColumn);
+
+        // Prepare the select.
+        selectedSortTasksByColumn = organization.SortTasksByColumn;
+        SelectedSortTasksByColumnValueChangeHandler(selectedSortTasksByColumn);
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events.
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    private async System.Threading.Tasks.Task SaveOrganization()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save the changes?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Save the organization on the server and close the dialog.
+        await organizationService.SaveOrganizationAsync(organization);
+    }
+
+    private void SelectedSortCustomersByColumnValueChangeHandler(string column)
+    {
+        selectedSortCustomersByColumn = column;
+        organization.SortCustomersByColumn = selectedSortCustomersByColumn;
+    }
+
+    private void SelectedSortProjectsByColumnValueChangeHandler(string column)
+    {
+        selectedSortProjectsByColumn = column;
+        organization.SortProjectsByColumn = selectedSortProjectsByColumn;
+    }
+
+    private void SelectedSortTasksByColumnValueChangeHandler(string column)
+    {
+        selectedSortTasksByColumn = column;
+        organization.SortTasksByColumn = selectedSortTasksByColumn;
+    }
+}

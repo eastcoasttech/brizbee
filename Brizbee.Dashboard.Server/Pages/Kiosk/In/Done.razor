@@ -1,0 +1,93 @@
+﻿@page "/kiosk/in/done"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject SharedService sharedService
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                    </NavLink>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
+            <div class="panel panel-default panel-kiosk">
+                <div class="panel-heading">All Done</div>
+                <div class="panel-body">
+                    <p class="text-center" style="text-transform: uppercase; margin-top: 2em; margin-bottom: 2em;">
+                        You are now punched <span class="text-success"><strong>IN</strong></span>.
+                    </p>
+
+                    <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/status">
+                        More Options
+                    </NavLink>
+                    <button type="button" class="btn btn-block btn-lg btn-primary" @onclick="SignOutClicked">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+
+    protected override void OnInitialized()
+    {
+        working = true;
+
+        currentUser = sharedService.CurrentUser;
+
+        working = false;
+    }
+}

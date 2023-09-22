@@ -9,9 +9,10 @@
         mc:Ignorable="d"
         Height="600" MinHeight="480" Width="800" MinWidth="640"
         WindowStartupLocation="CenterScreen"
-        DataContext="_dataContext"
         Title="Write Checks">
     <FrameworkElement.Resources>
+        <CollectionViewSource x:Key="ExpenseAccountsCollectionViewSource" Source="{Binding ExpenseAccounts}" />
+
         <!--DataGrid Cell Vertical Centering-->
         <Style x:Key="DataGridCellCentering"
                TargetType="{x:Type DataGridCell}">
@@ -25,7 +26,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <!--DataGrid Cell ElementStyle-->
         <Style x:Key="DataGridTextTrimmingEllipsis"
                TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -67,6 +68,12 @@
                     <TextBlock HorizontalAlignment="Center" FontSize="10">Delete</TextBlock>
                 </StackPanel>
             </Button>
+            <Button Name="ButtonExport" Click="ButtonExport_OnClick" Width="48" Margin="4 0 0 0" IsEnabled="{Binding IsEnabled}">
+                <StackPanel>
+                    <Label Content="{StaticResource SaveAsDialog16x16}" Margin="0" Padding="0" HorizontalContentAlignment="Center"/>
+                    <TextBlock HorizontalAlignment="Center" FontSize="10">Export</TextBlock>
+                </StackPanel>
+            </Button>
         </StackPanel>
         <DockPanel>
             <Border DockPanel.Dock="Top" Margin="10" Background="Black">
@@ -92,9 +99,13 @@
                                     <RowDefinition MinHeight="30" Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Label Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right">PAY TO THE ORDER OF</Label>
-                                <TextBox Grid.Column="1" Grid.Row="2" Height="24" Padding="2"
-                                         Text="{Binding PayToTheOrderOf}"
-                                         IsEnabled="{Binding IsEnabled}"/>
+                                <ComboBox Grid.Column="1" Grid.Row="2" Height="24" Padding="2"
+                                          IsEditable="True"
+                                          ItemsSource="{Binding Vendors}"
+                                          SelectedValue="{Binding VendorId}"
+                                          SelectedValuePath="{Binding Id}"
+                                          DisplayMemberPath="{Binding Name}"
+                                          IsEnabled="{Binding IsEnabled}"/>
 
                                 <Label Grid.Column="3" Grid.Row="0" HorizontalAlignment="Right">NUMBER</Label>
                                 <TextBox Grid.Column="4" Grid.Row="0" Height="24" Padding="2"
@@ -123,7 +134,7 @@
                     </Border>
                 </Border>
             </Border>
-            
+
             <StackPanel DockPanel.Dock="Bottom">
                 <StatusBar>
                     <StatusBarItem>
@@ -134,21 +145,31 @@
 
             <TabControl Margin="10">
                 <TabItem Header="Expenses">
-                    <DataGrid ItemsSource="{Binding Expenses}" AutoGenerateColumns="False"
-                              CanUserResizeRows="False" CanUserAddRows="True" CanUserReorderColumns="False"
-                              HeadersVisibility="All" RowHeight="26" ColumnHeaderHeight="26"
-                              HorizontalContentAlignment="Center" Name="DataGridExpenses" Margin="5"
-                              CellStyle="{StaticResource DataGridCellCentering}" IsEnabled="{Binding IsEnabled}"
-                              CanUserDeleteRows="True" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="LightGray">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Account" Binding="{Binding Account}" Width="2*"
-                                                SortMemberPath="QuadlogicBuildingId"
-                                                ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
-                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="4*"
-                                                SortMemberPath="Address"
-                                                ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+                            <Button Margin="5 5 5 5" Name="ButtonAddLine" Click="ButtonAddLine_OnClick" Content="Add Line" Padding="10 3"/>
+                            <Button Margin="0 5 5 5" Name="ButtonDeleteLine" Click="ButtonDeleteLine_OnClick" Content="Delete Line" Padding="10 3"/>
+                        </StackPanel>
+
+                        <DataGrid ItemsSource="{Binding CheckExpenseLines}" AutoGenerateColumns="False"
+                                  CanUserResizeRows="False" CanUserAddRows="False" CanUserReorderColumns="False"
+                                  HeadersVisibility="Column" RowHeight="26" ColumnHeaderHeight="26"
+                                  HorizontalContentAlignment="Center" Name="DataGridExpenses" Margin="5"
+                                  CanUserSortColumns="False" CanUserDeleteRows="True"
+                                  CellStyle="{StaticResource DataGridCellCentering}" IsEnabled="{Binding IsEnabled}"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="LightGray" SelectedItem="{Binding SelectedCheckExpenseLine}">
+                            <DataGrid.Columns>
+                                <DataGridComboBoxColumn Header="Account"
+                                                        Width="2*"
+                                                        ItemsSource="{Binding Source={StaticResource ExpenseAccountsCollectionViewSource}}"
+                                                        SelectedValueBinding="{Binding AccountId}"
+                                                        SelectedValuePath="Id"
+                                                        DisplayMemberPath="Name"/>
+                                <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="4*"
+                                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
                 </TabItem>
             </TabControl>
         </DockPanel>

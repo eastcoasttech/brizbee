@@ -20,7 +20,6 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Books.Serialization;
 using Brizbee.Core.Models.Accounting;
 using RestSharp;
 using System;
@@ -29,7 +28,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
+using Brizbee.Core.Models;
 
 namespace Brizbee.Books.ViewModels;
 
@@ -43,11 +44,9 @@ public class WriteChecksWindowViewModel : INotifyPropertyChanged
 
     public int Skip { get; set; } = 0;
 
-    public Transaction? Transaction { get; set; }
+    public Check? Check { get; set; }
 
     public string CheckNumber { get; set; } = string.Empty;
-    
-    public string PayToTheOrderOf { get; set; } = string.Empty;
     
     public string Memo { get; set; } = string.Empty;
     
@@ -56,8 +55,16 @@ public class WriteChecksWindowViewModel : INotifyPropertyChanged
     public string Amount { get; set; } = string.Empty;
 
     public string AmountVerbalized { get; set; } = string.Empty;
+
+    public int? VendorId { get; set; }
     
-    public ObservableCollection<Expense>? Expenses { get; set; }
+    public ObservableCollection<Account>? ExpenseAccounts { get; set; }
+    
+    public ObservableCollection<Vendor>? Vendors { get; set; }
+    
+    public ObservableCollection<CheckExpenseLine>? CheckExpenseLines { get; set; }
+
+    public CheckExpenseLine? SelectedCheckExpenseLine { get; set; }
 
     private readonly RestClient? _client = Application.Current.Properties["Client"] as RestClient;
 
@@ -66,7 +73,7 @@ public class WriteChecksWindowViewModel : INotifyPropertyChanged
         PropertyNameCaseInsensitive = true
     };
 
-    public async System.Threading.Tasks.Task RefreshTransactionAsync()
+    public async System.Threading.Tasks.Task RefreshExpenseAccountsAsync()
     {
         IsEnabled = false;
         OnPropertyChanged(nameof(IsEnabled));
@@ -75,10 +82,116 @@ public class WriteChecksWindowViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(Status));
 
         // Build request
-        var request = new RestRequest("api/Accounting/Transactions");
-        request.AddParameter("orderBy", "TRANSACTIONS/ENTERED_ON");
+        var request = new RestRequest("api/Accounting/Accounts");
+        request.AddParameter("orderBy", "ACCOUNTS/NAME");
         request.AddParameter("orderByDirection", "ASC");
-        request.AddParameter("filterByVoucherType", "CHK");
+        request.AddParameter("skip", Skip);
+        request.AddParameter("pageSize", 1000);
+
+        // Execute request
+        var response = await _client!.ExecuteAsync(request);
+
+        if (response is { ResponseStatus: ResponseStatus.Completed, StatusCode: System.Net.HttpStatusCode.OK })
+        {
+            var result = JsonSerializer.Deserialize<List<Account>>(response.Content!, _options); // Deserialize manually
+            ExpenseAccounts = new ObservableCollection<Account>(result!);
+            OnPropertyChanged(nameof(ExpenseAccounts));
+
+            IsEnabled = true;
+            OnPropertyChanged(nameof(IsEnabled));
+
+            Status = "Done";
+            OnPropertyChanged(nameof(Status));
+        }
+        else
+        {
+            ExpenseAccounts = null;
+            OnPropertyChanged(nameof(ExpenseAccounts));
+
+            IsEnabled = true;
+            OnPropertyChanged(nameof(IsEnabled));
+
+            Status = "Failed to Load Expense Accounts";
+            OnPropertyChanged(nameof(Status));
+        }
+    }
+
+    public async System.Threading.Tasks.Task RefreshVendorsAsync()
+    {
+        IsEnabled = false;
+        OnPropertyChanged(nameof(IsEnabled));
+
+        Status = "Loading";
+        OnPropertyChanged(nameof(Status));
+
+        // Build request
+        var request = new RestRequest("api/Accounting/Vendors");
+        request.AddParameter("orderBy", "VENDORS/NAME");
+        request.AddParameter("orderByDirection", "ASC");
+        request.AddParameter("skip", Skip);
+        request.AddParameter("pageSize", 1000);
+
+        // Execute request
+        var response = await _client!.ExecuteAsync(request);
+
+        if (response is { ResponseStatus: ResponseStatus.Completed, StatusCode: System.Net.HttpStatusCode.OK })
+        {
+            var result = JsonSerializer.Deserialize<List<Vendor>>(response.Content!, _options); // Deserialize manually
+            Vendors = new ObservableCollection<Vendor>(result!);
+            OnPropertyChanged(nameof(Vendors));
+
+            IsEnabled = true;
+            OnPropertyChanged(nameof(IsEnabled));
+
+            Status = "Done";
+            OnPropertyChanged(nameof(Status));
+        }
+        else
+        {
+            Vendors = null;
+            OnPropertyChanged(nameof(Vendors));
+
+            IsEnabled = true;
+            OnPropertyChanged(nameof(IsEnabled));
+
+            Status = "Failed to Load Vendors";
+            OnPropertyChanged(nameof(Status));
+        }
+    }
+
+    public void AddCheckExpenseLine()
+    {
+        CheckExpenseLines ??= new ObservableCollection<CheckExpenseLine>();
+
+        CheckExpenseLines!.Add(new CheckExpenseLine());
+
+        OnPropertyChanged(nameof(CheckExpenseLines));
+    }
+
+    public void DeleteCheckExpenseLine()
+    {
+        if (SelectedCheckExpenseLine == null)
+        {
+            return;
+        }
+
+        CheckExpenseLines!.Remove(SelectedCheckExpenseLine);
+
+        OnPropertyChanged(nameof(CheckExpenseLines));
+    }
+
+    public async System.Threading.Tasks.Task RefreshCheckAsync()
+    {
+        IsEnabled = false;
+        OnPropertyChanged(nameof(IsEnabled));
+
+        Status = "Loading";
+        OnPropertyChanged(nameof(Status));
+
+        // Build request
+        var request = new RestRequest("api/Accounting/Checks");
+        request.AddParameter("orderBy", "CHECKS/ENTERED_ON");
+        request.AddParameter("orderByDirection", "ASC");
         request.AddParameter("skip", Skip);
         request.AddParameter("pageSize", 1);
 
@@ -87,20 +200,20 @@ public class WriteChecksWindowViewModel : INotifyPropertyChanged
 
         if (response is { ResponseStatus: ResponseStatus.Completed, StatusCode: System.Net.HttpStatusCode.OK })
         {
-            var result = JsonSerializer.Deserialize<List<Transaction>>(response.Content!, _options); // Deserialize manually
+            var result = JsonSerializer.Deserialize<List<Check>>(response.Content!, _options); // Deserialize manually
 
             if (result != null && result.Any())
             {
-                Transaction = result.FirstOrDefault();
-                OnPropertyChanged(nameof(Transaction));
+                Check = result.FirstOrDefault();
+                OnPropertyChanged(nameof(Check));
 
-                CheckNumber = Transaction!.ReferenceNumber;
+                CheckNumber = Check!.Number;
                 OnPropertyChanged(nameof(CheckNumber));
 
-                Date = new DateOnly(Transaction.EnteredOn.Year, Transaction.EnteredOn.Month, Transaction.EnteredOn.Day);
+                Date = new DateOnly(Check.EnteredOn.Year, Check.EnteredOn.Month, Check.EnteredOn.Day);
                 OnPropertyChanged(nameof(Date));
 
-                Memo = Transaction.Description;
+                Memo = Check.Memo;
                 OnPropertyChanged(nameof(Memo));
             }
 
@@ -112,15 +225,72 @@ public class WriteChecksWindowViewModel : INotifyPropertyChanged
         }
         else
         {
-            Transaction = null;
-            OnPropertyChanged(nameof(Transaction));
+            Check = new Check();
+            OnPropertyChanged(nameof(Check));
 
             IsEnabled = true;
             OnPropertyChanged(nameof(IsEnabled));
 
-            Status = "Failed to Load Check";
+            Status = "Done";
             OnPropertyChanged(nameof(Status));
         }
+    }
+
+    public async Task<(bool Success, string Message)> SaveCheckAsync()
+    {
+        IsEnabled = false;
+        OnPropertyChanged(nameof(IsEnabled));
+
+        Status = "Saving";
+        OnPropertyChanged(nameof(Status));
+        
+        // Build the payload.
+        var payload = new
+        {
+            Number = CheckNumber,
+            EnteredOn = Date,
+            VendorId = 0,
+            Memo,
+            CheckExpenseLines = new List<object>()
+        };
+
+        foreach (var checkExpenseLine in CheckExpenseLines!)
+        {
+            payload.CheckExpenseLines.Add(new
+            {
+                checkExpenseLine.AccountId,
+                checkExpenseLine.Amount
+            });
+        }
+
+        // Build request
+        var request = new RestRequest("api/Accounting/Checks", Method.Post);
+        request.AddJsonBody(payload);
+
+        // Execute request
+        var response = await _client!.ExecuteAsync(request);
+
+        if (response is { ResponseStatus: ResponseStatus.Completed, StatusCode: System.Net.HttpStatusCode.OK })
+        {
+            IsEnabled = true;
+            OnPropertyChanged(nameof(IsEnabled));
+
+            Status = "Done";
+            OnPropertyChanged(nameof(Status));
+
+            return (true, string.Empty);
+        }
+
+        ExpenseAccounts = null;
+        OnPropertyChanged(nameof(ExpenseAccounts));
+
+        IsEnabled = true;
+        OnPropertyChanged(nameof(IsEnabled));
+
+        Status = "Failed to Save Check";
+        OnPropertyChanged(nameof(Status));
+
+        return (false, response.Content!);
     }
 
     public void UpdateVerbalizedAmount()

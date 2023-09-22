@@ -13,6 +13,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Stripe;
 
 namespace Brizbee.Api.Tests;
 
@@ -144,6 +145,12 @@ public class ChecksControllerTest
             });
 
         Assert.AreEqual(-150.50M, balanceOfBankAccount);
+
+        var checksCount = await Context.Checks!.CountAsync();
+        var checkExpenseLinesCount = await Context.CheckExpenseLines!.CountAsync();
+
+        Assert.AreEqual(1, checksCount);
+        Assert.AreEqual(1, checkExpenseLinesCount);
     }
 
     private string GenerateJsonWebToken(int userId, string emailAddress)

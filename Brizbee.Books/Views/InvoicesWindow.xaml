@@ -133,21 +133,36 @@
                 </StatusBar>
             </StackPanel>
 
-            <DataGrid ItemsSource="{Binding Expenses}" AutoGenerateColumns="False"
-                      CanUserResizeRows="False" CanUserAddRows="True" CanUserReorderColumns="False"
-                      HeadersVisibility="All" RowHeight="26" ColumnHeaderHeight="26"
-                      HorizontalContentAlignment="Center" Name="DataGridExpenses" Margin="10"
-                      CellStyle="{StaticResource DataGridCellCentering}" IsEnabled="{Binding IsEnabled}"
-                      CanUserDeleteRows="True" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="LightGray">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Account" Binding="{Binding Account}" Width="2*"
-                                        SortMemberPath="QuadlogicBuildingId"
-                                        ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
-                    <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="4*"
-                                        SortMemberPath="Address"
-                                        ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
-                </DataGrid.Columns>
-            </DataGrid>
+            <TabControl Margin="10">
+                <TabItem Header="Expenses">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+                            <Button Margin="5 5 5 5" Content="Add Line" Padding="10 3"/>
+                            <Button Margin="0 5 5 5" Content="Delete Line" Padding="10 3"/>
+                        </StackPanel>
+                        
+                        <DataGrid ItemsSource="{Binding LineItems}" AutoGenerateColumns="False"
+                                  CanUserResizeRows="False" CanUserAddRows="False" CanUserReorderColumns="False"
+                                  HeadersVisibility="Column" RowHeight="26" ColumnHeaderHeight="26"
+                                  HorizontalContentAlignment="Center" Name="DataGridLineItems" Margin="5"
+                                  CanUserSortColumns="False" CanUserDeleteRows="False"
+                                  CellStyle="{StaticResource DataGridCellCentering}" IsEnabled="{Binding IsEnabled}"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="LightGray">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Description" Binding="{Binding Account}" Width="4*"
+                                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                                <DataGridTextColumn Header="Unit" Binding="{Binding Amount}" Width="1*"
+                                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                                <DataGridTextColumn Header="Quantity" Binding="{Binding Amount}" Width="1*"
+                                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                                <DataGridTextColumn Header="Subtotal" Binding="{Binding Amount}" Width="1*"
+                                                    IsReadOnly="True"
+                                                    ElementStyle="{StaticResource DataGridTextTrimmingEllipsis}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
         </DockPanel>
     </DockPanel>
 </Window>

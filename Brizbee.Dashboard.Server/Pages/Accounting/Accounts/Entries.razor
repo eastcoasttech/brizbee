@@ -1,0 +1,291 @@
+﻿@page "/accounting/accounts/{AccountId:long}/entries"
+
+@using Brizbee.Core.Models.Accounting
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject SharedService SharedService
+@inject EntryService EntryService
+@inject DialogService DialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                <li class="active">
+                    <NavLink class="nav-link" href="accounting/payroll/paycheck">
+                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Accounting
+                    </NavLink>
+                </li>
+                @if (_currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="accounting/invoices">Invoices</NavLink></li>
+        @*         <li role="presentation"><NavLink href="inventory/consumption-syncs">Receive Payments</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/items">Deposits</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Vendors</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Payroll</NavLink></li> *@
+        <li role="presentation"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshEntriesAsync())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Entries-->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Number</th>
+                <th>Memo</th>
+                <th>Amount</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in _entries)
+            {
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyInvoiceDialog(entry))">
+                    <td><a href="javascript:void(0)">@entry.Transaction!.EnteredOn.ToShortDateString()</a></td>
+                    <td><a href="javascript:void(0)">@entry.Transaction!.ReferenceNumber</a></td>
+                    <td><a href="javascript:void(0)">@entry.Description</a></td>
+                    <td><a href="javascript:void(0)">@entry.Amount.ToString("C")</a></td>
+                    <td></td>
+                </tr>
+            }
+            @if (_working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!_working && _entries.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="5">No entries have been added.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (_entriesCount > PageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (_entriesCount > 0 && !_working)
+            {
+                <p class="form-control-static pull-left">@(_entriesPageStart + 1) to @(_entriesPageStart + PageSize < _entriesCount ? _entriesPageStart + PageSize : _entriesCount) of @_entriesCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public long AccountId { get; set; }
+
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _working;
+    private User _currentUser;
+    private List<Entry> _entries = new();
+    private string _sortBy = "TRANSACTIONS/ENTERED_ON";
+    private string _sortDirection = "ASC";
+    private const int PageSize = 100;
+    private int _skip;
+    private long _entriesCount;
+    private int _entriesPageStart;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+
+        await RefreshEntriesAsync();
+
+        DialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+
+        DialogService.OnClose -= Close;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        _entriesPageStart += PageSize;
+        _skip = _entriesPageStart;
+        await RefreshEntriesAsync();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        _entriesPageStart -= PageSize;
+        _skip = _entriesPageStart;
+        await RefreshEntriesAsync();
+    }
+
+    private async void Close(dynamic result)
+    {
+        if ((result as string) == "entry.updated")
+        {
+            await RefreshEntriesAsync();
+        }
+    }
+
+    private async System.Threading.Tasks.Task RefreshEntriesAsync()
+    {
+        _working = true;
+        var (success, message, results, totalRecordCount) = await EntryService.GetEntriesAsync(AccountId, PageSize, _skip, _sortBy, _sortDirection);
+
+        if (!success)
+        {
+            Console.WriteLine(message);
+            return;
+        }
+
+        _entries.Clear();
+        _entries = results;
+        _entriesCount = totalRecordCount.GetValueOrDefault();
+        _working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        _sortBy = column;
+
+        if (_sortDirection == "ASC")
+        {
+            _sortDirection = "DESC";
+        }
+        else
+        {
+            _sortDirection = "ASC";
+        }
+
+        await RefreshEntriesAsync();
+    }
+
+    private void OpenModifyInvoiceDialog(Entry entry)
+    {
+        // DialogService.Open<InvoiceDialog>("Edit Invoice",
+        //                         new Dictionary<string, object>() { { "Id", entry.Id } },
+        //                         new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenNewInvoiceDialog()
+    {
+        // DialogService.Open<InvoiceDialog>("New Invoice",
+        //                         new Dictionary<string, object>() { { "Id", null } },
+        //                         new DialogOptions() { Width = "600px" });
+    }
+}

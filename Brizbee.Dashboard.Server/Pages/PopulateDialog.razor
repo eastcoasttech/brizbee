@@ -1,0 +1,350 @@
+﻿@page "/dialogs/populate"
+
+@using Brizbee.Dashboard.Server.Services
+@using Brizbee.Dashboard.Server.Serialization
+@using Core.Models
+
+@inject TooltipService tooltipService
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject RateService rateService
+@inject TaskService taskService
+@inject PunchService punchService
+@inject IJSRuntime JSRuntime
+
+<p style="margin-bottom: 20px; line-height: 1.75em;">
+    This function will populate the Payroll and Customer Rates for the unlocked punches between <strong>@sharedService.RangeMin.ToShortDateString()</strong> and <strong>@sharedService.RangeMax.ToShortDateString()</strong>.
+    <br />
+    Please note, only <strong>unlocked punches</strong> will be populated.
+    <br />
+    This operation is permanent and cannot be reversed. However, you can run Populate Rates multiple times and the rates will be overwritten.
+</p>
+
+<ul class="nav nav-tabs">
+    <li role="presentation" class="@(selectedTab == "PAYROLL" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "PAYROLL")" @onclick:preventDefault>Payroll Rates</a></li>
+    <li role="presentation" class="@(selectedTab == "SERVICE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SERVICE")" @onclick:preventDefault>Customer Rates</a></li>
+</ul>
+
+<div style="padding: 1.5em 0 1.5em 0;">
+    @if (selectedTab == "PAYROLL")
+    {
+        <p><strong>Base Rates <i class="far fa-question-circle" @ref="basePayrollRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(basePayrollRatesQuestionIcon))"></i></strong></p>
+        <table class="table table-bordered table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th>Customer #</th>
+                    <th>Customer</th>
+                    <th>Job #</th>
+                    <th>Job</th>
+                    <th>Task #</th>
+                    <th>Task</th>
+                    <th>Base Payroll Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in tasks)
+                {
+                    <tr class="fadeIn @(task.BasePayrollRate == null ? "danger" : "")">
+                        <td>@task.Job.Customer.Number</td>
+                        <td>@task.Job.Customer.Name</td>
+                        <td>@task.Job.Number</td>
+                        <td>@task.Job.Name</td>
+                        <td>@task.Number</td>
+                        <td>@task.Name</td>
+                        <td>
+                            @if (task.BasePayrollRate != null)
+                            {
+                                <strong>@task.BasePayrollRate.Name</strong>
+                            }
+                            else
+                            {
+                                <strong class="text-danger">No Base Rate Specified!</strong>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                @if (loadingBasePayrollRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    </tr>
+                }
+
+                @if (tasks.Count == 0 && !loadingBasePayrollRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7">No Base Rates for the Punches</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <p><strong>Exceptions</strong></p>
+
+        <ExceptionsFragment @ref="payrollExceptionsFragment" Type="Payroll" Exceptions="payrollExceptions" BaseRates="basePayrollRates" AlternateRates="alternatePayrollRates" />
+
+        <p>
+            <button class="btn btn-default" id="btnAddPayrollRateException" @onclick="@(e => AddPayrollRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add Exception</button>
+            <button class="btn btn-default" @onclick="@(e => AddPayrollRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !basePayrollRates.Any() || !alternatePayrollRates.Any())">Add From Template&hellip;</button>
+            <button class="btn btn-default" @onclick="@(e => ShowSavePayrollRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any() || !payrollExceptions.Any())">Save As Template&hellip;</button>
+        </p>
+    }
+    else if (selectedTab == "SERVICE")
+    {
+        <p><strong>Base Rates <i class="far fa-question-circle" @ref="baseServiceRatesQuestionIcon" @onmouseover="@(args => ShowRatesQuestionTooltip(baseServiceRatesQuestionIcon))"></i></strong></p>
+        <table class="table table-bordered table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th>Customer #</th>
+                    <th>Customer</th>
+                    <th>Job #</th>
+                    <th>Job</th>
+                    <th>Task #</th>
+                    <th>Task</th>
+                    <th>Base Customer Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in tasks)
+                {
+                    <tr class="fadeIn @(task.BaseServiceRate == null ? "danger" : "")">
+                        <td>@task.Job.Customer.Number</td>
+                        <td>@task.Job.Customer.Name</td>
+                        <td>@task.Job.Number</td>
+                        <td>@task.Job.Name</td>
+                        <td>@task.Number</td>
+                        <td>@task.Name</td>
+                        <td>
+                            @if (task.BaseServiceRate != null)
+                            {
+                                <strong>@task.BaseServiceRate.Name</strong>
+                            }
+                            else
+                            {
+                                <strong class="text-danger">No Base Rate Specified!</strong>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                @if (loadingBaseServiceRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                    </tr>
+                }
+
+                @if (tasks.Count == 0 && !loadingBaseServiceRates)
+                {
+                    <tr class="fadeIn">
+                        <td colspan="7">No Base Rates for the Punches</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <p><strong>Exceptions</strong></p>
+
+        <ExceptionsFragment @ref="serviceExceptionsFragment" Type="Service" Exceptions="serviceExceptions" BaseRates="baseServiceRates" AlternateRates="alternateServiceRates" />
+
+        <p>
+            <button class="btn btn-default" id ="btnAddServiceRateException" @onclick="@(e => AddServiceRateException())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add Exception</button>
+            <button class="btn btn-default" @onclick="@(e => AddServiceRateExceptionsFromTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any())">Add From Template&hellip;</button>
+            <button class="btn btn-default" @onclick="@(e => ShowSaveServiceRateExceptionsTemplate())" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates || !baseServiceRates.Any() || !alternateServiceRates.Any() || !serviceExceptions.Any())">Save As Template&hellip;</button>
+        </p>
+    }
+</div>
+
+<hr />
+
+<i class="@((working || loadingBasePayrollRates || loadingBaseServiceRates) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="Populate" disabled="@(working || loadingBasePayrollRates || loadingBaseServiceRates)" style="margin-left: 2px;">Perform Populate</button>
+
+@code {
+    private bool working = false;
+    private bool loadingBasePayrollRates = true;
+    private bool loadingBaseServiceRates = true;
+    private List<Rate> basePayrollRates = new List<Rate>();
+    private List<Rate> alternatePayrollRates = new List<Rate>();
+    private List<Rate> baseServiceRates = new List<Rate>();
+    private List<Rate> alternateServiceRates = new List<Rate>();
+    private List<Core.Models.Task> tasks = new List<Core.Models.Task>();
+    private List<PopulateRateException> serviceExceptions = new List<PopulateRateException>();
+    private List<PopulateRateException> payrollExceptions = new List<PopulateRateException>();
+    private ElementReference basePayrollRatesQuestionIcon;
+    private ElementReference baseServiceRatesQuestionIcon;
+    private ExceptionsFragment payrollExceptionsFragment;
+    private ExceptionsFragment serviceExceptionsFragment;
+    private string selectedTab = "PAYROLL";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var basePayrollRatesResult = await rateService.GetBasePayrollRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        basePayrollRates = basePayrollRatesResult.Item1;
+
+        var alternatePayrollRatesResult = await rateService.GetAlternatePayrollRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        alternatePayrollRates = alternatePayrollRatesResult.Item1;
+
+        var baseServiceRatesResult = await rateService.GetBaseServiceRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        baseServiceRates = baseServiceRatesResult.Item1;
+
+        var alternateServiceRatesResult = await rateService.GetAlternateServiceRatesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        alternateServiceRates = alternateServiceRatesResult.Item1;
+
+        var tasksResults = await taskService.GetTasksForPunchesAsync(sharedService.RangeMin, sharedService.RangeMax);
+        tasks = tasksResults.Item1;
+
+        loadingBasePayrollRates = false;
+        loadingBaseServiceRates = false;
+
+        StateHasChanged();
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("focusElement", "btnAddPayrollRateException");
+        }
+        catch (Exception) { }
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task Populate(MouseEventArgs e)
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            $"Are you sure you want to populate rates for these punches? This operation is permanent and cannot be reversed. However, you can run Populate Rates multiple times and the rates will be overwritten.",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        var populateRateOptions = new List<Dictionary<string, object>>();
+
+        for (var i = 0; i < payrollExceptions.Count; i++)
+        {
+            var option = BuildPopulateRateOption(payrollExceptions[i]);
+            option.Add("Order", i);
+            option.Add("BasePayrollRateId", payrollExceptions[i].BasePayrollRateId);
+            option.Add("AlternatePayrollRateId", payrollExceptions[i].AlternatePayrollRateId);
+
+            populateRateOptions.Add(option);
+        }
+
+        for (var i = 0; i < serviceExceptions.Count; i++)
+        {
+            var option = BuildPopulateRateOption(serviceExceptions[i]);
+            option.Add("Order", serviceExceptions.Count + i);
+            option.Add("BaseServiceRateId", serviceExceptions[i].BaseServiceRateId);
+            option.Add("AlternateServiceRateId", serviceExceptions[i].AlternateServiceRateId);
+
+            populateRateOptions.Add(option);
+        }
+
+        // Send the request.
+        await punchService.PostPopulateRatesAsync(sharedService.RangeMin, sharedService.RangeMax, populateRateOptions);
+
+        dialogService.Close("punch.populated");
+    }
+
+    private void AddServiceRateException()
+    {
+        serviceExceptionsFragment.AddException();
+    }
+
+    private void AddPayrollRateException()
+    {
+        payrollExceptionsFragment.AddException();
+    }
+
+    private async System.Threading.Tasks.Task AddServiceRateExceptionsFromTemplate()
+    {
+        await serviceExceptionsFragment.AddExceptionFromTemplate();
+    }
+
+    private async System.Threading.Tasks.Task AddPayrollRateExceptionsFromTemplate()
+    {
+        await payrollExceptionsFragment.AddExceptionFromTemplate();
+    }
+
+    private async System.Threading.Tasks.Task ShowSaveServiceRateExceptionsTemplate()
+    {
+        await serviceExceptionsFragment.SaveExceptionsToTemplate();
+    }
+
+    private async System.Threading.Tasks.Task ShowSavePayrollRateExceptionsTemplate()
+    {
+        await payrollExceptionsFragment.SaveExceptionsToTemplate();
+    }
+
+    private Dictionary<string, object> BuildPopulateRateOption(PopulateRateException exception)
+    {
+        var option = new Dictionary<string, object>();
+
+        var rangeHour = int.Parse(exception.RangeHour);
+
+        if (exception.RangeMerdian == "PM")
+            rangeHour += 12;
+
+        switch (exception.Option)
+        {
+            case "Punches Before":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "RangeDirection", exception.CalculatedRangeDirection },
+                    { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
+                };
+                break;
+            case "Punches After":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "RangeDirection", exception.CalculatedRangeDirection },
+                    { "RangeMinutes", exception.CalculatedRangeMinutes.Value }
+                };
+                break;
+            case "After Hours/Minutes Per Day":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "CountScope", exception.CalculatedCountScope },
+                    { "CountMinute", exception.CalculatedCountMinutes }
+                };
+                break;
+            case "After Hours/Minutes in Range":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "CountScope", exception.CalculatedCountScope },
+                    { "CountMinute", exception.CalculatedCountMinutes }
+                };
+                break;
+            case "Punches on Specific Date":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "Date", exception.Date.ToString("yyyy-MM-dd") }
+                };
+                break;
+            case "Punches on Day of Week":
+                option = new Dictionary<string, object>()
+{
+                    { "Type", exception.CalculatedType },
+                    { "DayOfWeek", exception.DayOfWeek }
+                };
+                break;
+        }
+
+        return option;
+    }
+
+    private void ShowRatesQuestionTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, "These are the base rates for the punches you selected. All of the punches in the date range will be populated with these rates unless specified otherwise below.", options);
+}

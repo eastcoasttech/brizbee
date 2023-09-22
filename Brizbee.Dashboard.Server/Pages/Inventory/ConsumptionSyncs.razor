@@ -1,0 +1,324 @@
+﻿@page "/inventory/consumption-syncs"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject PunchService punchService
+@inject RateService rateService
+@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
+@inject DialogService dialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="inventory/consumption">Consumption</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="inventory/consumption-syncs">Consumption Syncs</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/items">Items</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Item Syncs</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshSyncs())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Syncs-->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="col-md-1">
+                    Id
+                </th>
+                <th class="col-md-1">
+                    Consumptions
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("QBDInventoryConsumptionSyncs/CreatedAt"))">
+                        Created
+                        @if (sortBy == "QBDInventoryConsumptionSyncs/CreatedAt" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "QBDInventoryConsumptionSyncs/CreatedAt" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Users/Name"))">
+                        User
+                        @if (sortBy == "Users/Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Users/Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    Product
+                </th>
+                <th class="col-md-1">
+                    Hostname
+                </th>
+                <th class="col-md-2">
+                    Recording Method
+                </th>
+                <th class="col-md-1">
+                    Value Method
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sync in syncs)
+            {
+                <tr class="fadeIn selectable">
+                    <td><a href="javascript:void(0)">@sync.Id</a></td>
+                    <td><a href="javascript:void(0)">@sync.ConsumptionsCount</a></td>
+                    <td><a href="javascript:void(0)">@TimeZoneInfo.ConvertTimeFromUtc(sync.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</a></td>
+                    <td><a href="javascript:void(0)">@sync.CreatedByUser.Name</a></td>
+                    <td><a href="javascript:void(0)">@formatText(sync.HostProductName)</a></td>
+                    <td><a href="javascript:void(0)"><i class="fas fa-desktop" style="margin-right: 5px;"></i>@sync.Hostname</a></td>
+                    <td>
+                        @if (sync.RecordingMethod == "Inventory Adjustment")
+                        {
+                            <i class="fas fa-sliders-h fa-padded" style="margin-right: 5px;"></i>
+                        }
+                        else if (sync.RecordingMethod == "Sales Receipt")
+                        {
+                            <i class="fas fa-receipt fa-padded" style="margin-right: 5px;"></i>
+                        }
+                        <a href="javascript:void(0)">@sync.RecordingMethod</a>
+                    </td>
+                    <td><a href="javascript:void(0)">@sync.ValueMethod</a></td>
+                </tr>
+            }
+            @if (working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="8"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!working && syncs.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="8">You have not synced any consumption to QuickBooks</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (syncsCount > pageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (syncsCount > 0 && !working)
+            {
+                <p class="form-control-static pull-left">@(syncsPageStart + 1) to @(syncsPageStart + pageSize < syncsCount ? syncsPageStart + pageSize : syncsCount) of @syncsCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private TimeZoneInfo systemTimeZone = TimeZoneInfo.Local;
+    private List<QBDInventoryConsumptionSync> syncs = new List<QBDInventoryConsumptionSync>();
+    private string sortBy = "QBDInventoryConsumptionSyncs/CreatedAt";
+    private string sortDirection = "DESC";
+    private int pageSize = 20;
+    private int skip = 0;
+    private long syncsCount = 0;
+    private int syncsPageStart = 0;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+
+        await RefreshSyncs();
+
+        dialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+
+        dialogService.OnClose -= Close;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        syncsPageStart = syncsPageStart + pageSize;
+        skip = syncsPageStart;
+        await RefreshSyncs();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        syncsPageStart = syncsPageStart - pageSize;
+        skip = syncsPageStart;
+        await RefreshSyncs();
+    }
+
+    private async void Close(dynamic result)
+    {
+        await RefreshSyncs();
+    }
+
+    private async System.Threading.Tasks.Task RefreshSyncs()
+    {
+        working = true;
+        syncs.Clear();
+        var result = await qbdInventoryConsumptionSyncService.GetQBDInventoryConsumptionSyncsAsync(pageSize, skip, sortBy, sortDirection);
+        syncs = result.Item1;
+        syncsCount = result.Item2.GetValueOrDefault();
+        working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        sortBy = column;
+
+        if (sortDirection == "ASC")
+        {
+            sortDirection = "DESC";
+        }
+        else
+        {
+            sortDirection = "ASC";
+        }
+
+        await RefreshSyncs();
+    }
+
+    private string formatText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        if (text.Length > 27)
+            return $"{text.Substring(0, 26)}...";
+        else
+            return text;
+    }
+}

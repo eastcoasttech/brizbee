@@ -1,0 +1,113 @@
+﻿@page "/dialogs/customer"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject DialogService dialogService
+@inject CustomerService customerService
+
+<EditForm Model="@customer" OnValidSubmit="SaveCustomer" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="customer_number" class="col-sm-3 control-label">Number</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="customer_number" @bind-Value="customer.Number" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="customer_name" class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="customer_name" @bind-Value="customer.Name" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="customer_description" class="col-sm-3 control-label">Description</label>
+        <div class="col-sm-9">
+            <InputTextArea class="form-control" id="customer_description" @bind-Value="customer.Description" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <hr />
+
+    @if (customer.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteCustomer" disabled="@(working || loading)">Delete</button>
+    }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private Customer customer = new Customer();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the customer, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            customer = await customerService.GetCustomerByIdAsync(Id.Value);
+        }
+        else
+        {
+            customer.Number = await customerService.GetNextNumberAsync();
+        }
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveCustomer()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this customer?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Save the customer on the server and close the dialog.
+        await customerService.SaveCustomerAsync(customer);
+        dialogService.Close("customer.created");
+    }
+
+    private async System.Threading.Tasks.Task DeleteCustomer()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this customer?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the customer on the server and close the dialog.
+        var result = await customerService.DeleteCustomerAsync(customer.Id);
+        if (result)
+            dialogService.Close("customer.deleted");
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

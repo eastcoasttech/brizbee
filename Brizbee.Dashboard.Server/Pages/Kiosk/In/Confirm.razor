@@ -1,0 +1,259 @@
+﻿@page "/kiosk/in/confirm"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using Brizbee.Core.Serialization
+@using NodaTime
+@using NodaTime.TimeZones
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject SharedService sharedService
+@inject KioskService kioskService
+@inject GeolocationService GeolocationService
+@inject IJSRuntime JSRuntime
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                    </NavLink>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
+            <div class="panel panel-default panel-kiosk">
+                <div class="panel-heading">Please Confirm</div>
+                <div class="panel-body">
+                    <EditForm Model="@model" OnValidSubmit="Continue" class="form" autocomplete="off">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <p class="text-center" style="text-transform: uppercase; padding-top: 2em;">You are <span class="text-success"><strong>PUNCHING IN</strong></span></p>
+                        <p class="text-center" style="text-transform: uppercase;"><small>on job</small><br /><strong>@sharedService.AttemptedTask.Job.Number &ndash; @sharedService.AttemptedTask.Job.Name</strong></p>
+                        <p class="text-center" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@sharedService.AttemptedTask.Job.Customer.Number &ndash; @sharedService.AttemptedTask.Job.Customer.Name</strong></p>
+                        <p class="text-center" style="text-transform: uppercase; padding-bottom: 2em;"><small>doing task</small><br /><strong>@sharedService.AttemptedTask.Number &ndash; @sharedService.AttemptedTask.Name</strong></p>
+
+                        <div class="form-group">
+                            <label for="country_code">Country</label>
+                            <InputSelect class="form-control" id="country_code" disabled="@working"
+                                         ValueChanged="@( (string x) => selectedCountryCodeValueChangeHandler(x) )"
+                                         ValueExpression="@( () => model.CountryCode )"
+                                         Value="@model.CountryCode">
+                                @foreach (var country in countries)
+                                {
+                                    <option value="@country.CountryCode">@country.Name</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="time_zone">Time Zone</label>
+                            <InputSelect class="form-control" id="time_zone" disabled="@working"
+                                         ValueChanged="@( (string x) => selectedTimeZoneValueChangeHandler(x) )"
+                                         ValueExpression="@( () => model.TimeZone )"
+                                         Value="@model.TimeZone">
+                                @foreach (var timeZone in countryZones)
+                                {
+                                    <option value="@timeZone.Id">@timeZone.Id</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <button type="submit" class="btn btn-block btn-lg btn-primary" disabled="@working">Continue</button>
+                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/status" disabled="@working">
+                            Cancel
+                        </NavLink>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private List<Country> countries = new List<Country>();
+    private List<IanaTimeZone> countryZones = new List<IanaTimeZone>();
+    private List<IanaTimeZone> zones = new List<IanaTimeZone>();
+    private TimeZoneModel model = new TimeZoneModel();
+
+    protected override void OnInitialized()
+    {
+        working = true;
+
+        // --------------------------------------------------------------------
+        // Build list of time zones.
+        // --------------------------------------------------------------------
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var tzdb = DateTimeZoneProviders.Tzdb;
+        var countryCode = "";
+
+        var list =
+            from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+            where string.IsNullOrEmpty(countryCode) ||
+                  location.CountryCode.Equals(countryCode,
+                    StringComparison.OrdinalIgnoreCase)
+            let zoneId = location.ZoneId
+            let tz = tzdb[zoneId]
+            let offset = tz.GetZoneInterval(now).StandardOffset
+            orderby offset, zoneId
+            select new
+            {
+                Id = zoneId,
+                CountryCode = location.CountryCode
+            };
+
+        foreach (var z in list)
+        {
+            zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+        }
+
+
+        // --------------------------------------------------------------------
+        // Build list of countries.
+        // --------------------------------------------------------------------
+
+        CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+        foreach (var culture in cultures)
+        {
+            try
+            {
+                var region = new RegionInfo(culture.LCID);
+                if (!countries.Where(c => c.Name == region.EnglishName).Any())
+                {
+                    countries.Add(new Country() { CountryCode = region.TwoLetterISORegionName, Name = region.EnglishName });
+                }
+            }
+            catch (CultureNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        currentUser = sharedService.CurrentUser;
+
+        var defaultTimeZone = currentUser.TimeZone;
+        var defaultCountryCode = zones.Where(z => z.Id == defaultTimeZone).Select(z => z.CountryCode).FirstOrDefault();
+
+        selectedCountryCodeValueChangeHandler(defaultCountryCode);
+        selectedTimeZoneValueChangeHandler(defaultTimeZone);
+
+        working = false;
+    }
+
+    private async System.Threading.Tasks.Task Continue()
+    {
+        working = true;
+
+        // Attempt to collect coordinates.
+        var currentPositionResult = await GeolocationService.GetCurrentPosition();
+
+        var latitude = "";
+        var longitude = "";
+        if (!currentPositionResult.IsSuccess && currentUser.RequiresLocation == true)
+        {
+            working = false;
+            return;
+        }
+
+        // Store the successfully collected coordinates.
+        if (currentPositionResult.IsSuccess)
+        {
+            latitude = currentPositionResult.Position.Coords.Latitude.ToString();
+            longitude = currentPositionResult.Position.Coords.Longitude.ToString();
+        }
+
+        // Collection platform details.
+        var details = await JSRuntime.InvokeAsync<Dictionary<string, string>>("getPlatformDetails");
+        var browserName = details["BrowserName"];
+        var browserVersion = details["BrowserVersion"];
+        var operatingSystemName = details["OperatingSystemName"];
+        var operatingSystemVersion = details["OperatingSystemVersion"];
+
+        var success = await kioskService.PunchInAsync(sharedService.AttemptedTask.Id,
+            latitude, longitude, browserName, browserVersion,
+            operatingSystemName, operatingSystemVersion, model.TimeZone);
+
+        if (success)
+        {
+            sharedService.AttemptedTask = null; // Clear the attempted task
+            NavigationManager.NavigateTo("kiosk/in/done");
+        }
+        else
+        {
+            working = false;
+            Console.WriteLine("Could not punch in!");
+        }
+    }
+
+    private void selectedCountryCodeValueChangeHandler(string country)
+    {
+        model.CountryCode = country;
+        countryZones = zones.Where(z => z.CountryCode == model.CountryCode).ToList();
+    }
+
+    private void selectedTimeZoneValueChangeHandler(string timeZone)
+    {
+        model.TimeZone = timeZone;
+    }
+
+    class TimeZoneModel
+    {
+        [Required]
+        public string CountryCode { get; set; }
+
+        [Required]
+        public string TimeZone { get; set; }
+    }
+}

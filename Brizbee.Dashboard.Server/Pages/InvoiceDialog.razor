@@ -1,0 +1,141 @@
+﻿@page "/dialogs/invoice"
+
+@using Brizbee.Core.Models.Accounting
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject DialogService dialogService
+@inject InvoiceService invoiceService
+
+<EditForm Model="@invoice" OnValidSubmit="SaveInvoice" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <h1>Invoice</h1>
+
+    <table class="table">
+        <tr>
+            <td>
+                <label for="invoice_entered_on" class="control-label">Date</label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <InputDate class="form-control" id="invoice_entered_on" @bind-Value="invoice.EnteredOn" disabled="@(working || loading)" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="invoice_number" class="control-label">Number</label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <InputText class="form-control" id="invoice_number" @bind-Value="invoice.Number" disabled="@(working || loading)" />
+            </td>
+        </tr>
+    </table>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Unit</th>
+            <th>Amount</th>
+        </tr>
+
+        @foreach (var lineItem in invoice.LineItems)
+        {
+            <tr>
+                <td><InputText class="form-control" @bind-Value="lineItem.Description" disabled="@(working || loading)" /></td>
+                <td><InputNumber class="form-control" @bind-Value="lineItem.Quantity" disabled="@(working || loading)" /></td>
+                <td><InputNumber class="form-control" @bind-Value="lineItem.UnitAmount" disabled="@(working || loading)" /></td>
+                <td><input type="text" class="form-control" readonly value="@(lineItem.UnitAmount * lineItem.Quantity)" /></td>
+            </tr>
+        }
+    </table>
+
+    <button class="btn btn-default" @onclick="@(e => invoice.LineItems.Add(new LineItem()))">Add Line</button>
+
+    <hr />
+
+    @if (invoice.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteInvoice" disabled="@(working || loading)">Delete</button>
+    }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private Invoice invoice = new Invoice()
+    {
+        LineItems = new List<LineItem>(1)
+        {
+            new LineItem()
+        }
+    };
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the invoice, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            invoice = await invoiceService.GetInvoiceByIdAsync(Id.Value);
+        }
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveInvoice()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this invoice?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Save the invoice on the server and close the dialog.
+        await invoiceService.SaveInvoiceAsync(invoice);
+        dialogService.Close("invoice.created");
+    }
+
+    private async System.Threading.Tasks.Task DeleteInvoice()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this invoice?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the invoice on the server and close the dialog.
+        var result = await invoiceService.DeleteInvoiceAsync(invoice.Id);
+        if (result)
+            dialogService.Close("invoice.deleted");
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

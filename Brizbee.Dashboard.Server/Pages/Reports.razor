@@ -1,0 +1,490 @@
+﻿@page "/reports"
+
+@using System.Timers 
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject ApiService apiService
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject PunchService punchService
+@inject JobService jobService
+@inject DialogService dialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewReports)
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+
+        <!-- Column 1 -->
+        <div class="col-md-4">
+            <ul class="list-unstyled">
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <a href="@($"{apiService.GetBaseUrl()}api/Reports/PunchesByUser?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&CommitStatus={includeLocked}&access_token={sharedService.Token}")">
+                                            <h4>
+                                                Punches by User
+                                            </h4>
+                                            <p><small>Lists the punches by user for each day in the range.</small></p>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <a href="@($"{apiService.GetBaseUrl()}api/Reports/PunchesByJob?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&CommitStatus={includeLocked}&access_token={sharedService.Token}")">
+                                            <h4>
+                                                Punches by Projects and Task
+                                            </h4>
+                                            <p><small>Lists the punches by project and task for each day in the range.</small></p>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <a href="@($"{apiService.GetBaseUrl()}api/Reports/PunchesByDay?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&CommitStatus={includeLocked}&access_token={sharedService.Token}")">
+                                            <h4>
+                                                Punches by Day
+                                            </h4>
+                                            <p><small>Lists the punches by day for each day in the range.</small></p>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Column 2 -->
+        <div class="col-md-4">
+            <ul class="list-unstyled">
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <a href="@($"{apiService.GetBaseUrl()}api/Reports/TimeEntriesByUser?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&access_token={sharedService.Token}")">
+                                            <h4>
+                                                Time Cards by User
+                                            </h4>
+                                            <p><small>Lists the time cards by user for each day in the range.</small></p>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <a href="@($"{apiService.GetBaseUrl()}api/Reports/TimeEntriesByJob?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&access_token={sharedService.Token}")">
+                                            <h4>
+                                                Time Cards by Project and Task
+                                            </h4>
+                                            <p><small>Lists the time cards by project and task for each day in the range.</small></p>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="far fa-file-excel" aria-hidden="true" style="font-size: 40px;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <a href="@($"{apiService.GetBaseUrl()}api/Reports/TimeEntriesByDay?Min={new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0).ToString("yyyy-MM-ddTHH:mm:ss")}&Max={new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59).ToString("yyyy-MM-ddTHH:mm:ss")}&JobScope={projectScope}{string.Join("", projectFilters.Select(x => $"&JobIds={x.Id}"))}&UserScope={userScope}{string.Join("", userFilters.Select(x => $"&UserIds={x.Id}"))}&access_token={sharedService.Token}")">
+                                            <h4>
+                                                Time Cards by Day
+                                            </h4>
+                                            <p><small>Lists the time cards by day for each day in the range.</small></p>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="panel panel-default panel-condensed">
+                        <div class="panel-body">
+                            <table class="table table-report">
+                                <tr>
+                                    <td class="col-md-1">
+                                        <i class="fa fa-question-circle" aria-hidden="true" style="font-size: 40px; color: #444;"></i>
+                                    </td>
+                                    <td class="col-md-11">
+                                        <h4>
+                                            Need a custom report?
+                                        </h4>
+                                        <p><small>We would be happy to build a custom report for your specific business needs. Please reach out to our support team at <a href="mailto:support@brizbee.com">support@brizbee.com</a></small></p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Report Filters and Options</div>
+                <div class="panel-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="range_min">From</label>
+                            <input type="date" @bind-value="sharedService.RangeMin" id="range_min" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="range_max">To</label>
+                            <input type="date" @bind-value="sharedService.RangeMax" id="range_min" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Users</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" checked="@(userScope == "all")" @onchange="@((e) => userScope = "all")" />
+                                    Include All Users
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" checked="@(userScope == "specific")" @onchange="@((e) => userScope = "specific")" />
+                                    Include Specific Users
+                                </label>
+                            </div>
+
+                            <div class="@(userScope == "specific" ? "" : "hidden")" style="padding-left: 20px">
+                                <input type="text" class="form-control" @bind="userQuery" @onkeyup="SearchUsers" @oninput="@((e) => { userQuery = (string)e.Value; })" placeholder="Search and Add a User" />
+                                <i class="@((searchUsersWorking == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                @if (userResults.Count > 0)
+                                {
+                                    <p style="margin-top: 10px; margin-bottom: 0;"><strong>Search Results</strong></p>
+                                    <ul class="list-unstyled" style="margin-top: 5px; margin-bottom: 5px;">
+                                        @foreach (var user in userResults)
+                                        {
+                                            <li>@user.Name &ndash; @user.EmailAddress <a href="javascript:void(0)" @onclick="@((e) => { userFilters.Add(user); userResults.Clear(); userQuery = ""; })">Add</a></li>
+                                        }
+                                    </ul>
+                                }
+
+                                @if (userFilters.Count > 0)
+                                {
+                                    <p style="margin-top: 10px; margin-bottom: 0;"><strong>Selected Users</strong> <i class="@((searchUsersWorking == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></p>
+                                    <ul class="list-unstyled" style="margin-top: 5px; margin-bottom: 5px;">
+                                        @foreach (var user in userFilters)
+                                        {
+                                            <li>@user.Name @(string.IsNullOrEmpty(user.EmailAddress) ? "" : $"- {user.EmailAddress}") <a href="javascript:void(0)" @onclick="@((e) => userFilters.Remove(user))">Remove</a></li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Projects</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" checked="@(projectScope == "all")" @onchange="@((e) => projectScope = "all")" />
+                                    Include All Projects
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" checked="@(projectScope == "specific")" @onchange="@((e) => projectScope = "specific")" />
+                                    Include Specific Projects
+                                </label>
+                            </div>
+
+                            <div class="@(projectScope == "specific" ? "" : "hidden")" style="padding-left: 20px">
+                                <input type="text" class="form-control" @bind="projectQuery" @onkeyup="SearchProjects" @oninput="@((e) => { projectQuery = (string)e.Value; })" placeholder="Search and Add a Project" />
+                                <i class="@((searchProjectsWorking == true) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                @if (projectResults.Count > 0)
+                                {
+                                    <p style="margin-top: 10px; margin-bottom: 0;"><strong>Search Results</strong></p>
+                                    <ul class="list-unstyled" style="margin-top: 5px; margin-bottom: 5px;">
+                                        @foreach (var project in projectResults)
+                                        {
+                                            <li>@project.Number &ndash; @project.Name / @project.Customer.Number &ndash; @project.Customer.Name  <a href="javascript:void(0)" @onclick="@((e) => { projectFilters.Add(project); projectResults.Clear(); projectQuery = ""; })">Add</a></li>
+                                        }
+                                    </ul>
+                                }
+
+                                @if (projectFilters.Count > 0)
+                                {
+                                    <p style="margin-top: 10px; margin-bottom: 0;"><strong>Selected Jobs</strong></p>
+                                    <ul class="list-unstyled" style="margin-top: 5px; margin-bottom: 5px;">
+                                        @foreach (var project in projectFilters)
+                                        {
+                                            <li>@project.Number &ndash; @project.Name <a href="javascript:void(0)" @onclick="@((e) => projectFilters.Remove(project))">Remove</a></li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="form-group">
+                            <label>Status (Only Applies to Punch Reports)</label>
+                            <select class="form-control" @bind="includeLocked">
+                                <option value="all">Both Locked and Unlocked Punches</option>
+                                <option value="only">Only Locked Punches</option>
+                                <option value="uncommitted">Only Unlocked Punches</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private User currentUser;
+    private List<Job> projectFilters = new List<Job>();
+    private List<User> userFilters = new List<User>();
+    private List<Job> projectResults = new List<Job>();
+    private List<User> userResults = new List<User>();
+    private string projectScope = "all";
+    private string userScope = "all";
+    private string includeLocked = "all";
+    private string projectQuery = "";
+    private string userQuery = "";
+    private Timer userQueryTimer;
+    private Timer projectQueryTimer;
+    private bool searchUsersWorking = false;
+    private bool searchProjectsWorking = false;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    private void SearchUsers(KeyboardEventArgs args)
+    {
+        // Reset the timer if already counting.
+        if (userQueryTimer != null)
+            userQueryTimer.Stop();
+
+        // Create a new timer if one does not exist.
+        if (userQueryTimer == null || userQueryTimer.Interval != 500)
+        {
+            userQueryTimer = new Timer();
+            userQueryTimer.Elapsed += NotifyUserQueryTimerElapsed;
+            userQueryTimer.Interval = 500;
+        }
+
+        userQueryTimer.Start();
+    }
+
+    private void SearchProjects(KeyboardEventArgs args)
+    {
+        // Reset the timer if already counting.
+        if (projectQueryTimer != null)
+            projectQueryTimer.Stop();
+
+        // Create a new timer if one does not exist.
+        if (projectQueryTimer == null || projectQueryTimer.Interval != 500)
+        {
+            projectQueryTimer = new Timer();
+            projectQueryTimer.Elapsed += NotifyProjectQueryTimerElapsed;
+            projectQueryTimer.Interval = 500;
+        }
+
+        projectQueryTimer.Start();
+    }
+
+    private async void NotifyUserQueryTimerElapsed(Object source, ElapsedEventArgs e)
+    {
+        // Stop the timer.
+        userQueryTimer.Stop();
+
+        if (userQuery.Length <= 2)
+            return;
+
+        searchUsersWorking = true;
+        StateHasChanged();
+
+        userResults.Clear();
+        StateHasChanged();
+
+        userResults = await userService.SearchUsersAsync(userQuery);
+        StateHasChanged();
+
+        searchUsersWorking = false;
+        StateHasChanged();
+    }
+
+    private async void NotifyProjectQueryTimerElapsed(Object source, ElapsedEventArgs e)
+    {
+        // Stop the timer.
+        projectQueryTimer.Stop();
+
+        if (projectQuery.Length <= 2)
+            return;
+
+        searchProjectsWorking = true;
+        StateHasChanged();
+
+        projectResults.Clear();
+        StateHasChanged();
+
+        projectResults = await jobService.SearchJobsAsync(projectQuery);
+        StateHasChanged();
+
+        searchProjectsWorking = false;
+        StateHasChanged();
+    }
+}

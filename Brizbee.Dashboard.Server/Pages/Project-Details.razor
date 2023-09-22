@@ -1,0 +1,472 @@
+﻿@page "/project-details/{ProjectId:int}"
+
+@using Brizbee.Core.Serialization.Statistics
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService LocalStorageService
+@inject SharedService SharedService
+@inject ApiService ApiService
+@inject UserService UserService
+@inject PunchService PunchService
+@inject CustomerService CustomerService
+@inject JobService JobService
+@inject TaskService TaskService
+@inject DialogService DialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="open-projects"><i class="fa-solid fa-circle-chevron-left"></i> Back to Projects</NavLink></li>
+    </ul>
+    
+    <hr />
+    
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenModifyProjectDialog(_currentProject))"><i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 5px;"></i> Edit Project</button>
+@*                    <button type="button" class="btn btn-default" @onclick="@(e => OpenMergeProjectDialog(_currentProject))"><i class="fas fa-code-merge" aria-hidden="true" style="margin-right: 5px;"></i> Merge Project</button>*@                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadBarCodesDialog(_currentProject.Id))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_currentProject != null)
+    {
+        <h1 style="margin-top: 3rem; margin-bottom: 0; font-weight: bold; line-height: 3rem; font-size: 3em;">@_currentProject.Name <span class="text-muted"><small>Project Number @_currentProject.Number</small></span></h1>
+        <h2 style="margin-top: 2rem; margin-bottom: 3rem; font-weight: bold; line-height: 3rem;">@_currentProject.Customer.Name <span class="text-muted"><small>Customer Number @_currentProject.Customer.Number</small></span></h2>
+        <div class="row">
+            
+            <!-- Column 1 -->
+            <div class="col-md-4">
+                <div class="panel panel-default panel-condensed">
+                    <div class="panel-body">
+                        <div class="row" style="margin: 0; padding: 0;">
+                            <div class="col-md-6">
+                                <p>Quote <strong>@_currentProject.QuoteNumber</strong></p>
+                                <p>Work Order <strong>@_currentProject.CustomerWorkOrder</strong></p>
+                                <p>Purchase Order <strong>@_currentProject.CustomerPurchaseOrder</strong></p>
+                                <p>Invoice <strong>@_currentProject.InvoiceNumber</strong></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>Status <strong>@_currentProject.Status</strong></p>
+                                <p>Taxability <strong>@_currentProject.Taxability</strong></p>
+                                <p>Description<br/> <strong>@_currentProject.Description</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="col-md-4">
+                <ul class="list-unstyled">
+                    <li>
+                        <div class="panel panel-default panel-condensed">
+                            <div class="panel-body">
+                                <div class="row" style="margin: 0; padding: 0;">
+                                    <div class="col-md-4">
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@decimal.Round(Statistics.MinutesCount / 60.0m, 1)</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Total Hours</span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@Statistics.WorkedDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Worked Days</span></p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@Statistics.DurationDaysCount</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Days in Duration</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default panel-condensed">
+                            <div class="panel-body">
+                                <div>
+                                    <RadzenChart>
+                                        <RadzenBarSeries Data="@Statistics.TaskStatistics" CategoryProperty="TaskNumberWithName" ValueProperty="HoursCount">
+                                            <TooltipTemplate Context="data">
+                                                <div>
+                                                    Hours for task <i>@data.TaskNumberWithName</i>:
+                                                    <strong>@data.HoursCount</strong>
+                                                </div>
+                                            </TooltipTemplate>
+                                        </RadzenBarSeries>
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Hours by Task" />
+                                        </RadzenValueAxis>
+                                        <RadzenLegend Visible="false" />
+                                        <RadzenBarOptions Height="20" />
+                                    </RadzenChart>
+                                </div>
+                                <div>
+                                    <RadzenChart>
+                                        <RadzenBarSeries Data="@Statistics.UserStatistics" CategoryProperty="UserName" ValueProperty="HoursCount">
+                                            <TooltipTemplate Context="data">
+                                                <div>
+                                                    Hours for user <i>@data.UserName</i>:
+                                                    <strong>@data.HoursCount</strong>
+                                                </div>
+                                            </TooltipTemplate>
+                                        </RadzenBarSeries>
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Hours by User" />
+                                        </RadzenValueAxis>
+                                        <RadzenLegend Visible="false" />
+                                        <RadzenBarOptions Height="20" />
+                                    </RadzenChart>
+                                </div>
+                                <div>
+                                    <RadzenChart>
+                                        <RadzenLineSeries Data="@Statistics.DateStatistics" CategoryProperty="Date" LineType="LineType.Solid" ValueProperty="HoursCount" Title="Hours Per Day">
+                                            <RadzenMarkers MarkerType="MarkerType.Circle" />
+                                        </RadzenLineSeries>
+                                        <RadzenCategoryAxis Padding="20" Formatter="@FormatAsDay" />
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Hours" />
+                                        </RadzenValueAxis>
+                                    </RadzenChart>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Column 3 -->
+            <div class="col-md-4">
+                <ul class="list-unstyled">
+                    <li>
+                        <div class="panel panel-default panel-condensed">
+                            <div class="panel-heading">
+                                Tasks for this Project
+                            </div>
+                            <div class="panel-body">
+                                
+                                <!--List of Tasks-->
+                                <table class="table table-bordered table-jobs">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-md-2">
+                                                <a href="javascript:void(0)" @onclick="@(e => ChangeTasksSortBy("Number"))">
+                                                    Number
+                                                    @if (_tasksSortBy == "Number" && _tasksSortDirection == "ASC")
+                                                    {
+                                                        <span class="fa fa-caret-up"></span>
+                                                    }
+                                                    else if (_tasksSortBy == "Number" && _tasksSortDirection == "DESC")
+                                                    {
+                                                        <span class="fa fa-caret-down"></span>
+                                                    }
+                                                </a>
+                                            </th>
+                                            <th class="col-md-5">
+                                                <a href="javascript:void(0)" @onclick="@(e => ChangeTasksSortBy("Name"))">
+                                                    Name
+                                                    @if (_tasksSortBy == "Name" && _tasksSortDirection == "ASC")
+                                                    {
+                                                        <span class="fa fa-caret-up"></span>
+                                                    }
+                                                    else if (_tasksSortBy == "Name" && _tasksSortDirection == "DESC")
+                                                    {
+                                                        <span class="fa fa-caret-down"></span>
+                                                    }
+                                                </a>
+                                            </th>
+                                            <th class="col-md-4">
+                                                <a href="javascript:void(0)" @onclick="@(e => ChangeTasksSortBy("Group"))">
+                                                    Bar Code Group
+                                                    @if (_tasksSortBy == "Group" && _tasksSortDirection == "ASC")
+                                                    {
+                                                        <span class="fa fa-caret-up"></span>
+                                                    }
+                                                    else if (_tasksSortBy == "Group" && _tasksSortDirection == "DESC")
+                                                    {
+                                                        <span class="fa fa-caret-down"></span>
+                                                    }
+                                                </a>
+                                            </th>
+                                            <th class="col-md-1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var task in Tasks)
+                                        {
+                                            <tr class="selectable @(task.Id == _selectedTaskId ? "selected" : "")">
+                                                <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Number</a></td>
+                                                <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Name</a></td>
+                                                <td @onclick="@(e => SelectTask(task))"><a href="javascript:void(0)">@task.Group</a></td>
+                                                <td class="col-md-1 text-right text-muted" style="vertical-align: middle;">
+                                                    <a href="javascript:void(0)" @onclick="@(e => OpenModifyTaskDialog(task))"><i class="fas fa-pencil-alt" aria-hidden="true"></i></a>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (_loadingTasks)
+                                        {
+                                            <tr class="fadeIn">
+                                                <td colspan="4"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                                            </tr>
+                                        }
+                                        @if (!_loadingTasks && Tasks.Count == 0)
+                                        {
+                                            <tr class="fadeIn">
+                                                <td colspan="4">No Tasks for Selected Job</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+    
+    private ProjectStatistics Statistics { get; set; } = new ();
+
+    private List<Core.Models.Task> Tasks { get; set; } = new ();
+
+    private User _currentUser;
+    private Job _currentProject;
+    private string _tasksSortBy = "Number";
+    private string _tasksSortDirection = "ASC";
+    private bool _loadingTasks = false;
+    private int? _selectedTaskId;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+
+        await RefreshProject();
+        await RefreshStatistics();
+        await RefreshTasks();
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+    }
+
+    private async System.Threading.Tasks.Task RefreshProject()
+    {
+        try
+        {
+            _currentProject = await JobService.GetJobByIdAsync(ProjectId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+    }
+
+    private void OpenDownloadBarCodesDialog(int? projectId)
+    {
+        DialogService.Open<DownloadBarCodesDialog>("Download Bar Codes",
+                                new Dictionary<string, object>() { { "Id", projectId } },
+                                new DialogOptions() { Width = "500px" });
+    }
+
+    private async void ChangeTasksSortBy(string column)
+    {
+        _tasksSortBy = column;
+
+        if (_tasksSortDirection == "ASC")
+        {
+            _tasksSortDirection = "DESC";
+        }
+        else
+        {
+            _tasksSortDirection = "ASC";
+        }
+
+        await RefreshTasks();
+    }
+
+    private async System.Threading.Tasks.Task RefreshTasks()
+    {
+        try
+        {
+            _loadingTasks = true;
+            StateHasChanged();
+
+            // Prevent stagnation.
+            Tasks.Clear();
+
+            var result = await TaskService.GetTasksAsync(ProjectId, 100, 0, _tasksSortBy, _tasksSortDirection);
+            Tasks = result.Item1;
+            _loadingTasks = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+    }
+
+    private async System.Threading.Tasks.Task RefreshStatistics()
+    {
+        try
+        {
+            Statistics = await JobService.GetStatisticsAsync(ProjectId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+    }
+
+    private void SelectTask(Core.Models.Task task)
+    {
+        _selectedTaskId = task.Id;
+        StateHasChanged();
+    }
+
+    private void OpenNewTaskDialog()
+    {
+        DialogService.Open<TaskDialog>("New Task",
+                                new Dictionary<string, object>() { { "Id", null }, { "ProjectId", ProjectId } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenModifyTaskDialog(Core.Models.Task task)
+    {
+        DialogService.Open<TaskDialog>("Edit Task",
+                                new Dictionary<string, object>() { { "Id", task.Id }, { "ProjectId", ProjectId } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenMergeProjectDialog(Job project)
+    {
+        DialogService.Open<MergeProjectDialog>("Merge Project",
+                                new Dictionary<string, object>() { { "Id", project.Id } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenModifyProjectDialog(Job project)
+    {
+        DialogService.Open<ProjectDialog>("Edit Project",
+                                new Dictionary<string, object>() { { "Id", project.Id }, { "CustomerId", project.CustomerId } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private string FormatAsDay(object value)
+    {
+        if (value != null)
+        {
+            return Convert.ToDateTime(value).ToString("MMM d");
+        }
+
+        return string.Empty;
+    }
+}

@@ -1,0 +1,234 @@
+﻿@page "/dialogs/task"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject DialogService dialogService
+@inject TaskService taskService
+@inject RateService rateService
+@inject SharedService sharedService
+
+<EditForm Model="@task" OnValidSubmit="SaveTask" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="task_number" class="col-sm-3 control-label">Number</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="task_number" @bind-Value="task.Number" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="task_name" class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="task_name" @bind-Value="task.Name" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="task_base_payroll_rate_id" class="col-sm-3 control-label">Base Payroll Rate</label>
+        <div class="col-sm-9">
+            <InputSelect id="task_base_payroll_rate_id" class="form-control" disabled="@(working || loading)"
+                         ValueChanged="@( (int x) => SelectedBasePayrollRateIdValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedBasePayrollRateId )"
+                         Value="@selectedBasePayrollRateId">
+                <option value=""></option>
+                @foreach (var rate in basePayrollRates)
+                {
+                    <option value="@rate.Id">@rate.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="task_base_service_rate_id" class="col-sm-3 control-label">Base Service Rate</label>
+        <div class="col-sm-9">
+            <InputSelect id="task_base_service_rate_id" class="form-control" disabled="@(working || loading)"
+                         ValueChanged="@( (int x) => SelectedBaseServiceRateIdValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedBaseServiceRateId )"
+                         Value="@selectedBaseServiceRateId">
+                <option value=""></option>
+                @foreach (var rate in baseServiceRates)
+                {
+                    <option value="@rate.Id">@rate.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="task_group" class="col-sm-3 control-label">Bar Code Group</label>
+        <div class="col-sm-9">
+            <InputSelect id="task_group" class="form-control" disabled="@(working || loading)"
+                         ValueChanged="@( (string x) => SelectedGroupValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedGroup )"
+                         Value="@selectedGroup">
+                <option value="Unspecified">Unspecified</option>
+                @foreach (var group in groups)
+                {
+                    <option value="@group">@group</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    @if (task.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteTask" disabled="@(working || loading)">Delete</button>
+    }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Parameter] public int? ProjectId { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private Core.Models.Task task = new Core.Models.Task();
+    private string[] groups = new string[] { };
+    private int selectedBaseServiceRateId;
+    private List<Rate> baseServiceRates = new List<Rate>(0);
+    private int selectedBasePayrollRateId;
+    private List<Rate> basePayrollRates = new List<Rate>(0);
+    private string selectedGroup = "Unspecified";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Load the task groups from the organization.
+        // --------------------------------------------------------------------
+
+        groups = sharedService.CurrentUser.Organization.Groups.Split(",");
+
+
+        // --------------------------------------------------------------------
+        // Load the base rates.
+        // --------------------------------------------------------------------
+
+        var payrollResult = await rateService.GetBaseRatesAsync("Payroll");
+        basePayrollRates = payrollResult.Item1;
+
+        var serviceResult = await rateService.GetBaseRatesAsync("Service");
+        baseServiceRates = serviceResult.Item1;
+
+
+        // --------------------------------------------------------------------
+        // Attempt to load the task, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            task = await taskService.GetTaskByIdAsync(Id.Value);
+
+            // Set the base payroll rate id.
+            if (task.BasePayrollRateId.HasValue)
+            {
+                selectedBasePayrollRateId = task.BasePayrollRateId.Value;
+                SelectedBasePayrollRateIdValueChangeHandler(selectedBasePayrollRateId);
+            }
+
+            // Set the base service rate id.
+            if (task.BaseServiceRateId.HasValue)
+            {
+                selectedBaseServiceRateId = task.BaseServiceRateId.Value;
+                SelectedBaseServiceRateIdValueChangeHandler(selectedBaseServiceRateId);
+            }
+
+            // Set the group.
+            selectedGroup = task.Group;
+            SelectedGroupValueChangeHandler(selectedGroup);
+        }
+        else
+        {
+            task.Number = await taskService.GetNextNumberAsync();
+
+            // Set the group.
+            selectedGroup = "Unspecified";
+            SelectedGroupValueChangeHandler(selectedGroup);
+        }
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveTask()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this task?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Set the project id.
+        task.JobId = ProjectId.Value;
+
+        // Save the task on the server and close the dialog.
+        await taskService.SaveTaskAsync(task);
+        dialogService.Close("task.created");
+    }
+
+    private async System.Threading.Tasks.Task DeleteTask()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this task?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the task on the server and close the dialog.
+        var result = await taskService.DeleteTaskAsync(task.Id);
+        if (result)
+            dialogService.Close("task.deleted");
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void SelectedBaseServiceRateIdValueChangeHandler(int rateId)
+    {
+        selectedBaseServiceRateId = rateId;
+
+        // Update the task.
+        task.BaseServiceRateId = selectedBaseServiceRateId;
+    }
+
+    private void SelectedBasePayrollRateIdValueChangeHandler(int rateId)
+    {
+        selectedBasePayrollRateId = rateId;
+
+        // Update the task.
+        task.BasePayrollRateId = selectedBasePayrollRateId;
+    }
+
+    private void SelectedGroupValueChangeHandler(string group)
+    {
+        selectedGroup = group;
+
+        // Update the task.
+        task.Group = selectedGroup;
+    }
+}

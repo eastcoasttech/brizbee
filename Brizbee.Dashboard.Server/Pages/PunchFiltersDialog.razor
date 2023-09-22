@@ -1,0 +1,168 @@
+﻿@page "/dialogs/filters/punch"
+
+@using Brizbee.Dashboard.Server.Services
+@using Brizbee.Dashboard.Server.Serialization
+@using Core.Models
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject UserService userService
+
+@implements IDisposable
+
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchUsersDialog())"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Filter Users</button>
+    </div>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchCustomersDialog())"><i class="fas fa-user-tie fa-padded" aria-hidden="true"></i> Filter Customers</button>
+    </div>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchProjectsDialog())"><i class="fa fa-truck fa-padded" aria-hidden="true"></i> Filter Projects</button>
+    </div>
+    @*<div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchTasksDialog())"><i class="fas fa-project-diagram fa-padded" aria-hidden="true"></i> Tasks</button>
+    </div>*@
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="col-md-2">Type</th>
+            <th class="col-md-9" colspan="4">Filter</th>
+            <th class="col-md-1"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in filters.Users)
+        {
+            <tr>
+                <td>User</td>
+                <td colspan="4">@user.Name</td>
+                <td><a href="javascript:void(0)" @onclick="@(e => filters.Users.Remove(user))"><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var customer in filters.Customers)
+        {
+            <tr>
+                <td>Customer</td>
+                <td colspan="2">@customer.Number</td>
+                <td colspan="2">@customer.Name</td>
+                <td><a href="javascript:void(0)" @onclick="@(e => filters.Customers.Remove(customer))"><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var project in filters.Projects)
+        {
+            <tr>
+                <td>Project</td>
+                <td>@project.Customer.Number</td>
+                <td>@project.Customer.Name</td>
+                <td>@project.Number</td>
+                <td>@project.Name</td>
+                <td><a href="javascript:void(0)" @onclick="@(e => filters.Projects.Remove(project))"><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+
+        @foreach (var task in filters.Tasks)
+        {
+            <tr>
+                <td>Task</td>
+                <td colspan="4">@task.Name</td>
+                <td><a href="javascript:void(0)" @onclick="@(e => filters.Tasks.Remove(task))"><i class="fas fa-trash-alt"></i></a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<button class="btn btn-default" type="button" @onclick="Clear">Clear Filters</button>
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">OK</button>
+
+@code {
+    private PunchFilters filters = new PunchFilters();
+
+    protected override void OnInitialized()
+    {
+        filters = sharedService.PunchFilters;
+
+        dialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        dialogService.OnClose -= Close;
+    }
+
+    private void Close(dynamic result)
+    {
+        if (result is HashSet<User>)
+        {
+            filters.Users = result as HashSet<User>;
+        }
+        else if (result is HashSet<Customer>)
+        {
+            filters.Customers = result as HashSet<Customer>;
+        }
+        else if (result is HashSet<Job>)
+        {
+            filters.Projects = result as HashSet<Job>;
+        }
+        else if (result is HashSet<Core.Models.Task>)
+        {
+            filters.Tasks = result as HashSet<Core.Models.Task>;
+        }
+
+        StateHasChanged();
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogSuccess(MouseEventArgs e)
+    {
+        sharedService.PunchFilters = filters;
+        dialogService.Close("filter.updated");
+    }
+
+    private void OpenSearchUsersDialog()
+    {
+        dialogService.Open<SearchUsersDialog>("Search Users",
+                                new Dictionary<string, object>() { { "ExistingFilters", filters.Users } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenSearchTasksDialog()
+    {
+        dialogService.Open<SearchTasksDialog>("Search Tasks",
+                                new Dictionary<string, object>() { { "ExistingFilters", filters.Tasks } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenSearchProjectsDialog()
+    {
+        dialogService.Open<SearchProjectsDialog>("Search Projects",
+                                new Dictionary<string, object>() { { "ExistingFilters", filters.Projects } },
+                                new DialogOptions() { Width = "800px" });
+    }
+
+    private void OpenSearchCustomersDialog()
+    {
+        dialogService.Open<SearchCustomersDialog>("Search Customers",
+                                new Dictionary<string, object>() { { "ExistingFilters", filters.Customers } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void Clear()
+    {
+        filters.Users = new HashSet<User>();
+        filters.Customers = new HashSet<Customer>();
+        filters.Projects = new HashSet<Job>();
+        filters.Tasks = new HashSet<Core.Models.Task>();
+    }
+}

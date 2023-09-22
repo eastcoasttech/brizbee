@@ -1,0 +1,372 @@
+﻿@page "/dialogs/timecard"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+@using Brizbee.Dashboard.Server.Serialization
+@using System.Globalization
+@using NodaTime
+@using NodaTime.TimeZones
+
+@inject DialogService dialogService
+@inject UserService userService
+@inject CustomerService customerService
+@inject JobService jobService
+@inject TaskService taskService
+@inject TimesheetEntryService timesheetEntryService
+
+<EditForm Model="@timeCard" OnValidSubmit="SaveTimeCard" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="selected_user_id" class="col-sm-3 control-label">User</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_user_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" autofocus
+                         ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedUserId )"
+                         Value="@selectedUserId">
+                @foreach (var user in users)
+                {
+                    <option value="@user.Id">@user.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="in_at" class="col-sm-3 control-label">Date</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="timeCard.EnteredAt" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Time</label>
+        <div class="col-sm-9">
+            <div class="row">
+                <div class="col-md-3" style="padding-right: 0;">
+                    <InputSelect @bind-Value="hours" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">
+                        @for (int i = 0; i <= 23; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-sm-2" style="padding-left: 7px;">
+                    <p class="form-control-static">hours</p>
+                </div>
+                <div class="col-md-3" style="padding-right: 0;">
+                    <InputSelect @bind-Value="minutes" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">
+                        @for (int i = 0; i <= 59; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-sm-2" style="padding-left: 7px;">
+                    <p class="form-control-static">minutes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="in_at" class="col-sm-3 control-label">Notes</label>
+        <div class="col-sm-9">
+            <InputTextArea @bind-Value="timeCard.Notes" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+                         ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedCustomerId )"
+                         Value="@selectedCustomerId">
+                @foreach (var customer in customers)
+                {
+                    <option value="@customer.Id">@customer.Number &ndash; @customer.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+                         ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedJobId )"
+                         Value="@selectedJobId">
+                @foreach (var job in jobs)
+                {
+                    <option value="@job.Id">@job.Number &ndash; @job.Name </option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)"
+                         ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedTaskId )"
+                         Value="@selectedTaskId">
+                @foreach (var task in tasks)
+                {
+                    <option value="@task.Id">@task.Number &ndash; @task.Name </option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    @if (timeCard.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteTimeCard" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)">Delete</button>
+    }
+    <i class="@((working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private bool loadingUsers = true;
+    private bool loadingCustomers = true;
+    private bool loadingJobs = true;
+    private bool loadingTasks = true;
+    private TimesheetEntry timeCard = new TimesheetEntry();
+    private int selectedUserId;
+    private int selectedCustomerId;
+    private int selectedJobId;
+    private int selectedTaskId;
+    private string hours = "0";
+    private string minutes = "0";
+    private List<Customer> customers = new List<Customer>();
+    private List<Core.Models.Task> tasks = new List<Core.Models.Task>();
+    private List<Job> jobs = new List<Job>();
+    private List<User> users = new List<User>();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Set defaults.
+        // --------------------------------------------------------------------
+
+        timeCard = new TimesheetEntry()
+        {
+            EnteredAt = DateTime.Today
+        };
+
+
+        // --------------------------------------------------------------------
+        // Attempt to load the time card, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            timeCard = await timesheetEntryService.GetTimesheetEntryByIdAsync(Id.Value);
+
+            hours = Math.Floor(timeCard.Minutes / 60.0).ToString();
+            minutes = (timeCard.Minutes % 60.0).ToString();
+
+            // Set the customer, job, and task based on the TaskId for this time card.
+            await RefreshCustomers(timeCard.Task.Job.CustomerId);
+            await RefreshJobs(timeCard.Task.JobId);
+            await RefreshTasks(timeCard.TaskId);
+
+            // Set the user based on the UserId for this time card.
+            await RefreshUsers();
+        }
+        else
+        {
+            // Set the customer, job, and task by selecting defaults.
+            await RefreshCustomers();
+
+            // Set a default user.
+            await RefreshUsers();
+        }
+
+
+        loading = false;
+    }
+
+    private async void SelectedCustomerValueChangeHandler(int customerId)
+    {
+        selectedCustomerId = customerId;
+        await RefreshJobs();
+    }
+
+    private async void SelectedJobValueChangeHandler(int jobId)
+    {
+        selectedJobId = jobId;
+        await RefreshTasks();
+    }
+
+    private void SelectedTaskValueChangeHandler(int taskId)
+    {
+        selectedTaskId = taskId;
+
+        // Update the time card.
+        timeCard.TaskId = selectedTaskId;
+    }
+
+    private void SelectedUserValueChangeHandler(int userId)
+    {
+        selectedUserId = userId;
+
+        // Update the time card.
+        timeCard.UserId = selectedUserId;
+    }
+
+    private async System.Threading.Tasks.Task RefreshUsers()
+    {
+        loadingUsers = true;
+
+        var result = await userService.GetUsersAsync();
+        users = result.Item1;
+
+        // Update the selected user.
+        if (timeCard.UserId != 0)
+            SelectedUserValueChangeHandler(timeCard.UserId);
+        else
+            SelectedUserValueChangeHandler(users.FirstOrDefault().Id);
+
+        loadingUsers = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshCustomers(int? customerId = null)
+    {
+        loadingCustomers = true;
+
+        var result = await customerService.GetCustomersAsync();
+        customers = result.Item1;
+
+        if (customerId.HasValue)
+        {
+            // Attempt to find the requested customer in the list.
+            var exists = customers.Where(c => c.Id == customerId).Any();
+            if (exists)
+                selectedCustomerId = customerId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedCustomerId = customers.FirstOrDefault().Id;
+
+            // Trigger refresh for jobs.
+            await RefreshJobs();
+        }
+
+        loadingCustomers = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshJobs(int? jobId = null)
+    {
+        loadingJobs = true;
+
+        var result = await jobService.GetJobsAsync(selectedCustomerId);
+        jobs = result.Item1;
+
+        if (jobId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = jobs.Where(j => j.Id == jobId).Any();
+            if (exists)
+                selectedJobId = jobId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedJobId = jobs.FirstOrDefault().Id;
+
+            // Trigger refresh for tasks.
+            await RefreshTasks();
+        }
+
+        loadingJobs = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshTasks(int? taskId = null)
+    {
+        loadingTasks = true;
+
+        var result = await taskService.GetTasksAsync(selectedJobId);
+        tasks = result.Item1;
+
+        if (taskId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = tasks.Where(t => t.Id == taskId).Any();
+            if (exists)
+                selectedTaskId = taskId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedTaskId = tasks.FirstOrDefault().Id;
+
+            // Update the time card.
+            timeCard.TaskId = selectedTaskId;
+        }
+
+        loadingTasks = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task SaveTimeCard()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this time card?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        timeCard.Minutes = (int.Parse(hours) * 60) + int.Parse(minutes);
+
+        // Save the time card on the server and close the dialog.
+        await timesheetEntryService.SaveTimesheetEntryAsync(timeCard);
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task DeleteTimeCard()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this time card?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+
+        // Delete the time card on the server and close the dialog.
+        var result = await timesheetEntryService.DeleteTimesheetEntryAsync(timeCard.Id);
+        if (result)
+            dialogService.Close(false);
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

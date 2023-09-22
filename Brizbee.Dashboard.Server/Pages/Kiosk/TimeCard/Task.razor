@@ -1,0 +1,342 @@
+﻿@page "/kiosk/timecard/task"
+
+@using System.ComponentModel.DataAnnotations
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject SharedService sharedService
+@inject KioskService kioskService
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                    </NavLink>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
+            <div class="panel panel-default panel-kiosk">
+                <div class="panel-heading">Add Time Card</div>
+                <div class="panel-body">
+                    <EditForm Model="@timeCard" OnValidSubmit="Continue" class="form-horizontal" autocomplete="off" style="padding-top: 2em;">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group">
+                            <label for="in_at" class="col-sm-3 control-label">Date</label>
+                            <div class="col-sm-9">
+                                <InputDate @bind-Value="timeCard.EnteredAt" class="form-control" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Time</label>
+                            <div class="col-sm-9">
+                                <div class="row">
+                                    <div class="col-md-3" style="padding-right: 0;">
+                                        <InputSelect @bind-Value="hours" class="form-control" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)">
+                                            @for (int i = 0; i <= 23; i++)
+                                            {
+                                                <option value="@i">@i</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-sm-2" style="padding-left: 7px;">
+                                        <p class="form-control-static">hours</p>
+                                    </div>
+                                    <div class="col-md-3" style="padding-right: 0;">
+                                        <InputSelect @bind-Value="minutes" class="form-control" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)">
+                                            @for (int i = 0; i <= 59; i++)
+                                            {
+                                                <option value="@i">@i</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-sm-2" style="padding-left: 7px;">
+                                        <p class="form-control-static">minutes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="in_at" class="col-sm-3 control-label">Notes</label>
+                            <div class="col-sm-9">
+                                <InputTextArea @bind-Value="timeCard.Notes" class="form-control" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
+                            <div class="col-sm-9">
+                                <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)"
+                                             ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedCustomerId )"
+                                             Value="@selectedCustomerId">
+                                    @foreach (var customer in customers)
+                                    {
+                                        <option value="@customer.Id">@customer.Number &ndash; @customer.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
+                            <div class="col-sm-9">
+                                <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)"
+                                             ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedJobId )"
+                                             Value="@selectedJobId">
+                                    @foreach (var job in jobs)
+                                    {
+                                        <option value="@job.Id">@job.Number &ndash; @job.Name </option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="padding-bottom: 2em;">
+                            <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
+                            <div class="col-sm-9">
+                                <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)"
+                                             ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedTaskId )"
+                                             Value="@selectedTaskId">
+                                    @foreach (var task in tasks)
+                                    {
+                                        <option value="@task.Id">@task.Number &ndash; @task.Name </option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-block btn-lg btn-primary" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)">Continue</button>
+                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/status" disabled="@working">
+                            Cancel
+                        </NavLink>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private bool loading = true;
+    private bool loadingCustomers = true;
+    private bool loadingJobs = true;
+    private bool loadingTasks = true;
+    private TimesheetEntry timeCard = new TimesheetEntry();
+    private int selectedCustomerId;
+    private int selectedJobId;
+    private int selectedTaskId;
+    private string hours = "0";
+    private string minutes = "0";
+    private List<Customer> customers = new List<Customer>();
+    private List<Core.Models.Task> tasks = new List<Core.Models.Task>();
+    private List<Job> jobs = new List<Job>();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        loading = true;
+
+        // Set defaults.
+        timeCard = new TimesheetEntry()
+        {
+            EnteredAt = DateTime.Today
+        };
+
+        currentUser = sharedService.CurrentUser;
+
+        // Set the customer, job, and task by selecting defaults.
+        await RefreshCustomers();
+
+        loading = false;
+    }
+
+    private async void SelectedCustomerValueChangeHandler(int customerId)
+    {
+        selectedCustomerId = customerId;
+        await RefreshJobs();
+    }
+
+    private async void SelectedJobValueChangeHandler(int jobId)
+    {
+        selectedJobId = jobId;
+        await RefreshTasks();
+    }
+
+    private void SelectedTaskValueChangeHandler(int taskId)
+    {
+        selectedTaskId = taskId;
+
+        // Update the time card.
+        timeCard.TaskId = selectedTaskId;
+    }
+
+    private async System.Threading.Tasks.Task RefreshCustomers(int? customerId = null)
+    {
+        loadingCustomers = true;
+
+        customers = await kioskService.GetCustomersAsync();
+
+        if (customerId.HasValue)
+        {
+            // Attempt to find the requested customer in the list.
+            var exists = customers.Where(c => c.Id == customerId).Any();
+            if (exists)
+                selectedCustomerId = customerId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedCustomerId = customers.FirstOrDefault().Id;
+
+            // Trigger refresh for jobs.
+            await RefreshJobs();
+        }
+
+        loadingCustomers = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshJobs(int? jobId = null)
+    {
+        loadingJobs = true;
+
+        jobs = await kioskService.GetProjectsAsync(selectedCustomerId);
+
+        if (jobId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = jobs.Where(j => j.Id == jobId).Any();
+            if (exists)
+                selectedJobId = jobId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedJobId = jobs.FirstOrDefault().Id;
+
+            // Trigger refresh for tasks.
+            await RefreshTasks();
+        }
+
+        loadingJobs = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshTasks(int? taskId = null)
+    {
+        loadingTasks = true;
+
+        tasks = await kioskService.GetTasksAsync(selectedJobId);
+
+        if (taskId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = tasks.Where(t => t.Id == taskId).Any();
+            if (exists)
+                selectedTaskId = taskId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedTaskId = tasks.FirstOrDefault().Id;
+
+            // Update the time card.
+            timeCard.TaskId = selectedTaskId;
+        }
+
+        loadingTasks = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task Continue()
+    {
+        working = true;
+        StateHasChanged();
+
+        // Calculate the minutes based on the hours and minutes.
+        timeCard.Minutes = (int.Parse(hours) * 60) + int.Parse(minutes);
+
+        // Apply the user id.
+        timeCard.UserId = sharedService.CurrentUser.Id;
+
+        // Save the time card on the server and close the dialog.
+        var result = await kioskService.AddTimeCardAsync(timeCard.EnteredAt, timeCard.Minutes, timeCard.Notes, timeCard.TaskId);
+
+        if (result)
+        {
+            NavigationManager.NavigateTo("kiosk/timecard/done");
+        }
+        else
+        {
+            working = false;
+            StateHasChanged();
+        }
+    }
+
+    class TimeZoneModel
+    {
+        [Required]
+        public string CountryCode { get; set; }
+
+        [Required]
+        public string TimeZone { get; set; }
+    }
+}

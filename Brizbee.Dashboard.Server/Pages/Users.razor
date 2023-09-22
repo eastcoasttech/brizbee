@@ -1,0 +1,343 @@
+﻿@page "/users"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject PunchService punchService
+@inject DialogService dialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="who">Who's Working</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="users">All Users</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenNewUserDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New User</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshUsers())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Users-->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Name"))">
+                        Name
+                        @if (sortBy == "Name" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Name" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-3">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("EmailAddress"))">
+                        Email Address
+                        @if (sortBy == "EmailAddress" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "EmailAddress" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Pin"))">
+                        PIN
+                        @if (sortBy == "Pin" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "Pin" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("TimeZone"))">
+                        Default Time Zone
+                        @if (sortBy == "TimeZone" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "TimeZone" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    Active?
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CreatedAt"))">
+                        Added
+                        @if (sortBy == "CreatedAt" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "CreatedAt" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyUserDialog(user))">
+                    <td><a href="javascript:void(0)">@user.Name</a></td>
+                    <td><a href="javascript:void(0)">@user.EmailAddress</a></td>
+                    <td><a href="javascript:void(0)">@user.Pin</a></td>
+                    <td><a href="javascript:void(0)">@user.TimeZone</a></td>
+                    <td class="text-center">
+                        @if (user.IsActive == true)
+                        {
+                            <i class="fas fa-check"></i>
+                        }
+                    </td>
+                    <td><a href="javascript:void(0)">@user.CreatedAt.ToString("M/d/yyyy h:mm tt")</a></td>
+                </tr>
+            }
+            @if (working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="6"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!working && users.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="6">No Users</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (usersCount > pageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (usersCount > 0 && !working)
+            {
+                <p class="form-control-static pull-left">@(usersPageStart + 1) to @(usersPageStart + pageSize < usersCount ? usersPageStart + pageSize : usersCount) of @usersCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private List<User> users = new List<User>();
+    private string sortBy = "Name";
+    private string sortDirection = "ASC";
+    private int pageSize = 100;
+    private int skip = 0;
+    private long usersCount = 0;
+    private int usersPageStart = 0;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+
+        await RefreshUsers();
+
+        dialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+
+        dialogService.OnClose -= Close;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        usersPageStart = usersPageStart + pageSize;
+        skip = usersPageStart;
+        await RefreshUsers();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        usersPageStart = usersPageStart - pageSize;
+        skip = usersPageStart;
+        await RefreshUsers();
+    }
+
+    private async void Close(dynamic result)
+    {
+        await RefreshUsers();
+    }
+
+    private async System.Threading.Tasks.Task RefreshUsers()
+    {
+        working = true;
+        users.Clear();
+        var result = await userService.GetUsersAsync(pageSize, skip, sortBy, sortDirection);
+        users = result.Item1;
+        usersCount = result.Item2.GetValueOrDefault();
+        working = false;
+        StateHasChanged();
+    }
+
+    private void OpenNewUserDialog()
+    {
+        dialogService.Open<UserDialog>("New User",
+                                new Dictionary<string, object>() { { "Id", null } },
+                                new DialogOptions() { Width = "800px" });
+    }
+
+    private void OpenModifyUserDialog(User user)
+    {
+        dialogService.Open<UserDialog>("Edit User",
+                                new Dictionary<string, object>() { { "Id", user.Id } },
+                                new DialogOptions() { Width = "800px" });
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        sortBy = column;
+
+        if (sortDirection == "ASC")
+        {
+            sortDirection = "DESC";
+        }
+        else
+        {
+            sortDirection = "ASC";
+        }
+
+        await RefreshUsers();
+    }
+}

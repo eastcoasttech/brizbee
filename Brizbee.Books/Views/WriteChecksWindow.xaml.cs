@@ -1,10 +1,10 @@
 ﻿using Brizbee.Books.ViewModels;
 using System;
-using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
+using Brizbee.Core.Models.Accounting;
 
 namespace Brizbee.Books.Views;
 
@@ -26,8 +26,26 @@ public partial class WriteChecksWindow : Window
     {
         try
         {
+            await _dataContext.RefreshExpenseAccountsAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Could Not Load the Expense Accounts", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        
+        try
+        {
+            await _dataContext.RefreshVendorsAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Could Not Load the Vendors", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        try
+        {
             _dataContext.Skip = 0;
-            await _dataContext.RefreshTransactionAsync();
+            await _dataContext.RefreshCheckAsync();
         }
         catch (Exception ex)
         {
@@ -40,7 +58,7 @@ public partial class WriteChecksWindow : Window
         try
         {
             _dataContext.Skip -= 1;
-            await _dataContext.RefreshTransactionAsync();
+            await _dataContext.RefreshCheckAsync();
         }
         catch (Exception ex)
         {
@@ -53,7 +71,7 @@ public partial class WriteChecksWindow : Window
         try
         {
             _dataContext.Skip += 1;
-            await _dataContext.RefreshTransactionAsync();
+            await _dataContext.RefreshCheckAsync();
         }
         catch (Exception ex)
         {
@@ -66,9 +84,14 @@ public partial class WriteChecksWindow : Window
         throw new NotImplementedException();
     }
 
-    private void ButtonSave_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonSave_OnClick(object sender, RoutedEventArgs e)
     {
-        throw new NotImplementedException();
+        var (success, message) = await _dataContext.SaveCheckAsync();
+
+        if (!success)
+        {
+            MessageBox.Show(message, $"Could Not Save the Check\r\n\r\n{message}", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void ButtonDelete_OnClick(object sender, RoutedEventArgs e)
@@ -83,5 +106,25 @@ public partial class WriteChecksWindow : Window
             Task.Delay(500);
             _dataContext.UpdateVerbalizedAmount();
         });
+    }
+
+    private void ButtonDeleteLine_OnClick(object sender, RoutedEventArgs e)
+    {
+        _dataContext.DeleteCheckExpenseLine();
+    }
+
+    private void ButtonAddLine_OnClick(object sender, RoutedEventArgs e)
+    {
+        _dataContext.AddCheckExpenseLine();
+
+        // Focus on new row and start editing the first cell.
+        DataGridExpenses.CurrentCell = new DataGridCellInfo(
+            DataGridExpenses.Items[^1], DataGridExpenses.Columns[0]);
+        DataGridExpenses.BeginEdit();
+    }
+
+    private void ButtonExport_OnClick(object sender, RoutedEventArgs e)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,0 +1,104 @@
+﻿@page "/dialogs/task-template"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject DialogService dialogService
+@inject TaskTemplateService taskTemplateService
+@inject SharedService sharedService
+
+<EditForm Model="@template" OnValidSubmit="SaveTemplate" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="task_template_name" class="col-sm-3 control-label">Name</label>
+        <div class="col-sm-9">
+            <InputText class="form-control" id="task_template_name" @bind-Value="template.Name" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="task_template_template" class="col-sm-3 control-label">Template</label>
+        <div class="col-sm-9">
+            <InputTextArea id="task_template_template" @bind-Value="template.Template" class="form-control" disabled="@(working || loading)" rows="20" />
+        </div>
+    </div>
+
+    <hr />
+
+    @if (template.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteTask" disabled="@(working || loading)">Delete</button>
+    }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Parameter] public int? ProjectId { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private TaskTemplate template = new TaskTemplate();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the task template, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            template = await taskTemplateService.GetTaskTemplateByIdAsync(Id.Value);
+        }
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveTemplate()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this task template?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Save the task template on the server and close the dialog.
+        await taskTemplateService.SaveTaskTemplateAsync(template);
+        dialogService.Close(true);
+    }
+
+    private async System.Threading.Tasks.Task DeleteTask()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this task template?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the task template on the server and close the dialog.
+        var result = await taskTemplateService.DeleteTaskTemplateAsync(template.Id);
+        if (result)
+            dialogService.Close(true);
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

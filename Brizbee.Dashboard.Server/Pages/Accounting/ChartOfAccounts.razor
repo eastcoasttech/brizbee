@@ -1,0 +1,308 @@
+﻿@page "/accounting/chart-of-accounts"
+
+@using Brizbee.Core.Models.Accounting
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject SharedService SharedService
+@inject AccountService AccountService
+@inject DialogService DialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+                <li class="active">
+                    <NavLink class="nav-link" href="accounting/start">
+                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Books
+                    </NavLink>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="accounting/start">Start</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshAccounts())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Accounts-->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/NUMBER"))">
+                        Name
+                        @if (_sortBy == "ACCOUNTS/NUMBER" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "ACCOUNTS/NUMBER" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/NAME"))">
+                        Name
+                        @if (_sortBy == "ACCOUNTS/NAME" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "ACCOUNTS/NAME" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/TYPE"))">
+                        Name
+                        @if (_sortBy == "ACCOUNTS/TYPE" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "ACCOUNTS/TYPE" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var account in _accounts)
+            {
+                <tr class="fadeIn selectable" @onclick="@(e => NavigateToEntries(account))">
+                    <td><a href="javascript:void(0)">@account.Number</a></td>
+                    <td><a href="javascript:void(0)">@account.Name</a></td>
+                    <td><a href="javascript:void(0)">@account.Type</a></td>
+                </tr>
+            }
+            @if (_working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!_working && _accounts.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="3">No accounts have been added.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (_accountsCount > PageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (_accountsCount > 0 && !_working)
+            {
+                <p class="form-control-static pull-left">@(_accountsPageStart + 1) to @(_accountsPageStart + PageSize < _accountsCount ? _accountsPageStart + PageSize : _accountsCount) of @_accountsCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _working = false;
+    private User _currentUser;
+    private List<Account> _accounts = new List<Account>();
+    private string _sortBy = "ACCOUNTS/NUMBER";
+    private string _sortDirection = "ASC";
+    private const int PageSize = 100;
+    private int _skip = 0;
+    private long _accountsCount = 0;
+    private int _accountsPageStart = 0;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+
+        await RefreshAccounts();
+
+        DialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+
+        DialogService.OnClose -= Close;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        _accountsPageStart = _accountsPageStart + PageSize;
+        _skip = _accountsPageStart;
+        await RefreshAccounts();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        _accountsPageStart = _accountsPageStart - PageSize;
+        _skip = _accountsPageStart;
+        await RefreshAccounts();
+    }
+
+    private async void Close(dynamic result)
+    {
+        if ((result as string) == "account.updated")
+        {
+            await RefreshAccounts();
+        }
+    }
+
+    private async System.Threading.Tasks.Task RefreshAccounts()
+    {
+        _working = true;
+        _accounts.Clear();
+        var result = await AccountService.GetAccountsAsync(PageSize, _skip, _sortBy, _sortDirection);
+        _accounts = result.Item1;
+        _accountsCount = result.Item2.GetValueOrDefault();
+        _working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        _sortBy = column;
+
+        if (_sortDirection == "ASC")
+        {
+            _sortDirection = "DESC";
+        }
+        else
+        {
+            _sortDirection = "ASC";
+        }
+
+        await RefreshAccounts();
+    }
+
+    private void OpenModifyAccountDialog(Account account)
+    {
+        DialogService.Open<InventoryItemDialog>("Edit Account",
+                                new Dictionary<string, object>() { { "Id", account.Id } },
+                                new DialogOptions() { Width = "600px" });
+    }
+
+    private void NavigateToEntries(Account account)
+    {
+        NavigationManager.NavigateTo($"accounting/accounts/{account.Id}/entries");
+    }
+}

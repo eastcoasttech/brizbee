@@ -1,0 +1,206 @@
+﻿@page "/dialogs/search/projects"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject DialogService dialogService
+@inject JobService jobService
+@inject SharedService sharedService
+
+<div style="height: 400px; overflow-y: scroll;">
+    <table class="table table-condensed">
+        <thead>
+            <tr>
+                <th class="col-md-1"></th>
+                @if (sharedService.CurrentUser.Organization.ShowCustomerNumber)
+                {
+                    <th class="col-md-1">
+                        <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CUSTOMERS/NUMBER"))">
+                            Number
+                            @if (sortBy == "CUSTOMERS/NUMBER" && sortDirection == "ASC")
+                            {
+                                <span class="fa fa-caret-up"></span>
+                            }
+                            else if (sortBy == "CUSTOMERS/NUMBER" && sortDirection == "DESC")
+                            {
+                                <span class="fa fa-caret-down"></span>
+                            }
+                        </a>
+                    </th>
+                }
+
+                <th class="col-md-4">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("CUSTOMERS/NAME"))">
+                        Customer
+                        @if (sortBy == "CUSTOMERS/NAME" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "CUSTOMERS/NAME" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+
+                @if (sharedService.CurrentUser.Organization.ShowProjectNumber)
+                {
+                    <th class="col-md-1">
+                        <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("JOBS/NUMBER"))">
+                            Number
+                            @if (sortBy == "JOBS/NUMBER" && sortDirection == "ASC")
+                            {
+                                <span class="fa fa-caret-up"></span>
+                            }
+                            else if (sortBy == "JOBS/NUMBER" && sortDirection == "DESC")
+                            {
+                                <span class="fa fa-caret-down"></span>
+                            }
+                        </a>
+                    </th>
+                }
+
+                <th class="col-md-5">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("JOBS/NAME"))">
+                        Project
+                        @if (sortBy == "JOBS/NAME" && sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (sortBy == "JOBS/NAME" && sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in projects)
+            {
+                bool isChecked = false;
+                if (selectedProjects.Where(x => x.Id == project.Id).Any())
+                {
+                    isChecked = true;
+                }
+
+                <tr class="fadeIn" style="cursor: pointer;" @onclick="args => { ToggleCheckbox(project); }">
+                    <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(project, args.Value); }" /></td>
+                    
+                    @if (sharedService.CurrentUser.Organization.ShowCustomerNumber)
+                    {
+                        <td>@project.Customer.Number</td>
+                    }
+
+                    <td>@project.Customer.Name</td>
+                    
+                    
+                    @if (sharedService.CurrentUser.Organization.ShowProjectNumber)
+                    {
+                        <td>@project.Number</td>
+                    }
+
+                    <td>@project.Name</td>
+                </tr>
+            }
+            @if (working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? "3" : "2")"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">Add</button>
+
+@code {
+    [Parameter] public HashSet<Job> ExistingFilters { get; set; }
+
+    private List<Job> projects = new List<Job>(0);
+    private HashSet<Job> selectedProjects = new HashSet<Job>(0);
+    private string sortBy = "JOBS/NAME";
+    private string sortDirection = "ASC";
+    private bool working = false;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        selectedProjects = ExistingFilters;
+
+        await RefreshProjects();
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogSuccess(MouseEventArgs e)
+    {
+        dialogService.Close(selectedProjects);
+    }
+
+    private void CheckboxClicked(Job selected, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!selectedProjects.Contains(selected))
+            {
+                selectedProjects.Add(selected);
+            }
+        }
+        else
+        {
+            if (selectedProjects.Contains(selected))
+            {
+                selectedProjects.Remove(selected);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void ToggleCheckbox(Job project)
+    {
+        if (!selectedProjects.Contains(project))
+        {
+            selectedProjects.Add(project);
+        }
+        else
+        {
+            selectedProjects.Remove(project);
+        }
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshProjects()
+    {
+        working = true;
+        projects.Clear();
+
+        StateHasChanged();
+
+        var result = await jobService.GetExpandedJobsAsync(pageSize: 1000, sortBy: sortBy, sortDirection: sortDirection);
+        projects = result.Item1;
+
+        working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        sortBy = column;
+
+        if (sortDirection == "ASC")
+        {
+            sortDirection = "DESC";
+        }
+        else
+        {
+            sortDirection = "ASC";
+        }
+
+        await RefreshProjects();
+    }
+}

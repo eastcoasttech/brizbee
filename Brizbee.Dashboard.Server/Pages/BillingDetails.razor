@@ -1,0 +1,215 @@
+﻿@page "/billing-details"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject UserService userService
+@inject OrganizationService organizationService
+@inject DialogService dialogService
+@inject IJSRuntime JSRuntime
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 col-sm-12">
+            <ul class="nav nav-pills">
+                <li role="presentation"><NavLink href="organization-details">Organization Details</NavLink></li>
+                <li role="presentation" class="active"><NavLink href="billing-details">Billing Details</NavLink></li>
+                <li role="presentation"><NavLink href="task-templates">Task Templates</NavLink></li>
+                <li role="presentation"><NavLink href="organization-preferences">Organization Preferences</NavLink></li>
+            </ul>
+
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 col-sm-12">
+            <p style="font-weight: bold;">Current Plan</p>
+            @switch (organization.PlanId)
+            {
+                case 1:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Contractor - Up to 3 Users</p>
+                    break;
+                case 2:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Micro Business - Up to 10 Users</p>
+                    break;
+                case 3:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Small Business - Up to 20 Users</p>
+                    break;
+                case 4:
+                    <p style="font-size: 1.5em; margin-bottom: 1em;">Midsize Business - Up to 50 Users</p>
+                    break;
+            }
+            <p class="alert alert-info" style="margin-bottom: 2em;">Please contact us at <a href="mailto:support@brizbee.com">support@brizbee.com</a> to upgrade your plan for more users.</p>
+
+            <form id="payment-form" autocomplete="off">
+                @if (!string.IsNullOrEmpty(organization.StripeSourceId))
+                {
+                    <div class="form-group" style="margin-bottom: 2em;">
+                        <label for="card-element">
+                            Current Card
+                        </label>
+                        <p>@organization.StripeSourceCardBrand ending in @organization.StripeSourceCardLast4 expires @organization.StripeSourceCardExpirationMonth &ndash; @organization.StripeSourceCardExpirationYear</p>
+                    </div>
+                }
+
+                <div class="form-group" style="margin-bottom: 2em;">
+                    <label for="card-element">
+                        Update Credit or Debit Card
+                    </label>
+                    <div id="card-element">
+                        <!-- A Stripe Element will be inserted here. -->
+                    </div>
+                    <!-- Used to display Element errors. -->
+                    <div id="card-errors" role="alert"></div>
+                </div>
+
+                <button class="btn btn-primary btn-lg"><i class="fas fa-check" aria-hidden="true" style="margin-right: 5px;"></i> Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private Organization organization = new Organization();
+
+    private static Action<string> action;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        currentUser = sharedService.CurrentUser;
+
+        organization = await organizationService.GetOrganizationByIdAsync(currentUser.OrganizationId);
+
+        action = UpdateSourceId;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Prepare Stripe form
+            await JSRuntime.InvokeVoidAsync("setupStripe");
+        }
+    }
+
+    [JSInvokable]
+    public static void InvokeUpdateSourceId(string sourceId)
+    {
+        action.Invoke(sourceId);
+    }
+
+    public async void UpdateSourceId(string sourceId)
+    {
+        await organizationService.SaveSourceIdAsync(currentUser.OrganizationId, sourceId);
+        StateHasChanged();
+    }
+}

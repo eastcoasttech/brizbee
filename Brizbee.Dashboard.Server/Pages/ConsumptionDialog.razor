@@ -1,0 +1,115 @@
+﻿@page "/dialogs/consumption"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+
+@inject DialogService dialogService
+@inject QBDInventoryConsumptionService consumptionService
+
+<EditForm Model="@consumption" OnValidSubmit="SaveInventoryConsumption" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="consumption_created_at" class="col-sm-3 control-label">Created</label>
+        <div class="col-sm-9">
+            <p class="form-control-static">@TimeZoneInfo.ConvertTimeFromUtc(consumption.CreatedAt, systemTimeZone).ToString("MM/dd/yyyy h:mm tt")</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="consumption_item_full_name" class="col-sm-3 control-label">Item</label>
+        <div class="col-sm-9">
+            <p class="form-control-static">@(consumption.QBDInventoryItem != null ? consumption.QBDInventoryItem.Name : "")</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="consumption_quantity" class="col-sm-3 control-label">Quantity</label>
+        <div class="col-sm-9">
+            <InputNumber class="form-control" id="consumption_quantity" @bind-Value="consumption.Quantity" disabled="@(working || loading)" min="0" max="10000" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="consumption_created_by_user_name" class="col-sm-3 control-label">User</label>
+        <div class="col-sm-9">
+            <p class="form-control-static">@(consumption.CreatedByUser != null ? consumption.CreatedByUser.Name : "")</p>
+        </div>
+    </div>
+
+    <hr />
+
+    @if (consumption.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteConsumption" disabled="@(working || loading)">Delete</button>
+    }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public long? Id { get; set; }
+
+    private TimeZoneInfo systemTimeZone = TimeZoneInfo.Local;
+    private bool working = false;
+    private bool loading = true;
+    private QBDInventoryConsumption consumption = new QBDInventoryConsumption();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the consumption.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+            consumption = await consumptionService.GetQBDInventoryConsumptionByIdAsync(Id.Value);
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task DeleteConsumption()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this consumption?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the consumption on the server and close the dialog.
+        var result = await consumptionService.DeleteQBDInventoryConsumptionAsync(consumption.Id);
+        if (result)
+            dialogService.Close("consumption.deleted");
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task SaveInventoryConsumption()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this consumption?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Save on the server and close the dialog.
+        await consumptionService.SaveQbdInventoryConsumptionAsync(consumption);
+        dialogService.Close("consumption.updated");
+    }
+}

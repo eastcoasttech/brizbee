@@ -1,0 +1,294 @@
+﻿@page "/register"
+
+@using Brizbee.Dashboard.Server.Services
+@using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Serialization
+@using System.Globalization
+@using Brizbee.Core.Serialization
+@using NodaTime
+@using NodaTime.TimeZones
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject AuditService auditService
+@inject AuthService authService
+@inject KioskService kioskService
+@inject UserService userService
+@inject LockService lockService
+@inject PunchService punchService
+@inject CustomerService customerService
+@inject TaskService taskService
+@inject TaskTemplateService taskTemplateService
+@inject PopulateTemplateService populateTemplateService
+@inject JobService jobService
+@inject RateService rateService
+@inject OrganizationService organizationService
+@inject TimesheetEntryService timesheetEntryService
+@inject QBDInventoryItemService qbdInventoryItemService
+@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
+@inject ExportService exportService
+
+<div class="container-fluid fadeIn" style="min-height: 50vh;">
+    <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
+        <div class="col-md-4 col-md-offset-2" style="padding: 2em;">
+            <p class="text-center" style="margin-top: 4em; margin-bottom: 4em;">
+                <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
+            </p>
+            <p class="text-center text-muted" style="font-size: 2em;">Let us help you get started with a free consultation and guided setup.</p>
+            <p class="text-center text-muted" style="font-size: 3em; font-weight: bold;"><a href="mailto:sales@brizbee.com" style="text-decoration: none;">sales@brizbee.com</a></p>
+            <p class="text-center" style="margin-top: 2em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> No credit card required.</p>
+            <p class="text-center" style="margin-top: 1em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> Free 30 day trial.</p>
+            <p class="text-center" style="margin-top: 1em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> Cancel anytime.</p>
+        </div>
+        <div class="col-md-4 col-sm-12 col-xs-12">
+            <div class="panel panel-default" style="margin-bottom: 5px;">
+                <div class="panel-heading">
+                    Sign Up for BRIZBEE
+                </div>
+                <div class="panel-body" style="padding: 35px;">
+                    <EditForm Model="@registration" OnValidSubmit="RegisterAsync" autocomplete="off">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group">
+                            <label id="registration_organization_plan_id">Plan</label>
+                            <InputSelect id="registration_organization_plan_id" class="form-control input-lg" disabled="@working"
+                                         ValueChanged="@( (int x) => SelectedPlanIdValueChangeHandler(x) )"
+                                         ValueExpression="@( () => selectedPlanId )"
+                                         Value="@selectedPlanId">
+                                <option value="1">Contractor - Up to 3 Users</option>
+                                <option value="2">Micro Business - Up to 10 Users</option>
+                                <option value="3">Small Business - Up to 20 Users</option>
+                                <option value="4">Midsize Business - Up to 50 Users</option>
+                            </InputSelect>
+                        </div>
+                        <div class="form-group">
+                            <label for="registration_user_email_address">Email Address</label>
+                            <InputText @bind-Value="registration.EmailAddress" class="form-control input-lg" id="registration_user_email_address" type="email" disabled="@working" autofocus />
+                        </div>
+                        <div class="form-group">
+                            <label id="registration_user_name">Your Name</label>
+                            <InputText @bind-Value="registration.Name" class="form-control input-lg" id="registration_user_name" disabled="@working" />
+                        </div>
+                        <div class="form-group">
+                            <label id="registration_organization_name">Company Name</label>
+                            <InputText @bind-Value="registration.Organization" class="form-control input-lg" id="registration_organization_name" disabled="@working" />
+                            <p class="help-block">Ex. Matrix Corp, R & D HVAC, Great Lakes Auto Mall</p>
+                        </div>
+                        <div class="form-group">
+                            <label id="registration_user_password">Password</label>
+                            <InputText @bind-Value="registration.Password" class="form-control input-lg" type="password" disabled="@working" />
+                            <p class="help-block">Must be 8+ characters and include both numbers and letters</p>
+                        </div>
+
+                        @if (false)
+                        {
+                            <div class="form-group">
+                                <label id="registration_country">Your Country</label>
+                                <InputSelect class="form-control input-lg" id="registration_country" disabled="@working"
+                                             ValueChanged="@( (string x) => SelectedCountryCodeValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedCountryCode )"
+                                             Value="@selectedCountryCode">
+                                    @foreach (var country in countries)
+                                    {
+                                        <option value="@country.CountryCode">@country.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="form-group">
+                                <label id="registration_organization_time_zone">Your Time Zone</label>
+                                <InputSelect class="form-control input-lg" id="registration_organization_time_zone" disabled="@working"
+                                             ValueChanged="@( (string x) => SelectedTimeZoneValueChangeHandler(x) )"
+                                             ValueExpression="@( () => selectedTimeZone )"
+                                             Value="@selectedTimeZone">
+                                    @foreach (var timeZone in filteredTimeZones)
+                                    {
+                                        <option value="@timeZone.Id">@timeZone.Id</option>
+                                    }
+                                </InputSelect>
+                                <p class="help-block">
+                                    Your punches will default to this time zone unless you specify otherwise
+                                </p>
+                            </div>
+                        }
+
+                        <div class="text-center" style="margin-top: 2em; margin-bottom: 2em;">
+                            <button type="submit" class="btn btn-primary btn-lg" style="padding: 1em 2em 1em 2em; background-color: #228B22; border-color: darkgreen;" disabled="@working">Save and Continue <i class="@(!working ? "far fa-arrow-alt-circle-right" : "hidden")" aria-hidden="true"></i><i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i></button>
+                        </div>
+                        <p class="text-center text-muted">By clicking Save and Continue, you agree to our <a href="https://www.brizbee.com/terms.html">Terms of Service</a> and have read our <a href="https://www.brizbee.com/privacy.html">Privacy Policy</a>.</p>
+                    </EditForm>
+                </div>
+            </div>
+            <p class="text-muted" style="padding-top: 0.5em; font-size: 1.25em;">
+                Already have an account?
+                <NavLink href="/">Login Now</NavLink>
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool loading = true;
+    private bool working = false;
+    private Brizbee.Dashboard.Server.Serialization.Registration registration = new Brizbee.Dashboard.Server.Serialization.Registration();
+    private int selectedPlanId = 1;
+    private string selectedTimeZone = "";
+    private string selectedCountryCode = "";
+    private List<Country> countries = new List<Country>(0);
+    private List<IanaTimeZone> zones = new List<IanaTimeZone>(0);
+    private List<IanaTimeZone> filteredTimeZones = new List<IanaTimeZone>(0);
+
+    protected override void OnInitialized()
+    {
+        // --------------------------------------------------------------------
+        // Build list of time zones.
+        // --------------------------------------------------------------------
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var tzdb = DateTimeZoneProviders.Tzdb;
+        var countryCode = "";
+
+        var list =
+            from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+            where string.IsNullOrEmpty(countryCode) ||
+                  location.CountryCode.Equals(countryCode,
+                    StringComparison.OrdinalIgnoreCase)
+            let zoneId = location.ZoneId
+            let tz = tzdb[zoneId]
+            let offset = tz.GetZoneInterval(now).StandardOffset
+            orderby offset, zoneId
+            select new
+            {
+                Id = zoneId,
+                CountryCode = location.CountryCode
+            };
+
+        foreach (var z in list)
+        {
+            zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+        }
+
+
+        // --------------------------------------------------------------------
+        // Build list of countries.
+        // --------------------------------------------------------------------
+
+        CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+        foreach (var culture in cultures)
+        {
+            try
+            {
+                var region = new RegionInfo(culture.LCID);
+                if (!countries.Where(c => c.Name == region.EnglishName).Any())
+                {
+                    countries.Add(new Country() { CountryCode = region.TwoLetterISORegionName, Name = region.EnglishName });
+                }
+            }
+            catch (CultureNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
+        // --------------------------------------------------------------------
+        // Set defaults.
+        // --------------------------------------------------------------------
+
+        selectedCountryCode = "US";
+        SelectedCountryCodeValueChangeHandler(selectedCountryCode);
+
+        selectedTimeZone = "America/New_York";
+        SelectedTimeZoneValueChangeHandler(selectedTimeZone);
+
+        selectedPlanId = 1;
+        SelectedPlanIdValueChangeHandler(selectedPlanId);
+
+
+        // --------------------------------------------------------------------
+        // Set plan from optional query parameter.
+        // --------------------------------------------------------------------
+
+        StringValues planIdQueryParameter;
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("PlanId", out planIdQueryParameter))
+        {
+            selectedPlanId = Convert.ToInt32(planIdQueryParameter);
+            SelectedPlanIdValueChangeHandler(selectedPlanId);
+        }
+    }
+
+    private async void RegisterAsync()
+    {
+        working = true;
+
+        // Register the user.
+        var success = await userService.RegisterAsync(registration);
+
+        if (!success)
+            working = true;
+
+        // Authenticate the user.
+        var token = await authService.AuthenticateWithEmailAsync(new EmailSession()
+        {
+            EmailAddress = registration.EmailAddress,
+            EmailPassword = registration.Password
+        });
+        
+        // Save token to local storage.
+        await localStorageService.SetLocalStorage("Token", token);
+
+        // Update headers on services.
+        auditService.ConfigureHeadersWithToken(token);
+        authService.ConfigureHeadersWithToken(token);
+        kioskService.ConfigureHeadersWithToken(token);
+        userService.ConfigureHeadersWithToken(token);
+        punchService.ConfigureHeadersWithToken(token);
+        lockService.ConfigureHeadersWithToken(token);
+        customerService.ConfigureHeadersWithToken(token);
+        taskService.ConfigureHeadersWithToken(token);
+        taskTemplateService.ConfigureHeadersWithToken(token);
+        populateTemplateService.ConfigureHeadersWithToken(token);
+        jobService.ConfigureHeadersWithToken(token);
+        rateService.ConfigureHeadersWithToken(token);
+        organizationService.ConfigureHeadersWithToken(token);
+        timesheetEntryService.ConfigureHeadersWithToken(token);
+        qbdInventoryItemService.ConfigureHeadersWithToken(token);
+        qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+        qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+        qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+        exportService.ConfigureHeadersWithToken(token);
+
+        // Configure shared service.
+        sharedService.CurrentUser = await authService.GetMeAsync();
+        sharedService.Token = token;
+
+        NavigationManager.NavigateTo("kiosk/status");
+    }
+
+    private void SelectedPlanIdValueChangeHandler(int planId)
+    {
+        selectedPlanId = planId;
+
+        // Update the registration.
+        registration.PlanId = selectedPlanId;
+    }
+
+    private void SelectedCountryCodeValueChangeHandler(string country)
+    {
+        selectedCountryCode = country;
+        filteredTimeZones = zones.Where(z => z.CountryCode == selectedCountryCode).ToList();
+    }
+
+    private void SelectedTimeZoneValueChangeHandler(string timeZone)
+    {
+        selectedTimeZone = timeZone;
+        registration.TimeZone = selectedTimeZone;
+    }
+}
