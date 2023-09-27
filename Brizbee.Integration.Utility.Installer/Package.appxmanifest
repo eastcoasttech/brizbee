@@ -9,7 +9,7 @@
   <Identity
     Name="63628EastCoastTechnologyS.BRIZBEEIntegrationUtilit"
     Publisher="CN=4633D7BB-19EF-4A9B-B46B-865EFDADD8C1"
-    Version="1.0.3.0" />
+    Version="1.0.4.0" />
 
   <Properties>
     <DisplayName>BRIZBEE Integration Utility</DisplayName>
