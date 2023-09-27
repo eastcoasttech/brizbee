@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Database.SqlServer"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Books", "Brizbee.Books\Brizbee.Books.csproj", "{2FD0134F-B68F-4357-9FD3-64BB8DE1CCA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Dashboard.Server", "Brizbee.Dashboard.Server\Brizbee.Dashboard.Server.csproj", "{0EEF1AE6-F1EF-4224-B46A-F106F5753CFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Dashboard.Server", "Brizbee.Dashboard.Server\Brizbee.Dashboard.Server.csproj", "{0EEF1AE6-F1EF-4224-B46A-F106F5753CFB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,108 +1,99 @@
 ﻿using Brizbee.Core.Models;
 using Brizbee.Dashboard.Server.Serialization;
 
-namespace Brizbee.Dashboard.Server.Services
+namespace Brizbee.Dashboard.Server.Services;
+
+public class SharedService
 {
-    public class SharedService
+    private User? _currentUser;
+
+    private string? _token;
+
+    private DateTime _rangeMin;
+
+    private DateTime _rangeMax;
+
+    private PunchFilters? _punchFilters;
+
+    public User? CurrentUser
     {
-        private User _currentUser;
-        private string _token;
-        private DateTime _rangeMin;
-        private DateTime _rangeMax;
-        private PunchFilters _punchFilters;
-
-        public User CurrentUser
+        get => _currentUser;
+        set
         {
-            get
-            {
-                return _currentUser;
-            }
-            set
-            {
-                _currentUser = value;
-                NotifyDataChanged();
-            }
+            _currentUser = value;
+            NotifyDataChanged();
         }
+    }
 
-        public string Token
+    public string? Token
+    {
+        get => _token;
+        set
         {
-            get
-            {
-                return _token;
-            }
-            set
-            {
-                _token = value;
-                NotifyDataChanged();
-            }
+            _token = value;
+            NotifyDataChanged();
         }
+    }
 
-        public DateTime RangeMin
+    public DateTime RangeMin
+    {
+        get => _rangeMin == DateTime.MinValue ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0) : _rangeMin;
+        set
         {
-            get
-            {
-                return _rangeMin == DateTime.MinValue ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0) : _rangeMin;
-            }
-            set
-            {
-                _rangeMin = value;
-                NotifyDataChanged();
-            }
+            _rangeMin = value;
+            NotifyDataChanged();
         }
+    }
 
-        public DateTime RangeMax
+    public DateTime RangeMax
+    {
+        get => _rangeMax == DateTime.MinValue ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59) : _rangeMax;
+        set
         {
-            get
-            {
-                return _rangeMax == DateTime.MinValue ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59) : _rangeMax;
-            }
-            set
-            {
-                _rangeMax = value;
-                NotifyDataChanged();
-            }
+            _rangeMax = value;
+            NotifyDataChanged();
         }
+    }
 
-        public PunchFilters PunchFilters
+    public PunchFilters PunchFilters
+    {
+        get
         {
-            get
+            if (_punchFilters == null)
             {
-                if (_punchFilters == null)
+                _punchFilters = new PunchFilters()
                 {
-                    _punchFilters = new PunchFilters()
-                    {
-                        Users = new HashSet<User>(),
-                        Tasks = new HashSet<Core.Models.Task>(),
-                        Projects = new HashSet<Job>(),
-                        Customers = new HashSet<Customer>()
-                    };
-                    NotifyDataChanged();
-                    return _punchFilters;
-                }
-                else
-                    return _punchFilters;
-            }
-            set
-            {
-                _punchFilters = value;
+                    Users = new HashSet<User>(),
+                    Tasks = new HashSet<Core.Models.Task>(),
+                    Projects = new HashSet<Job>(),
+                    Customers = new HashSet<Customer>()
+                };
                 NotifyDataChanged();
+                return _punchFilters;
             }
+            else
+                return _punchFilters;
         }
-
-        public Core.Models.Task AttemptedTask { get; set; }
-
-        public event Action OnChange;
-
-        private void NotifyDataChanged() => OnChange?.Invoke();
-
-        public void Reset()
+        set
         {
-            // Clear variables
-            _token = null;
-            _rangeMin = DateTime.Now;
-            _rangeMax = DateTime.Now;
-            _currentUser = null;
-            _punchFilters = null;
+            _punchFilters = value;
+            NotifyDataChanged();
         }
+    }
+
+    public Core.Models.Task? AttemptedTask { get; set; }
+
+    public event Action? OnChange;
+
+    private void NotifyDataChanged() => OnChange?.Invoke();
+
+    public void Reset()
+    {
+        // Clear variables
+        _token = null;
+        _rangeMin = DateTime.Now;
+        _rangeMax = DateTime.Now;
+        _currentUser = null;
+        _punchFilters = null;
     }
 }

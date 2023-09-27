@@ -36,7 +36,7 @@ CREATE TABLE [dbo].[Vendors]
     (
         [CreatedAt]      DATETIME2 (7)  NOT NULL,
         [Description]    VARCHAR (3000) NULL,
-        [Id]             INT            IDENTITY (1, 1) NOT NULL,
+        [Id]             BIGINT            IDENTITY (1, 1) NOT NULL,
         [Name]           VARCHAR (100)  NOT NULL,
         [Number]         VARCHAR (20)   NOT NULL,
         [OrganizationId] INT            NOT NULL,

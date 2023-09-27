@@ -23,7 +23,7 @@
                 @group Tasks
             </td>
             <td style="padding-top: 0.5em; padding-bottom: 0.5em;">
-                <a href="@(downloadUrl + "&TaskGroupScope=" + group)" class="btn btn-default btn-block">Download</a>
+                <a href="@(downloadUrl + "&TaskGroupScope=" + group)" class="btn btn-secondary btn-block">Download</a>
             </td>
         </tr>
     }
@@ -31,7 +31,7 @@
 
 <hr />
 
-<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-secondary pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
 
 @code {
     [Parameter] public int? Id { get; set; }

@@ -12,16 +12,16 @@
 
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchUsersDialog())"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Filter Users</button>
+        <button type="button" class="btn btn-sm btn-secondary" @onclick="@(e => OpenSearchUsersDialog())"><i class="fas fa-users fa-padded" aria-hidden="true"></i> Filter Users</button>
     </div>
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchCustomersDialog())"><i class="fas fa-user-tie fa-padded" aria-hidden="true"></i> Filter Customers</button>
+        <button type="button" class="btn btn-sm btn-secondary" @onclick="@(e => OpenSearchCustomersDialog())"><i class="fas fa-user-tie fa-padded" aria-hidden="true"></i> Filter Customers</button>
     </div>
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchProjectsDialog())"><i class="fa fa-truck fa-padded" aria-hidden="true"></i> Filter Projects</button>
+        <button type="button" class="btn btn-sm btn-secondary" @onclick="@(e => OpenSearchProjectsDialog())"><i class="fa fa-truck fa-padded" aria-hidden="true"></i> Filter Projects</button>
     </div>
     @*<div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm btn-default" @onclick="@(e => OpenSearchTasksDialog())"><i class="fas fa-project-diagram fa-padded" aria-hidden="true"></i> Tasks</button>
+        <button type="button" class="btn btn-sm btn-secondary" @onclick="@(e => OpenSearchTasksDialog())"><i class="fas fa-project-diagram fa-padded" aria-hidden="true"></i> Tasks</button>
     </div>*@
 </div>
 
@@ -78,8 +78,8 @@
 
 <hr />
 
-<button class="btn btn-default" type="button" @onclick="Clear">Clear Filters</button>
-<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-secondary" type="button" @onclick="Clear">Clear Filters</button>
+<button class="btn btn-secondary pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
 <button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">OK</button>
 
 @code {

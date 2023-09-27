@@ -1,7 +1,7 @@
 ﻿@page "/"
 
-@using Brizbee.Dashboard.Server.Services
 @using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Services
 
 @inject NavigationManager NavigationManager
 @inject LocalStorageService LocalStorageService
@@ -29,7 +29,7 @@
 @inject ExportService ExportService
 @inject IJSRuntime JsRuntime
 
-@if (_loading == true)
+@if (_loading)
 {
     <div class="spinner-background">
         <div class="spinner"></div>
@@ -37,24 +37,24 @@
 }
 
 <div class="container-fluid fadeIn" style="min-height: 50vh;">
-    @if (_confirmed == true)
+    @if (_confirmed)
     {
         <div class="alert alert-info">Your account is now confirmed! Please sign in to continue.</div>
     }
 
     <div class="row">
-        <div class="col-md-4 col-md-offset-4 col-xs-12">
+        <div class="col-md-4 offset-md-4 col-xs-12">
             <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
-                <div class="col-md-8 col-md-offset-2 col-xs-12">
+                <div class="col-md-8 offset-md-2 col-xs-12">
                     <p class="text-center" style="margin-bottom: 4em;">
                         <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
                     </p>
 
                     @if (_method == "pin")
                     {
-                        <div class="panel panel-default panel-login">
-                            <div class="panel-heading">Login with Your PIN</div>
-                            <div class="panel-body">
+                        <div class="card panel-login">
+                            <div class="card-header">Login with Your PIN</div>
+                            <div class="card-body">
                                 <EditForm Model="@_pinSession" OnValidSubmit="AuthenticateAsync" id="formPin" autocomplete="off">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary />
@@ -68,18 +68,20 @@
                                         <InputText id="inputUserPin" @bind-Value="_pinSession.UserPin" class="form-control" type="password" disabled="@_working" />
                                     </div>
                                     <i class="@(_working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@_working">Login</button>
+                                    <div class="d-flex flex-column align-items-end" style="margin-top: 1rem;">
+                                        <button type="submit" class="btn btn-lg btn-primary" disabled="@_working">Login</button>
+                                    </div>
                                 </EditForm>
                             </div>
                         </div>
-                        <p class="text-right" style="font-size: 1.25em;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with Email Address Instead</a></p>
+                        <p class="text-end" style="font-size: 1rem; margin-top: 1rem;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with Email Address Instead</a></p>
                     }
 
                     @if (_method == "email")
                     {
-                        <div class="panel panel-default panel-login">
-                            <div class="panel-heading">Login with Email Address</div>
-                            <div class="panel-body">
+                        <div class="card panel-login">
+                            <div class="card-header">Login with Email Address</div>
+                            <div class="card-body">
                                 <EditForm Model="@_emailSession" OnValidSubmit="AuthenticateAsync" id="formEmail" autocomplete="off">
                                     <DataAnnotationsValidator />
                                     <ValidationSummary />
@@ -93,25 +95,27 @@
                                         <InputText id="inputPassword" @bind-Value="_emailSession.EmailPassword" class="form-control" type="password" disabled="@_working" />
                                     </div>
                                     <i class="@(_working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@_working">Login</button>
+                                    <div class="d-flex flex-column align-items-end" style="margin-top: 1rem;">
+                                        <button type="submit" class="btn btn-lg btn-primary" disabled="@_working">Login</button>
+                                    </div>
                                 </EditForm>
                             </div>
                         </div>
-                        <p class="text-right" style="font-size: 1.25em;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with PIN Number Instead</a></p>
+                        <p class="text-end" style="font-size: 1rem; margin-top: 1rem;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with PIN Number Instead</a></p>
                     }
 
-                    <p class="text-center" style="margin-top: 4em; font-size: 1.5em;">
+                    <p class="text-center" style="margin-top: 4rem; font-size: 1.5rem;">
                         Don't have an account?
                     </p>
                     <p class="text-center">
-                        <NavLink class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" href="register" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
-                            Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
+                        <NavLink class="btn btn-lg btn-primary d-none d-md-block" href="register" style="padding: 1rem; background-color: #228B22; border-color: darkgreen;">
+                            Start Tracking Time for FREE <i class="fa-regular fa-circle-right"></i>
                         </NavLink>
-                        <NavLink class="btn btn-sm btn-block btn-primary visible-xs visible-sm" href="register" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
-                            Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
+                        <NavLink class="btn btn-sm btn-primary d-xs-block d-md-none" href="register" style="padding: 1rem; background-color: #228B22; border-color: darkgreen;">
+                            Start Tracking Time for FREE <i class="fa-regular fa-circle-right"></i>
                         </NavLink>
                     </p>
-                    <p class="text-center text-muted" style="font-size: 1.15em;">
+                    <p class="text-center" style="font-size: 1rem;">
                         No credit card required. Free 30 day trial. Cancel anytime.
                     </p>
                 </div>
@@ -125,8 +129,8 @@
     private bool _working;
     private bool _confirmed;
     private string _method = "pin";
-    private PinSession _pinSession = new();
-    private EmailSession _emailSession = new();
+    private readonly PinSession _pinSession = new();
+    private readonly EmailSession _emailSession = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -180,7 +184,7 @@
         }
     }
 
-    private async System.Threading.Tasks.Task AuthenticateAsync()
+    private async Task AuthenticateAsync()
     {
         _working = true;
         StateHasChanged();
@@ -245,7 +249,7 @@
         }
     }
 
-    private async System.Threading.Tasks.Task ToggleMethodAsync()
+    private async Task ToggleMethodAsync()
     {
         if (_method == "email")
         {

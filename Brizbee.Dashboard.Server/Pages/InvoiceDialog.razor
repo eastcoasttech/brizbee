@@ -55,7 +55,7 @@
         }
     </table>
 
-    <button class="btn btn-default" @onclick="@(e => invoice.LineItems.Add(new LineItem()))">Add Line</button>
+    <button class="btn btn-secondary" @onclick="@(e => invoice.LineItems.Add(new LineItem()))">Add Line</button>
 
     <hr />
 
@@ -64,7 +64,7 @@
         <button class="btn btn-danger" type="button" @onclick="DeleteInvoice" disabled="@(working || loading)">Delete</button>
     }
     <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-secondary pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
     <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
 </EditForm>
 

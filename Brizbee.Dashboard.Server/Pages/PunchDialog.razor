@@ -125,7 +125,7 @@
                             </InputSelect>
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@inAtMeridian</button>
+                            <button type="button" class="btn btn-secondary" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@inAtMeridian</button>
                         </div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
                             </InputSelect>
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@outAtMeridian</button>
+                            <button type="button" class="btn btn-secondary" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@outAtMeridian</button>
                         </div>
                     </div>
                 </div>
@@ -247,7 +247,7 @@
                 <button class="btn btn-danger" type="button" @onclick="DeletePunch" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">Delete</button>
             }
             <i class="@((working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-            <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+            <button class="btn btn-secondary pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
             <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" style="margin-left: 2px;">OK</button>
         </EditForm>
     }
@@ -796,7 +796,7 @@
                     <p>@response.Item3</p>
                     <div class="row">
                         <div class="col-md-12">
-                            <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog">OK</button>
+                            <button class="btn btn-secondary pull-right" type="button" @onclick="CloseDialog">OK</button>
                         </div>
                     </div>
                 </div>);

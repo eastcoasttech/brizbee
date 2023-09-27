@@ -19,7 +19,7 @@ public class Check
     public string Memo { get; set; } = string.Empty;
 
     [Required]
-    public int VendorId { get; set; }
+    public long VendorId { get; set; }
 
     [ForeignKey("VendorId")]
     public virtual Vendor? Vendor { get; set; }

@@ -121,10 +121,10 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenNewInvoiceDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Invoice</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(e => OpenNewInvoiceDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Invoice</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshInvoices())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(e => RefreshInvoices())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
             </div>
         </div>
@@ -176,8 +176,8 @@
             @if (invoicesCount > pageSize)
             {
                 <div class="pull-left" style="margin-right: 1rem;">
-                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-secondary pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-secondary pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
                 </div>
             }
 

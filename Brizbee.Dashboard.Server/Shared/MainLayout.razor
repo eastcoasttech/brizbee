@@ -3,35 +3,35 @@
 @using Brizbee.Dashboard.Server.Services
 
 @inject NavigationManager NavigationManager
-@inject LocalStorageService localStorageService
+@inject LocalStorageService LocalStorageService
 
-@inject SharedService sharedService
-@inject AuditService auditService
-@inject AuthService authService
-@inject KioskService kioskService
-@inject UserService userService
-@inject PunchService punchService
-@inject RateService rateService
-@inject OrganizationService organizationService
-@inject ExportService exportService
-@inject TaskService taskService
-@inject JobService jobService
-@inject CustomerService customerService
-@inject LockService lockService
-@inject TimesheetEntryService timesheetEntryService
-@inject QBDInventoryItemService qbdInventoryItemService
-@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
-@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
-@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
-@inject TaskTemplateService taskTemplateService
-@inject PopulateTemplateService populateTemplateService
+@inject SharedService SharedService
+@inject AuditService AuditService
+@inject AuthService AuthService
+@inject KioskService KioskService
+@inject UserService UserService
+@inject PunchService PunchService
+@inject RateService RateService
+@inject OrganizationService OrganizationService
+@inject ExportService ExportService
+@inject TaskService TaskService
+@inject JobService JobService
+@inject CustomerService CustomerService
+@inject LockService LockService
+@inject TimesheetEntryService TimesheetEntryService
+@inject QBDInventoryItemService QbdInventoryItemService
+@inject QBDInventoryItemSyncService QbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService QbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService QbdInventoryConsumptionSyncService
+@inject TaskTemplateService TaskTemplateService
+@inject PopulateTemplateService PopulateTemplateService
 
 <RadzenDialog />
 <RadzenTooltip />
 
 <div id="wrap">
     <div id="main">
-        <CascadingValue Value=SignOutClicked>
+        <CascadingValue Value="SignOutClicked">
             @Body
         </CascadingValue>
     </div>
@@ -39,12 +39,16 @@
 
 @code {
     EventCallback _signOutClicked = EventCallback.Empty;
+
     EventCallback SignOutClicked
     {
         get
         {
             if (_signOutClicked.Equals(EventCallback.Empty))
+            {
                 _signOutClicked = EventCallback.Factory.Create(this, SignOutAsync);
+            }
+
             return _signOutClicked;
         }
     }
@@ -53,46 +57,43 @@
     {
         if (firstRender)
         {
-            var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-
             // Handle authentication
-            if (sharedService.CurrentUser == null)
+            if (SharedService.CurrentUser == null)
             {
-                var token = await localStorageService.GetFromLocalStorage("Token");
+                var token = await LocalStorageService.GetFromLocalStorage("Token");
 
                 // Check for previous authentication
                 if (!string.IsNullOrEmpty(token))
                 {
                     // Update headers on services.
-                    auditService.ConfigureHeadersWithToken(token);
-                    authService.ConfigureHeadersWithToken(token);
-                    kioskService.ConfigureHeadersWithToken(token);
-                    userService.ConfigureHeadersWithToken(token);
-                    punchService.ConfigureHeadersWithToken(token);
-                    lockService.ConfigureHeadersWithToken(token);
-                    customerService.ConfigureHeadersWithToken(token);
-                    taskService.ConfigureHeadersWithToken(token);
-                    taskTemplateService.ConfigureHeadersWithToken(token);
-                    populateTemplateService.ConfigureHeadersWithToken(token);
-                    jobService.ConfigureHeadersWithToken(token);
-                    rateService.ConfigureHeadersWithToken(token);
-                    organizationService.ConfigureHeadersWithToken(token);
-                    timesheetEntryService.ConfigureHeadersWithToken(token);
-                    qbdInventoryItemService.ConfigureHeadersWithToken(token);
-                    qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
-                    qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
-                    qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
-                    exportService.ConfigureHeadersWithToken(token);
+                    AuditService.ConfigureHeadersWithToken(token);
+                    AuthService.ConfigureHeadersWithToken(token);
+                    KioskService.ConfigureHeadersWithToken(token);
+                    UserService.ConfigureHeadersWithToken(token);
+                    PunchService.ConfigureHeadersWithToken(token);
+                    LockService.ConfigureHeadersWithToken(token);
+                    CustomerService.ConfigureHeadersWithToken(token);
+                    TaskService.ConfigureHeadersWithToken(token);
+                    TaskTemplateService.ConfigureHeadersWithToken(token);
+                    PopulateTemplateService.ConfigureHeadersWithToken(token);
+                    JobService.ConfigureHeadersWithToken(token);
+                    RateService.ConfigureHeadersWithToken(token);
+                    OrganizationService.ConfigureHeadersWithToken(token);
+                    TimesheetEntryService.ConfigureHeadersWithToken(token);
+                    QbdInventoryItemService.ConfigureHeadersWithToken(token);
+                    QbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+                    QbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+                    QbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+                    ExportService.ConfigureHeadersWithToken(token);
 
                     // Configure shared service.
-                    sharedService.CurrentUser = await authService.GetMeAsync();
-                    sharedService.Token = token;
+                    SharedService.CurrentUser = await AuthService.GetMeAsync();
+                    SharedService.Token = token;
                 }
                 else
                 {
                     // Otherwise, redirect to login
                     NavigationManager.NavigateTo("/");
-                    return;
                 }
             }
         }
@@ -101,30 +102,30 @@
     private async void SignOutAsync()
     {
         // Clear the local storage
-        await localStorageService.RemoveFromLocalStorage("Token");
+        await LocalStorageService.RemoveFromLocalStorage("Token");
 
         // Clear the headers
-        auditService.ResetHeaders();
-        kioskService.ResetHeaders();
-        userService.ResetHeaders();
-        punchService.ResetHeaders();
-        rateService.ResetHeaders();
-        organizationService.ResetHeaders();
-        exportService.ResetHeaders();
-        taskService.ResetHeaders();
-        jobService.ResetHeaders();
-        customerService.ResetHeaders();
-        lockService.ResetHeaders();
-        timesheetEntryService.ResetHeaders();
-        qbdInventoryItemService.ResetHeaders();
-        qbdInventoryItemSyncService.ResetHeaders();
-        qbdInventoryConsumptionService.ResetHeaders();
-        qbdInventoryConsumptionSyncService.ResetHeaders();
-        taskTemplateService.ResetHeaders();
-        populateTemplateService.ResetHeaders();
+        AuditService.ResetHeaders();
+        KioskService.ResetHeaders();
+        UserService.ResetHeaders();
+        PunchService.ResetHeaders();
+        RateService.ResetHeaders();
+        OrganizationService.ResetHeaders();
+        ExportService.ResetHeaders();
+        TaskService.ResetHeaders();
+        JobService.ResetHeaders();
+        CustomerService.ResetHeaders();
+        LockService.ResetHeaders();
+        TimesheetEntryService.ResetHeaders();
+        QbdInventoryItemService.ResetHeaders();
+        QbdInventoryItemSyncService.ResetHeaders();
+        QbdInventoryConsumptionService.ResetHeaders();
+        QbdInventoryConsumptionSyncService.ResetHeaders();
+        TaskTemplateService.ResetHeaders();
+        PopulateTemplateService.ResetHeaders();
 
         // Reset shared variables
-        sharedService.Reset();
+        SharedService.Reset();
 
         // Return to login
         NavigationManager.NavigateTo("/");

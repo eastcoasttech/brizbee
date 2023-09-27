@@ -1,103 +1,96 @@
 ﻿@page "/kiosk/status"
 
 @using Brizbee.Dashboard.Server.Services
-@using Brizbee.Dashboard.Server.Serialization
 @using Core.Models
 
-@inject NavigationManager NavigationManager
-@inject LocalStorageService localStorageService
-@inject SharedService sharedService
-@inject UserService userService
-@inject KioskService kioskService
+@inject SharedService SharedService
+@inject KioskService KioskService
 
 @implements IDisposable
 
-<nav class="navbar navbar-default navbar-fixed-top">
+<nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <NavLink class="navbar-brand" href="kiosk/status">
-                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
-            </NavLink>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li class="active">
-                    <NavLink class="nav-link" href="kiosk/status">
+        <NavLink class="navbar-brand" href="kiosk/status">
+            <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+        </NavLink>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <NavLink class="nav-link active" aria-current="page" href="kiosk/status">
                         <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
                     </NavLink>
                 </li>
-                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                @if (_currentUser!.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="punches">
                             <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="customers">
                             <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="inventory/consumption">
                             <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewReports)
+                @if (_currentUser.CanViewReports)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="reports">
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewUsers)
+                @if (_currentUser.CanViewUsers)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="users">
                             <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
                         </NavLink>
                     </li>
                 }
-                <li>
+                <li class="nav-item">
                     <NavLink class="nav-link" href="accounting/start">
                         <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Books
                     </NavLink>
                 </li>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
-                <li class="dropdown">
-                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+            <ul class="nav navbar-right">
+                <span class="navbar-text">
+                    <a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a>
+                </span>
+                <li class="nav-item dropdown">
+                    <a href="javascript:void(0)" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" role="button">@_currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <NavLink class="nav-link" href="user-details">
+                            <NavLink class="dropdown-item" href="user-details">
                                 Account Details
                             </NavLink>
                         </li>
-                        @if (currentUser.CanViewOrganizationDetails)
+                        @if (_currentUser.CanViewOrganizationDetails)
                         {
                             <li role="separator" class="divider"></li>
                             <li>
-                                <NavLink class="nav-link" href="organization-details">
+                                <NavLink class="dropdown-item" href="organization-details">
                                     Organization Settings
                                 </NavLink>
                             </li>
                         }
-                        <li role="separator" class="divider"></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
                     </ul>
                 </li>
@@ -108,11 +101,11 @@
 
 <div class="container-fluid fadeIn">
     <div class="row">
-        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
-            <div class="panel panel-default panel-kiosk">
-                <div class="panel-heading">Hello, @currentUser.Name</div>
-                <div class="panel-body">
-                    @if (working == true)
+        <div class="col-md-4 offset-md-4 col-sm-12 col-xs-12">
+            <div class="card panel-kiosk">
+                <div class="card-header">Hello, @_currentUser.Name</div>
+                <div class="card-body">
+                    @if (_working)
                     {
                         <div class="text-center">
                             <i class="fa fa-spinner fa-spin fa-fw"></i>
@@ -120,39 +113,42 @@
                     }
                     else
                     {
-                        @if (currentPunch != null)
+                        @if (_currentPunch != null)
                         {
                             <p class="text-center fadeIn" style="text-transform: uppercase; padding-top: 2em;">You are <span class="label label-success"><strong>PUNCHED IN</strong></span></p>
-                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>on job</small><br /><strong>@currentPunch.Task.Job.Number &ndash; @currentPunch.Task.Job.Name</strong></p>
-                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@currentPunch.Task.Job.Customer.Number &ndash; @currentPunch.Task.Job.Customer.Name</strong></p>
-                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>doing task</small><br /><strong>@currentPunch.Task.Number &ndash; @currentPunch.Task.Name</strong></p>
-                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-bottom: 2em;"><small>since @currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@currentPunch.InAtTimeZone</small></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>on job</small><br /><strong>@_currentPunch.Task!.Job!.Number &ndash; @_currentPunch.Task.Job.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@_currentPunch.Task!.Job!.Customer!.Number &ndash; @_currentPunch.Task.Job.Customer.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>doing task</small><br /><strong>@_currentPunch.Task.Number &ndash; @_currentPunch.Task.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-bottom: 2em;"><small>since @_currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@_currentPunch.InAtTimeZone</small></p>
                         }
 
-                        @if (currentPunch == null)
+                        @if (_currentPunch == null)
                         {
                             <p class="text-center fadeIn" style="text-transform: uppercase; padding-top: 2em; padding-bottom: 2em;">You are <span class="label label-danger"><strong>PUNCHED OUT</strong></span></p>
                         }
 
-                        <NavLink class="btn btn-block btn-lg btn-success" href="kiosk/in/tasknumber">
-                            Punch In
-                        </NavLink>
-
-                        @if (currentPunch != null)
-                        {
-                            <NavLink class="btn btn-block btn-lg btn-danger" href="kiosk/out/confirm">
-                                Punch Out
+                        <div class="d-grid gap-2">
+                            <NavLink class="btn btn-lg btn-success" href="kiosk/in/tasknumber">
+                                Punch In
                             </NavLink>
-                        }
 
-                        @if (currentUser.UsesTimesheets)
-                        {
-                            <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/timecard/task">
-                                Time Card
-                            </NavLink>
-                        }
+                            @if (_currentPunch != null)
+                            {
+                                <NavLink class="btn btn-block btn-lg btn-danger" href="kiosk/out/confirm">
+                                    Punch Out
+                                </NavLink>
+                            }
 
-                        <button type="button" class="btn btn-block btn-lg btn-default" @onclick="SignOutClicked">Logout</button>
+                            @if (_currentUser.UsesTimesheets)
+                            {
+                                <NavLink class="btn btn-block btn-lg btn-secondary" href="kiosk/timecard/task">
+                                    Time Card
+                                </NavLink>
+                            }
+
+                            <button type="button" class="btn btn-block btn-lg btn-secondary" @onclick="SignOutClicked">Logout</button>
+
+                        </div>
                     }
                 </div>
             </div>
@@ -164,28 +160,30 @@
     [CascadingParameter]
     public EventCallback SignOutClicked { get; set; }
 
-    private bool working = false;
-    private User currentUser;
-    private Punch currentPunch;
+    private bool _working;
+
+    private User? _currentUser;
+
+    private Punch? _currentPunch;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // Subscribe to the events
-        sharedService.OnChange += StateHasChanged;
+        SharedService.OnChange += StateHasChanged;
 
-        working = true;
-        currentUser = sharedService.CurrentUser;
+        _working = true;
+        _currentUser = SharedService.CurrentUser;
 
-        var result = await kioskService.GetCurrentPunchAsync();
+        var result = await KioskService.GetCurrentPunchAsync();
         if (result.Id != 0)
-            currentPunch = result;
+            _currentPunch = result;
 
-        working = false;
+        _working = false;
     }
 
     public void Dispose()
     {
         // Unsubscribe to the events
-        sharedService.OnChange -= StateHasChanged;
+        SharedService.OnChange -= StateHasChanged;
     }
 }

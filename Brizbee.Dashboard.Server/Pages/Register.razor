@@ -46,11 +46,11 @@
             <p class="text-center" style="margin-top: 1em; font-size: 2em;"><i class="fas fa-check" style="color: green;"></i> Cancel anytime.</p>
         </div>
         <div class="col-md-4 col-sm-12 col-xs-12">
-            <div class="panel panel-default" style="margin-bottom: 5px;">
-                <div class="panel-heading">
+            <div class="card" style="margin-bottom: 5px;">
+                <div class="card-header">
                     Sign Up for BRIZBEE
                 </div>
-                <div class="panel-body" style="padding: 35px;">
+                <div class="card-body" style="padding: 35px;">
                     <EditForm Model="@registration" OnValidSubmit="RegisterAsync" autocomplete="off">
                         <DataAnnotationsValidator />
                         <ValidationSummary />

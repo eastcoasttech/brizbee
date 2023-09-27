@@ -60,9 +60,9 @@
 <div class="container-fluid fadeIn">
     <div class="row">
         <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
-            <div class="panel panel-default panel-kiosk">
-                <div class="panel-heading">Add Time Card</div>
-                <div class="panel-body">
+            <div class="card panel-kiosk">
+                <div class="card-header">Add Time Card</div>
+                <div class="card-body">
                     <EditForm Model="@timeCard" OnValidSubmit="Continue" class="form-horizontal" autocomplete="off" style="padding-top: 2em;">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
@@ -157,7 +157,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-block btn-lg btn-primary" disabled="@(working || loading || loadingCustomers || loadingJobs || loadingTasks)">Continue</button>
-                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/status" disabled="@working">
+                        <NavLink class="btn btn-block btn-lg btn-secondary" href="kiosk/status" disabled="@working">
                             Cancel
                         </NavLink>
                     </EditForm>

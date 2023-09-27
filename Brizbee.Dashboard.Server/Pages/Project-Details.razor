@@ -118,10 +118,10 @@
         <div class="col-md-12 col-sm-12 col-xs-12">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenModifyProjectDialog(_currentProject))"><i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 5px;"></i> Edit Project</button>
-@*                    <button type="button" class="btn btn-default" @onclick="@(e => OpenMergeProjectDialog(_currentProject))"><i class="fas fa-code-merge" aria-hidden="true" style="margin-right: 5px;"></i> Merge Project</button>*@                </div>
+                    <button type="button" class="btn btn-secondary" @onclick="@(e => OpenModifyProjectDialog(_currentProject))"><i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 5px;"></i> Edit Project</button>
+@*                    <button type="button" class="btn btn-secondary" @onclick="@(e => OpenMergeProjectDialog(_currentProject))"><i class="fas fa-code-merge" aria-hidden="true" style="margin-right: 5px;"></i> Merge Project</button>*@                </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadBarCodesDialog(_currentProject.Id))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(e => OpenDownloadBarCodesDialog(_currentProject.Id))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
                 </div>
             </div>
         </div>
@@ -135,8 +135,8 @@
             
             <!-- Column 1 -->
             <div class="col-md-4">
-                <div class="panel panel-default panel-condensed">
-                    <div class="panel-body">
+                <div class="card panel-condensed">
+                    <div class="card-body">
                         <div class="row" style="margin: 0; padding: 0;">
                             <div class="col-md-6">
                                 <p>Quote <strong>@_currentProject.QuoteNumber</strong></p>
@@ -158,8 +158,8 @@
             <div class="col-md-4">
                 <ul class="list-unstyled">
                     <li>
-                        <div class="panel panel-default panel-condensed">
-                            <div class="panel-body">
+                        <div class="card panel-condensed">
+                            <div class="card-body">
                                 <div class="row" style="margin: 0; padding: 0;">
                                     <div class="col-md-4">
                                         <p style="margin: 1rem 0 0 0; font-size: 6rem; line-height: 2.5rem;"><strong>@decimal.Round(Statistics.MinutesCount / 60.0m, 1)</strong><br /><span class="text-muted" style="font-size: 2rem; font-weight: bold;">Total Hours</span></p>
@@ -173,8 +173,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="panel panel-default panel-condensed">
-                            <div class="panel-body">
+                        <div class="card panel-condensed">
+                            <div class="card-body">
                                 <div>
                                     <RadzenChart>
                                         <RadzenBarSeries Data="@Statistics.TaskStatistics" CategoryProperty="TaskNumberWithName" ValueProperty="HoursCount">
@@ -233,11 +233,11 @@
             <div class="col-md-4">
                 <ul class="list-unstyled">
                     <li>
-                        <div class="panel panel-default panel-condensed">
-                            <div class="panel-heading">
+                        <div class="card panel-condensed">
+                            <div class="card-header">
                                 Tasks for this Project
                             </div>
-                            <div class="panel-body">
+                            <div class="card-body">
                                 
                                 <!--List of Tasks-->
                                 <table class="table table-bordered table-jobs">

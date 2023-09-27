@@ -121,14 +121,14 @@
                 <div class="col-md-8 col-sm-8 col-xs-8">
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => OpenNewCustomerDialog())"><i class="fa fa-user" aria-hidden="true" style="margin-right: 5px;"></i> New Customer</button>
+                            <button type="button" class="btn btn-secondary" @onclick="@(e => OpenNewCustomerDialog())"><i class="fa fa-user" aria-hidden="true" style="margin-right: 5px;"></i> New Customer</button>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4">
                     <div class="btn-toolbar pull-right" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => RefreshCustomers())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-secondary" @onclick="@(e => RefreshCustomers())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                         </div>
                     </div>
                 </div>
@@ -198,8 +198,8 @@
                     @if (customersCount > pageSize)
                     {
                         <div class="pull-left" style="margin-right: 1rem;">
-                            <button class="btn btn-sm btn-default pull-left" @onclick="PreviousCustomerPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-                            <button class="btn btn-sm btn-default pull-left" @onclick="NextCustomerPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-secondary pull-left" @onclick="PreviousCustomerPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-secondary pull-left" @onclick="NextCustomerPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
                         </div>
                     }
                     @if (customersCount > 0 && !loadingCustomers)
@@ -214,14 +214,14 @@
                 <div class="col-md-8 col-sm-8 col-xs-8">
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => OpenNewProjectDialog())" disabled="@(!selectedCustomerId.HasValue)"><i class="fa fa-truck" aria-hidden="true" style="margin-right: 5px;"></i> New Project</button>
+                            <button type="button" class="btn btn-secondary" @onclick="@(e => OpenNewProjectDialog())" disabled="@(!selectedCustomerId.HasValue)"><i class="fa fa-truck" aria-hidden="true" style="margin-right: 5px;"></i> New Project</button>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4">
                     <div class="btn-toolbar pull-right" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => RefreshProjects())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-secondary" @onclick="@(e => RefreshProjects())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                         </div>
                     </div>
                 </div>
@@ -305,8 +305,8 @@
                     @if (projectsCount > pageSize)
                     {
                         <div class="pull-left" style="margin-right: 1rem;">
-                            <button class="btn btn-sm btn-default pull-left" @onclick="PreviousProjectPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-                            <button class="btn btn-sm btn-default pull-left" @onclick="NextProjectPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-secondary pull-left" @onclick="PreviousProjectPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-secondary pull-left" @onclick="NextProjectPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
                         </div>
                     }
                     @if (projectsCount > 0 && !loadingProjects)
@@ -321,15 +321,15 @@
                 <div class="col-md-8 col-sm-8 col-xs-8">
                     <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => OpenNewTaskDialog())" disabled="@(!selectedProjectId.HasValue)"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Task</button>
-                            <button type="button" class="btn btn-default" disabled="@(!selectedProjectId.HasValue)" @onclick="@(e => OpenDownloadBarCodesDialog(selectedProjectId))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
+                            <button type="button" class="btn btn-secondary" @onclick="@(e => OpenNewTaskDialog())" disabled="@(!selectedProjectId.HasValue)"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Task</button>
+                            <button type="button" class="btn btn-secondary" disabled="@(!selectedProjectId.HasValue)" @onclick="@(e => OpenDownloadBarCodesDialog(selectedProjectId))"><i class="fas fa-file-download" style="margin-right: 5px;"></i> Download Bar Codes</button>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4">
                     <div class="btn-toolbar pull-right" role="toolbar">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default" @onclick="@(e => RefreshTasks())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-secondary" @onclick="@(e => RefreshTasks())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                         </div>
                     </div>
                 </div>
@@ -413,8 +413,8 @@
                     @if (tasksCount > pageSize)
                     {
                         <div class="pull-left" style="margin-right: 1rem;">
-                            <button class="btn btn-sm btn-default pull-left" @onclick="PreviousTaskPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-                            <button class="btn btn-sm btn-default pull-left" @onclick="NextTaskPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-secondary pull-left" @onclick="PreviousTaskPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                            <button class="btn btn-sm btn-secondary pull-left" @onclick="NextTaskPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
                         </div>
                     }
                     @if (tasksCount > 0 && !loadingTasks)

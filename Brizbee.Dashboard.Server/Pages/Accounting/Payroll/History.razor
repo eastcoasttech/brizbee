@@ -1,12 +1,12 @@
-﻿@page "/accounting/accounts/{AccountId:long}/entries"
+﻿@page "/accounting/payroll/history"
 
-@using Brizbee.Core.Models.Accounting
 @using Brizbee.Dashboard.Server.Services
 @using Core.Models
+@using Microsoft.EntityFrameworkCore
+@using Brizbee.Core.Models.Accounting
 
 @inject SharedService SharedService
-@inject EntryService EntryService
-@inject DialogService DialogService
+@inject IDbContextFactory<PrimaryContext> DbFactory
 
 @implements IDisposable
 
@@ -30,7 +30,7 @@
                         <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
                     </NavLink>
                 </li>
-                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                @if (_currentUser!.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
                 {
                     <li>
                         <NavLink class="nav-link" href="punches">
@@ -54,11 +54,6 @@
                         </NavLink>
                     </li>
                 }
-                <li class="active">
-                    <NavLink class="nav-link" href="accounting/payroll/paycheck">
-                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Accounting
-                    </NavLink>
-                </li>
                 @if (_currentUser.CanViewReports)
                 {
                     <li>
@@ -75,6 +70,11 @@
                         </NavLink>
                     </li>
                 }
+                <li class="active">
+                    <NavLink class="nav-link" href="accounting/start">
+                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Books
+                    </NavLink>
+                </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
@@ -106,11 +106,7 @@
 
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
-        <li role="presentation"><NavLink href="accounting/invoices">Invoices</NavLink></li>
-        @*         <li role="presentation"><NavLink href="inventory/consumption-syncs">Receive Payments</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/items">Deposits</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Vendors</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Payroll</NavLink></li> *@
+        <li role="presentation"><NavLink href="accounting/start">Start</NavLink></li>
         <li role="presentation"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
     </ul>
 
@@ -121,32 +117,96 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="@(e => RefreshEntriesAsync())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => RefreshPaychecks())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!--List of Entries-->
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Number</th>
-                <th>Memo</th>
-                <th>Amount</th>
-                <th>Balance</th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("PAYCHECKS/NUMBER"))">
+                        Check Number
+                        @switch (_sortBy)
+                        {
+                            case "PAYCHECKS/NUMBER" when _sortDirection == "ASC":
+                                <span class="fa fa-caret-up"></span>
+                                break;
+                            case "PAYCHECKS/NUMBER" when _sortDirection == "DESC":
+                                <span class="fa fa-caret-down"></span>
+                                break;
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("PAYCHECKS/ENTERED_ON"))">
+                        Date
+                        @switch (_sortBy)
+                        {
+                            case "PAYCHECKS/ENTERED_ON" when _sortDirection == "ASC":
+                                <span class="fa fa-caret-up"></span>
+                                break;
+                            case "PAYCHECKS/ENTERED_ON" when _sortDirection == "DESC":
+                                <span class="fa fa-caret-down"></span>
+                                break;
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("PAYCHECKS/GROSS_AMOUNT"))">
+                        Gross Amount
+                        @switch (_sortBy)
+                        {
+                            case "PAYCHECKS/GROSS_AMOUNT" when _sortDirection == "ASC":
+                                <span class="fa fa-caret-up"></span>
+                                break;
+                            case "PAYCHECKS/GROSS_AMOUNT" when _sortDirection == "DESC":
+                                <span class="fa fa-caret-down"></span>
+                                break;
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("PAYCHECKS/NET_AMOUNT"))">
+                        Net Amount
+                        @switch (_sortBy)
+                        {
+                            case "PAYCHECKS/NET_AMOUNT" when _sortDirection == "ASC":
+                                <span class="fa fa-caret-up"></span>
+                                break;
+                            case "PAYCHECKS/NET_AMOUNT" when _sortDirection == "DESC":
+                                <span class="fa fa-caret-down"></span>
+                                break;
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("PAYCHECKS/USER/NAME"))">
+                        Name
+                        @switch (_sortBy)
+                        {
+                            case "PAYCHECKS/USER/NAME" when _sortDirection == "ASC":
+                                <span class="fa fa-caret-up"></span>
+                                break;
+                            case "PAYCHECKS/USER/NAME" when _sortDirection == "DESC":
+                                <span class="fa fa-caret-down"></span>
+                                break;
+                        }
+                    </a>
+                </th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var entry in _entries)
+            @foreach (var paycheck in _paychecks)
             {
-                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyInvoiceDialog(entry))">
-                    <td><a href="javascript:void(0)">@entry.Transaction!.EnteredOn.ToShortDateString()</a></td>
-                    <td><a href="javascript:void(0)">@entry.Transaction!.ReferenceNumber</a></td>
-                    <td><a href="javascript:void(0)">@entry.Description</a></td>
-                    <td><a href="javascript:void(0)">@entry.Amount.ToString("C")</a></td>
-                    <td></td>
+                <tr class="fadeIn selectable">
+                    <td><a href="javascript:void(0)">@paycheck.Number</a></td>
+                    <td><a href="javascript:void(0)">@paycheck.EnteredOn.ToShortDateString()</a></td>
+                    <td><a href="javascript:void(0)">@paycheck.GrossAmount.ToString("C")</a></td>
+                    <td><a href="javascript:void(0)">@paycheck.NetAmount.ToString("C")</a></td>
+                    <td><a href="javascript:void(0)">@paycheck.User!.Name</a></td>
                 </tr>
             }
             @if (_working)
@@ -155,10 +215,10 @@
                     <td colspan="5"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
                 </tr>
             }
-            @if (!_working && _entries.Count == 0)
+            @if (!_working && _paychecks.Count == 0)
             {
                 <tr class="fadeIn">
-                    <td colspan="5">No entries have been added.</td>
+                    <td colspan="5">No paychecks have been created.</td>
                 </tr>
             }
         </tbody>
@@ -166,7 +226,7 @@
 
     <div class="row">
         <div class="col-md-6">
-            @if (_entriesCount > PageSize)
+            @if (_paychecksCount > PageSize)
             {
                 <div class="pull-left" style="margin-right: 1rem;">
                     <button class="btn btn-sm btn-secondary pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
@@ -174,30 +234,38 @@
                 </div>
             }
 
-            @if (_entriesCount > 0 && !_working)
+            @if (_paychecksCount > 0 && !_working)
             {
-                <p class="form-control-static pull-left">@(_entriesPageStart + 1) to @(_entriesPageStart + PageSize < _entriesCount ? _entriesPageStart + PageSize : _entriesCount) of @_entriesCount</p>
+                <p class="form-control-static pull-left">@(_paychecksPageStart + 1) to @(_paychecksPageStart + PageSize < _paychecksCount ? _paychecksPageStart + PageSize : _paychecksCount) of @_paychecksCount</p>
             }
         </div>
     </div>
+
 </div>
 
 @code {
-    [Parameter]
-    public long AccountId { get; set; }
-
     [CascadingParameter]
     public EventCallback SignOutClicked { get; set; }
 
+    private User? _currentUser;
+
     private bool _working;
-    private User _currentUser;
-    private List<Entry> _entries = new();
-    private string _sortBy = "TRANSACTIONS/ENTERED_ON";
+
+    private PrimaryContext? _context;
+    
+    private List<Paycheck> _paychecks = new();
+
+    private string _sortBy = "PAYCHECKS/NUMBER";
+
     private string _sortDirection = "ASC";
-    private const int PageSize = 100;
+
+    private const int PageSize = 1000;
+
     private int _skip;
-    private long _entriesCount;
-    private int _entriesPageStart;
+
+    private long _paychecksCount;
+
+    private int _paychecksPageStart;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -206,55 +274,51 @@
 
         _currentUser = SharedService.CurrentUser;
 
-        await RefreshEntriesAsync();
+        _context = await DbFactory.CreateDbContextAsync();
 
-        DialogService.OnClose += Close;
+        await RefreshPaychecks();
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         // Unsubscribe to the events
         SharedService.OnChange -= StateHasChanged;
 
-        DialogService.OnClose -= Close;
+        _context?.Dispose();
     }
 
     private async void NextPage(MouseEventArgs e)
     {
-        _entriesPageStart += PageSize;
-        _skip = _entriesPageStart;
-        await RefreshEntriesAsync();
+        _paychecksPageStart = _paychecksPageStart + PageSize;
+        _skip = _paychecksPageStart;
+        await RefreshPaychecks();
     }
 
     private async void PreviousPage(MouseEventArgs e)
     {
-        _entriesPageStart -= PageSize;
-        _skip = _entriesPageStart;
-        await RefreshEntriesAsync();
+        _paychecksPageStart = _paychecksPageStart - PageSize;
+        _skip = _paychecksPageStart;
+        await RefreshPaychecks();
     }
 
-    private async void Close(dynamic result)
-    {
-        if ((result as string) == "entry.updated")
-        {
-            await RefreshEntriesAsync();
-        }
-    }
-
-    private async System.Threading.Tasks.Task RefreshEntriesAsync()
+    private async System.Threading.Tasks.Task RefreshPaychecks()
     {
         _working = true;
-        var (success, message, results, totalRecordCount) = await EntryService.GetEntriesAsync(AccountId, PageSize, _skip, _sortBy, _sortDirection);
+        _paychecks.Clear();
 
-        if (!success)
-        {
-            Console.WriteLine(message);
-            return;
-        }
+        var count = await _context!.Paychecks!
+            .Where(pc => pc.OrganizationId == _currentUser!.OrganizationId)
+            .CountAsync();
 
-        _entries.Clear();
-        _entries = results;
-        _entriesCount = totalRecordCount.GetValueOrDefault();
+        var paychecks = await _context!.Paychecks!
+            .Include(pc => pc.User)
+            .Where(pc => pc.OrganizationId == _currentUser!.OrganizationId)
+            .Skip(_skip)
+            .Take(PageSize)
+            .ToListAsync();
+
+        _paychecks = paychecks;
+        _paychecksCount = count;
         _working = false;
         StateHasChanged();
     }
@@ -263,29 +327,8 @@
     {
         _sortBy = column;
 
-        if (_sortDirection == "ASC")
-        {
-            _sortDirection = "DESC";
-        }
-        else
-        {
-            _sortDirection = "ASC";
-        }
+        _sortDirection = _sortDirection == "ASC" ? "DESC" : "ASC";
 
-        await RefreshEntriesAsync();
-    }
-
-    private void OpenModifyInvoiceDialog(Entry entry)
-    {
-        // DialogService.Open<InvoiceDialog>("Edit Invoice",
-        //                         new Dictionary<string, object>() { { "Id", entry.Id } },
-        //                         new DialogOptions() { Width = "600px" });
-    }
-
-    private void OpenNewInvoiceDialog()
-    {
-        // DialogService.Open<InvoiceDialog>("New Invoice",
-        //                         new Dictionary<string, object>() { { "Id", null } },
-        //                         new DialogOptions() { Width = "600px" });
+        await RefreshPaychecks();
     }
 }

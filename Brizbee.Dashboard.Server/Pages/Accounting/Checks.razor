@@ -3,15 +3,15 @@
 @using Brizbee.Core.Models.Accounting
 @using Brizbee.Dashboard.Server.Services
 @using Core.Models
+@using Dapper
+@using Microsoft.EntityFrameworkCore
 
-@inject NavigationManager NavigationManager
 @inject SharedService SharedService
-@inject AccountService AccountService
-@inject DialogService DialogService
+@inject IDbContextFactory<PrimaryContext> DbFactory
 
 @implements IDisposable
 
-<nav class="navbar navbar-default navbar-fixed-top">
+<nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
@@ -31,7 +31,7 @@
                         <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
                     </NavLink>
                 </li>
-                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                @if (_currentUser!.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
                 {
                     <li>
                         <NavLink class="nav-link" href="punches">
@@ -118,127 +118,212 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => RefreshCheck())" disabled="@(_working || _loading || _check.Id == 0)"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => PreviousCheckAsync())" disabled="@(_working || _loading)"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => NextCheckAsync())" disabled="@(_working || _loading)"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())"><i class="fa fa-plus" aria-hidden="true"></i> New Check</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => NewCheck())" disabled="@(_working || _loading)"><i class="fa fa-plus" aria-hidden="true"></i> New Check</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(async _  => await SaveCheckAsync())" disabled="@(_working || _loading)">Save Changes</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => RefreshCheck())" disabled="@(_working || _loading)">Delete</button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshCheck())"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => RefreshCheck())" disabled="@(_working || _loading)"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/NUMBER"))">
-                        Name
-                        @if (_sortBy == "ACCOUNTS/NUMBER" && _sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (_sortBy == "ACCOUNTS/NUMBER" && _sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th>
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/NAME"))">
-                        Name
-                        @if (_sortBy == "ACCOUNTS/NAME" && _sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (_sortBy == "ACCOUNTS/NAME" && _sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-                <th>
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("ACCOUNTS/TYPE"))">
-                        Name
-                        @if (_sortBy == "ACCOUNTS/TYPE" && _sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (_sortBy == "ACCOUNTS/TYPE" && _sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var account in _accounts)
-            {
-                <tr class="fadeIn selectable" @onclick="@(e => NavigateToEntries(account))">
-                    <td><a href="javascript:void(0)">@account.Number</a></td>
-                    <td><a href="javascript:void(0)">@account.Name</a></td>
-                    <td><a href="javascript:void(0)">@account.Type</a></td>
-                </tr>
-            }
-            @if (_working)
-            {
-                <tr class="fadeIn">
-                    <td colspan="3"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
-                </tr>
-            }
-            @if (!_working && _accounts.Count == 0)
-            {
-                <tr class="fadeIn">
-                    <td colspan="3">No accounts have been added.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <EditForm Model="@_check" OnValidSubmit="SaveCheckAsync" class="form-horizontal" autocomplete="off">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <div class="row">
-        <div class="col-md-6">
-            @if (_accountsCount > PageSize)
-            {
-                <div class="pull-left" style="margin-right: 1rem;">
-                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
-                </div>
-            }
+        <RadzenRow>
+            <RadzenColumn Size="8">
+                <RadzenRow Style="background-color: #ecf9eb; padding: 1rem;">
+                    <RadzenColumn>
+                        <RadzenRow Style="background-color: #ecf9eb; border: solid 2px #def1dd; padding: 2rem;">
+                            <RadzenColumn>
 
-            @if (_accountsCount > 0 && !_working)
-            {
-                <p class="form-control-static pull-left">@(_accountsPageStart + 1) to @(_accountsPageStart + PageSize < _accountsCount ? _accountsPageStart + PageSize : _accountsCount) of @_accountsCount</p>
-            }
-        </div>
-    </div>
+                                @* Number *@
+                                <RadzenRow Style="margin-top: 0.5rem;">
+                                    <RadzenColumn Size="3" Offset="9">
+                                        <div class="row">
+                                            <div class="col-4 text-end">
+                                                <label for="check_number" class="col-form-label">NUMBER</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <RadzenNumeric @bind-Value="_check.Number"
+                                                               id="check_number"
+                                                               class="form-control"
+                                                               ShowUpDown="false" TValue="string"
+                                                               AutoComplete="false"
+                                                               disabled="@(_working || _loading)" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                @* Date *@
+                                <RadzenRow Style="margin-top: 0.5rem;">
+                                    <RadzenColumn Size="3" Offset="9">
+                                        <div class="row">
+                                            <div class="col-4 text-end">
+                                                <label for="check_entered_on" class="col-form-label">DATE</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <InputDate id="check_entered_on" @bind-Value="_check.EnteredOn" class="form-control" disabled="@(_working || _loading)" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                @* Payable *@
+                                <RadzenRow Style="margin-top: 0.5rem;">
+                                    <RadzenColumn Size="9">
+                                        <div class="row">
+                                            <div class="col-3 text-end">
+                                                <label class="col-form-label">PAY TO THE ORDER OF</label>
+                                            </div>
+                                            <div class="col-9">
+                                                <RadzenDropDown AllowClear="true" @bind-Value="_check.VendorId"
+                                                                LoadData="@LoadVendors" AllowFiltering="true"
+                                                                Data="@_vendors" TextProperty="Name" ValueProperty="Id"
+                                                                Style="width: 100%;" class="form-control" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="3">
+                                        <div class="row">
+                                            <div class="col-4 text-end">
+                                                <label for="check_total_amount" class="col-form-label">$</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <RadzenNumeric @bind-Value="_check.TotalAmount"
+                                                               id="check_total_amount"
+                                                               class="form-control"
+                                                               ShowUpDown="false" TValue="decimal"
+                                                               Change="@(UpdateTotalAmountVerbalized)"
+                                                               AutoComplete="false" Format="F2"
+                                                               disabled="@(_working || _loading)" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                @* Amount in Words and Currency *@
+                                <RadzenRow Style="margin-top: 2rem;">
+                                    <RadzenColumn>
+                                        <p>@_totalAmountVerbalized</p>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                @* Memo *@
+                                <RadzenRow Style="margin-top: 1.5rem; padding-bottom: 0.5rem;">
+                                    <RadzenColumn Size="9">
+                                        <div class="row">
+                                            <div class="col-3 text-end">
+                                                <label for="check_memo" class="col-form-label">MEMO</label>
+                                            </div>
+                                            <div class="col-9">
+                                                <InputText @bind-Value="@_check.Memo"
+                                                           id="check_memo"
+                                                           class="form-control"
+                                                           disabled="@(_working || _loading)" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="8">
+                <h2>Expenses</h2>
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th class="col-3">Account</th>
+                            <th class="col-6">Description</th>
+                            <th class="col-2">Amount</th>
+                            <th class="col-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var expense in _checkExpenseLines)
+                        {
+                            <tr>
+                                <td>
+                                    <RadzenDropDown AllowClear="true" @bind-Value="expense.AccountId"
+                                                    LoadData="@LoadAccounts" AllowFiltering="true"
+                                                    Data="@_accounts" TextProperty="Name" ValueProperty="Id"
+                                                    Style="width: 100%;" class="form-control" />
+                                </td>
+                                <td>
+                                    <InputText @bind-Value="@expense.Description" class="form-control" disabled="@(_working || _loading)" />
+                                </td>
+                                <td>
+                                    <RadzenNumeric class="form-control"
+                                                   ShowUpDown="false" TValue="decimal"
+                                    @bind-Value="expense.Amount"
+                                                   AutoComplete="false" Format="F2"
+                                                   disabled="@(_working || _loading)" />
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-secondary" @onclick="@(_ => _checkExpenseLines.Remove(expense))" disabled="@(_working || _loading)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <hr />
+
+                <button type="button" class="btn btn-secondary" @onclick="@(_ => _checkExpenseLines.Add(new CheckExpenseLine()))" disabled="@(_working || _loading)"><i class="fa fa-plus" aria-hidden="true"></i> ADD LINE</button>
+            </RadzenColumn>
+        </RadzenRow>
+
+    </EditForm>
 </div>
 
 @code {
     [CascadingParameter]
     public EventCallback SignOutClicked { get; set; }
 
-    private bool _working = false;
-    private User _currentUser;
-    private List<Account> _accounts = new List<Account>();
-    private string _sortBy = "ACCOUNTS/NUMBER";
-    private string _sortDirection = "ASC";
-    private const int PageSize = 100;
-    private int _skip = 0;
-    private long _accountsCount = 0;
-    private int _accountsPageStart = 0;
+    private User? _currentUser;
+
+    private bool _working;
+
+    private bool _loading = true;
+
+    private Check _check = new();
+
+    private string _totalAmountVerbalized = string.Empty;
+
+    private bool _calculatingTotalAmountVerbalized;
+
+    private IEnumerable<Vendor>? _vendors;
+
+    private List<CheckExpenseLine> _checkExpenseLines = new();
+
+    private IEnumerable<Account>? _accounts;
+
+    private int _skip;
+
+    private const int Take = 1;
+
+    private int _totalChecks;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
@@ -247,77 +332,525 @@
 
         _currentUser = SharedService.CurrentUser;
 
-        await RefreshCheck();
+        await using var context = await DbFactory.CreateDbContextAsync();
 
-        DialogService.OnClose += Close;
+        _totalChecks = await context.Checks!
+            .Where(c => c.OrganizationId == _currentUser!.OrganizationId)
+            .CountAsync();
+
+        await RefreshFirstCheck();
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         // Unsubscribe to the events
         SharedService.OnChange -= StateHasChanged;
-
-        DialogService.OnClose -= Close;
     }
 
-    private async void NextPage(MouseEventArgs e)
+    private async System.Threading.Tasks.Task RefreshFirstCheck()
     {
-        _accountsPageStart = _accountsPageStart + PageSize;
-        _skip = _accountsPageStart;
-        await RefreshCheck();
-    }
+        await using var context = await DbFactory.CreateDbContextAsync();
 
-    private async void PreviousPage(MouseEventArgs e)
-    {
-        _accountsPageStart = _accountsPageStart - PageSize;
-        _skip = _accountsPageStart;
-        await RefreshCheck();
-    }
+        _check = await context.Checks!
+            .Where(c => c.OrganizationId == _currentUser!.OrganizationId)
+            .OrderBy(c => c.EnteredOn)
+            .ThenBy(c => c.TotalAmount)
+            .Skip(_skip)
+            .Take(Take)
+            .FirstOrDefaultAsync() ?? new Check()
+                {
+                    EnteredOn = DateTime.Today,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    Number = "1000"
+                };
 
-    private async void Close(dynamic result)
-    {
-        if ((result as string) == "account.updated")
+        _totalAmountVerbalized = _check.TotalAmount == 0M ? "N/A" : ToVerbalCurrency(_check.TotalAmount);
+
+        if (_check.Id != 0)
         {
-            await RefreshCheck();
+            _checkExpenseLines = await context.CheckExpenseLines!
+                .Where(c => c.CheckId == _check.Id)
+                .ToListAsync();
         }
+        else
+        {
+            _checkExpenseLines.Add(new CheckExpenseLine());
+        }
+
+        _loading = false;
     }
 
     private async System.Threading.Tasks.Task RefreshCheck()
     {
-        _working = true;
-        _accounts.Clear();
-        var result = await AccountService.GetAccountsAsync(PageSize, _skip, _sortBy, _sortDirection);
-        _accounts = result.Item1;
-        _accountsCount = result.Item2.GetValueOrDefault();
-        _working = false;
-        StateHasChanged();
+        _loading = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            _check = await context.Checks!
+                .FirstAsync(c => c.Id == _check.Id);
+
+            _totalAmountVerbalized = _check.TotalAmount == 0M ? "N/A" : ToVerbalCurrency(_check.TotalAmount);
+
+            _checkExpenseLines = await context.CheckExpenseLines!
+                .Where(c => c.CheckId == _check.Id)
+                .ToListAsync();
+        }
+
+        _loading = false;
     }
 
-    private async void ChangeSortBy(string column)
+    private async System.Threading.Tasks.Task NextCheckAsync()
     {
-        _sortBy = column;
-
-        if (_sortDirection == "ASC")
+        if (_skip < _totalChecks - 1)
         {
-            _sortDirection = "DESC";
+            _skip += 1;
+        }
+
+        _loading = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var selected = await context.Checks!
+                .Where(c => c.OrganizationId == _currentUser!.OrganizationId)
+                .OrderBy(c => c.EnteredOn)
+                .ThenBy(c => c.TotalAmount)
+                .Skip(_skip)
+                .Take(Take)
+                .FirstOrDefaultAsync();
+
+            if (selected != null)
+            {
+                _check = selected;
+
+                _totalAmountVerbalized = _check.TotalAmount == 0M ? "N/A" : ToVerbalCurrency(_check.TotalAmount);
+
+                _checkExpenseLines = await context.CheckExpenseLines!
+                    .Where(c => c.CheckId == _check.Id)
+                    .ToListAsync();
+            }
+        }
+
+        _loading = false;
+    }
+
+    private async System.Threading.Tasks.Task PreviousCheckAsync()
+    {
+        if (_skip > 0)
+        {
+            _skip -= 1;
+        }
+
+        _loading = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var selected = await context.Checks!
+                .Where(c => c.OrganizationId == _currentUser!.OrganizationId)
+                .OrderBy(c => c.EnteredOn)
+                .ThenBy(c => c.TotalAmount)
+                .Skip(_skip)
+                .Take(Take)
+                .FirstOrDefaultAsync();
+
+            if (selected != null)
+            {
+                _check = selected;
+
+                _totalAmountVerbalized = _check.TotalAmount == 0M ? "N/A" : ToVerbalCurrency(_check.TotalAmount);
+
+                _checkExpenseLines = await context.CheckExpenseLines!
+                    .Where(c => c.CheckId == _check.Id)
+                    .ToListAsync();
+            }
+        }
+
+        _loading = false;
+    }
+
+    private async System.Threading.Tasks.Task NewCheck()
+    {
+        _working = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            const string lastCheckNumberSql = "SELECT MAX( CONVERT(INT, [Number]) ) FROM [dbo].[Checks] WHERE [OrganizationId] = @OrganizationId;";
+
+            var lastCheckNumber = await context.Database.GetDbConnection().QueryFirstOrDefaultAsync<int>(lastCheckNumberSql,
+                param: new
+                {
+                    _currentUser!.OrganizationId
+                });
+
+            _check = new Check()
+                {
+                    EnteredOn = DateTime.Today,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    Number = (lastCheckNumber + 1).ToString()
+                };
+
+            _checkExpenseLines = new List<CheckExpenseLine> { new() };
+
+            _totalAmountVerbalized = "N/A";
+        }
+
+        _working = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveCheckAsync()
+    {
+        _working = true;
+
+        if (_check.Id == 0)
+        {
+            await SaveNewCheckAsync();
         }
         else
         {
-            _sortDirection = "ASC";
+            await SaveExistingCheckAsync();
         }
 
-        await RefreshCheck();
+        _working = false;
     }
 
-    private void OpenModifyAccountDialog(Account account)
+    private async System.Threading.Tasks.Task SaveNewCheckAsync()
     {
-        DialogService.Open<InventoryItemDialog>("Edit Account",
-                                new Dictionary<string, object>() { { "Id", account.Id } },
-                                new DialogOptions() { Width = "600px" });
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var bankAccountId = await context.Accounts!
+            .Where(a => a.OrganizationId == _currentUser!.OrganizationId)
+            .Where(a => a.Type == "Bank")
+            .Select(a => a.Id)
+            .FirstAsync();
+
+        var nowUtc = DateTime.UtcNow;
+
+        var totalAmount = _checkExpenseLines.Sum(x => x.Amount);
+
+        await using var databaseTransaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // ------------------------------------------------------------
+            // Record the transaction for this check.
+            // ------------------------------------------------------------
+
+            var transaction = new Transaction()
+                {
+                    EnteredOn = _check.EnteredOn,
+                    CreatedAt = nowUtc,
+                    Description = string.Empty,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    ReferenceNumber = string.Empty,
+                    VoucherType = "CHK"
+                };
+
+            context.Transactions!.Add(transaction);
+
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Record the check.
+            // ------------------------------------------------------------
+
+            var check = new Check
+                {
+                    EnteredOn = _check.EnteredOn,
+                    CreatedAt = nowUtc,
+                    OrganizationId = _currentUser.OrganizationId,
+                    Number = _check.Number,
+                    VendorId = _check.VendorId,
+                    TotalAmount = totalAmount,
+                    TransactionId = transaction.Id,
+                    Memo = _check.Memo,
+                    BankAccountId = bankAccountId
+                };
+
+            context.Checks!.Add(check);
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Record the expense lines and their entries.
+            // ------------------------------------------------------------
+
+            foreach (var checkExpenseLineDto in _checkExpenseLines)
+            {
+                var expenseAccount = context.Accounts!.FirstOrDefault(x => x.Id == checkExpenseLineDto.AccountId);
+
+                var debitEntry = new Entry()
+                    {
+                        Amount = checkExpenseLineDto.Amount,
+                        AccountId = expenseAccount!.Id,
+                        CreatedAt = nowUtc,
+                        Description = string.Empty,
+                        TransactionId = transaction.Id,
+                        Type = "D"
+                    };
+
+                context.Entries!.Add(debitEntry);
+                await context.SaveChangesAsync();
+
+                var checkExpenseLine = new CheckExpenseLine()
+                    {
+                        Amount = checkExpenseLineDto.Amount,
+                        AccountId = expenseAccount.Id,
+                        CheckId = check.Id,
+                        CreatedAt = nowUtc,
+                        EntryId = debitEntry.Id,
+                        Description = checkExpenseLineDto.Description
+                    };
+
+                context.CheckExpenseLines!.Add(checkExpenseLine);
+                await context.SaveChangesAsync();
+            }
+
+            var creditEntry = new Entry()
+                {
+                    AccountId = bankAccountId,
+                    Amount = totalAmount,
+                    CreatedAt = nowUtc,
+                    TransactionId = transaction.Id,
+                    Description = string.Empty,
+                    Type = "C"
+                };
+
+            context.Entries!.Add(creditEntry);
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Commit the transaction.
+            // ------------------------------------------------------------
+
+            await databaseTransaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await databaseTransaction.RollbackAsync();
+        }
     }
 
-    private void NavigateToEntries(Account account)
+    private async System.Threading.Tasks.Task SaveExistingCheckAsync()
     {
-        NavigationManager.NavigateTo($"accounting/accounts/{account.Id}/entries");
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var nowUtc = DateTime.UtcNow;
+
+        var totalAmount = _checkExpenseLines.Sum(x => x.Amount);
+
+        await using var databaseTransaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var transaction = await context.Transactions!.FindAsync(_check.TransactionId);
+
+            _check.TotalAmount = totalAmount;
+
+            context.Entry(_check).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+
+            // ------------------------------------------------------------
+            // Delete all the existing check expense lines and entries.
+            // ------------------------------------------------------------
+
+            var deleteCheckExpenseLines = await context.CheckExpenseLines!
+                .Where(c => c.CheckId == _check.Id)
+                .ToListAsync();
+
+            foreach (var checkExpenseLine in deleteCheckExpenseLines)
+            {
+                var entry = await context.Entries!.FindAsync(checkExpenseLine.EntryId);
+
+                if (entry != null)
+                {
+                    context.Entries!.Remove(entry);
+                }
+
+                context.CheckExpenseLines!.Remove(checkExpenseLine);
+                await context.SaveChangesAsync();
+            }
+
+
+            // ------------------------------------------------------------
+            // Record the expense lines and their entries.
+            // ------------------------------------------------------------
+
+            foreach (var checkExpenseLineDto in _checkExpenseLines)
+            {
+                var expenseAccount = context.Accounts!.FirstOrDefault(x => x.Id == checkExpenseLineDto.AccountId);
+
+                var debitEntry = new Entry()
+                    {
+                        Amount = checkExpenseLineDto.Amount,
+                        AccountId = expenseAccount!.Id,
+                        CreatedAt = nowUtc,
+                        Description = string.Empty,
+                        TransactionId = transaction!.Id,
+                        Type = "D"
+                    };
+
+                context.Entries!.Add(debitEntry);
+                await context.SaveChangesAsync();
+
+                var checkExpenseLine = new CheckExpenseLine()
+                    {
+                        Amount = checkExpenseLineDto.Amount,
+                        AccountId = expenseAccount.Id,
+                        CheckId = _check.Id,
+                        CreatedAt = nowUtc,
+                        EntryId = debitEntry.Id,
+                        Description = checkExpenseLineDto.Description
+                    };
+
+                context.CheckExpenseLines!.Add(checkExpenseLine);
+                await context.SaveChangesAsync();
+            }
+
+            var creditEntry = new Entry()
+                {
+                    AccountId = _check.BankAccountId,
+                    Amount = totalAmount,
+                    CreatedAt = nowUtc,
+                    TransactionId = transaction!.Id,
+                    Description = string.Empty,
+                    Type = "C"
+                };
+
+            context.Entries!.Add(creditEntry);
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Commit the transaction.
+            // ------------------------------------------------------------
+
+            await databaseTransaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await databaseTransaction.RollbackAsync();
+        }
+    }
+
+    private async void LoadAccounts(LoadDataArgs args)
+    {
+        if (_working)
+        {
+            return;
+        }
+
+        _working = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var query = context.Accounts!.Where(a => a.Type == "Expense").AsQueryable();
+
+            if (!string.IsNullOrEmpty(args.Filter))
+            {
+                query = query.Where(a => a.Name.ToLower().Contains(args.Filter.ToLower()));
+            }
+
+            _accounts = query.ToList();
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+        _working = false;
+    }
+
+    private async void LoadVendors(LoadDataArgs args)
+    {
+        if (_working)
+        {
+            return;
+        }
+
+        _working = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var query = context.Vendors!.AsQueryable();
+
+            if (!string.IsNullOrEmpty(args.Filter))
+            {
+                query = query.Where(c => c.Number!.ToLower().Contains(args.Filter.ToLower()) || c.Name!.ToLower().Contains(args.Filter.ToLower()));
+            }
+
+            _vendors = query.ToList();
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+        _working = false;
+    }
+
+    private void UpdateTotalAmountVerbalized(decimal amount)
+    {
+        if (_calculatingTotalAmountVerbalized)
+        {
+            return;
+        }
+
+        _calculatingTotalAmountVerbalized = true;
+
+        if (amount == 0M)
+        {
+            _totalAmountVerbalized = "N/A";
+            _calculatingTotalAmountVerbalized = false;
+            return;
+        }
+
+        _totalAmountVerbalized = ToVerbalCurrency(amount);
+
+        _calculatingTotalAmountVerbalized = false;
+    }
+
+    private static string ToVerbalCurrency(decimal value)
+    {
+        var valueString = value.ToString("N2");
+        var decimalString = valueString[(valueString.LastIndexOf('.') + 1)..];
+        var wholeString = valueString[..valueString.LastIndexOf('.')];
+
+        var valueArray = wholeString.Split(',');
+
+        var unitsMap = new[] { "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen" };
+        var tensMap = new[] { "", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
+        var placeMap = new[] { "", " thousand ", " million ", " billion ", " trillion " };
+
+        var outList = new List<string>();
+
+        var placeIndex = 0;
+
+        for (var i = valueArray.Length - 1; i >= 0; i--)
+        {
+            var intValue = int.Parse(valueArray[i]);
+            var tensValue = intValue % 100;
+
+            string tensString;
+            if (tensValue < unitsMap.Length) tensString = unitsMap[tensValue];
+            else tensString = tensMap[(tensValue - tensValue % 10) / 10] + " " + unitsMap[tensValue % 10];
+
+            var fullValue = string.Empty;
+            if (intValue >= 100) fullValue = unitsMap[(intValue - intValue % 100) / 100] + " hundred " + tensString + placeMap[placeIndex++];
+            else if (intValue != 0) fullValue = tensString + placeMap[placeIndex++];
+            else placeIndex++;
+
+            outList.Add(fullValue);
+        }
+
+        var intCentsValue = int.Parse(decimalString);
+
+        string centsString;
+        if (intCentsValue < unitsMap.Length) centsString = unitsMap[intCentsValue];
+        else centsString = tensMap[(intCentsValue - intCentsValue % 10) / 10] + " " + unitsMap[intCentsValue % 10];
+
+        if (intCentsValue == 0) centsString = "zero";
+
+        var output = string.Empty;
+        for (var i = outList.Count - 1; i >= 0; i--) output += outList[i];
+        output += " dollars and " + centsString + " cents";
+
+        return output.ToUpper();
     }
 }

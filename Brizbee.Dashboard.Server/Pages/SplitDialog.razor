@@ -11,7 +11,7 @@
 <hr />
 
 <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
-<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-secondary pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
 <button class="btn btn-primary pull-right" type="button" @onclick="Split" disabled="@working" style="margin-left: 2px;">Perform Split</button>
 
 @code {

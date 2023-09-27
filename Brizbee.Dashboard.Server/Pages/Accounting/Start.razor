@@ -2,6 +2,7 @@
 
 @using Brizbee.Dashboard.Server.Services
 @using Core.Models
+@using Dapper
 @using Microsoft.EntityFrameworkCore
 
 @inject SharedService SharedService
@@ -9,29 +10,24 @@
 
 @implements IDisposable
 
-<nav class="navbar navbar-default navbar-fixed-top">
+<nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <NavLink class="navbar-brand" href="kiosk/status">
-                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
-            </NavLink>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li>
+        <NavLink class="navbar-brand" href="kiosk/status">
+            <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+        </NavLink>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
                     <NavLink class="nav-link" href="kiosk/status">
-                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
                     </NavLink>
                 </li>
                 @if (_currentUser!.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="punches">
                             <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
                         </NavLink>
@@ -39,7 +35,7 @@
                 }
                 @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="customers">
                             <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
                         </NavLink>
@@ -47,15 +43,15 @@
                 }
                 @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="inventory/consumption">
-                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
                         </NavLink>
                     </li>
                 }
                 @if (_currentUser.CanViewReports)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="reports">
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
@@ -63,25 +59,27 @@
                 }
                 @if (_currentUser.CanViewUsers)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="users">
                             <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
                         </NavLink>
                     </li>
                 }
-                <li class="active">
-                    <NavLink class="nav-link" href="accounting/start">
+                <li class="nav-item">
+                    <NavLink class="nav-link active" aria-current="page" href="accounting/start">
                         <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Books
                     </NavLink>
                 </li>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
-                <li class="dropdown">
-                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
+            <ul class="nav navbar-right">
+                <span class="navbar-text">
+                    <a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a>
+                </span>
+                <li class="nav-item dropdown">
+                    <a href="javascript:void(0)" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" role="button">@_currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <NavLink class="nav-link" href="user-details">
+                            <NavLink class="dropdown-item" href="user-details">
                                 Account Details
                             </NavLink>
                         </li>
@@ -89,12 +87,12 @@
                         {
                             <li role="separator" class="divider"></li>
                             <li>
-                                <NavLink class="nav-link" href="organization-details">
+                                <NavLink class="dropdown-item" href="organization-details">
                                     Organization Settings
                                 </NavLink>
                             </li>
                         }
-                        <li role="separator" class="divider"></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
                     </ul>
                 </li>
@@ -105,48 +103,55 @@
 
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
-        <li role="presentation" class="active"><NavLink href="accounting/start">Start</NavLink></li>
-        <li role="presentation"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
+        <li class="nav-item"><NavLink href="accounting/start" class="nav-link actives" aria-current="page">Start</NavLink></li>
+        <li class="nav-item"><NavLink href="accounting/chart-of-accounts" class="nav-link">Chart of Accounts</NavLink></li>
     </ul>
 
     <hr />
 
     <RadzenRow>
         <RadzenColumn Size="3">
-            @foreach (var balance in _balances)
-            {
-                <p style="font-size: 4rem;"><strong>@balance.Balance.ToString("C")</strong></p>
-                <p style="font-size: 2rem; margin-bottom: 2rem;">@balance.Account</p>
-            }
+            <div class="card">
+                <div class="card-header">
+                    Balances
+                </div>
+                <div class="card-body">
+                    @foreach (var balance in _balances)
+                    {
+                        <p style="margin-bottom: 0;"><strong>@balance.Balance.ToString("C")</strong></p>
+                        <p style="margin-bottom: 1.5rem;">@balance.Account</p>
+                    }
+                </div>
+            </div>
         </RadzenColumn>
         <RadzenColumn>
             <RadzenRow>
                 <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <button type="button" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Invoices</button>
+                    <button type="button" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Invoices</button>
                 </RadzenColumn>
                 <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <button type="button" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Receive Payments</button>
+                    <button type="button" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Receive Payments</button>
                 </RadzenColumn>
                 <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <button type="button" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Record Deposits</button>
-                </RadzenColumn>
-            </RadzenRow>
-
-            <RadzenRow>
-                <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <NavLink href="accounting/checks" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Write Checks</NavLink>
-                </RadzenColumn>
-                <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <button type="button" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Check Register</button>
-                </RadzenColumn>
-                <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <button type="button" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Credit Card Charges</button>
+                    <button type="button" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Record Deposits</button>
                 </RadzenColumn>
             </RadzenRow>
 
             <RadzenRow>
                 <RadzenColumn Size="2" Offset="1" class="rz-p-5">
-                    <button type="button" class="btn btn-default" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Payroll</button>
+                    <NavLink href="accounting/checks" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Write Checks</NavLink>
+                </RadzenColumn>
+                <RadzenColumn Size="2" Offset="1" class="rz-p-5">
+                    <button type="button" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Check Register</button>
+                </RadzenColumn>
+                <RadzenColumn Size="2" Offset="1" class="rz-p-5">
+                    <button type="button" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Credit Card Charges</button>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="2" Offset="1" class="rz-p-5">
+                    <NavLink href="accounting/payroll/history" class="btn btn-secondary" style="width: 100%; padding-top: 3rem; padding-bottom: 3rem;">Payroll</NavLink>
                 </RadzenColumn>
             </RadzenRow>
         </RadzenColumn>
@@ -162,8 +167,6 @@
 
     private readonly List<(string Account, decimal Balance)> _balances = new();
 
-    private PrimaryContext? _context;
-
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // Subscribe to the events
@@ -171,15 +174,22 @@
 
         _currentUser = SharedService.CurrentUser;
 
-        _context = await DbFactory.CreateDbContextAsync();
+        await using var context = await DbFactory.CreateDbContextAsync();
 
-        var accounts = await _context!.Accounts!
+        var accounts = await context.Accounts!
             .Where(a => a.Type == "Bank" || a.Type == "Accounts Receivable")
             .ToListAsync();
 
         foreach (var account in accounts)
         {
-            _balances.Add((account.Name, 0M));
+            var balance = await context.Database.GetDbConnection().QuerySingleAsync<decimal>("SELECT dbo.udf_AccountBalance(@MinDate, @MaxDate, @AccountId) AS [Result];",
+                param: new
+                {
+                    MinDate = new DateTime(1753, 1, 1),
+                    MaxDate = new DateTime(2100, 1, 1),
+                    AccountId = account.Id
+                });
+            _balances.Add((account.Name, balance));
         }
     }
 
@@ -187,7 +197,5 @@
     {
         // Unsubscribe to the events
         SharedService.OnChange -= StateHasChanged;
-
-        _context?.Dispose();
     }
 }
