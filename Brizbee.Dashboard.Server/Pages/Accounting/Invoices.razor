@@ -2,100 +2,101 @@
 
 @using Brizbee.Core.Models.Accounting
 @using Brizbee.Dashboard.Server.Services
+@using Brizbee.Dashboard.Server.Services.Reports
 @using Core.Models
+@using Dapper
+@using Microsoft.EntityFrameworkCore
 
-@inject SharedService sharedService
-@inject InvoiceService invoiceService
-@inject DialogService dialogService
+@inject SharedService SharedService
+@inject IDbContextFactory<PrimaryContext> DbFactory
+@inject IJSRuntime JsRuntime
+@inject InvoiceReportBuilder InvoiceReportBuilder
 
 @implements IDisposable
 
-<nav class="navbar navbar-default navbar-fixed-top">
+<nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <NavLink class="navbar-brand" href="kiosk/status">
-                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
-            </NavLink>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li>
+        <NavLink class="navbar-brand" href="kiosk/status">
+            <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+        </NavLink>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
                     <NavLink class="nav-link" href="kiosk/status">
-                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
                     </NavLink>
                 </li>
-                @if (currentUser.CanViewPunches || currentUser.CanViewTimecards || currentUser.CanViewRates || currentUser.CanViewLocks)
+                @if (_currentUser!.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="punches">
                             <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewCustomers || currentUser.CanViewProjects || currentUser.CanViewTasks)
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="customers">
                             <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewInventoryConsumptions || currentUser.CanViewInventoryItems)
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="inventory/consumption">
-                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
                         </NavLink>
                     </li>
                 }
-                <li class="active">
-                    <NavLink class="nav-link" href="accounting/payroll/paycheck">
-                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Accounting
-                    </NavLink>
-                </li>
-                @if (currentUser.CanViewReports)
+                @if (_currentUser.CanViewReports)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="reports">
                             <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
                         </NavLink>
                     </li>
                 }
-                @if (currentUser.CanViewUsers)
+                @if (_currentUser.CanViewUsers)
                 {
-                    <li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="users">
                             <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
                         </NavLink>
                     </li>
                 }
+                <li class="nav-item">
+                    <NavLink class="nav-link active" aria-current="page" href="accounting/start">
+                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Books
+                    </NavLink>
+                </li>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
-                <li class="dropdown">
-                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@currentUser.Name <span class="caret"></span></a>
+            <ul class="nav navbar-right">
+                <span class="navbar-text">
+                    <a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a>
+                </span>
+                <li class="nav-item dropdown">
+                    <a href="javascript:void(0)" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" role="button">@_currentUser.Name <span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <NavLink class="nav-link" href="user-details">
+                            <NavLink class="dropdown-item" href="user-details">
                                 Account Details
                             </NavLink>
                         </li>
-                        @if (currentUser.CanViewOrganizationDetails)
+                        @if (_currentUser.CanViewOrganizationDetails)
                         {
                             <li role="separator" class="divider"></li>
                             <li>
-                                <NavLink class="nav-link" href="organization-details">
+                                <NavLink class="dropdown-item" href="organization-details">
                                     Organization Settings
                                 </NavLink>
                             </li>
                         }
-                        <li role="separator" class="divider"></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
                     </ul>
                 </li>
@@ -106,12 +107,8 @@
 
 <div class="container-fluid fadeIn">
     <ul class="nav nav-pills">
-        <li role="presentation" class="active"><NavLink href="accounting/invoices">Invoices</NavLink></li>
-        @*         <li role="presentation"><NavLink href="inventory/consumption-syncs">Receive Payments</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/items">Deposits</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Vendors</NavLink></li>
-        <li role="presentation"><NavLink href="inventory/item-syncs">Payroll</NavLink></li> *@
-        <li role="presentation"><NavLink href="accounting/chart-of-accounts">Chart of Accounts</NavLink></li>
+        <li class="nav-item"><NavLink href="accounting/start" class="nav-link actives" aria-current="page">Start</NavLink></li>
+        <li class="nav-item"><NavLink href="accounting/chart-of-accounts" class="nav-link">Chart of Accounts</NavLink></li>
     </ul>
 
     <hr />
@@ -121,168 +118,646 @@
         <div class="col-md-6">
             <div class="btn-toolbar" role="toolbar">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="@(e => OpenNewInvoiceDialog())"><i class="fa fa-plus" aria-hidden="true" style="margin-right: 5px;"></i> New Invoice</button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => RefreshInvoice())" disabled="@(_working || _loading || _invoice.Id == 0)"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="@(e => RefreshInvoices())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => PreviousCheckAsync())" disabled="@(_working || _loading)"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => NextCheckAsync())" disabled="@(_working || _loading)"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => NewInvoice())" disabled="@(_working || _loading)"><i class="fa fa-plus" aria-hidden="true"></i> New Invoice</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => SaveInvoiceAsync())" disabled="@(_working || _loading)">Save Changes</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => RefreshInvoice())" disabled="@(_working || _loading || _invoice.Id == 0)">Delete</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="@(_ => DownloadInvoiceAsync())" disabled="@(_working || _loading || _invoice.Id == 0)"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Download</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!--List of Invoices-->
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>
-                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("INVOICES/NUMBER"))">
-                        Name
-                        @if (sortBy == "INVOICES/NUMBER" && sortDirection == "ASC")
-                        {
-                            <span class="fa fa-caret-up"></span>
-                        }
-                        else if (sortBy == "INVOICES/NUMBER" && sortDirection == "DESC")
-                        {
-                            <span class="fa fa-caret-down"></span>
-                        }
-                    </a>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var invoice in invoices)
-            {
-                <tr class="fadeIn selectable" @onclick="@(e => OpenModifyInvoiceDialog(invoice))">
-                    <td><a href="javascript:void(0)">@invoice.Number</a></td>
-                </tr>
-            }
-            @if (working)
-            {
-                <tr class="fadeIn">
-                    <td colspan="1"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
-                </tr>
-            }
-            @if (!working && invoices.Count == 0)
-            {
-                <tr class="fadeIn">
-                    <td colspan="1">No invoices have been added.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
 
-    <div class="row">
-        <div class="col-md-6">
-            @if (invoicesCount > pageSize)
-            {
-                <div class="pull-left" style="margin-right: 1rem;">
-                    <button class="btn btn-sm btn-secondary pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
-                    <button class="btn btn-sm btn-secondary pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
-                </div>
-            }
+    <EditForm Model="@_invoice" OnValidSubmit="SaveInvoiceAsync" class="form-horizontal" autocomplete="off">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-            @if (invoicesCount > 0 && !working)
-            {
-                <p class="form-control-static pull-left">@(invoicesPageStart + 1) to @(invoicesPageStart + pageSize < invoicesCount ? invoicesPageStart + pageSize : invoicesCount) of @invoicesCount</p>
-            }
-        </div>
-    </div>
+        <RadzenRow>
+            <RadzenColumn Size="8">
+                <RadzenRow Style="background-color: #fff; padding: 1rem;">
+                    <RadzenColumn>
+                        <RadzenRow Style="background-color: #fff; border: solid 2px #000; padding: 2rem;">
+                            <RadzenColumn>
+
+                                <RadzenRow Style="margin-top: 0.5rem;">
+                                    <RadzenColumn Size="9">
+                                        <h1>INVOICE</h1>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="3">
+                                        
+                                        @* Number *@
+                                        <div class="row">
+                                            <div class="col-4 text-end">
+                                                <label for="check_number" class="col-form-label">NUMBER</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <RadzenNumeric @bind-Value="_invoice.Number"
+                                                               id="check_number"
+                                                               class="form-control"
+                                                               ShowUpDown="false" TValue="string"
+                                                               AutoComplete="false"
+                                                               disabled="@(_working || _loading)"/>
+                                            </div>
+                                        </div>
+
+                                        @* Date *@
+                                        <div class="row" style="margin-top: 0.5rem;">
+                                            <div class="col-4 text-end">
+                                                <label for="check_entered_on" class="col-form-label">DATE</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <InputDate id="check_entered_on" @bind-Value="_invoice.EnteredOn" class="form-control" disabled="@(_working || _loading)"/>
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                
+                                <RadzenRow Style="margin-top: 0.5rem;">
+                                    <RadzenColumn Size="9">
+
+                                        @* Customer *@
+                                        <div class="row">
+                                            <div class="col-2 text-end">
+                                                <label class="col-form-label">BILL TO</label>
+                                            </div>
+                                            <div class="col-7">
+                                                <RadzenDropDown AllowClear="true" @bind-Value="_invoice.CustomerId"
+                                                                LoadData="@LoadCustomers" AllowFiltering="true"
+                                                                Data="@_customers" TextProperty="Name" ValueProperty="Id"
+                                                                Style="width: 100%;" class="form-control" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                    
+                                    <RadzenColumn Size="3">
+
+                                        @* Due *@
+                                        <div class="row">
+                                            <div class="col-4 text-end">
+                                                <label for="check_due_on" class="col-form-label">DUE</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <InputDate id="check_due_on" @bind-Value="_invoice.DueOn" class="form-control" disabled="@(_working || _loading)" />
+                                            </div>
+                                        </div>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                                
+                                @* Line Items *@
+                                <RadzenRow Style="margin-top: 3rem;">
+                                    <RadzenColumn Size="12">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th class="col-6">Description</th>
+                                                    <th class="col-1">Quantity</th>
+                                                    <th class="col-2">Amount</th>
+                                                    <th class="col-2">Subtotal</th>
+                                                    <th class="col-1"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var lineItem in _lineItems)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <InputText @bind-Value="@lineItem.Description" class="form-control" disabled="@(_working || _loading)" />
+                                                        </td>
+                                                        <td>
+                                                            <RadzenNumeric class="form-control"
+                                                                           ShowUpDown="false" TValue="decimal"
+                                                            @bind-Value="lineItem.Quantity"
+                                                                           AutoComplete="false" Format="F2"
+                                                                           disabled="@(_working || _loading)" />
+                                                        </td>
+                                                        <td>
+                                                            <RadzenNumeric class="form-control"
+                                                                           ShowUpDown="false" TValue="decimal"
+                                                            @bind-Value="lineItem.UnitAmount"
+                                                                           AutoComplete="false" Format="F2"
+                                                                           disabled="@(_working || _loading)" />
+                                                        </td>
+                                                        <td>
+                                                            <label class="col-form-label">@((lineItem.Quantity * lineItem.UnitAmount).ToString("C"))</label>
+                                                        </td>
+                                                        <td class="d-flex justify-content-center">
+                                                            <button type="button" class="btn btn-secondary" @onclick="@(_ => _lineItems.Remove(lineItem))" disabled="@(_working || _loading)"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+
+                                        <hr />
+
+                                        <button type="button" class="btn btn-secondary" @onclick="@(_ => (_lineItems).Add(new LineItem()))" disabled="@(_working || _loading)"><i class="fa fa-plus" aria-hidden="true"></i> ADD LINE</button>
+                                    </RadzenColumn>
+                                </RadzenRow>
+
+                                @* Subtotal, Taxes, and Total *@
+                                <RadzenRow Style="margin-top: 3rem;">
+                                    <RadzenColumn Size="12">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="col-9 text-end">SUBTOTAL</td>
+                                                    <td class="text-end">@(_lineItems.Sum(l => l.UnitAmount * l.Quantity).ToString("C"))</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="col-9 text-end">TOTAL</td>
+                                                    <td class="text-end">@_invoice.TotalAmount.ToString("C")</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenColumn>
+        </RadzenRow>
+
+
+    </EditForm>
 </div>
 
 @code {
     [CascadingParameter]
     public EventCallback SignOutClicked { get; set; }
 
-    private bool working = false;
-    private User currentUser;
-    private List<Invoice> invoices = new List<Invoice>();
-    private string sortBy = "INVOICES/NUMBER";
-    private string sortDirection = "ASC";
-    private int pageSize = 100;
-    private int skip = 0;
-    private long invoicesCount = 0;
-    private int invoicesPageStart = 0;
+    private User? _currentUser;
+
+    private bool _working;
+
+    private bool _loading = true;
+
+    private Invoice _invoice = new()
+        {
+            EnteredOn = DateTime.Today,
+            Number = string.Empty
+        };
+
+    private IEnumerable<Customer>? _customers;
+
+    private List<LineItem> _lineItems = new();
+
+    private int _skip;
+
+    private const int Take = 1;
+
+    private int _totalInvoices;
 
     protected override async System.Threading.Tasks.Task OnInitializedAsync()
     {
         // Subscribe to the events
-        sharedService.OnChange += StateHasChanged;
+        SharedService.OnChange += StateHasChanged;
 
-        currentUser = sharedService.CurrentUser;
+        _currentUser = SharedService.CurrentUser;
 
-        await RefreshInvoices();
+        await using var context = await DbFactory.CreateDbContextAsync();
 
-        dialogService.OnClose += Close;
+        _totalInvoices = await context.Invoices!
+            .Where(i => i.OrganizationId == _currentUser!.OrganizationId)
+            .CountAsync();
+
+        await RefreshFirstInvoice();
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         // Unsubscribe to the events
-        sharedService.OnChange -= StateHasChanged;
-
-        dialogService.OnClose -= Close;
+        SharedService.OnChange -= StateHasChanged;
     }
 
-    private async void NextPage(MouseEventArgs e)
+    private async System.Threading.Tasks.Task RefreshFirstInvoice()
     {
-        invoicesPageStart = invoicesPageStart + pageSize;
-        skip = invoicesPageStart;
-        await RefreshInvoices();
-    }
+        await using var context = await DbFactory.CreateDbContextAsync();
 
-    private async void PreviousPage(MouseEventArgs e)
-    {
-        invoicesPageStart = invoicesPageStart - pageSize;
-        skip = invoicesPageStart;
-        await RefreshInvoices();
-    }
+        _invoice = await context.Invoices!
+            .Where(i => i.OrganizationId == _currentUser!.OrganizationId)
+            .OrderBy(i => i.EnteredOn)
+            .ThenBy(i => i.TotalAmount)
+            .Skip(_skip)
+            .Take(Take)
+            .FirstOrDefaultAsync() ?? new Invoice()
+                {
+                    EnteredOn = DateTime.Today,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    Number = "1000"
+                };
 
-    private async void Close(dynamic result)
-    {
-        if ((result as string) == "invoice.updated")
+        if (_invoice.Id != 0)
         {
-            await RefreshInvoices();
-        }
-    }
-
-    private async System.Threading.Tasks.Task RefreshInvoices()
-    {
-        working = true;
-        invoices.Clear();
-        var result = await invoiceService.GetInvoicesAsync(pageSize, skip, sortBy, sortDirection);
-        invoices = result.Item1;
-        invoicesCount = result.Item2.GetValueOrDefault();
-        working = false;
-        StateHasChanged();
-    }
-
-    private async void ChangeSortBy(string column)
-    {
-        sortBy = column;
-
-        if (sortDirection == "ASC")
-        {
-            sortDirection = "DESC";
+            _lineItems = await context.LineItems!
+                .Where(l => l.InvoiceId == _invoice.Id)
+                .ToListAsync();
         }
         else
         {
-            sortDirection = "ASC";
+            _lineItems.Add(new LineItem());
         }
 
-        await RefreshInvoices();
+        _loading = false;
     }
 
-    private void OpenModifyInvoiceDialog(Invoice invoice)
+    private async System.Threading.Tasks.Task RefreshInvoice()
     {
-        dialogService.Open<InvoiceDialog>("Edit Invoice",
-                                new Dictionary<string, object>() { { "Id", invoice.Id } },
-                                new DialogOptions() { Width = "600px" });
+        _loading = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            _invoice = await context.Invoices!
+                .FirstAsync(i => i.Id == _invoice.Id);
+
+            _lineItems = await context.LineItems!
+                .Where(i => i.InvoiceId == _invoice.Id)
+                .ToListAsync();
+        }
+
+        _loading = false;
     }
 
-    private void OpenNewInvoiceDialog()
+    private async System.Threading.Tasks.Task NextCheckAsync()
     {
-        dialogService.Open<InvoiceDialog>("New Invoice",
-                                new Dictionary<string, object>() { { "Id", null } },
-                                new DialogOptions() { Width = "600px" });
+        if (_skip < _totalInvoices - 1)
+        {
+            _skip += 1;
+        }
+
+        _loading = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var selected = await context.Invoices!
+                .Where(i => i.OrganizationId == _currentUser!.OrganizationId)
+                .OrderBy(i => i.EnteredOn)
+                .ThenBy(i => i.TotalAmount)
+                .Skip(_skip)
+                .Take(Take)
+                .FirstOrDefaultAsync();
+
+            if (selected != null)
+            {
+                _invoice = selected;
+
+                _lineItems = await context.LineItems!
+                    .Where(l => l.InvoiceId == _invoice.Id)
+                    .ToListAsync();
+            }
+        }
+
+        _loading = false;
+    }
+
+    private async System.Threading.Tasks.Task PreviousCheckAsync()
+    {
+        if (_skip > 0)
+        {
+            _skip -= 1;
+        }
+
+        _loading = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var selected = await context.Invoices!
+                .Where(i => i.OrganizationId == _currentUser!.OrganizationId)
+                .OrderBy(i => i.EnteredOn)
+                .ThenBy(i => i.TotalAmount)
+                .Skip(_skip)
+                .Take(Take)
+                .FirstOrDefaultAsync();
+
+            if (selected != null)
+            {
+                _invoice = selected;
+
+                _lineItems = await context.LineItems!
+                    .Where(l => l.InvoiceId == _invoice.Id)
+                    .ToListAsync();
+            }
+        }
+
+        _loading = false;
+    }
+
+    private async System.Threading.Tasks.Task NewInvoice()
+    {
+        _working = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            const string lastInvoiceSql = "SELECT MAX( CONVERT(INT, [Number]) ) FROM [dbo].[Invoices] WHERE [OrganizationId] = @OrganizationId;";
+
+            var lastInvoiceNumber = await context.Database.GetDbConnection().QueryFirstOrDefaultAsync<int>(lastInvoiceSql,
+                param: new
+                {
+                    _currentUser!.OrganizationId
+                });
+
+            _invoice = new Invoice()
+                {
+                    EnteredOn = DateTime.Today,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    Number = (lastInvoiceNumber + 1).ToString()
+                };
+
+            _lineItems = new List<LineItem> { new() };
+        }
+
+        _working = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveInvoiceAsync()
+    {
+        _working = true;
+
+        if (_invoice.Id == 0)
+        {
+            await SaveNewInvoiceAsync();
+        }
+        else
+        {
+            await SaveExistingInvoiceAsync();
+        }
+
+        _working = false;
+    }
+
+    private async System.Threading.Tasks.Task SaveNewInvoiceAsync()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var salesAccount = await context.Accounts!
+            .Where(a => a.OrganizationId == _currentUser!.OrganizationId)
+            .FirstOrDefaultAsync(x => x.Name == "Sales");
+        var arAccount = await context.Accounts!
+            .Where(a => a.OrganizationId == _currentUser!.OrganizationId)
+            .FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+
+        var nowUtc = DateTime.UtcNow;
+
+        var totalAmount = _lineItems.Sum(x => x.UnitAmount * x.Quantity);
+
+        await using var databaseTransaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // ------------------------------------------------------------
+            // Record the transaction for this invoice.
+            // ------------------------------------------------------------
+
+            var transaction = new Transaction()
+                {
+                    EnteredOn = _invoice.EnteredOn,
+                    CreatedAt = nowUtc,
+                    Description = string.Empty,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    ReferenceNumber = string.Empty,
+                    VoucherType = "INV"
+                };
+
+            context.Transactions!.Add(transaction);
+
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Record the invoice.
+            // ------------------------------------------------------------
+
+            var invoice = new Invoice
+                {
+                    EnteredOn = _invoice.EnteredOn,
+                    CreatedAt = nowUtc,
+                    OrganizationId = _currentUser!.OrganizationId,
+                    Number = _invoice.Number,
+                    CustomerId = _invoice.CustomerId,
+                    TotalAmount = totalAmount,
+                    TransactionId = transaction.Id
+                };
+
+            context.Invoices!.Add(invoice);
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Record the line items.
+            // ------------------------------------------------------------
+
+            foreach (var lineItemDto in _lineItems)
+            {
+                var lineItem = new LineItem()
+                    {
+                        InvoiceId = invoice.Id,
+                        Quantity = lineItemDto.Quantity,
+                        UnitAmount = lineItemDto.UnitAmount,
+                        TotalAmount = lineItemDto.UnitAmount * lineItemDto.Quantity,
+                        CreatedAt = nowUtc,
+                        Description = lineItemDto.Description
+                    };
+
+                context.LineItems!.Add(lineItem);
+                await context.SaveChangesAsync();
+            }
+
+
+            // ------------------------------------------------------------
+            // Record the entries for this invoice.
+            // ------------------------------------------------------------
+
+            var debitEntry = new Entry()
+                {
+                    AccountId = arAccount!.Id,
+                    Amount = totalAmount,
+                    CreatedAt = nowUtc,
+                    TransactionId = transaction.Id,
+                    Description = string.Empty,
+                    Type = "D"
+                };
+
+            context.Entries!.Add(debitEntry);
+            await context.SaveChangesAsync();
+
+            var creditEntry = new Entry()
+                {
+                    AccountId = salesAccount!.Id,
+                    Amount = totalAmount,
+                    CreatedAt = nowUtc,
+                    TransactionId = transaction.Id,
+                    Description = string.Empty,
+                    Type = "C"
+                };
+
+            context.Entries!.Add(creditEntry);
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Commit the transaction.
+            // ------------------------------------------------------------
+
+            await databaseTransaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await databaseTransaction.RollbackAsync();
+        }
+    }
+
+    private async System.Threading.Tasks.Task SaveExistingInvoiceAsync()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        var salesAccount = await context.Accounts!
+            .Where(a => a.OrganizationId == _currentUser!.OrganizationId)
+            .FirstOrDefaultAsync(x => x.Name == "Sales");
+        var arAccount = await context.Accounts!
+            .Where(a => a.OrganizationId == _currentUser!.OrganizationId)
+            .FirstOrDefaultAsync(x => x.Name == "Accounts Receivable");
+
+        var nowUtc = DateTime.UtcNow;
+
+        var totalAmount = _lineItems.Sum(x => x.UnitAmount * x.Quantity);
+
+        await using var databaseTransaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var transaction = await context.Transactions!.FindAsync(_invoice.TransactionId);
+
+            _invoice.TotalAmount = totalAmount;
+
+            context.Entry(_invoice).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+
+            // ------------------------------------------------------------
+            // Delete all the existing line items and entries.
+            // ------------------------------------------------------------
+
+            var deleteLineItems = await context.LineItems!
+                .Where(l => l.InvoiceId == _invoice.Id)
+                .ToListAsync();
+
+            foreach (var lineItem in deleteLineItems)
+            {
+                context.LineItems!.Remove(lineItem);
+                await context.SaveChangesAsync();
+            }
+
+
+            // ------------------------------------------------------------
+            // Record the line items.
+            // ------------------------------------------------------------
+
+            foreach (var lineItemDto in _lineItems)
+            {
+                var lineItem = new LineItem()
+                    {
+                        InvoiceId = _invoice.Id,
+                        Quantity = lineItemDto.Quantity,
+                        UnitAmount = lineItemDto.UnitAmount,
+                        TotalAmount = lineItemDto.UnitAmount * lineItemDto.Quantity,
+                        CreatedAt = nowUtc,
+                        Description = lineItemDto.Description
+                    };
+
+                context.LineItems!.Add(lineItem);
+                await context.SaveChangesAsync();
+            }
+
+
+            // ------------------------------------------------------------
+            // Record the entries for this invoice.
+            // ------------------------------------------------------------
+
+            var debitEntry = new Entry()
+                {
+                    AccountId = arAccount!.Id,
+                    Amount = totalAmount,
+                    CreatedAt = nowUtc,
+                    TransactionId = transaction!.Id,
+                    Description = string.Empty,
+                    Type = "D"
+                };
+
+            context.Entries!.Add(debitEntry);
+            await context.SaveChangesAsync();
+
+            var creditEntry = new Entry()
+                {
+                    AccountId = salesAccount!.Id,
+                    Amount = totalAmount,
+                    CreatedAt = nowUtc,
+                    TransactionId = transaction.Id,
+                    Description = string.Empty,
+                    Type = "C"
+                };
+
+            context.Entries!.Add(creditEntry);
+            await context.SaveChangesAsync();
+
+
+            // ------------------------------------------------------------
+            // Commit the transaction.
+            // ------------------------------------------------------------
+
+            await databaseTransaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await databaseTransaction.RollbackAsync();
+        }
+    }
+
+    private async void LoadCustomers(LoadDataArgs args)
+    {
+        if (_working)
+        {
+            return;
+        }
+
+        _working = true;
+
+        await using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var query = context.Customers!
+                .Where(c => c.OrganizationId == _currentUser!.OrganizationId)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(args.Filter))
+            {
+                query = query.Where(x => x.Number!.ToLower().Contains(args.Filter.ToLower()) || x.Name!.ToLower().Contains(args.Filter.ToLower()));
+            }
+
+            _customers = query.ToList();
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+        _working = false;
+    }
+
+    private async System.Threading.Tasks.Task DownloadInvoiceAsync()
+    {
+        var bytes = await InvoiceReportBuilder.InvoiceAsPdfAsync(_invoice.Id, _currentUser!);
+        await JsRuntime.InvokeVoidAsync("jsSaveAsFile",
+            $"Invoice {_invoice.Number}.pdf",
+            Convert.ToBase64String(bytes)
+            );
     }
 }

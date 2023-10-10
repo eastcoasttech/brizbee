@@ -1,5 +1,135 @@
-﻿<h3>Start</h3>
+﻿@page "/accounting/payroll/start"
+
+@using Brizbee.Dashboard.Server.Services
+@using Core.Models
+@using Dapper
+@using Microsoft.EntityFrameworkCore
+
+@inject SharedService SharedService
+@inject IDbContextFactory<PrimaryContext> DbFactory
+
+@implements IDisposable
+
+<nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <NavLink class="navbar-brand" href="kiosk/status">
+            <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+        </NavLink>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                    </NavLink>
+                </li>
+                @if (_currentUser!.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewReports)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewUsers)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+                <li class="nav-item">
+                    <NavLink class="nav-link active" aria-current="page" href="accounting/start">
+                        <i class="fas fa-scale-unbalanced fa-padded" aria-hidden="true"></i> Books
+                    </NavLink>
+                </li>
+            </ul>
+            <ul class="nav navbar-right">
+                <span class="navbar-text">
+                    <a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a>
+                </span>
+                <li class="nav-item dropdown">
+                    <a href="javascript:void(0)" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" role="button">@_currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="dropdown-item" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="dropdown-item" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li class="nav-item"><NavLink href="accounting/start" class="nav-link actives" aria-current="page">Start</NavLink></li>
+        <li class="nav-item"><NavLink href="accounting/payroll/start" class="nav-link">Payroll</NavLink></li>
+        <li class="nav-item"><NavLink href="accounting/chart-of-accounts" class="nav-link">Chart of Accounts</NavLink></li>
+    </ul>
+
+    <hr />
+    
+
+</div>
 
 @code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
 
+    private User? _currentUser;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+    }
 }

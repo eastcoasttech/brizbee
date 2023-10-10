@@ -66,5 +66,9 @@ namespace Brizbee.Core.Models.Accounting
 
         [ForeignKey("TransactionId")]
         public virtual Transaction? Transaction { get; set; }
+        
+        [Required]
+        [Column(TypeName = "date")]
+        public DateTime DueOn { get; set; }
     }
 }

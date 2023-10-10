@@ -1,4 +1,5 @@
 using Brizbee.Dashboard.Server.Services;
+using Brizbee.Dashboard.Server.Services.Reports;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
@@ -24,7 +25,7 @@ public class Program
         // Configure HttpClient to communicate with API.
         builder.Services.AddHttpClient<ApiService>(client =>
         {
-            client.BaseAddress = new Uri("https://app-brizbee-api-prod-slot-1.azurewebsites.net");
+            client.BaseAddress = new Uri("http://localhost:5113/");
             client.Timeout = TimeSpan.FromMinutes(10);
         });
 
@@ -53,6 +54,9 @@ public class Program
         builder.Services.AddSingleton<TimesheetEntryService>();
         builder.Services.AddSingleton<UserService>();
         
+        builder.Services.AddScoped<CheckReportBuilder>();
+        builder.Services.AddScoped<InvoiceReportBuilder>();
+
         builder.Services.AddScoped<GeolocationService>();
         builder.Services.AddScoped<SharedService>();
         builder.Services.AddScoped<LocalStorageService>();

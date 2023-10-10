@@ -115,6 +115,7 @@ CREATE TABLE [dbo].[Invoices]
         [OrganizationId] INT             NOT NULL,
         [TotalAmount]    DECIMAL (12, 2) NOT NULL,
         [EnteredOn]      DATE            NOT NULL,
+        [DueOn]      DATE            NOT NULL,
         [TransactionId]  BIGINT          NOT NULL,
         CONSTRAINT [PK_Invoices]
             PRIMARY KEY CLUSTERED ([Id])
@@ -122,15 +123,15 @@ CREATE TABLE [dbo].[Invoices]
 
 CREATE NONCLUSTERED INDEX [IX_Invoices_OrganizationId]
     ON [dbo].[Invoices] ([OrganizationId])
-    INCLUDE ([CustomerId], [TransactionId], [Number], [TotalAmount], [EnteredOn]);
+    INCLUDE ([CustomerId], [TransactionId], [Number], [TotalAmount], [EnteredOn], [DueOn]);
 
 CREATE NONCLUSTERED INDEX [IX_Invoices_CustomerId]
     ON [dbo].[Invoices] ([CustomerId])
-    INCLUDE ([OrganizationId], [TransactionId], [Number], [TotalAmount], [EnteredOn]);
+    INCLUDE ([OrganizationId], [TransactionId], [Number], [TotalAmount], [EnteredOn], [DueOn]);
 
 CREATE NONCLUSTERED INDEX [IX_Invoices_TransactionId]
     ON [dbo].[Invoices] ([TransactionId])
-    INCLUDE ([OrganizationId], [CustomerId], [Number], [TotalAmount], [EnteredOn]);
+    INCLUDE ([OrganizationId], [CustomerId], [Number], [TotalAmount], [EnteredOn], [DueOn]);
 
 
 -- LineItems Table

@@ -541,7 +541,7 @@ table.table-exceptions tr td p.input-group-sm {
     font-size: 24px;
     padding: 20px;
 }
-
+/*
 span.rz-calendar input.rz-inputtext {
     border: none;
     border-radius: 0;
@@ -588,7 +588,7 @@ span.rz-calendar {
     -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
     -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
-}
+}*/
 
 
 .rz-datepicker {
@@ -678,4 +678,84 @@ ul.validation-errors {
     100% {
         transform: rotate(360deg)
     }
+}
+
+.btn-primary {
+    --bs-secondary: #ffffff;
+    --bs-btn-disabled-bg: #ffffff;
+    --bs-btn-disabled-color: #adadad;
+    --bs-btn-disabled-border-color: #cccccc;
+    --bs-btn-border-color: #cccccc;
+}
+
+.btn-secondary {
+    --bs-secondary: #ffffff;
+    --bs-btn-disabled-bg: #ffffff;
+    --bs-btn-disabled-color: #adadad;
+    --bs-btn-disabled-border-color: #cccccc;
+    --bs-btn-border-color: #cccccc;
+}
+
+.btn-group {
+    margin-left: 0.5rem;
+}
+
+/*
+.rz-spinner {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.rz-spinner-input {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.rz-inputtext {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.rz-form-field {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}*/
+
+.rz-spinner input[type='number'],
+.rz-spinner input[type='text'] {
+    margin: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.rz-form-field:hover .rz-form-field-content,
+.rz-autocomplete:hover:not(.rz-state-disabled),
+.rz-radiobutton-box:hover:not(.rz-state-disabled),
+.rz-chkbox-box:hover:not(.rz-state-disabled),
+.rz-colorpicker:not(:disabled):not(.rz-state-disabled):hover,
+.rz-lookup-search input:not(:disabled):not(.rz-state-disabled):hover,
+.rz-spinner:not(:disabled):not(.rz-state-disabled):hover,
+.rz-calendar .rz-inputtext:not(:disabled):not(.rz-state-disabled):hover,
+.rz-multiselect:not(:disabled):not(.rz-state-disabled):hover,
+.rz-dropdown:not(:disabled):not(.rz-state-disabled):hover,
+.mask:not(:disabled):not(.rz-state-disabled):hover,
+.rz-textarea:not(:disabled):not(.rz-state-disabled):hover,
+.rz-textbox:not(:disabled):not(.rz-state-disabled):hover {
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    border: none;
 }

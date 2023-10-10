@@ -50,18 +50,18 @@ function stripeSourceHandler(source) {
 // ----------------------------------------------------------------------------
 
 function getPlatformDetails() {
-	// Built-in platform detection
-	var browserName = platform.name; // 'Safari'
-	var browserVersion = platform.version; // '5.1'
-	var operatingSystemName = platform.os.family; // 'iOS'
-	var operatingSystemVersion = platform.os.version + (platform.os.architecture === 64 ? ' 64-bit' : ''); // 5.0
+    // Built-in platform detection
+    var browserName = platform.name; // 'Safari'
+    var browserVersion = platform.version; // '5.1'
+    var operatingSystemName = platform.os.family; // 'iOS'
+    var operatingSystemVersion = platform.os.version + (platform.os.architecture === 64 ? ' 64-bit' : ''); // 5.0
 
-	return {
-		BrowserName: browserName,
-		BrowserVersion: browserVersion,
-		OperatingSystemName: operatingSystemName,
-		OperatingSystemVersion: operatingSystemVersion
-	};
+    return {
+        BrowserName: browserName,
+        BrowserVersion: browserVersion,
+        OperatingSystemName: operatingSystemName,
+        OperatingSystemVersion: operatingSystemVersion
+    };
 }
 
 // ----------------------------------------------------------------------------
@@ -71,4 +71,13 @@ function getPlatformDetails() {
 function focusElement(id) {
     var elem = document.getElementById(id);
     elem.focus();
+}
+
+function jsSaveAsFile(filename, byteBase64) {
+    var link = document.createElement('a');
+    link.download = filename;
+    link.href = "data:application/octet-stream;base64," + byteBase64;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
