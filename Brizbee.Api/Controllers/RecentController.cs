@@ -53,52 +53,53 @@ namespace Brizbee.Api.Controllers
                 // Get the records.
                 var recordsSql = @"
                     SELECT
-                        P.[InAt] AS Punch_InAt,
-                        P.[InAtTimeZone] AS Punch_InAtTimeZone,
-                        P.[LatitudeForInAt] AS Punch_LatitudeForInAt,
-                        P.[LongitudeForInAt] AS Punch_LongitudeForInAt,
-                        P.[LatitudeForOutAt] AS Punch_LatitudeForOutAt,
-                        P.[LongitudeForOutAt] AS Punch_LongitudeForOutAt,
-                        P.[OutAt] AS Punch_OutAt,
-                        P.[OutAtTimeZone] AS Punch_OutAtTimeZone,
-                        P.[InAtSourceHardware] AS Punch_InAtSourceHardware,
-                        P.[InAtSourceHostname] AS Punch_InAtSourceHostname,
-                        P.[OutAtSourceHardware] AS Punch_OutAtSourceHardware,
-                        P.[OutAtSourceHostname] AS Punch_OutAtSourceHostname,
-
-                        J.[Id] AS Job_Id,
-                        J.[CreatedAt] AS Job_CreatedAt,
-                        J.[CustomerId] AS Job_CustomerId,
-                        J.[Name] AS Job_Name,
-                        J.[Number] AS Job_Number,
-
-                        C.[Id] AS Customer_Id,
-                        C.[CreatedAt] AS Customer_CreatedAt,
-                        C.[Name] AS Customer_Name,
-                        C.[Number] AS Customer_Number,
-                        C.[OrganizationId] AS Customer_OrganizationId,
-
-                        T.[Id] AS Task_Id,
-                        T.[CreatedAt] AS Task_CreatedAt,
-                        T.[JobId] AS Task_JobId,
-                        T.[Name] AS Task_Name,
-                        T.[Number] AS Task_Number,
-
-                        U.Id AS User_Id,
-                        U.Name AS User_Name
-                    FROM
-                        Punches AS P
-                    JOIN
-                        Tasks AS T ON T.[Id] = P.[TaskId]
-                    JOIN
-                        Jobs AS J ON J.[Id] = T.[JobId]
-                    JOIN
-                        Customers AS C ON C.[Id] = J.[CustomerId]
-                    JOIN
-                        Users AS U ON U.[Id] = P.[UserId]
+                        P.InAt AS Punch_InAt,
+                        P.InAtTimeZone AS Punch_InAtTimeZone,
+                        P.LatitudeForInAt AS Punch_LatitudeForInAt,
+                        P.LongitudeForInAt AS Punch_LongitudeForInAt,
+                        P.LatitudeForOutAt AS Punch_LatitudeForOutAt,
+                        P.LongitudeForOutAt AS Punch_LongitudeForOutAt,
+                        P.OutAt AS Punch_OutAt,
+                        P.OutAtTimeZone AS Punch_OutAtTimeZone,
+                        P.InAtSourceHardware AS Punch_InAtSourceHardware,
+                        P.InAtSourceHostname AS Punch_InAtSourceHostname,
+                        P.OutAtSourceHardware AS Punch_OutAtSourceHardware,
+                        P.OutAtSourceHostname AS Punch_OutAtSourceHostname,
+                        [J].[Id] AS Job_Id,
+                        [J].[CreatedAt] AS Job_CreatedAt,
+                        J.CustomerId AS Job_CustomerId,
+                        [J].[Name] AS Job_Name,
+                        [J].[Number] AS Job_Number,
+                        [C].[Id] AS Customer_Id,
+                        [C].[CreatedAt] AS Customer_CreatedAt,
+                        [C].[Name] AS Customer_Name,
+                        [C].[Number] AS Customer_Number,
+                        [C].[OrganizationId] AS Customer_OrganizationId,
+                        [T].[Id] AS Task_Id,
+                        [T].[CreatedAt] AS Task_CreatedAt,
+                        T.JobId AS Task_JobId,
+                        [T].[Name] AS Task_Name,
+                        [T].[Number] AS Task_Number,
+                        [U].[Id] AS User_Id,
+                        [U].[Name] AS User_Name
+                    FROM dbo.Punches AS P
+                    JOIN dbo.Tasks AS T ON
+                        [T].[Id] = P.TaskId
+                    JOIN dbo.Jobs AS J ON
+                        [J].[Id] = T.JobId
+                    JOIN dbo.Customers AS C ON
+                        [C].[Id] = J.CustomerId
+                    JOIN dbo.Users AS U ON
+                        U.[Id] = P.UserId
                     WHERE
-                        C.[OrganizationId] = @OrganizationId AND
-                        P.[OutAt] IS NULL OR P.[InAt] >= @Min
+                        [C].[OrganizationId] = @OrganizationId
+                        AND [U].[IsActive] = 1
+                        AND [U].[IsDeleted] = 0
+                        AND
+                        (
+                            P.OutAt IS NULL
+                            OR P.InAt >= @Min
+                        )
                     ORDER BY
                         Punch_InAt DESC;";
 
@@ -246,6 +247,8 @@ namespace Brizbee.Api.Controllers
                         [Users] AS U ON C.[CreatedByUserId] = U.[Id]
                     WHERE
                         C.[OrganizationId] = @OrganizationId
+                        AND [U].[IsActive] = 1
+                        AND [U].[IsDeleted] = 0
                     ORDER BY
                         C.[CreatedAt] DESC;";
 
