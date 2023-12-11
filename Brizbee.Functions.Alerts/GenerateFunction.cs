@@ -2,7 +2,7 @@
 //  GenerateFunction.cs
 //  BRIZBEE Alerts Function
 //
-//  Copyright (C) 2021-2022 East Coast Technology Services, LLC
+//  Copyright (C) 2021-2023 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE Alerts Function.
 //
@@ -23,66 +23,67 @@
 using Azure.Storage.Blobs;
 using Brizbee.Functions.Alerts.Serialization;
 using Dapper;
-using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using NodaTime;
-using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace Brizbee.Functions.Alerts
+namespace Brizbee.Functions.Alerts;
+
+public class GenerateFunction
 {
-    public class GenerateFunction
+    private static ILogger? _logger;
+
+    public GenerateFunction(ILoggerFactory loggerFactory)
     {
-        private ILogger logger;
+        _logger = loggerFactory.CreateLogger<GenerateFunction>();
+    }
 
-        [FunctionName("GenerateFunction")]
-        public async Task RunAsync([TimerTrigger("0 */30 * * * *", RunOnStartup = true)]TimerInfo myTimer, ILogger log)
+    [Function(nameof(GenerateFunction))]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Public parameters from Azure Functions runtime")]
+    public static void Run([TimerTrigger("0 */30 * * * *")] TimerInfo timerInfo, FunctionContext context)
+    {
+        _logger.LogInformation("GenerateFunction executing");
+
+        GenerateExceededAlertsAsync().GetAwaiter().GetResult();
+    }
+
+    private static async Task GenerateExceededAlertsAsync()
+    {
+        try
         {
-            logger = log;
-            log.LogInformation($"GenerateFunction executed at: {DateTime.Now}");
+            var instant = SystemClock.Instance.GetCurrentInstant();
+            var systemZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
+            var zonedDateTime = instant.InZone(systemZone);
+            var localDateTime = zonedDateTime.LocalDateTime;
 
-            await GenerateExceededAlertsAsync();
-        }
+            var monday = localDateTime.Previous(IsoDayOfWeek.Monday);
+            var sunday = localDateTime.Next(IsoDayOfWeek.Sunday);
 
-        private async Task GenerateExceededAlertsAsync()
-        {
-            try
-            {
-                var instant = SystemClock.Instance.GetCurrentInstant();
-                var systemZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-                var zonedDateTime = instant.InZone(systemZone);
-                var localDateTime = zonedDateTime.LocalDateTime;
+            _logger.LogInformation($"{monday.ToDateTimeUnspecified().ToShortDateString()} thru {sunday.ToDateTimeUnspecified().ToShortDateString()}");
 
-                var monday = localDateTime.Previous(IsoDayOfWeek.Monday);
-                var sunday = localDateTime.Next(IsoDayOfWeek.Sunday);
+            var connectionString = Environment.GetEnvironmentVariable("SqlContext");
 
-                logger.LogInformation($"{monday.ToDateTimeUnspecified().ToShortDateString()} thru {sunday.ToDateTimeUnspecified().ToShortDateString()}");
-                
-                var connectionString = Environment.GetEnvironmentVariable("SqlContext");
+            _logger.LogInformation("Connecting to database");
 
-                logger.LogInformation("Connecting to database");
+            await using var connection = new SqlConnection(connectionString);
 
-                await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
 
-                await connection.OpenAsync();
+            var alerts = new List<Alert>(0);
 
-                var alerts = new List<Alert>(0);
-
-                var organizationsSql = @"
+            var organizationsSql = @"
                         SELECT
                             [O].[Id]
                         FROM
                             [Organizations] AS [O];";
-                var organizations = await connection.QueryAsync<Organization>(organizationsSql);
+            var organizations = await connection.QueryAsync<Organization>(organizationsSql);
 
-                foreach (var organization in organizations)
-                {
-                    var usersSql = @"
+            foreach (var organization in organizations)
+            {
+                var usersSql = @"
                             SELECT
                                 [U].[Id],
                                 [U].[Name]
@@ -91,19 +92,19 @@ namespace Brizbee.Functions.Alerts
                             WHERE
                                 [U].[IsDeleted] = 0 AND
                                 [U].[OrganizationId] = @OrganizationId;";
-                    var users = await connection.QueryAsync<User>(usersSql, new
-                    {
-                        OrganizationId = organization.Id
-                    });
+                var users = await connection.QueryAsync<User>(usersSql, new
+                {
+                    OrganizationId = organization.Id
+                });
 
-                    foreach (var user in users)
-                    {
-                        // ----------------------------------------------------
-                        // Check for a total that exceeds the threshold.
-                        // ----------------------------------------------------
+                foreach (var user in users)
+                {
+                    // ----------------------------------------------------
+                    // Check for a total that exceeds the threshold.
+                    // ----------------------------------------------------
 
-                        const int totalThreshold = 2100; // Minutes
-                        var totalSql = @"
+                    const int totalThreshold = 2100; // Minutes
+                    var totalSql = @"
                                 SELECT
 	                                MAX ([X].[Punch_CumulativeMinutes])
                                 FROM
@@ -127,28 +128,28 @@ namespace Brizbee.Functions.Alerts
                                 WHERE
 	                                [X].[Punch_CumulativeMinutes] > @ExceededMinutes;";
 
-                        var total = await connection.QuerySingleAsync<long?>(totalSql, new
+                    var total = await connection.QuerySingleAsync<long?>(totalSql, new
+                    {
+                        Min = monday.ToDateTimeUnspecified(),
+                        Max = sunday.ToDateTimeUnspecified(),
+                        UserId = user.Id,
+                        ExceededMinutes = totalThreshold
+                    });
+
+                    if (total.HasValue)
+                        alerts.Add(new Alert()
                         {
-                            Min = monday.ToDateTimeUnspecified(),
-                            Max = sunday.ToDateTimeUnspecified(),
-                            UserId = user.Id,
-                            ExceededMinutes = totalThreshold
+                            Type = "total.exceeded",
+                            Value = total.Value,
+                            User = user
                         });
 
-                        if (total.HasValue)
-                            alerts.Add(new Alert()
-                            {
-                                Type = "total.exceeded",
-                                Value = total.Value,
-                                User = user
-                            });
+                    // ----------------------------------------------------
+                    // Check for any punch that exceeds the threshold.
+                    // ----------------------------------------------------
 
-                        // ----------------------------------------------------
-                        // Check for any punch that exceeds the threshold.
-                        // ----------------------------------------------------
-
-                        const int punchesThreshold = 600; // Minutes
-                        var punchesSql = @"
+                    const int punchesThreshold = 600; // Minutes
+                    var punchesSql = @"
                                 SELECT
                                     [X].[Id],
 	                                [X].[Punch_Minutes]
@@ -168,50 +169,49 @@ namespace Brizbee.Functions.Alerts
                                 WHERE
 	                                [X].[Punch_Minutes] > @ExceededMinutes;";
 
-                        var punches = await connection.QueryAsync<Exceeded>(punchesSql, new
+                    var punches = await connection.QueryAsync<Exceeded>(punchesSql, new
+                    {
+                        Min = monday.ToDateTimeUnspecified(),
+                        Max = sunday.ToDateTimeUnspecified(),
+                        UserId = user.Id,
+                        ExceededMinutes = punchesThreshold
+                    });
+
+                    foreach (var punch in punches)
+                        alerts.Add(new Alert()
                         {
-                            Min = monday.ToDateTimeUnspecified(),
-                            Max = sunday.ToDateTimeUnspecified(),
-                            UserId = user.Id,
-                            ExceededMinutes = punchesThreshold
+                            Type = "punch.exceeded",
+                            Value = punch.Punch_Minutes,
+                            User = user
                         });
-
-                        foreach (var punch in punches)
-                            alerts.Add(new Alert()
-                            {
-                                Type = "punch.exceeded",
-                                Value = punch.Punch_Minutes,
-                                User = user
-                            });
-                    }
-
-                    try
-                    {
-                        var json = JsonSerializer.Serialize(alerts);
-
-                        // Prepare to upload the json.
-                        var azureConnectionString = Environment.GetEnvironmentVariable("AlertsAzureStorageConnectionString");
-                        var blobServiceClient = new BlobServiceClient(azureConnectionString);
-                        var containerClient = blobServiceClient.GetBlobContainerClient("alerts");
-                        var blobClient = containerClient.GetBlobClient($"{organization.Id}.json");
-
-                        // Perform the upload.
-                        using var stream = new MemoryStream(Encoding.Default.GetBytes(json), false);
-
-                        await blobClient.UploadAsync(stream, overwrite: true);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex.ToString());
-                    }
                 }
 
-                connection.Close();
+                try
+                {
+                    var json = JsonSerializer.Serialize(alerts);
+
+                    // Prepare to upload the json.
+                    var azureConnectionString = Environment.GetEnvironmentVariable("AlertsAzureStorageConnectionString");
+                    var blobServiceClient = new BlobServiceClient(azureConnectionString);
+                    var containerClient = blobServiceClient.GetBlobContainerClient("alerts");
+                    var blobClient = containerClient.GetBlobClient($"{organization.Id}.json");
+
+                    // Perform the upload.
+                    using var stream = new MemoryStream(Encoding.Default.GetBytes(json), false);
+
+                    await blobClient.UploadAsync(stream, overwrite: true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex.Message);
-            }
+
+            connection.Close();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
         }
     }
 }
