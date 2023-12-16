@@ -1,32 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
-		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<OutputType>Exe</OutputType>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
-		<PackageReference Include="Dapper" Version="2.1.24" />
-		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.16.4" />
-		<PackageReference Include="NodaTime" Version="3.1.9" />
-		<PackageReference Include="SendGrid" Version="9.28.1" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-	</ItemGroup>
-	<ItemGroup>
-		<None Update="host.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="local.settings.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
-	</ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+    <PackageReference Include="Dapper" Version="2.1.24" />
+    <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.0" />
+    <PackageReference Include="NodaTime" Version="3.1.9" />
+    <PackageReference Include="SendGrid" Version="9.28.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.16.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
+  </ItemGroup>
 </Project>
