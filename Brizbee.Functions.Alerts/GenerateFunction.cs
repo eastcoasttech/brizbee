@@ -36,15 +36,11 @@ public class GenerateFunction
 {
     private static ILogger? _logger;
 
-    public GenerateFunction(ILoggerFactory loggerFactory)
-    {
-        _logger = loggerFactory.CreateLogger<GenerateFunction>();
-    }
-
     [Function(nameof(GenerateFunction))]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Public parameters from Azure Functions runtime")]
     public static void Run([TimerTrigger("0 */30 * * * *")] TimerInfo timerInfo, FunctionContext context)
     {
+        _logger = context.GetLogger(nameof(GenerateFunction));
+
         _logger.LogInformation("GenerateFunction executing");
 
         GenerateExceededAlertsAsync().GetAwaiter().GetResult();

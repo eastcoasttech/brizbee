@@ -37,15 +37,11 @@ public class MidnightPunchFunction
 {
     private static ILogger? _logger;
 
-    public MidnightPunchFunction(ILoggerFactory loggerFactory)
-    {
-        _logger = loggerFactory.CreateLogger<MidnightPunchFunction>();
-    }
-
     [Function(nameof(MidnightPunchFunction))]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Public parameters from Azure Functions runtime")]
     public static void Run([TimerTrigger("0 30 6 * * *")] TimerInfo timerInfo, FunctionContext context)
     {
+        _logger = context.GetLogger(nameof(MidnightPunchFunction));
+
         _logger.LogInformation("MidnightPunchFunction executing");
 
         GenerateMidnightPunchEmailsAsync().GetAwaiter().GetResult();
