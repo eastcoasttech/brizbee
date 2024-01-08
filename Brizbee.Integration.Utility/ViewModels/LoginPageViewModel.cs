@@ -50,7 +50,7 @@ namespace Brizbee.Integration.Utility.ViewModels
         public async System.Threading.Tasks.Task Login()
         {
             // Initialize the HTTP _client.
-            _client = new RestClient("https://app-brizbee-api-prod.azurewebsites.net/",
+            _client = new RestClient("https://api-production-1.brizbee.com/",
                 configureSerialization: s => s.UseSerializer(() => new JsonNetSerializer(_settings)));
 
             Application.Current.Properties["Client"] = _client;
