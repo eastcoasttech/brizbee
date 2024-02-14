@@ -23,13 +23,13 @@
     <div class="form-group">
         <label for="range_max" class="col-sm-3 control-label">To</label>
         <div class="col-sm-9">
-            <InputDate @bind-Value="_range.Max" id="range_max" class="form-control" />
+            <InputDate @bind-Value="@_range.Max" id="range_max" class="form-control" />
         </div>
     </div>
 </form>
 
 <p>
-    <a href="@_downloadUrl" class="btn btn-primary">
+    <a href="@($"{ApiService.GetBaseUrl()}api/QBDInventoryConsumptions/Export?minCreatedAt={_range.Min:yyyy-MM-dd}&maxCreatedAt={_range.Max:yyyy-MM-dd}&access_token={_accessToken}")" class="btn btn-primary">
         CSV File (Comma Separated Values)
     </a>
     <br />
@@ -43,16 +43,16 @@
 <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
 
 @code {
-    private string _downloadUrl = "";
-    private readonly DateRange _range = new DateRange();
+    private string _accessToken = string.Empty;
+    private readonly DateRange _range = new()
+    {
+        Max = DateTime.Today,
+        Min = DateTime.Today
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        var accessToken = await LocalStorageService.GetFromLocalStorage("Token");
-        var rangeMin = _range.Min.ToString("yyyy-MM-dd");
-        var rangeMax = _range.Max.ToString("yyyy-MM-dd");
-
-        _downloadUrl = $"{ApiService.GetBaseUrl()}api/QBDInventoryConsumptions/Export?minCreatedAt={rangeMin}&maxCreatedAt={rangeMax}&access_token={accessToken}";
+        _accessToken = await LocalStorageService.GetFromLocalStorage("Token");
     }
 
     private void CloseDialog(MouseEventArgs e)
