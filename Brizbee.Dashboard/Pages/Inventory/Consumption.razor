@@ -120,6 +120,9 @@
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-default" @onclick="@(e => RefreshConsumptions())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
                 </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadConsumptionDialog())" disabled="@(working)"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
+                </div>
             </div>
         </div>
     </div>
@@ -404,5 +407,12 @@
         dialogService.Open<ConsumptionDialog>("Edit Consumption",
                                 new Dictionary<string, object>() { { "Id", consumption.Id } },
                                 new DialogOptions() { Width = "600px" });
+    }
+
+    private void OpenDownloadConsumptionDialog()
+    {
+        dialogService.Open<DownloadConsumptionDialog>("Download Consumption",
+            new Dictionary<string, object>() { },
+            new DialogOptions() { Width = "600px" });
     }
 }

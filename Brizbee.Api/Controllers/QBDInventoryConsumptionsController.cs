@@ -20,17 +20,22 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using System.Collections;
 using Brizbee.Api;
 using Brizbee.Api.Serialization.Expanded;
 using Brizbee.Core.Models;
 using Brizbee.Core.Serialization;
+using CsvHelper.Configuration;
+using CsvHelper;
 using Dapper;
+using DocumentFormat.OpenXml.Math;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using System.Globalization;
 using System.Net;
+using System.Text;
 
 namespace Brizbee.Api.Controllers
 {
@@ -355,6 +360,40 @@ namespace Brizbee.Api.Controllers
             {
                 StatusCode = (int)HttpStatusCode.OK
             };
+        }
+        
+        // GET: api/QBDInventoryConsumptions/Export
+        [HttpGet("api/QBDInventoryConsumptions/Export")]
+        public IActionResult GetExport([FromQuery] DateTime minCreatedAt, [FromQuery] DateTime maxCreatedAt)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanViewInventoryConsumptions)
+                return BadRequest();
+
+            var consumptions = _context.QBDInventoryConsumptions!
+                .Include(c => c.QBDInventoryItem)
+                .Include(c => c.Task)
+                .Include(c => c.Task!.Job)
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .Where(c => c.CreatedAt >= minCreatedAt && c.CreatedAt <= maxCreatedAt)
+                .OrderBy(c => c.CreatedAt)
+                .ToList();
+            
+            var configuration = new CsvConfiguration(CultureInfo.CurrentCulture)
+            {
+                Delimiter = ","
+            };
+
+            using var writer = new StringWriter();
+            using var csv = new CsvWriter(writer, configuration);
+
+            csv.WriteRecords((IEnumerable)consumptions);
+
+            var bytes = Encoding.UTF8.GetBytes(writer.ToString());
+            return File(bytes, "text/csv", fileDownloadName:
+                $"Consumption {minCreatedAt.ToShortDateString()} thru {maxCreatedAt.ToShortDateString()}.csv");
         }
 
         // POST: api/QBDInventoryConsumptions/Sync

@@ -1,0 +1,62 @@
+﻿@page "/dialogs/download-consumption"
+
+@using Brizbee.Dashboard.Services
+@using Brizbee.Dashboard.Serialization
+
+@inject ApiService ApiService
+@inject DialogService DialogService
+@inject LocalStorageService LocalStorageService
+
+<p>
+    Click below to download the consumption:
+</p>
+
+<form class="form-horizontal" autocomplete="off">
+
+    <div class="form-group">
+        <label for="range_min" class="col-sm-3 control-label">From</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="_range.Min" id="range_min" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="range_max" class="col-sm-3 control-label">To</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="_range.Max" id="range_max" class="form-control" />
+        </div>
+    </div>
+</form>
+
+<p>
+    <a href="@_downloadUrl" class="btn btn-primary">
+        CSV File (Comma Separated Values)
+    </a>
+    <br />
+    <small>
+        This file can be opened in Microsoft Excel, LibreOffice, Google Docs, Office 365, etc.
+    </small>
+</p>
+
+<hr />
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+
+@code {
+    private string _downloadUrl = "";
+    private readonly DateRange _range = new DateRange();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var accessToken = await LocalStorageService.GetFromLocalStorage("Token");
+        var rangeMin = _range.Min.ToString("yyyy-MM-dd");
+        var rangeMax = _range.Max.ToString("yyyy-MM-dd");
+
+        _downloadUrl = $"{ApiService.GetBaseUrl()}api/QBDInventoryConsumptions/Export?minCreatedAt={rangeMin}&maxCreatedAt={rangeMax}&access_token={accessToken}";
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        DialogService.Close(false);
+    }
+}
