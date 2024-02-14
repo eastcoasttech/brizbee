@@ -48,7 +48,7 @@ namespace Brizbee.Integration.Utility.Views.Punches
 
         private void ViewPunchesButton_Click(object sender, RoutedEventArgs e)
         {
-            ViewPunchesWindow window = new ViewPunchesWindow();
+            var window = new ViewPunchesWindow();
             window.Owner = this.Parent as Window;
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             window.Show();
@@ -56,7 +56,7 @@ namespace Brizbee.Integration.Utility.Views.Punches
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            ViewPunchesWindow window = new ViewPunchesWindow();
+            var window = new ViewPunchesWindow();
             window.Owner = this.Parent as Window;
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             window.ShowDialog();

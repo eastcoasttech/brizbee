@@ -2,7 +2,7 @@
 //  ViewPunchesViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,7 +21,7 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
+using Brizbee.Core.Models;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Collections.ObjectModel;

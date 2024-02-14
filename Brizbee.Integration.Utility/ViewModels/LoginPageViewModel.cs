@@ -2,7 +2,7 @@
 //  LoginPageViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2022 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,8 +21,7 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
-using Brizbee.Common.Security;
+using Brizbee.Core.Models;
 using Brizbee.Integration.Utility.Exceptions;
 using Newtonsoft.Json;
 using RestSharp;
@@ -30,6 +29,7 @@ using RestSharp.Serializers.NewtonsoftJson;
 using System;
 using System.ComponentModel;
 using System.Windows;
+using Brizbee.Core.Security;
 
 namespace Brizbee.Integration.Utility.ViewModels
 {
@@ -40,7 +40,7 @@ namespace Brizbee.Integration.Utility.ViewModels
         public string Password { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
         private RestClient _client;
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings()
+        private readonly JsonSerializerSettings _settings = new()
         {
             NullValueHandling = NullValueHandling.Ignore,
             StringEscapeHandling = StringEscapeHandling.EscapeHtml,
@@ -68,7 +68,7 @@ namespace Brizbee.Integration.Utility.ViewModels
             request.AddJsonBody(new
             {
                 Method = "EMAIL",
-                EmailAddress = EmailAddress,
+                EmailAddress,
                 EmailPassword = Password
             });
 
@@ -88,7 +88,7 @@ namespace Brizbee.Integration.Utility.ViewModels
             else
             {
                 IsEnabled = true;
-                OnPropertyChanged("IsEnabled");
+                OnPropertyChanged(nameof(IsEnabled));
 
                 if (response.Content.Contains("password"))
                 {
@@ -114,12 +114,12 @@ namespace Brizbee.Integration.Utility.ViewModels
                 // Save the authenticated user for later
                 Application.Current.Properties["CurrentUser"] = response.Data;
                 IsEnabled = false;
-                OnPropertyChanged("IsEnabled");
+                OnPropertyChanged(nameof(IsEnabled));
             }
             else
             {
                 IsEnabled = true;
-                OnPropertyChanged("IsEnabled");
+                OnPropertyChanged(nameof(IsEnabled));
                 throw new Exception(response.Content);
             }
         }

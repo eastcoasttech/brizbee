@@ -39,7 +39,7 @@ namespace Brizbee.Integration.Utility
     /// </summary>
     public partial class App : System.Windows.Application
     {
-        private NotifyIcon icon = new NotifyIcon();
+        private NotifyIcon icon = new();
         private Mutex _instanceMutex = null;
 
         public App()
@@ -64,8 +64,8 @@ namespace Brizbee.Integration.Utility
             Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             // Configure the tray icon.
-            Assembly a = Assembly.GetExecutingAssembly();
-            Stream st = a.GetManifestResourceStream("Brizbee.Integration.Utility.Images.favicon.ico");
+            var a = Assembly.GetExecutingAssembly();
+            var st = a.GetManifestResourceStream("Brizbee.Integration.Utility.Images.favicon.ico");
             
             icon.Icon = new Icon(st);
             icon.Visible = true;

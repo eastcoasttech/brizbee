@@ -19,7 +19,7 @@
         <StackPanel DockPanel.Dock="Bottom" Background="White">
             <Separator />
             <Grid>
-                <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="10">© 2021, East Coast Technology Services, LLC</TextBlock>
+                <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="10">© 2021-2024, East Coast Technology Services, LLC</TextBlock>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="Next" Width="85"
                         Name="NextButton"

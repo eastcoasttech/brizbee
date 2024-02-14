@@ -2,7 +2,7 @@
 //  SyncViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,10 +21,9 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
+using Brizbee.Core.Models;
 using Brizbee.Integration.Utility.Services;
 using CsvHelper;
-using Interop.QBXMLRP2;
 using NLog;
 using RestSharp;
 using System;
@@ -37,6 +36,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Xml;
+using QBXMLRP2Lib;
 
 namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
 {
@@ -77,7 +77,7 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             OnPropertyChanged("StatusText");
 
             // Open the offset mapping file first, but only if one has been specified.
-            List<OffsetMapping> offsetMappings = new List<OffsetMapping>(0);
+            var offsetMappings = new List<OffsetMapping>(0);
             if (!string.IsNullOrEmpty(offsetFileName))
             {
                 try
@@ -274,10 +274,10 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
@@ -323,10 +323,10 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
@@ -375,10 +375,10 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryItems
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 

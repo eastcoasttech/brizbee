@@ -2,7 +2,7 @@
 //  SyncViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,10 +21,9 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
+using Brizbee.Core.Models;
 using Brizbee.Integration.Utility.Exceptions;
 using Brizbee.Integration.Utility.Services;
-using Interop.QBXMLRP2;
 using NLog;
 using RestSharp;
 using System;
@@ -35,6 +34,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Xml;
+using QBXMLRP2Lib;
 
 namespace Brizbee.Integration.Utility.ViewModels.Punches
 {
@@ -580,7 +580,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -597,8 +597,8 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             }
             else if (iStatusCode == 3310)
             {
-                Regex regex = new Regex(@".+(employee ""){1}(.+)("" provided){1}.+");
-                Match match = regex.Match(statusMessage);
+                var regex = new Regex(@".+(employee ""){1}(.+)("" provided){1}.+");
+                var match = regex.Match(statusMessage);
 
                 if (match.Success)
                 {
@@ -633,28 +633,28 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private void WalkEmployeeQueryRs(string response)
         {
             //Parse the response XML string into an XmlDocument
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             //Get the response for our request
-            XmlNodeList EmployeeQueryRsList = responseXmlDoc.GetElementsByTagName("EmployeeQueryRs");
+            var EmployeeQueryRsList = responseXmlDoc.GetElementsByTagName("EmployeeQueryRs");
             foreach (var result in EmployeeQueryRsList)
             {
-                XmlNode responseNode = result as XmlNode;
+                var responseNode = result as XmlNode;
 
                 //Check the status code, info, and severity
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+                var rsAttributes = responseNode.Attributes;
+                var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-                int iStatusCode = Convert.ToInt32(statusCode);
+                var iStatusCode = Convert.ToInt32(statusCode);
 
                 //status code = 0 all OK, > 0 is warning
                 if (iStatusCode == 500)
                 {
-                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
-                    Match match = regex.Match(statusMessage);
+                    var regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    var match = regex.Match(statusMessage);
 
                     if (match.Success)
                     {
@@ -677,28 +677,28 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private void WalkItemServiceQueryRs(string response)
         {
             //Parse the response XML string into an XmlDocument
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             //Get the response for our request
-            XmlNodeList ItemServiceQueryRsList = responseXmlDoc.GetElementsByTagName("ItemServiceQueryRs");
+            var ItemServiceQueryRsList = responseXmlDoc.GetElementsByTagName("ItemServiceQueryRs");
             foreach (var result in ItemServiceQueryRsList)
             {
-                XmlNode responseNode = result as XmlNode;
+                var responseNode = result as XmlNode;
 
                 //Check the status code, info, and severity
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+                var rsAttributes = responseNode.Attributes;
+                var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-                int iStatusCode = Convert.ToInt32(statusCode);
+                var iStatusCode = Convert.ToInt32(statusCode);
 
                 //status code = 0 all OK, > 0 is warning
                 if (iStatusCode == 500)
                 {
-                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
-                    Match match = regex.Match(statusMessage);
+                    var regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    var match = regex.Match(statusMessage);
 
                     if (match.Success)
                     {
@@ -721,28 +721,28 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private void WalkPayrollItemWageQueryRs(string response)
         {
             //Parse the response XML string into an XmlDocument
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             //Get the response for our request
-            XmlNodeList PayrollItemWageQueryRsList = responseXmlDoc.GetElementsByTagName("PayrollItemWageQueryRs");
+            var PayrollItemWageQueryRsList = responseXmlDoc.GetElementsByTagName("PayrollItemWageQueryRs");
             foreach (var result in PayrollItemWageQueryRsList)
             {
-                XmlNode responseNode = result as XmlNode;
+                var responseNode = result as XmlNode;
 
                 //Check the status code, info, and severity
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+                var rsAttributes = responseNode.Attributes;
+                var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-                int iStatusCode = Convert.ToInt32(statusCode);
+                var iStatusCode = Convert.ToInt32(statusCode);
 
                 //status code = 0 all OK, > 0 is warning
                 if (iStatusCode == 500)
                 {
-                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
-                    Match match = regex.Match(statusMessage);
+                    var regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    var match = regex.Match(statusMessage);
 
                     if (match.Success)
                     {
@@ -765,28 +765,28 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private void WalkCustomerQueryRs(string response)
         {
             //Parse the response XML string into an XmlDocument
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             //Get the response for our request
-            XmlNodeList CustomerQueryRsList = responseXmlDoc.GetElementsByTagName("CustomerQueryRs");
+            var CustomerQueryRsList = responseXmlDoc.GetElementsByTagName("CustomerQueryRs");
             foreach (var result in CustomerQueryRsList)
             {
-                XmlNode responseNode = result as XmlNode;
+                var responseNode = result as XmlNode;
 
                 //Check the status code, info, and severity
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+                var rsAttributes = responseNode.Attributes;
+                var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-                int iStatusCode = Convert.ToInt32(statusCode);
+                var iStatusCode = Convert.ToInt32(statusCode);
 
                 //status code = 0 all OK, > 0 is warning
                 if (iStatusCode == 500)
                 {
-                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
-                    Match match = regex.Match(statusMessage);
+                    var regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    var match = regex.Match(statusMessage);
 
                     if (match.Success)
                     {
@@ -809,28 +809,28 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
         private void WalkClassQueryRs(string response)
         {
             //Parse the response XML string into an XmlDocument
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             //Get the response for our request
-            XmlNodeList ClassQueryRsList = responseXmlDoc.GetElementsByTagName("ClassQueryRs");
+            var ClassQueryRsList = responseXmlDoc.GetElementsByTagName("ClassQueryRs");
             foreach (var result in ClassQueryRsList)
             {
-                XmlNode responseNode = result as XmlNode;
+                var responseNode = result as XmlNode;
 
                 //Check the status code, info, and severity
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+                var rsAttributes = responseNode.Attributes;
+                var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-                int iStatusCode = Convert.ToInt32(statusCode);
+                var iStatusCode = Convert.ToInt32(statusCode);
 
                 //status code = 0 all OK, > 0 is warning
                 if (iStatusCode == 500)
                 {
-                    Regex regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
-                    Match match = regex.Match(statusMessage);
+                    var regex = new Regex(@".+(\(""){1}(.+)(""\)){1}.+");
+                    var match = regex.Match(statusMessage);
 
                     if (match.Success)
                     {
@@ -856,99 +856,99 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
 
             //Go through all the elements of TimeTrackingRet
             //Get value of TxnID
-            string TxnID = TimeTrackingRet.SelectSingleNode("./TxnID").InnerText;
+            var TxnID = TimeTrackingRet.SelectSingleNode("./TxnID").InnerText;
             //Get value of TimeCreated
-            string TimeCreated = TimeTrackingRet.SelectSingleNode("./TimeCreated").InnerText;
+            var TimeCreated = TimeTrackingRet.SelectSingleNode("./TimeCreated").InnerText;
             //Get value of TimeModified
-            string TimeModified = TimeTrackingRet.SelectSingleNode("./TimeModified").InnerText;
+            var TimeModified = TimeTrackingRet.SelectSingleNode("./TimeModified").InnerText;
             //Get value of EditSequence
-            string EditSequence = TimeTrackingRet.SelectSingleNode("./EditSequence").InnerText;
+            var EditSequence = TimeTrackingRet.SelectSingleNode("./EditSequence").InnerText;
             //Get value of TxnNumber
             if (TimeTrackingRet.SelectSingleNode("./TxnNumber") != null)
             {
-                string TxnNumber = TimeTrackingRet.SelectSingleNode("./TxnNumber").InnerText;
+                var TxnNumber = TimeTrackingRet.SelectSingleNode("./TxnNumber").InnerText;
             }
             //Get value of TxnDate
-            string TxnDate = TimeTrackingRet.SelectSingleNode("./TxnDate").InnerText;
+            var TxnDate = TimeTrackingRet.SelectSingleNode("./TxnDate").InnerText;
             //Get all field values for EntityRef aggregate
             //Get value of ListID
             if (TimeTrackingRet.SelectSingleNode("./EntityRef/ListID") != null)
             {
-                string ListID = TimeTrackingRet.SelectSingleNode("./EntityRef/ListID").InnerText;
+                var ListID = TimeTrackingRet.SelectSingleNode("./EntityRef/ListID").InnerText;
             }
             //Get value of FullName
             if (TimeTrackingRet.SelectSingleNode("./EntityRef/FullName") != null)
             {
-                string FullName = TimeTrackingRet.SelectSingleNode("./EntityRef/FullName").InnerText;
+                var FullName = TimeTrackingRet.SelectSingleNode("./EntityRef/FullName").InnerText;
             }
             //Done with field values for EntityRef aggregate
 
             //Get all field values for CustomerRef aggregate
-            XmlNode CustomerRef = TimeTrackingRet.SelectSingleNode("./CustomerRef");
+            var CustomerRef = TimeTrackingRet.SelectSingleNode("./CustomerRef");
             if (CustomerRef != null)
             {
                 //Get value of ListID
                 if (TimeTrackingRet.SelectSingleNode("./CustomerRef/ListID") != null)
                 {
-                    string ListID = TimeTrackingRet.SelectSingleNode("./CustomerRef/ListID").InnerText;
+                    var ListID = TimeTrackingRet.SelectSingleNode("./CustomerRef/ListID").InnerText;
                 }
                 //Get value of FullName
                 if (TimeTrackingRet.SelectSingleNode("./CustomerRef/FullName") != null)
                 {
-                    string FullName = TimeTrackingRet.SelectSingleNode("./CustomerRef/FullName").InnerText;
+                    var FullName = TimeTrackingRet.SelectSingleNode("./CustomerRef/FullName").InnerText;
                 }
             }
             //Done with field values for CustomerRef aggregate
 
             //Get all field values for ItemServiceRef aggregate
-            XmlNode ItemServiceRef = TimeTrackingRet.SelectSingleNode("./ItemServiceRef");
+            var ItemServiceRef = TimeTrackingRet.SelectSingleNode("./ItemServiceRef");
             if (ItemServiceRef != null)
             {
                 //Get value of ListID
                 if (TimeTrackingRet.SelectSingleNode("./ItemServiceRef/ListID") != null)
                 {
-                    string ListID = TimeTrackingRet.SelectSingleNode("./ItemServiceRef/ListID").InnerText;
+                    var ListID = TimeTrackingRet.SelectSingleNode("./ItemServiceRef/ListID").InnerText;
                 }
                 //Get value of FullName
                 if (TimeTrackingRet.SelectSingleNode("./ItemServiceRef/FullName") != null)
                 {
-                    string FullName = TimeTrackingRet.SelectSingleNode("./ItemServiceRef/FullName").InnerText;
+                    var FullName = TimeTrackingRet.SelectSingleNode("./ItemServiceRef/FullName").InnerText;
                 }
             }
             //Done with field values for ItemServiceRef aggregate
 
             //Get value of Duration
-            string Duration = TimeTrackingRet.SelectSingleNode("./Duration").InnerText;
+            var Duration = TimeTrackingRet.SelectSingleNode("./Duration").InnerText;
             //Get all field values for ClassRef aggregate
-            XmlNode ClassRef = TimeTrackingRet.SelectSingleNode("./ClassRef");
+            var ClassRef = TimeTrackingRet.SelectSingleNode("./ClassRef");
             if (ClassRef != null)
             {
                 //Get value of ListID
                 if (TimeTrackingRet.SelectSingleNode("./ClassRef/ListID") != null)
                 {
-                    string ListID = TimeTrackingRet.SelectSingleNode("./ClassRef/ListID").InnerText;
+                    var ListID = TimeTrackingRet.SelectSingleNode("./ClassRef/ListID").InnerText;
                 }
                 //Get value of FullName
                 if (TimeTrackingRet.SelectSingleNode("./ClassRef/FullName") != null)
                 {
-                    string FullName = TimeTrackingRet.SelectSingleNode("./ClassRef/FullName").InnerText;
+                    var FullName = TimeTrackingRet.SelectSingleNode("./ClassRef/FullName").InnerText;
                 }
             }
             //Done with field values for ClassRef aggregate
 
             //Get all field values for PayrollItemWageRef aggregate
-            XmlNode PayrollItemWageRef = TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef");
+            var PayrollItemWageRef = TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef");
             if (PayrollItemWageRef != null)
             {
                 //Get value of ListID
                 if (TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef/ListID") != null)
                 {
-                    string ListID = TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef/ListID").InnerText;
+                    var ListID = TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef/ListID").InnerText;
                 }
                 //Get value of FullName
                 if (TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef/FullName") != null)
                 {
-                    string FullName = TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef/FullName").InnerText;
+                    var FullName = TimeTrackingRet.SelectSingleNode("./PayrollItemWageRef/FullName").InnerText;
                 }
             }
             //Done with field values for PayrollItemWageRef aggregate
@@ -956,27 +956,27 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             //Get value of Notes
             if (TimeTrackingRet.SelectSingleNode("./Notes") != null)
             {
-                string Notes = TimeTrackingRet.SelectSingleNode("./Notes").InnerText;
+                var Notes = TimeTrackingRet.SelectSingleNode("./Notes").InnerText;
             }
             //Get value of BillableStatus
             if (TimeTrackingRet.SelectSingleNode("./BillableStatus") != null)
             {
-                string BillableStatus = TimeTrackingRet.SelectSingleNode("./BillableStatus").InnerText;
+                var BillableStatus = TimeTrackingRet.SelectSingleNode("./BillableStatus").InnerText;
             }
             //Get value of ExternalGUID
             if (TimeTrackingRet.SelectSingleNode("./ExternalGUID") != null)
             {
-                string ExternalGUID = TimeTrackingRet.SelectSingleNode("./ExternalGUID").InnerText;
+                var ExternalGUID = TimeTrackingRet.SelectSingleNode("./ExternalGUID").InnerText;
             }
             //Get value of IsBillable
             if (TimeTrackingRet.SelectSingleNode("./IsBillable") != null)
             {
-                string IsBillable = TimeTrackingRet.SelectSingleNode("./IsBillable").InnerText;
+                var IsBillable = TimeTrackingRet.SelectSingleNode("./IsBillable").InnerText;
             }
             //Get value of IsBilled
             if (TimeTrackingRet.SelectSingleNode("./IsBilled") != null)
             {
-                string IsBilled = TimeTrackingRet.SelectSingleNode("./IsBilled").InnerText;
+                var IsBilled = TimeTrackingRet.SelectSingleNode("./IsBilled").InnerText;
             }
         }
 
@@ -995,10 +995,10 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
@@ -1028,10 +1028,10 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
@@ -1061,10 +1061,10 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
@@ -1094,10 +1094,10 @@ namespace Brizbee.Integration.Utility.ViewModels.Punches
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 

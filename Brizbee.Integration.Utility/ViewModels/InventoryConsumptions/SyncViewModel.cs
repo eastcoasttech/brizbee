@@ -2,7 +2,7 @@
 //  SyncViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,11 +21,10 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
 using Brizbee.Integration.Utility.Exceptions;
 using Brizbee.Integration.Utility.Services;
-using Interop.QBXMLRP2;
 using NLog;
+using QBXMLRP2Lib;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -34,6 +33,7 @@ using System.Configuration;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Brizbee.Core.Models;
 
 namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 {

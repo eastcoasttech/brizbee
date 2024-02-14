@@ -2,7 +2,7 @@
 //  SyncViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,10 +21,9 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
+using Brizbee.Core.Models;
 using Brizbee.Integration.Utility.Serialization;
 using Brizbee.Integration.Utility.Services;
-using Interop.QBXMLRP2;
 using NLog;
 using RestSharp;
 using System;
@@ -33,6 +32,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using QBXMLRP2Lib;
 
 namespace Brizbee.Integration.Utility.ViewModels.Projects
 {
@@ -261,7 +261,7 @@ namespace Brizbee.Integration.Utility.ViewModels.Projects
 
             var statusFilters = new string[selectedStatuses.Length];
 
-            for (int i = 0; i < selectedStatuses.Length; i++) 
+            for (var i = 0; i < selectedStatuses.Length; i++) 
             {
                 statusFilters[i] = $"Status eq '{selectedStatuses[i]}'";
             }

@@ -49,9 +49,9 @@ namespace Brizbee.Integration.Utility.Views.Projects
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
-            string[] selectedStatuses = new string[StatusesListBox.SelectedItems.Count];
+            var selectedStatuses = new string[StatusesListBox.SelectedItems.Count];
 
-            for (int i = 0; i < StatusesListBox.SelectedItems.Count; i++) 
+            for (var i = 0; i < StatusesListBox.SelectedItems.Count; i++) 
             {
                 var status = (StatusesListBox.SelectedItems[i] as ListBoxItem).Content.ToString();
                 selectedStatuses[i] = status;

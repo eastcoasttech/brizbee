@@ -2,7 +2,7 @@
 //  SendLogViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2022 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -38,8 +38,6 @@ namespace Brizbee.Integration.Utility.ViewModels
         public bool IsSendEnabled { get; set; }
         public string StatusText { get; set; }
 
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public void Upload()
         {
             IsSendEnabled = false;
@@ -52,23 +50,23 @@ namespace Brizbee.Integration.Utility.ViewModels
                 var hostname = Environment.MachineName;
                 var now = DateTime.Now.ToString("yyyy-MM-dd_hh_mm_ss");
 
-                Assembly assembly = Assembly.GetExecutingAssembly();
-                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+                var assembly = Assembly.GetExecutingAssembly();
+                var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
                 var version = fvi.FileVersion;
 
-                UriBuilder fullUri = new UriBuilder()
+                var fullUri = new UriBuilder()
                 {
                     Scheme = "https",
-                    Host = string.Format("{0}.blob.core.windows.net", "ects1"),
-                    Path = string.Format("{0}/{1}", "log-uploads", $"{now}_{version}_{hostname}.txt"),
+                    Host = "ects1.blob.core.windows.net",
+                    Path = $"log-uploads/{now}_{version}_{hostname}.txt",
                     Query = "sp=racw&st=2023-01-16T05:00:00Z&se=2024-01-01T05:00:00Z&spr=https&sv=2021-06-08&sr=c&sig=O%2BHmmj94Q%2FpK9iTRy98uAiMdHJc4V9IYZScWv3y0VHI%3D"
                 };
 
-                var blobClient = new BlobClient(fullUri.Uri, null);
+                var blobClient = new BlobClient(fullUri.Uri);
 
                 var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
                 var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
-                string fileName = fileTarget.FileName.Render(logEventInfo);
+                var fileName = fileTarget.FileName.Render(logEventInfo);
 
                 using (var uploadFileStream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {

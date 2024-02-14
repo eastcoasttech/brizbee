@@ -2,7 +2,7 @@
 //  ReverseViewModel.cs
 //  BRIZBEE Integration Utility
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of BRIZBEE Integration Utility.
 //
@@ -21,10 +21,10 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
+using Brizbee.Core.Models;
 using Brizbee.Integration.Utility.Services;
-using Interop.QBXMLRP2;
 using NLog;
+using QBXMLRP2Lib;
 using RestSharp;
 using System;
 using System.ComponentModel;
@@ -108,10 +108,10 @@ namespace Brizbee.Integration.Utility.ViewModels.Reverse
                 // Prepare the reverse request.
                 // ------------------------------------------------------------
 
-                string reverseTransactionType = Application.Current.Properties["ReverseTransactionType"] as string;
-                string transactionType = "";
-                string[] selectedTxnIds = new string[] { };
-                string syncId = "";
+                var reverseTransactionType = Application.Current.Properties["ReverseTransactionType"] as string;
+                var transactionType = "";
+                var selectedTxnIds = new string[] { };
+                var syncId = "";
 
                 if (reverseTransactionType == "Punches")
                 {

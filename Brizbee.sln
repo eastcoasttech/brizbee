@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Common", "Brizbee.Common\Brizbee.Common.csproj", "{34474249-6916-47BC-8013-3CD5DDC4B114}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brizbee.Integration.Utility", "Brizbee.Integration.Utility\Brizbee.Integration.Utility.csproj", "{72C67228-8F63-4079-8419-7B67D6C8F08E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Integration.Utility", "Brizbee.Integration.Utility\Brizbee.Integration.Utility.csproj", "{72C67228-8F63-4079-8419-7B67D6C8F08E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Brizbee.Dashboard", "Brizbee.Dashboard\Brizbee.Dashboard.csproj", "{7CB36687-ED3D-4FAF-97EB-BA4E755EDFC8}"
 EndProject

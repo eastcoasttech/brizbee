@@ -21,13 +21,13 @@
 //  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Common.Models;
-using Brizbee.Common.Serialization;
 using Brizbee.Integration.Utility.Serialization;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using Brizbee.Core.Models;
+using Brizbee.Core.Serialization;
 
 namespace Brizbee.Integration.Utility.Services
 {
@@ -35,7 +35,7 @@ namespace Brizbee.Integration.Utility.Services
     {
         public void BuildInventoryItemQueryRq(XmlDocument doc, XmlElement parent)
         {
-            XmlElement request = doc.CreateElement("ItemInventoryQueryRq");
+            var request = doc.CreateElement("ItemInventoryQueryRq");
             parent.AppendChild(request);
 
             // ------------------------------------------------------------
@@ -64,22 +64,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<QBDInventoryItem>) WalkInventoryItemQueryRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("ItemInventoryQueryRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("ItemInventoryQueryRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -91,7 +91,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -139,7 +139,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "UnitOfMeasureSetRef":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "FullName")
                                     {
                                         inventoryItem.QBDUnitOfMeasureSetFullName = xmlInnerNode.InnerText;
@@ -153,7 +153,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "COGSAccountRef":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "FullName")
                                     {
                                         inventoryItem.QBDCOGSAccountFullName = xmlInnerNode.InnerText;
@@ -180,7 +180,7 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildSalesReceiptAddRq(XmlDocument doc, XmlElement parent, List<QBDInventoryConsumption> consumptions, string valueMethod)
         {
-            XmlElement request = doc.CreateElement("SalesReceiptAddRq");
+            var request = doc.CreateElement("SalesReceiptAddRq");
             parent.AppendChild(request);
 
             foreach (var consumption in consumptions)
@@ -189,7 +189,7 @@ namespace Brizbee.Integration.Utility.Services
                 // SalesReceiptAddRq > SalesReceiptAdd
                 // ------------------------------------------------------------
 
-                XmlElement salesReceipt = doc.CreateElement("SalesReceiptAdd");
+                var salesReceipt = doc.CreateElement("SalesReceiptAdd");
                 request.AppendChild(salesReceipt);
 
                 // ------------------------------------------------------------
@@ -198,7 +198,7 @@ namespace Brizbee.Integration.Utility.Services
 
                 if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksCustomerJob))
                 {
-                    XmlElement customerRef = doc.CreateElement("CustomerRef");
+                    var customerRef = doc.CreateElement("CustomerRef");
                     salesReceipt.AppendChild(customerRef);
 
                     customerRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksCustomerJob));
@@ -210,7 +210,7 @@ namespace Brizbee.Integration.Utility.Services
 
                 if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
                 {
-                    XmlElement classRef = doc.CreateElement("ClassRef");
+                    var classRef = doc.CreateElement("ClassRef");
                     salesReceipt.AppendChild(classRef);
 
                     classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
@@ -226,14 +226,14 @@ namespace Brizbee.Integration.Utility.Services
                 // SalesReceiptAdd > SalesReceiptLineAdd
                 // ------------------------------------------------------------
 
-                XmlElement line = doc.CreateElement("SalesReceiptLineAdd");
+                var line = doc.CreateElement("SalesReceiptLineAdd");
                 salesReceipt.AppendChild(line);
 
                 // ------------------------------------------------------------
                 // SalesReceiptLineAdd > ItemRef
                 // ------------------------------------------------------------
 
-                XmlElement itemRef = doc.CreateElement("ItemRef");
+                var itemRef = doc.CreateElement("ItemRef");
                 line.AppendChild(itemRef);
 
                 itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
@@ -273,7 +273,7 @@ namespace Brizbee.Integration.Utility.Services
 
                 if (consumption.QBDInventorySiteId.HasValue) // Optional, not always available
                 {
-                    XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                    var inventorySiteRef = doc.CreateElement("InventorySiteRef");
                     line.AppendChild(inventorySiteRef);
 
                     inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
@@ -290,22 +290,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<string>) WalkSalesReceiptAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("SalesReceiptAddRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("SalesReceiptAddRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -317,7 +317,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -340,7 +340,7 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildInventoryAdjustmentAddRq(XmlDocument doc, XmlElement parent, List<QBDInventoryConsumption> consumptions, string valueMethod)
         {
-            XmlElement request = doc.CreateElement("InventoryAdjustmentAddRq");
+            var request = doc.CreateElement("InventoryAdjustmentAddRq");
             parent.AppendChild(request);
 
             foreach (var consumption in consumptions)
@@ -349,14 +349,14 @@ namespace Brizbee.Integration.Utility.Services
                 // InventoryAdjustmentAddRq > InventoryAdjustmentAdd
                 // ------------------------------------------------------------
 
-                XmlElement adjustment = doc.CreateElement("InventoryAdjustmentAdd");
+                var adjustment = doc.CreateElement("InventoryAdjustmentAdd");
                 request.AppendChild(adjustment);
 
                 // ------------------------------------------------------------
                 // InventoryAdjustmentAdd > AccountRef
                 // ------------------------------------------------------------
 
-                XmlElement accountRef = doc.CreateElement("AccountRef");
+                var accountRef = doc.CreateElement("AccountRef");
                 adjustment.AppendChild(accountRef);
 
                 accountRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.QBDInventoryItem.QBDCOGSAccountFullName));
@@ -373,7 +373,7 @@ namespace Brizbee.Integration.Utility.Services
 
                 if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksCustomerJob))
                 {
-                    XmlElement customerRef = doc.CreateElement("CustomerRef");
+                    var customerRef = doc.CreateElement("CustomerRef");
                     adjustment.AppendChild(customerRef);
 
                     customerRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksCustomerJob));
@@ -385,7 +385,7 @@ namespace Brizbee.Integration.Utility.Services
 
                 if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
                 {
-                    XmlElement classRef = doc.CreateElement("ClassRef");
+                    var classRef = doc.CreateElement("ClassRef");
                     adjustment.AppendChild(classRef);
 
                     classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
@@ -395,14 +395,14 @@ namespace Brizbee.Integration.Utility.Services
                 // InventoryAdjustmentAdd > InventoryAdjustmentLineAdd
                 // ------------------------------------------------------------
 
-                XmlElement line = doc.CreateElement("InventoryAdjustmentLineAdd");
+                var line = doc.CreateElement("InventoryAdjustmentLineAdd");
                 adjustment.AppendChild(line);
 
                 // ------------------------------------------------------------
                 // InventoryAdjustmentLineAdd > ItemRef
                 // ------------------------------------------------------------
 
-                XmlElement itemRef = doc.CreateElement("ItemRef");
+                var itemRef = doc.CreateElement("ItemRef");
                 line.AppendChild(itemRef);
 
                 itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
@@ -411,7 +411,7 @@ namespace Brizbee.Integration.Utility.Services
                 // InventoryAdjustmentLineAdd > QuantityAdjustment
                 // ------------------------------------------------------------
 
-                XmlElement quantity = doc.CreateElement("QuantityAdjustment");
+                var quantity = doc.CreateElement("QuantityAdjustment");
                 line.AppendChild(quantity);
 
                 quantity.AppendChild(MakeSimpleElement(doc, "QuantityDifference", (-consumption.Quantity).ToString()));
@@ -434,7 +434,7 @@ namespace Brizbee.Integration.Utility.Services
 
                 if (consumption.QBDInventorySiteId.HasValue)
                 {
-                    XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                    var inventorySiteRef = doc.CreateElement("InventorySiteRef");
                     line.AppendChild(inventorySiteRef);
 
                     inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
@@ -445,22 +445,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<string>) WalkInventoryAdjustmentAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("InventoryAdjustmentAddRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("InventoryAdjustmentAddRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -472,7 +472,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -495,21 +495,21 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildBillAddRq(XmlDocument doc, XmlElement parent, QBDInventoryConsumption consumption, string vendorFullName, string refNumber, string valueMethod)
         {
-            XmlElement request = doc.CreateElement("BillAddRq");
+            var request = doc.CreateElement("BillAddRq");
             parent.AppendChild(request);
 
             // ------------------------------------------------------------
             // BillAddRq > BillAdd
             // ------------------------------------------------------------
 
-            XmlElement bill = doc.CreateElement("BillAdd");
+            var bill = doc.CreateElement("BillAdd");
             request.AppendChild(bill);
 
             // ------------------------------------------------------------
             // BillAdd > VendorRef
             // ------------------------------------------------------------
 
-            XmlElement vendorRef = doc.CreateElement("VendorRef");
+            var vendorRef = doc.CreateElement("VendorRef");
             bill.AppendChild(vendorRef);
 
             vendorRef.AppendChild(MakeSimpleElement(doc, "FullName", vendorFullName));
@@ -556,14 +556,14 @@ namespace Brizbee.Integration.Utility.Services
             // BillAdd > ItemLineAdd 1
             // ------------------------------------------------------------
 
-            XmlElement line1 = doc.CreateElement("ItemLineAdd");
+            var line1 = doc.CreateElement("ItemLineAdd");
             bill.AppendChild(line1);
 
             // ------------------------------------------------------------
             // ItemLineAdd 1 > ItemRef
             // ------------------------------------------------------------
 
-            XmlElement itemRef = doc.CreateElement("ItemRef");
+            var itemRef = doc.CreateElement("ItemRef");
             line1.AppendChild(itemRef);
 
             itemRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventoryItem.ListId));
@@ -574,7 +574,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (consumption.QBDInventorySiteId.HasValue && consumption.QBDInventorySiteId != 0) // Optional, not always available
             {
-                XmlElement inventorySiteRef = doc.CreateElement("InventorySiteRef");
+                var inventorySiteRef = doc.CreateElement("InventorySiteRef");
                 line1.AppendChild(inventorySiteRef);
 
                 inventorySiteRef.AppendChild(MakeSimpleElement(doc, "ListID", consumption.QBDInventorySite.ListId));
@@ -611,14 +611,14 @@ namespace Brizbee.Integration.Utility.Services
             // BillAdd > ItemLineAdd 2
             // ------------------------------------------------------------
 
-            XmlElement line2 = doc.CreateElement("ItemLineAdd");
+            var line2 = doc.CreateElement("ItemLineAdd");
             bill.AppendChild(line2);
 
             // ------------------------------------------------------------
             // ItemLineAdd 2 > ItemRef
             // ------------------------------------------------------------
 
-            XmlElement offsetItemRef = doc.CreateElement("ItemRef");
+            var offsetItemRef = doc.CreateElement("ItemRef");
             line2.AppendChild(offsetItemRef);
 
             offsetItemRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.QBDInventoryItem.OffsetItemFullName)); // Non-Inventory Part Item
@@ -647,7 +647,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksCustomerJob))
             {
-                XmlElement customerRef = doc.CreateElement("CustomerRef");
+                var customerRef = doc.CreateElement("CustomerRef");
                 line2.AppendChild(customerRef);
 
                 customerRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksCustomerJob));
@@ -659,7 +659,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(consumption.Task.Job.QuickBooksClass))
             {
-                XmlElement classRef = doc.CreateElement("ClassRef");
+                var classRef = doc.CreateElement("ClassRef");
                 line2.AppendChild(classRef);
 
                 classRef.AppendChild(MakeSimpleElement(doc, "FullName", consumption.Task.Job.QuickBooksClass));
@@ -677,22 +677,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<string>) WalkBillAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("BillAddRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("BillAddRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -704,7 +704,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -728,7 +728,7 @@ namespace Brizbee.Integration.Utility.Services
         public void BuildUnitOfMeasureSetQueryRq(XmlDocument doc, XmlElement parent)
         {
             // Create UnitOfMeasureSetQueryRq.
-            XmlElement request = doc.CreateElement("UnitOfMeasureSetQueryRq");
+            var request = doc.CreateElement("UnitOfMeasureSetQueryRq");
             parent.AppendChild(request);
 
             // Return 500 items at a time.
@@ -745,22 +745,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<QBDUnitOfMeasureSet>) WalkUnitOfMeasureSetQueryRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("UnitOfMeasureSetQueryRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("UnitOfMeasureSetQueryRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -772,7 +772,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -794,7 +794,7 @@ namespace Brizbee.Integration.Utility.Services
                                 var baseUnit = new QuickBooksUnitOfMeasure();
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "Name")
                                     {
                                         baseUnit.Name = xmlInnerNode.InnerText;
@@ -825,7 +825,7 @@ namespace Brizbee.Integration.Utility.Services
                                 var relatedUnit = new QuickBooksUnitOfMeasure();
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "Name")
                                     {
                                         relatedUnit.Name = xmlInnerNode.InnerText;
@@ -866,7 +866,7 @@ namespace Brizbee.Integration.Utility.Services
         public void BuildInventorySiteQueryRq(XmlDocument doc, XmlElement parent)
         {
             // Create UnitOfMeasureSetQueryRq.
-            XmlElement request = doc.CreateElement("InventorySiteQueryRq");
+            var request = doc.CreateElement("InventorySiteQueryRq");
             parent.AppendChild(request);
 
             // Only include certain fields.
@@ -878,22 +878,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<QBDInventorySite>) WalkInventorySiteQueryRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("InventorySiteQueryRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("InventorySiteQueryRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -905,7 +905,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -939,14 +939,14 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildCustomerAddRqForJob(XmlDocument doc, XmlElement parent, QuickBooksCustomer quickBooksCustomer, string parentName)
         {
-            XmlElement request = doc.CreateElement("CustomerAddRq");
+            var request = doc.CreateElement("CustomerAddRq");
             parent.AppendChild(request);
 
             // ------------------------------------------------------------
             // CustomerAddRq > CustomerAdd
             // ------------------------------------------------------------
 
-            XmlElement customer = doc.CreateElement("CustomerAdd");
+            var customer = doc.CreateElement("CustomerAdd");
             request.AppendChild(customer);
 
             // ------------------------------------------------------------
@@ -968,7 +968,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(parentName))
             {
-                XmlElement customerRef = doc.CreateElement("ParentRef");
+                var customerRef = doc.CreateElement("ParentRef");
                 customer.AppendChild(customerRef);
 
                 customerRef.AppendChild(MakeSimpleElement(doc, "FullName", parentName));
@@ -1026,7 +1026,7 @@ namespace Brizbee.Integration.Utility.Services
                 !string.IsNullOrEmpty(quickBooksCustomer.BillAddressState) ||
                 !string.IsNullOrEmpty(quickBooksCustomer.BillAddressPostalCode))
             {
-                XmlElement billAddress = doc.CreateElement("BillAddress");
+                var billAddress = doc.CreateElement("BillAddress");
                 customer.AppendChild(billAddress);
 
                 billAddress.AppendChild(MakeSimpleElement(doc, "Addr1", quickBooksCustomer.BillAddressAddr1));
@@ -1054,7 +1054,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(quickBooksCustomer.ShipToAddressName))
             {
-                XmlElement shipToAddress = doc.CreateElement("ShipToAddress");
+                var shipToAddress = doc.CreateElement("ShipToAddress");
                 customer.AppendChild(shipToAddress);
 
                 shipToAddress.AppendChild(MakeSimpleElement(doc, "Name", quickBooksCustomer.ShipToAddressName));
@@ -1122,7 +1122,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(quickBooksCustomer.SalesTaxCodeRefListId))
             {
-                XmlElement salesTaxCodeRef = doc.CreateElement("SalesTaxCodeRef");
+                var salesTaxCodeRef = doc.CreateElement("SalesTaxCodeRef");
                 customer.AppendChild(salesTaxCodeRef);
 
                 salesTaxCodeRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.SalesTaxCodeRefListId));
@@ -1134,7 +1134,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(quickBooksCustomer.ItemSalesTaxRefListId))
             {
-                XmlElement itemSalesTaxRef = doc.CreateElement("ItemSalesTaxRef");
+                var itemSalesTaxRef = doc.CreateElement("ItemSalesTaxRef");
                 customer.AppendChild(itemSalesTaxRef);
 
                 itemSalesTaxRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.ItemSalesTaxRefListId));
@@ -1167,7 +1167,7 @@ namespace Brizbee.Integration.Utility.Services
 
             if (!string.IsNullOrEmpty(quickBooksCustomer.PreferredPaymentMethodRefListId))
             {
-                XmlElement preferredPaymentMethodRef = doc.CreateElement("PreferredPaymentMethodRef");
+                var preferredPaymentMethodRef = doc.CreateElement("PreferredPaymentMethodRef");
                 customer.AppendChild(preferredPaymentMethodRef);
 
                 preferredPaymentMethodRef.AppendChild(MakeSimpleElement(doc, "ListID", quickBooksCustomer.PreferredPaymentMethodRefListId));
@@ -1183,14 +1183,14 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildCustomerAddRqForCustomer(XmlDocument doc, XmlElement parent, string name)
         {
-            XmlElement request = doc.CreateElement("CustomerAddRq");
+            var request = doc.CreateElement("CustomerAddRq");
             parent.AppendChild(request);
 
             // ------------------------------------------------------------
             // CustomerAddRq > CustomerAdd
             // ------------------------------------------------------------
 
-            XmlElement customer = doc.CreateElement("CustomerAdd");
+            var customer = doc.CreateElement("CustomerAdd");
             request.AppendChild(customer);
 
             // ------------------------------------------------------------
@@ -1210,22 +1210,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<string>) WalkCustomerAddRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("CustomerAddRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("CustomerAddRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -1237,7 +1237,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         //switch (xmlNode.Name)
                         //{
@@ -1264,7 +1264,7 @@ namespace Brizbee.Integration.Utility.Services
         public void BuildCustomerQueryRq(XmlDocument doc, XmlElement parent, string name)
         {
             // Create CustomerQueryRq.
-            XmlElement request = doc.CreateElement("CustomerQueryRq");
+            var request = doc.CreateElement("CustomerQueryRq");
             parent.AppendChild(request);
 
             // Only include certain fields.
@@ -1302,22 +1302,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string, List<QuickBooksCustomer>) WalkCustomerQueryRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("CustomerQueryRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("CustomerQueryRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response.", null); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -1329,7 +1329,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -1396,7 +1396,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "SalesTaxCodeRef":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "ListID")
                                     {
                                         customer.SalesTaxCodeRefListId = xmlInnerNode.InnerText;
@@ -1406,7 +1406,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "ItemSalesTaxRef":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "ListID")
                                     {
                                         customer.ItemSalesTaxRefListId = xmlInnerNode.InnerText;
@@ -1416,7 +1416,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "PreferredPaymentMethodRef":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "ListID")
                                     {
                                         customer.PreferredPaymentMethodRefListId = xmlInnerNode.InnerText;
@@ -1426,7 +1426,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "BillAddress":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "Addr1")
                                     {
                                         customer.BillAddressAddr1 = xmlInnerNode.InnerText;
@@ -1472,7 +1472,7 @@ namespace Brizbee.Integration.Utility.Services
                             case "ShipToAddress":
                                 foreach (var innerNode in xmlNode.ChildNodes)
                                 {
-                                    XmlNode xmlInnerNode = innerNode as XmlNode;
+                                    var xmlInnerNode = innerNode as XmlNode;
                                     if (xmlInnerNode.Name == "Name")
                                     {
                                         customer.ShipToAddressName = xmlInnerNode.InnerText;
@@ -1531,7 +1531,7 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildHostQueryRq(XmlDocument doc, XmlElement parent)
         {
-            XmlElement HostQuery = doc.CreateElement("HostQueryRq");
+            var HostQuery = doc.CreateElement("HostQueryRq");
             parent.AppendChild(HostQuery);
 
             // ------------------------------------------------------------
@@ -1551,29 +1551,29 @@ namespace Brizbee.Integration.Utility.Services
             var quickBooksExport = new QuickBooksHostDetails();
 
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList HostQueryRsList = responseXmlDoc.GetElementsByTagName("HostQueryRs");
+            var HostQueryRsList = responseXmlDoc.GetElementsByTagName("HostQueryRs");
             foreach (var hostQueryResult in HostQueryRsList)
             {
-                XmlNode responseNode = hostQueryResult as XmlNode;
+                var responseNode = hostQueryResult as XmlNode;
 
                 // Check the return status.
-                XmlAttributeCollection rsAttributes = responseNode.Attributes;
-                string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-                string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-                string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+                var rsAttributes = responseNode.Attributes;
+                var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+                var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+                var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-                int iStatusCode = Convert.ToInt32(statusCode);
+                var iStatusCode = Convert.ToInt32(statusCode);
 
                 if (iStatusCode == 0)
                 {
-                    XmlNode hostReturnResult = responseNode.FirstChild as XmlNode;
+                    var hostReturnResult = responseNode.FirstChild as XmlNode;
                     foreach (var node in hostReturnResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
                         switch (xmlNode.Name)
                         {
                             case "ProductName":
@@ -1603,7 +1603,7 @@ namespace Brizbee.Integration.Utility.Services
 
         public void BuildTxnDelRq(XmlDocument doc, XmlElement parent, string transactionType, string transactionId)
         {
-            XmlElement request = doc.CreateElement("TxnDelRq");
+            var request = doc.CreateElement("TxnDelRq");
             parent.AppendChild(request);
 
             // ------------------------------------------------------------
@@ -1622,22 +1622,22 @@ namespace Brizbee.Integration.Utility.Services
         public (bool, string) WalkTxnDelRs(string response)
         {
             // Parse the response XML string into an XmlDocument.
-            XmlDocument responseXmlDoc = new XmlDocument();
+            var responseXmlDoc = new XmlDocument();
             responseXmlDoc.LoadXml(response);
 
             // Get the response for our request.
-            XmlNodeList queryResults = responseXmlDoc.GetElementsByTagName("TxnDelRs");
-            XmlNode firstQueryResult = queryResults.Item(0);
+            var queryResults = responseXmlDoc.GetElementsByTagName("TxnDelRs");
+            var firstQueryResult = queryResults.Item(0);
 
             if (firstQueryResult == null) { return (false, "No items in QuickBooks response."); }
 
             // Check the return status.
-            XmlAttributeCollection rsAttributes = firstQueryResult.Attributes;
-            string statusCode = rsAttributes.GetNamedItem("statusCode").Value;
-            string statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
-            string statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
+            var rsAttributes = firstQueryResult.Attributes;
+            var statusCode = rsAttributes.GetNamedItem("statusCode").Value;
+            var statusSeverity = rsAttributes.GetNamedItem("statusSeverity").Value;
+            var statusMessage = rsAttributes.GetNamedItem("statusMessage").Value;
 
-            int iStatusCode = Convert.ToInt32(statusCode);
+            var iStatusCode = Convert.ToInt32(statusCode);
 
             if (iStatusCode == 0)
             {
@@ -1649,7 +1649,7 @@ namespace Brizbee.Integration.Utility.Services
 
                     foreach (var node in queryResult.ChildNodes)
                     {
-                        XmlNode xmlNode = node as XmlNode;
+                        var xmlNode = node as XmlNode;
 
                         switch (xmlNode.Name)
                         {
@@ -1677,10 +1677,10 @@ namespace Brizbee.Integration.Utility.Services
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", null, null));
             doc.AppendChild(doc.CreateProcessingInstruction("qbxml", "version=\"14.0\""));
 
-            XmlElement outer = doc.CreateElement("QBXML");
+            var outer = doc.CreateElement("QBXML");
             doc.AppendChild(outer);
 
-            XmlElement inner = doc.CreateElement("QBXMLMsgsRq");
+            var inner = doc.CreateElement("QBXMLMsgsRq");
             outer.AppendChild(inner);
             inner.SetAttribute("onError", "stopOnError");
 
@@ -1689,7 +1689,7 @@ namespace Brizbee.Integration.Utility.Services
 
         private XmlElement MakeSimpleElement(XmlDocument doc, string tagName, string tagvalue)
         {
-            XmlElement element = doc.CreateElement(tagName);
+            var element = doc.CreateElement(tagName);
             element.InnerText = tagvalue;
             return element;
         }

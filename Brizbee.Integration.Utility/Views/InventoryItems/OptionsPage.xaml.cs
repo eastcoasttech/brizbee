@@ -57,7 +57,7 @@ namespace Brizbee.Integration.Utility.Views.InventoryItems
 
         private void ChooseFileButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            var openFileDialog = new OpenFileDialog();
 
             // Configure the open file dialog.
             openFileDialog.Filter = "CSV Files (*.csv)|*.csv";
