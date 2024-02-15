@@ -36,6 +36,10 @@ using Microsoft.Extensions.Primitives;
 using System.Globalization;
 using System.Net;
 using System.Text;
+using Microsoft.ApplicationInsights;
+using NodaTime;
+using System;
+using NodaTime.Extensions;
 
 namespace Brizbee.Api.Controllers
 {
@@ -43,11 +47,13 @@ namespace Brizbee.Api.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
+        private readonly TelemetryClient _telemetryClient;
 
-        public QBDInventoryConsumptionsController(IConfiguration configuration, SqlContext context)
+        public QBDInventoryConsumptionsController(IConfiguration configuration, SqlContext context, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
             _context = context;
+            _telemetryClient = telemetryClient;
         }
 
         // GET: api/QBDInventoryConsumptions
@@ -366,34 +372,88 @@ namespace Brizbee.Api.Controllers
         [HttpGet("api/QBDInventoryConsumptions/Export")]
         public IActionResult GetExport([FromQuery] DateTime minCreatedAt, [FromQuery] DateTime maxCreatedAt)
         {
+            _context.Database.SetCommandTimeout(TimeSpan.FromMinutes(3));
+
+            if ((maxCreatedAt - minCreatedAt).TotalDays > 30)
+            {
+                return BadRequest();
+            }
+
             var currentUser = CurrentUser();
 
             // Ensure that user is authorized.
             if (!currentUser.CanViewInventoryConsumptions)
                 return BadRequest();
 
-            var consumptions = _context.QBDInventoryConsumptions!
+            var timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(currentUser.TimeZone!)!;
+
+            var minCreatedAtLocal = LocalDateTime.FromDateTime(minCreatedAt);
+            var minCreatedAtZoned = minCreatedAtLocal.InZoneLeniently(timeZone);
+            var minCreatedAtUtc = minCreatedAtZoned.ToDateTimeUtc();
+
+            var maxCreatedAtLocal = LocalDateTime.FromDateTime(maxCreatedAt);
+            maxCreatedAtLocal = new LocalDateTime(maxCreatedAtLocal.Year, maxCreatedAtLocal.Month, maxCreatedAtLocal.Day, 23, 59, 59, 999);
+            var maxCreatedAtZoned = maxCreatedAtLocal.InZoneLeniently(timeZone);
+            var maxCreatedAtUtc = maxCreatedAtZoned.ToDateTimeUtc();
+
+            try
+            {
+                var consumptions = _context.QBDInventoryConsumptions!
                 .Include(c => c.QBDInventoryItem)
                 .Include(c => c.Task)
                 .Include(c => c.Task!.Job)
                 .Where(c => c.OrganizationId == currentUser.OrganizationId)
-                .Where(c => c.CreatedAt >= minCreatedAt && c.CreatedAt <= maxCreatedAt)
+                .Where(c => c.CreatedAt >= minCreatedAtUtc && c.CreatedAt <= maxCreatedAtUtc)
                 .OrderBy(c => c.CreatedAt)
-                .ToList();
-            
-            var configuration = new CsvConfiguration(CultureInfo.CurrentCulture)
+                .Select(c => new
+                {
+                    Created = c.CreatedAt,
+                    User = c.CreatedByUser!.Name,
+                    Item = c.QBDInventoryItem!.Name,
+                    c.Quantity,
+                    CustomerNumber = c.Task!.Job!.Customer!.Number,
+                    CustomerName = c.Task.Job.Customer.Name,
+                    TaskNumber = c.Task.Number,
+                    TaskName = c.Task.Name,
+                    ProjectNumber = c.Task.Job.Number,
+                    ProjectName = c.Task.Job.Name,
+                    Synced = c.QBDInventoryConsumptionSyncId.HasValue
+                })
+                .ToList()
+                .Select(c => new
+                {
+                    Created = DateTime.SpecifyKind(c.Created, DateTimeKind.Utc).ToInstant().InZone(timeZone).ToDateTimeUnspecified(),
+                    c.User,
+                    c.Item,
+                    c.Quantity,
+                    c.CustomerNumber,
+                    c.CustomerName,
+                    c.TaskNumber,
+                    c.TaskName,
+                    c.ProjectNumber,
+                    c.ProjectName,
+                    c.Synced
+                });
+
+                var configuration = new CsvConfiguration(CultureInfo.CurrentCulture)
+                {
+                    Delimiter = ","
+                };
+
+                using var writer = new StringWriter();
+                using var csv = new CsvWriter(writer, configuration);
+
+                csv.WriteRecords((IEnumerable)consumptions);
+
+                var bytes = Encoding.UTF8.GetBytes(writer.ToString());
+                return File(bytes, "text/csv", fileDownloadName:
+                    $"Consumption {minCreatedAt.ToShortDateString()} thru {maxCreatedAt.ToShortDateString()}.csv");
+            }
+            catch (Exception ex)
             {
-                Delimiter = ","
-            };
-
-            using var writer = new StringWriter();
-            using var csv = new CsvWriter(writer, configuration);
-
-            csv.WriteRecords((IEnumerable)consumptions);
-
-            var bytes = Encoding.UTF8.GetBytes(writer.ToString());
-            return File(bytes, "text/csv", fileDownloadName:
-                $"Consumption {minCreatedAt.ToShortDateString()} thru {maxCreatedAt.ToShortDateString()}.csv");
+                _telemetryClient.TrackException(ex);
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         // POST: api/QBDInventoryConsumptions/Sync
