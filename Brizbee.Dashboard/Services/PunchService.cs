@@ -194,7 +194,7 @@ namespace Brizbee.Dashboard.Services
                         else
                         {
                             var deserialized = await JsonSerializer.DeserializeAsync<BadRequestODataMessage>(responseContent, options);
-                            return (false, null, deserialized.value);
+                            return (false, null, deserialized.message);
                         }
                     }
                 }
