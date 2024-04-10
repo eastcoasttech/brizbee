@@ -1,7 +1,12 @@
-﻿namespace Brizbee.Core.Serialization
+﻿using System.Text.Json.Serialization;
+
+namespace Brizbee.Core.Serialization;
+
+public class BadRequestODataMessage
 {
-    public class BadRequestODataMessage
-    {
-        public string message { get; set; } = string.Empty;
-    }
+    [JsonPropertyName("code")]
+    public string Code { get; set; } = string.Empty;
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = string.Empty;
 }
