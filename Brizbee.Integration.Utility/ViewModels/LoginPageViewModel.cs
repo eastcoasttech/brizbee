@@ -30,6 +30,7 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using Brizbee.Core.Security;
+using System.Reflection;
 
 namespace Brizbee.Integration.Utility.ViewModels
 {
@@ -46,6 +47,8 @@ namespace Brizbee.Integration.Utility.ViewModels
             StringEscapeHandling = StringEscapeHandling.EscapeHtml,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
+
+        public string Version { get; set; } = $"Version {Assembly.GetExecutingAssembly().GetName().Version}";
 
         public async System.Threading.Tasks.Task Login()
         {

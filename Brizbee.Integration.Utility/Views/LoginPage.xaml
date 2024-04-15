@@ -20,7 +20,10 @@
         <StackPanel DockPanel.Dock="Bottom" Background="White">
             <Separator />
             <Grid>
-                <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="10">© 2021-2024, East Coast Technology Services, LLC</TextBlock>
+                <StackPanel Orientation="Vertical" Margin="10" VerticalAlignment="Center">
+                    <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="0">© 2021-2024, East Coast Technology Services, LLC</TextBlock>
+                    <TextBlock Foreground="Gray" FontSize="8" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="0" Text="{Binding Version}"/>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="Next" Width="85"
                         Name="LoginButton"
