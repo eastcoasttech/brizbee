@@ -56,6 +56,12 @@ namespace Brizbee.Dashboard.Services
             return await JsonSerializer.DeserializeAsync<QBDInventoryItem>(responseContent, options);
         }
 
+        public async Task<bool> DeleteQbdInventoryItemAsync(long id)
+        {
+            var response = await _apiService.GetHttpClient().DeleteAsync($"api/QBDInventoryItems/{id}");
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<(bool, string)> SaveQBDInventoryItemAsync(QBDInventoryItem inventoryItem)
         {
             using (var request = new HttpRequestMessage(HttpMethod.Put, $"api/QBDInventoryItems/{inventoryItem.Id}"))

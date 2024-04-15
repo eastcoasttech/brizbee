@@ -82,6 +82,11 @@
 
     <hr />
 
+    @if (inventoryItem.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteInventoryItem" disabled="@(working || loading)">Delete</button>
+    }
+
     <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
     <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
     <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
@@ -105,6 +110,27 @@
             inventoryItem = await inventoryItemService.GetQBDInventoryItemByIdAsync(Id.Value);
 
         loading = false;
+    }
+
+    private async System.Threading.Tasks.Task DeleteInventoryItem()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this inventory item?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the inventory item on the server and close the dialog.
+        var result = await inventoryItemService.DeleteQbdInventoryItemAsync(inventoryItem.Id);
+        if (result)
+            dialogService.Close("inventoryItem.deleted");
+        else
+            working = false;
     }
 
     private void CloseDialog(MouseEventArgs e)
