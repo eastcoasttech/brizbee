@@ -150,6 +150,6 @@
   </ItemGroup>
   <PropertyGroup>
     <PlatformTarget>x86</PlatformTarget>
-    <AssemblyVersion>2.6.0.0</AssemblyVersion>
+    <AssemblyVersion></AssemblyVersion>
   </PropertyGroup>
 </Project>
