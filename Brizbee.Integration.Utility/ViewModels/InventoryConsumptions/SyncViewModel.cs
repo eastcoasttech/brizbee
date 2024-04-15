@@ -29,11 +29,11 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Configuration;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Brizbee.Core.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
 {
@@ -56,12 +56,15 @@ namespace Brizbee.Integration.Utility.ViewModels.InventoryConsumptions
         private readonly RestClient _client = Application.Current.Properties["Client"] as RestClient;
         private readonly string _selectedMethod = Application.Current.Properties["SelectedMethod"] as string;
         private readonly string _selectedValue = Application.Current.Properties["SelectedValue"] as string;
-        private readonly string _vendorFullName = ConfigurationManager.AppSettings["InventoryConsumptionVendorName"];
+        private string _vendorFullName;
         private const string ReferenceNumber = "Materials";
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         public void Sync()
         {
+            var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+            _vendorFullName = configuration.GetValue<string>("InventoryConsumptionVendorName");
+
             // Disable the buttons.
             IsExitEnabled = false;
             IsTryEnabled = false;
