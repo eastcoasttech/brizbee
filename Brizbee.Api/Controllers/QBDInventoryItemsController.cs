@@ -515,9 +515,9 @@ namespace Brizbee.Api.Controllers
             }
 
             // Remove all the consumptions for this inventory item first.
-            await _context.Database.ExecuteSqlRawAsync(
+            await _context.Database.GetDbConnection().ExecuteAsync(
                 sql: "DELETE FROM [dbo].[QBDInventoryConsumptions] WHERE [QBDInventoryItemId] = @QBDInventoryItemId;",
-                parameters: new
+                param: new
                 {
                     QBDInventoryItemId = inventoryItem.Id
                 });
