@@ -30,9 +30,13 @@
 		<UseWindowsForms>True</UseWindowsForms>
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<Platforms>AnyCPU;x86</Platforms>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+	  <DebugSymbols>true</DebugSymbols>
 	</PropertyGroup>
 	<PropertyGroup>
 		<ManifestCertificateThumbprint>BAE89E2CAE3A21447B5B6F8099CA3E3FCB9D6F0A</ManifestCertificateThumbprint>
