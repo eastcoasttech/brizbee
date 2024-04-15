@@ -315,9 +315,12 @@
 
     private async void Close(dynamic result)
     {
-        if ((result as string) == "item.updated")
+        switch (result as string)
         {
-            await RefreshItems();
+            case "item.updated":
+            case "item.deleted":
+                await RefreshItems();
+                break;
         }
     }
 

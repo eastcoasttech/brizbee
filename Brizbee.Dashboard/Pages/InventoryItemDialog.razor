@@ -128,7 +128,7 @@
         // Delete the inventory item on the server and close the dialog.
         var result = await inventoryItemService.DeleteQbdInventoryItemAsync(inventoryItem.Id);
         if (result)
-            dialogService.Close("inventoryItem.deleted");
+            dialogService.Close("item.deleted");
         else
             working = false;
     }
