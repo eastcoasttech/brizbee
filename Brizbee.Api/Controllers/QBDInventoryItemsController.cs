@@ -495,6 +495,40 @@ namespace Brizbee.Api.Controllers
             return Ok();
         }
 
+        // DELETE: api/QBDInventoryItems/5
+        [HttpDelete("api/QBDInventoryItems/{id:long}")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var currentUser = CurrentUser();
+
+            // Ensure that user is authorized.
+            if (!currentUser.CanDeleteInventoryConsumptions)
+                return Forbid();
+
+            var inventoryItem = _context.QBDInventoryItems!
+                .Where(c => c.OrganizationId == currentUser.OrganizationId)
+                .FirstOrDefault(c => c.Id == id);
+
+            if (inventoryItem == null)
+            {
+                return NotFound();
+            }
+
+            // Remove all the consumptions for this inventory item first.
+            await _context.Database.ExecuteSqlRawAsync(
+                sql: "DELETE FROM [dbo].[QBDInventoryConsumptions] WHERE [QBDInventoryItemId] = @QBDInventoryItemId;",
+                parameters: new
+                {
+                    QBDInventoryItemId = inventoryItem.Id
+                });
+
+            // Then remove the inventory item.
+            _context.QBDInventoryItems!.Remove(inventoryItem);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         private User CurrentUser()
         {
             var type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
