@@ -20,19 +20,21 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
+using System.Configuration;
 using System.Text;
 using System.Text.Json;
 using Azure.Storage.Blobs;
 using Brizbee.Worker.Alerts.Serialization;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 
 namespace Brizbee.Worker.Alerts.Workers;
 
-public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger<GenerateAlertsWorker> logger)
+public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger<GenerateAlertsWorker> logger, IConfiguration configuration)
     : IHostedService
 {
     private readonly IHostApplicationLifetime _hostLifetime = hostLifetime ?? throw new ArgumentNullException(nameof(hostLifetime));
@@ -66,8 +68,8 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
             var sunday = localDateTime.Next(IsoDayOfWeek.Sunday);
 
             _logger.LogInformation("{Monday} thru {Sunday}", monday.ToDateTimeUnspecified().ToShortDateString(), sunday.ToDateTimeUnspecified().ToShortDateString());
-
-            var connectionString = Environment.GetEnvironmentVariable("SqlContext");
+            
+            var connectionString = configuration.GetConnectionString("SqlContext");
 
             _logger.LogInformation("Connecting to database");
 
@@ -197,7 +199,7 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
                     var json = JsonSerializer.Serialize(alerts);
 
                     // Prepare to upload the json.
-                    var azureConnectionString = Environment.GetEnvironmentVariable("AlertsAzureStorageConnectionString");
+                    var azureConnectionString = configuration.GetValue<string>("AlertsAzureStorageConnectionString");
                     var blobServiceClient = new BlobServiceClient(azureConnectionString);
                     var containerClient = blobServiceClient.GetBlobContainerClient("alerts");
                     var blobClient = containerClient.GetBlobClient($"{organization.Id}.json");

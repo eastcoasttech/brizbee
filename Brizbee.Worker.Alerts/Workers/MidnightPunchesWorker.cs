@@ -24,6 +24,7 @@ using System.Text.Json.Serialization;
 using Brizbee.Worker.Alerts.Serialization;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -32,7 +33,7 @@ using SendGrid.Helpers.Mail;
 
 namespace Brizbee.Worker.Alerts.Workers;
 
-public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogger<MidnightPunchesWorker> logger)
+public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogger<MidnightPunchesWorker> logger, IConfiguration configuration)
     : IHostedService
 {
     private readonly IHostApplicationLifetime _hostLifetime = hostLifetime ?? throw new ArgumentNullException(nameof(hostLifetime));
@@ -65,7 +66,7 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
 
             _logger.LogInformation("{MidnightDate} {MidnightTime}", midnight.ToShortDateString(), midnight.ToShortTimeString());
 
-            var connectionString = Environment.GetEnvironmentVariable("SqlContext");
+            var connectionString = configuration.GetConnectionString("SqlContext");
 
             _logger.LogInformation("Connecting to database");
 
@@ -169,8 +170,8 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
                     foreach (var recipient in recipientsList.Where(r => !string.IsNullOrEmpty(r.EmailAddress)))
                         tos.Add(new EmailAddress() { Email = recipient.EmailAddress, Name = recipient.Name });
 
-                    var apiKey = Environment.GetEnvironmentVariable("SendGridApiKey");
-                    var templateId = Environment.GetEnvironmentVariable("SendGridMidnightPunchTemplateId");
+                    var apiKey = configuration.GetValue<string>("SendGridApiKey");
+                    var templateId = configuration.GetValue<string>("SendGridMidnightPunchTemplateId");
 
                     var dynamicTemplateData = new DynamicTemplateData()
                     {

@@ -41,25 +41,41 @@ internal class Program
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddCommandLine(args)
-            .AddJsonFile("appsettings.json")
-            .Build();
-
-        // Determine the connection string for Application Insights.
-        var operation = configuration["operation"] ?? throw new ArgumentException("operation must be provided");
-        var appInsightsConnectionString = operation.ToUpper() switch
-        {
-            "MIDNIGHT" => configuration.GetValue<string>("ApplicationInsights:ConnectionStringForMidnightPunches"),
-            "GENERATE" => configuration.GetValue<string>("ApplicationInsights:ConnectionStringForGenerateAlerts"),
-            _ => throw new ArgumentException("Invalid argument for operation. Must be MIDNIGHT or GENERATE.")
-        };
+        string? appInsightsConnectionString = null;
+        string? operation = null;
 
         return Host.CreateDefaultBuilder()
-            .ConfigureHostConfiguration(config =>
+            .ConfigureHostConfiguration(configurationBuilder =>
             {
-                config.AddCommandLine(args);
-                config.AddJsonFile("appsettings.json", optional: true);
+                configurationBuilder.AddCommandLine(args);
+                configurationBuilder.AddJsonFile("appsettings.json", optional: true);
+                configurationBuilder.AddEnvironmentVariables();
+            })
+            .ConfigureAppConfiguration((hostingContext, configurationBuilder) =>
+            {
+                var hostEnvironment = hostingContext.HostingEnvironment;
+
+                configurationBuilder.AddCommandLine(args);
+                configurationBuilder.AddJsonFile("appsettings.json", optional: true);
+                configurationBuilder.AddJsonFile($"appsettings.{hostEnvironment.EnvironmentName}.json", optional: true);
+                configurationBuilder.AddEnvironmentVariables();
+                
+                var configuration = configurationBuilder.Build();
+
+                if (string.IsNullOrEmpty(configuration.GetConnectionString("SqlContext")))
+                {
+                    throw new InvalidOperationException(
+                        "Database connection string 'SqlContext' must be provided.");
+                }
+
+                // Determine the connection string for Application Insights.
+                operation = configuration["operation"] ?? throw new ArgumentException("operation must be provided");
+                appInsightsConnectionString = operation.ToUpper() switch
+                {
+                    "MIDNIGHT" => configuration.GetValue<string>("ApplicationInsights:ConnectionStringForMidnightPunches"),
+                    "GENERATE" => configuration.GetValue<string>("ApplicationInsights:ConnectionStringForGenerateAlerts"),
+                    _ => throw new ArgumentException("Invalid argument for operation. Must be MIDNIGHT or GENERATE.")
+                };
             })
             .ConfigureServices(services =>
             {
@@ -69,7 +85,7 @@ internal class Program
                     {
                         // Application Insights is registered as a logger provider.
                         builder.AddApplicationInsights(
-                            configureTelemetryConfiguration: (config) => config.ConnectionString = appInsightsConnectionString,
+                            configureTelemetryConfiguration: config => config.ConnectionString = appInsightsConnectionString,
                             configureApplicationInsightsLoggerOptions: _ => { }
                         );
                     }
@@ -88,8 +104,8 @@ internal class Program
                 }
 
                 services.Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true);
-                
-                switch (operation.ToUpper())
+
+                switch (operation!.ToUpper())
                 {
                     case "MIDNIGHT":
                         services.AddHostedService<MidnightPunchesWorker>();
