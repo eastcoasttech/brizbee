@@ -173,9 +173,20 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
                     var apiKey = configuration.GetValue<string>("SendGridApiKey");
                     var templateId = configuration.GetValue<string>("SendGridMidnightPunchTemplateId");
 
-                    var dynamicTemplateData = new DynamicTemplateData()
+                    var dynamicTemplateData = new
                     {
-                        MidnightPunches = [.. midnightPunchesList]
+                        midnight_punches = midnightPunchesList.Select(p => new
+                        {
+                            user_name = p.User_Name,
+                            punch_outAt = p.Punch_OutAt,
+                            punch_inAt = p.Punch_InAt,
+                            task_number = p.Task_Number,
+                            task_name = p.Task_Name,
+                            project_number = p.Project_Number,
+                            project_name = p.Project_Name,
+                            customer_number = p.Customer_Number,
+                            customer_name = p.Customer_Name
+                        })
                     };
 
                     var client = new SendGridClient(apiKey);
@@ -195,11 +206,5 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
         {
             _logger.LogError(ex, "{Message}", ex.Message);
         }
-    }
-
-    internal class DynamicTemplateData
-    {
-        [JsonPropertyName("midnight_punches")]
-        public List<MidnightPunch>? MidnightPunches { get; set; }
     }
 }

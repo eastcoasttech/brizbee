@@ -20,36 +20,34 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using System.Text.Json.Serialization;
-
 namespace Brizbee.Worker.Alerts.Serialization;
 
 public class MidnightPunch
 {
-    [JsonPropertyName("user_name")]
+    // ReSharper disable once InconsistentNaming
     public string? User_Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("punch_outAt")]
+    // ReSharper disable once InconsistentNaming
     public string? Punch_OutAt { get; set; } = string.Empty;
 
-    [JsonPropertyName("punch_inAt")]
+    // ReSharper disable once InconsistentNaming
     public string? Punch_InAt { get; set; } = string.Empty;
 
-    [JsonPropertyName("task_number")]
+    // ReSharper disable once InconsistentNaming
     public string? Task_Number { get; set; } = string.Empty;
 
-    [JsonPropertyName("task_name")]
+    // ReSharper disable once InconsistentNaming
     public string? Task_Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("project_number")]
+    // ReSharper disable once InconsistentNaming
     public string? Project_Number { get; set; } = string.Empty;
 
-    [JsonPropertyName("project_name")]
+    // ReSharper disable once InconsistentNaming
     public string? Project_Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("customer_number")]
+    // ReSharper disable once InconsistentNaming
     public string? Customer_Number { get; set; } = string.Empty;
 
-    [JsonPropertyName("customer_name")]
+    // ReSharper disable once InconsistentNaming
     public string? Customer_Name { get; set; } = string.Empty;
 }
