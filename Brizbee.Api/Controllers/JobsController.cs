@@ -242,12 +242,19 @@ namespace Brizbee.Api.Controllers
             // Attempt to send notifications.
             try
             {
-                var mobileNumbers = _context.Users
+                var mobileNumbersCombined = _context.Users
                     .Where(u => u.IsDeleted == false)
                     .Where(u => u.OrganizationId == currentUser.OrganizationId)
                     .Where(u => !string.IsNullOrEmpty(u.NotificationMobileNumbers))
                     .Select(u => u.NotificationMobileNumbers)
-                    .ToArray();
+                    .ToList();
+
+                var mobileNumbers = new List<string>();
+
+                foreach (var n in mobileNumbersCombined)
+                {
+                    mobileNumbers.AddRange(n!.Split(','));
+                }
 
                 var accountSid = _configuration["TwilioNotificationsAccountSid"];
                 var authToken = _configuration["TwilioNotificationsAccountToken"];
