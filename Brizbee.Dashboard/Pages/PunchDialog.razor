@@ -649,7 +649,7 @@
     {
         loadingUsers = true;
 
-        var result = await userService.GetUsersAsync();
+        var result = await userService.GetUsersAsync(excludeInactiveUsers: true);
         users = result.Item1;
 
         // Update the selected user.

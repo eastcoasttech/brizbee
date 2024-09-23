@@ -38,9 +38,10 @@ namespace Brizbee.Dashboard.Services
             _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
-        public async Task<(List<User>, long?)> GetUsersAsync(int pageSize = 100, int skip = 0, string sortBy = "Name", string sortDirection = "ASC")
+        public async Task<(List<User>, long?)> GetUsersAsync(int pageSize = 100, int skip = 0, string sortBy = "Name", string sortDirection = "ASC", bool excludeInactiveUsers = false)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
+            var filterActiveUsers = excludeInactiveUsers ? string.Empty : "$filter=IsActive eq true&";
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?{filterActiveUsers}$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -59,7 +60,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<List<User>> SearchUsersAsync(string query)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?$filter=contains(Name,'{query}')&$select=EmailAddress,Name,Id");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?$filter=contains(Name,'{query}') and IsActive eq false&$select=EmailAddress,Name,Id");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
