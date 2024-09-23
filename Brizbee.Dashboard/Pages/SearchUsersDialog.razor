@@ -118,7 +118,7 @@
 
         StateHasChanged();
 
-        var result = await userService.GetUsersAsync(sortBy: sortBy, sortDirection: sortDirection);
+        var result = await userService.GetUsersAsync(sortBy: sortBy, sortDirection: sortDirection, excludeInactiveUsers: true);
         users = result.Item1;
 
         working = false;
