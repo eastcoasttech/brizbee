@@ -40,7 +40,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<User>, long?)> GetUsersAsync(int pageSize = 100, int skip = 0, string sortBy = "Name", string sortDirection = "ASC", bool excludeInactiveUsers = false)
         {
-            var filterActiveUsers = excludeInactiveUsers ? string.Empty : "$filter=IsActive eq true&";
+            var filterActiveUsers = excludeInactiveUsers ? "$filter=IsActive eq true&" : string.Empty;
             var response = await _apiService.GetHttpClient().GetAsync($"odata/Users?{filterActiveUsers}$count=true&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
             response.EnsureSuccessStatusCode();
 
