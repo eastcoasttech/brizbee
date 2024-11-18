@@ -534,7 +534,6 @@ namespace Brizbee.Api.Services.Reports
 
                 // Save and close the document.
                 workbookPart1.Workbook.Save();
-                document.Close();
 
                 return stream.ToArray();
             }
