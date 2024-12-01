@@ -2,7 +2,7 @@
 //  Program.cs
 //  BRIZBEE API
 //
-//  Copyright (C) 2019-2021 East Coast Technology Services, LLC
+//  Copyright (C) 2019-2024 East Coast Technology Services, LLC
 //
 //  This file is part of the BRIZBEE API.
 //
@@ -26,11 +26,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Stripe;
-using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -57,12 +55,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Issuer"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                     };
                 })
-
-                // This example shows the default options. You can set them to
-                // whatever you like or you can leave out the lambda altogether.
+                
+                // Allow passing the token via query parameter, instead of a header.
                 .AddJwtBearerQueryStringAuthentication(options =>
                 {
                     options.QueryStringParameterName = "access_token";
@@ -103,7 +100,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Brizbee.Api", Version = "v1" });
 });
 
-// Configure Stripe key
+// Configure the Stripe key for payments.
 StripeConfiguration.ApiKey = builder.Configuration["StripeSecretKey"];
 
 var app = builder.Build();
@@ -112,9 +109,9 @@ app.UseForwardedHeaders();
 
 app.UseRouting();
 
-app.UseCors(builder =>
+app.UseCors(corsPolicyBuilder =>
 {
-    builder
+    corsPolicyBuilder
         .AllowAnyOrigin()
         .AllowAnyMethod()
         .AllowAnyHeader()
@@ -125,9 +122,6 @@ app.UseAuthentication();
 app.UseJwtBearerQueryString();
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.MapControllers();
 
 app.Run();
