@@ -7,6 +7,7 @@
 *.userosscache
 *.sln.docstates
 **/Properties/ServiceDependencies/*
+**/.config/*
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
