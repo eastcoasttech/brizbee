@@ -100,22 +100,10 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Brizbee.Api", Version = "v1" });
 });
 
-// Compression does not work with only server configuration.
-builder.Services.AddRequestDecompression();
-
-builder.Services.AddResponseCompression(options =>
-{
-    options.EnableForHttps = true;
-});
-
 // Configure the Stripe key for payments.
 StripeConfiguration.ApiKey = builder.Configuration["StripeSecretKey"];
 
 var app = builder.Build();
-
-// Compression does not work with only server configuration.
-app.UseRequestDecompression();
-app.UseResponseCompression();
 
 app.UseForwardedHeaders();
 
