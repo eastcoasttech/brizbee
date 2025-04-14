@@ -245,20 +245,20 @@ namespace Brizbee.Api.Controllers
                     organization.SortTasksByColumn = "Number";
 
                     // Determine the actual Stripe Plan Id based on the PlanId.
-                    var stripePlanId = _configuration["StripePlanId1"]; // Default plan is the contractor plan
+                    var stripePlanId = _configuration.GetSection("Stripe").GetValue<string>("StripePlanId1"); // Default plan is the contractor plan
                     switch (organization.PlanId)
                     {
                         case 1:
-                            stripePlanId = _configuration["StripePlanId1"];
+                            stripePlanId = _configuration.GetSection("Stripe").GetValue<string>("StripePlanId1");
                             break;
                         case 2:
-                            stripePlanId = _configuration["StripePlanId2"];
+                            stripePlanId = _configuration.GetSection("Stripe").GetValue<string>("StripePlanId2");
                             break;
                         case 3:
-                            stripePlanId = _configuration["StripePlanId3"];
+                            stripePlanId = _configuration.GetSection("Stripe").GetValue<string>("StripePlanId3");
                             break;
                         case 4:
-                            stripePlanId = _configuration["StripePlanId4"];
+                            stripePlanId = _configuration.GetSection("Stripe").GetValue<string>("StripePlanId4");
                             break;
                     }
 
