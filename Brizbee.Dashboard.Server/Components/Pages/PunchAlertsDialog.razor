@@ -1,0 +1,74 @@
+﻿@page "/dialogs/alerts/punches"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Serialization.Alerts
+
+@inject DialogService dialogService
+
+<div class="row">
+    <div class="col-md-6">
+        <!--List of Punch Exceeded Alerts-->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Exceeded 10 hours in a day
+            </div>
+            <div class="panel-body">
+                @if (working)
+                {
+                    <i class="fa fa-spinner fa-spin fa-fw"></i>
+                }
+                else
+                {
+                    <ul class="list-unstyled">
+                        @foreach (var alert in alerts.Where(a => a.Type == "punch.exceeded").OrderByDescending(a => a.Value))
+                        {
+                            <li style="padding-bottom: 0.5em;">@alert.User.Name was punched in for <strong>@(Math.Round(alert.Value / 60d, 2)) hours</strong></li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <!--List of Total Exceeded Alerts-->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Approaching or Exceeded 40 hours
+            </div>
+            <div class="panel-body">
+                @if (working)
+                {
+                    <i class="fa fa-spinner fa-spin fa-fw"></i>
+                }
+                else
+                {
+                    <ul class="list-unstyled">
+                        @foreach (var alert in alerts.Where(a => a.Type == "total.exceeded").OrderByDescending(a => a.Value))
+                        {
+                            <li style="padding-bottom: 0.5em;">@alert.User.Name is at <strong>@(Math.Round(alert.Value / 60d, 2)) hours</strong> this week</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Alert> Alerts { get; set; }
+
+    private bool working = false;
+    private User currentUser;
+    private List<Alert> alerts = new List<Alert>();
+
+    protected override void OnInitialized()
+    {
+        alerts = Alerts;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

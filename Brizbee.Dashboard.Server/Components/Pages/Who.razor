@@ -1,0 +1,353 @@
+﻿@page "/who"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+
+@inject SharedService SharedService
+@inject PunchService PunchService
+@inject DialogService DialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewUsers)
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation" class="active"><NavLink href="who">Who's Working</NavLink></li>
+        <li role="presentation"><NavLink href="users">All Users</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshPunches())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Users-->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("User/Name"))">
+                        Name
+                        @if (_sortBy == "User/Name" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "User/Name" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Customer/Number"))">
+                        Customer #
+                        @if (_sortBy == "Task/Job/Customer/Number" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "Task/Job/Customer/Number" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Customer/Name"))">
+                        Customer
+                        @if (_sortBy == "Task/Job/Customer/Name" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "Task/Job/Customer/Name" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-1">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Number"))">
+                        Project #
+                        @if (_sortBy == "Task/Job/Number" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "Task/Job/Number" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Job/Name"))">
+                        Project
+                        @if (_sortBy == "Task/Job/Name" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "Task/Job/Name" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Task/Name"))">
+                        Task
+                        @if (_sortBy == "Task/Name" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "Task/Name" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th class="col-md-2">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("InAt"))">
+                        Since
+                        @if (_sortBy == "InAt" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "InAt" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var punch in _punches)
+            {
+                <tr class="fadeIn selectable">
+                    <td><a href="javascript:void(0)">@punch.User.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Number</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Customer.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Number</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Job.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.Task.Name</a></td>
+                    <td><a href="javascript:void(0)">@punch.InAt.ToString("M/d/yyyy h:mm tt")</a></td>
+                </tr>
+            }
+            @if (_working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="7"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!_working && _punches.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="5">
+                        <p style="padding: 2em 2em 0 2em; font-size: 3em;">Nobody's Working <i class="fa fa-frown-o" aria-hidden="true"></i></p>
+                        <p style="padding: 0 2em 2em 2em;">Tell your users to punch in on the Web, the mobile app, or touch-tone phone at <a href="tel:1-888-930-3044">1-888-930-3044</a></p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (_punchesCount > PageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (_punchesCount > 0 && !_working)
+            {
+                <p class="form-control-static pull-left">@(_punchesPageStart + 1) to @(_punchesPageStart + PageSize < _punchesCount ? _punchesPageStart + PageSize : _punchesCount) of @_punchesCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _working;
+    
+    private User? _currentUser;
+    
+    private List<Punch> _punches = [];
+    
+    private string _sortBy = "User/Name";
+    
+    private string _sortDirection = "ASC";
+
+    private const int PageSize = 100;
+
+    private int _skip;
+    
+    private long _punchesCount;
+    
+    private int _punchesPageStart;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+
+        await RefreshPunches();
+
+        DialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+
+        DialogService.OnClose -= Close;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        _punchesPageStart = _punchesPageStart + PageSize;
+        _skip = _punchesPageStart;
+        await RefreshPunches();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        _punchesPageStart = _punchesPageStart - PageSize;
+        _skip = _punchesPageStart;
+        await RefreshPunches();
+    }
+
+    private async void Close(dynamic result)
+    {
+        await RefreshPunches();
+    }
+
+    private async System.Threading.Tasks.Task RefreshPunches()
+    {
+        _working = true;
+        _punches.Clear();
+        var result = await PunchService.GetCurrentPunchesAsync(PageSize, _skip, _sortBy, _sortDirection);
+        _punches = result.Item1;
+        _punchesCount = result.Item2.GetValueOrDefault();
+        _working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        _sortBy = column;
+
+        if (_sortDirection == "ASC")
+        {
+            _sortDirection = "DESC";
+        }
+        else
+        {
+            _sortDirection = "ASC";
+        }
+
+        await RefreshPunches();
+    }
+}

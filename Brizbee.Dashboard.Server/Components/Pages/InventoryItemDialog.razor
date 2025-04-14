@@ -1,0 +1,155 @@
+﻿@page "/dialogs/inventoryItem"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+
+@inject DialogService dialogService
+@inject QBDInventoryItemService inventoryItemService
+
+<EditForm Model="@inventoryItem" OnValidSubmit="SaveInventoryItem" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="inventory_item_name" class="col-sm-4 control-label">Name</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.Name</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_full_name" class="col-sm-4 control-label">Full Name</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.FullName</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_manufacturer_part_number" class="col-sm-4 control-label">Manufacturer Part Number</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.ManufacturerPartNumber</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_bar_code_value" class="col-sm-4 control-label">QuickBooks Barcode Value</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.BarCodeValue</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_custom_bar_code_value" class="col-sm-4 control-label">Custom Barcode Value</label>
+        <div class="col-sm-8">
+            <InputText class="form-control" id="inventory_item_custom_bar_code_value" @bind-Value="inventoryItem.CustomBarCodeValue" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_purchase_description" class="col-sm-4 control-label">Purchase Description</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.PurchaseDescription</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_purchase_cost" class="col-sm-4 control-label">Purchase Cost</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.PurchaseCost</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_sales_description" class="col-sm-4 control-label">Sales Description</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.SalesDescription</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_sales_price" class="col-sm-4 control-label">Sales Price</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.SalesPrice</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="inventory_item_offset_item_full_name" class="col-sm-4 control-label">Offset Item Full Name</label>
+        <div class="col-sm-8">
+            <p class="form-control-static">@inventoryItem.OffsetItemFullName</p>
+        </div>
+    </div>
+
+    <hr />
+
+    @if (inventoryItem.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteInventoryItem" disabled="@(working || loading)">Delete</button>
+    }
+
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public long? Id { get; set; }
+
+    private TimeZoneInfo systemTimeZone = TimeZoneInfo.Local;
+    private bool working = false;
+    private bool loading = true;
+    private QBDInventoryItem inventoryItem = new QBDInventoryItem();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Attempt to load the inventory item.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+            inventoryItem = await inventoryItemService.GetQBDInventoryItemByIdAsync(Id.Value);
+
+        loading = false;
+    }
+
+    private async System.Threading.Tasks.Task DeleteInventoryItem()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this inventory item?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the inventory item on the server and close the dialog.
+        var result = await inventoryItemService.DeleteQbdInventoryItemAsync(inventoryItem.Id);
+        if (result)
+            dialogService.Close("item.deleted");
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task SaveInventoryItem()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this inventory item?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Save the punch on the server and close the dialog.
+        await inventoryItemService.SaveQBDInventoryItemAsync(inventoryItem);
+        dialogService.Close("item.updated");
+    }
+}

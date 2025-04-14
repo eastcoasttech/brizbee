@@ -1,0 +1,143 @@
+﻿@page "/kiosk/in/tasknumber"
+
+@using System.ComponentModel.DataAnnotations
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+
+@inject NavigationManager NavigationManager
+@inject SharedService SharedService
+@inject KioskService KioskService
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                    </NavLink>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser?.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser is { CanViewOrganizationDetails: true })
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
+            <div class="panel panel-default panel-kiosk">
+                <div class="panel-heading">What is your task number?</div>
+                <div class="panel-body">
+                    <EditForm Model="@_model" OnValidSubmit="Continue" class="form" autocomplete="off" style="padding-top: 2em;">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group" style="padding-bottom: 2em;">
+                            <InputText @ref="_inputNumber" @bind-Value="_model.Number" class="form-control" id="task_number" placeholder="Task Number" disabled="@_working" autocomplete="off" />
+                        </div>
+
+                        <button type="submit" class="btn btn-block btn-lg btn-primary" disabled="@_working">Continue</button>
+                        <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/status" disabled="@_working">
+                            Cancel
+                        </NavLink>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _working;
+    
+    private User? _currentUser;
+    
+    private readonly TaskNumberModel _model = new();
+    
+    private InputText? _inputNumber;
+
+    protected override void OnInitialized()
+    {
+        _working = true;
+        StateHasChanged();
+        
+        _currentUser = SharedService.CurrentUser;
+        
+        _working = false;
+        StateHasChanged();
+    }
+
+    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (_inputNumber?.Element != null)
+            {
+                await _inputNumber.Element.Value.FocusAsync();
+            }
+        }
+    }
+
+    private async System.Threading.Tasks.Task Continue()
+    {
+        _working = true;
+        StateHasChanged();
+
+        var found = await KioskService.SearchTasksAsync(_model.Number);
+
+        if (found != null)
+        {
+            SharedService.AttemptedTask = found;
+            NavigationManager.NavigateTo("kiosk/in/confirm");
+        }
+        else
+        {
+            _working = false;
+            StateHasChanged();
+        }
+    }
+
+    class TaskNumberModel
+    {
+        [Required(ErrorMessage = "Your task number is required. The task number must match exactly, including leading-zeros.")]
+        public string Number { get; set; } = string.Empty;
+    }
+}

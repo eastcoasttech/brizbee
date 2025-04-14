@@ -1,0 +1,498 @@
+﻿@page "/dialogs/user"
+
+@using System.Globalization
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Services
+@using NodaTime
+@using NodaTime.TimeZones
+
+@inject DialogService dialogService
+@inject UserService userService
+
+<EditForm Model="@user" OnValidSubmit="SaveUser" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="user_email_address" class="col-sm-3 control-label">Email Address</label>
+        <div class="col-sm-9">
+            <InputText id="user_email_address" @bind-Value="user.EmailAddress" class="form-control" readonly="@(user.Id != 0)" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="user_name" class="col-sm-3 control-label">Full Name</label>
+        <div class="col-sm-9">
+            <InputText id="user_name" @bind-Value="user.Name" class="form-control" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="selected_country_code" class="col-sm-3 control-label">Country</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_country_code" disabled="@(working || loading)"
+                         ValueChanged="@( (string x) => selectedCountryCodeValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedCountryCode )"
+                         Value="@selectedCountryCode">
+                @foreach (var country in countries)
+                {
+                    <option value="@country.CountryCode">@country.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="selected_time_zone" class="col-sm-3 control-label">Time Zone</label>
+        <div class="col-sm-9">
+            <InputSelect class="form-control" id="selected_time_zone" disabled="@(working || loading)"
+                         ValueChanged="@( (string x) => selectedTimeZoneValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedTimeZone )"
+                         Value="@selectedTimeZone">
+                @foreach (var timeZone in inAtZones)
+                {
+                    <option value="@timeZone.Id">@timeZone.Id</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.UsesTimesheets" disabled="@(working || loading)" /> Can Use Time Cards?
+                </label>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.UsesMobileClock" disabled="@(working || loading)" /> Can Use Mobile App?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.UsesTouchToneClock" disabled="@(working || loading)" /> Can Use Touch-Tone?
+                </label>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.UsesWebClock" disabled="@(working || loading)" /> Can Use Web Kiosk?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.RequiresLocation" disabled="@(working || loading)" /> Require Location?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.ShouldSendMidnightPunchEmail" disabled="@(working || loading)" /> Should Send Midnight Punch Email?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-9">
+            <table class="table table-condensed table-bordered">
+                <thead>
+                    <tr>
+                        <th class="col-md-5"></th>
+                        <th class="col-md-1">View</th>
+                        <th class="col-md-1">Create</th>
+                        <th class="col-md-1">Modify</th>
+                        <th class="col-md-1">Delete</th>
+                        <th class="col-md-1">Sync</th>
+                        <th class="col-md-1">Undo</th>
+                        <th class="col-md-1">Merge</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Customers</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewCustomers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateCustomers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyCustomers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteCustomers" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Projects</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewProjects" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateProjects" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyProjects" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteProjects" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanMergeProjects" disabled="@(working || loading)" /></td>
+                    </tr>
+                    <tr>
+                        <th>Tasks</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewTasks" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateTasks" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyTasks" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteTasks" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Rates</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewRates" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateRates" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyRates" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteRates" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Punches</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewPunches" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreatePunches" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyPunches" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeletePunches" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Timecards</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewTimecards" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateTimecards" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyTimecards" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteTimecards" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Users</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewUsers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateUsers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyUsers" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteUsers" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Organization Details</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewOrganizationDetails" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyOrganizationDetails" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Reports</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewReports" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Locks</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewLocks" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanCreateLocks" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanUndoLocks" disabled="@(working || loading)" /></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Inventory Items</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewInventoryItems" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanModifyInventoryItems" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanSyncInventoryItems" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Inventory Consumption</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewInventoryConsumptions" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanDeleteInventoryConsumptions" disabled="@(working || loading)" /></td>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanSyncInventoryConsumptions" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>Audit Trails</th>
+                        <td class="text-center"><InputCheckbox @bind-Value="user.CanViewAudits" disabled="@(working || loading)" /></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="user_allowed_phone_numbers" class="col-sm-3 control-label">Allowed Phone Numbers</label>
+        <div class="col-sm-9">
+            <InputText id="user_allowed_phone_numbers" class="form-control" @bind-Value="user.AllowedPhoneNumbers" placeholder="+18832238332,+14432345847" disabled="@(working || loading)" />
+            <p class="help-block">Limits the phone numbers that can be used. Separate with a comma or specify * (asterisk) to allow any number.</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="user_notification_mobile_numbers" class="col-sm-3 control-label">Mobile Numbers for Notifications</label>
+        <div class="col-sm-9">
+            <InputText id="user_notification_mobile_numbers" class="form-control" @bind-Value="user.NotificationMobileNumbers" placeholder="+18832238332,+14432345847" disabled="@(working || loading)" />
+            <p class="help-block">Separate with a comma or specify * (asterisk) to allow any number.</p>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="user_pin" class="col-sm-3 control-label">PIN Number</label>
+        <div class="col-sm-9">
+            <InputText id="user_pin" @bind-Value="user.Pin" class="form-control" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="user_quickbooks_employee" class="col-sm-3 control-label">QuickBooks Employee</label>
+        <div class="col-sm-9">
+            <InputText id="user_quickbooks_employee" @bind-Value="user.QuickBooksEmployee" class="form-control" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="user_quickbooks_vendor" class="col-sm-3 control-label">QuickBooks Vendor</label>
+        <div class="col-sm-9">
+            <InputText id="user_quickbooks_vendor" @bind-Value="user.QuickBooksVendor" class="form-control" disabled="@(working || loading)" />
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-4">
+            <div class="checkbox">
+                <label>
+                    <InputCheckbox @bind-Value="user.IsActive" disabled="@(working || loading)" /> Active?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label for="user_password" class="col-sm-3 control-label">Password</label>
+        <div class="col-sm-9">
+            @if (showPassword)
+            {
+                <InputText type="password" id="user_password" @bind-Value="user.Password" class="form-control" disabled="@working" />
+            }
+            else
+            {
+                <p class="form-control-static"><a href="javascript:void(0)" @onclick="@(e => { showPassword = true; })">Change Password</a></p>
+            }
+        </div>
+    </div>
+
+    <hr />
+
+    @if (user.Id != 0)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteUser" disabled="@(working || loading)">Delete</button>
+    }
+    <i class="@((working || loading) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading)" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private List<Country> countries = new List<Country>();
+    private List<IanaTimeZone> zones = new List<IanaTimeZone>();
+    private List<IanaTimeZone> inAtZones = new List<IanaTimeZone>();
+    private User user = new User();
+    private string selectedCountryCode = "";
+    private string selectedTimeZone = "";
+    private bool showPassword = false;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Build list of time zones.
+        // --------------------------------------------------------------------
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var tzdb = DateTimeZoneProviders.Tzdb;
+        var countryCode = "";
+
+        var list =
+            from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+            where string.IsNullOrEmpty(countryCode) ||
+                  location.CountryCode.Equals(countryCode,
+                    StringComparison.OrdinalIgnoreCase)
+            let zoneId = location.ZoneId
+            let tz = tzdb[zoneId]
+            let offset = tz.GetZoneInterval(now).StandardOffset
+            orderby offset, zoneId
+            select new
+            {
+                Id = zoneId,
+                CountryCode = location.CountryCode
+            };
+
+        foreach (var z in list)
+        {
+            zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+        }
+
+
+        // --------------------------------------------------------------------
+        // Build list of countries.
+        // --------------------------------------------------------------------
+
+        CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+        foreach (var culture in cultures)
+        {
+            try
+            {
+                var region = new RegionInfo(culture.Name);
+                if (!countries.Where(c => c.Name == region.EnglishName).Any())
+                {
+                    countries.Add(new Country() { CountryCode = region.TwoLetterISORegionName, Name = region.EnglishName });
+                }
+            }
+            catch (CultureNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        selectedCountryCode = "US";
+        selectedCountryCodeValueChangeHandler(selectedCountryCode);
+
+        selectedTimeZone = "America/New_York";
+        selectedTimeZoneValueChangeHandler(selectedTimeZone);
+
+
+        // --------------------------------------------------------------------
+        // Attempt to load the user, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            user = await userService.GetUserByIdAsync(Id.Value);
+
+            // Set the time zone.
+            var timeZone = zones.Where(x => x.Id == user.TimeZone).FirstOrDefault();
+            selectedCountryCode = timeZone.CountryCode;
+            selectedCountryCodeValueChangeHandler(selectedCountryCode);
+            selectedTimeZone = timeZone.Id;
+            selectedTimeZoneValueChangeHandler(selectedTimeZone);
+        }
+
+        loading = false;
+    }
+
+    private void selectedCountryCodeValueChangeHandler(string country)
+    {
+        selectedCountryCode = country;
+        inAtZones = zones.Where(z => z.CountryCode == selectedCountryCode).ToList();
+    }
+
+    private void selectedTimeZoneValueChangeHandler(string timeZone)
+    {
+        selectedTimeZone = timeZone;
+        user.TimeZone = selectedTimeZone;
+    }
+
+    private async System.Threading.Tasks.Task SaveUser()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this user?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Save the user on the server and close the dialog.
+        await userService.SaveUserAsync(user);
+        dialogService.Close(false);
+    }
+
+    private async System.Threading.Tasks.Task DeleteUser()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this user?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+
+        // Delete the user on the server and close the dialog.
+        var result = await userService.DeleteUserAsync(user.Id);
+        if (result)
+            dialogService.Close(false);
+        else
+            working = false;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

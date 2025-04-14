@@ -1,0 +1,380 @@
+﻿
+@using System.Text.Json
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Services
+
+@inject DialogService DialogService
+@inject PopulateTemplateService PopulateTemplateService
+
+@implements IDisposable
+
+<table class="table table-bordered table-condensed table-supercondensed table-exceptions">
+    <thead>
+        <tr>
+            <th style="width: 5%;"></th>
+            <th style="width: 25%;">Option</th>
+            <th style="width: 24%;" colspan="3">Parameter</th>
+            <th style="width: 21%;">Match Base Rate</th>
+            <th style="width: 21%;">Set Alternate Rate</th>
+            <th style="width: 4%;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var exception in Exceptions)
+        {
+            <tr class="fadeIn">
+                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                    <a href="javascript:void(0)" @onclick="@(e => MoveException(exception, "UP"))" title="Move Priority Up"><i class="fa fa-caret-up" aria-hidden="true"></i></a>
+                    <a href="javascript:void(0)" @onclick="@(e => MoveException(exception, "DOWN"))" title="Move Priority Down"><i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                </td>
+                <td>
+                    <label class="text-muted">Select Option</label>
+                    <select class="form-control input-sm" @bind="@exception.Option">
+                        <option>Punches Before</option>
+                        <option>Punches After</option>
+                        <option>After Hours/Minutes Per Day</option>
+                        <option>After Hours/Minutes in Range</option>
+                        <option>Punches on Specific Date</option>
+                        <option>Punches on Day of Week</option>
+                    </select>
+                </td>
+
+                @if (exception.Option == "After Hours/Minutes Per Day" || exception.Option == "After Hours/Minutes in Range")
+                {
+                    <td colspan="3">
+                        <table class="table" style="margin-bottom: 0; border: 0;">
+                            <tbody style="border: 0;">
+                                <tr style="border: 0;">
+                                    <td style="padding-top: 0; padding-bottom: 0; padding-left: 0; border: 0;">
+                                        <label class="text-muted">Hours</label>
+                                        <input type="number" class="form-control form-control-number input-sm" @bind="exception.CountHours" />
+                                    </td>
+                                    <td style="padding-top: 0; padding-bottom: 0; padding-right: 0; border: 0;">
+                                        <label class="text-muted">Minutes</label>
+                                        <input type="number" class="form-control form-control-number input-sm" @bind="exception.CountMinutes" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                }
+
+                @if (exception.Option == "Punches Before" || exception.Option == "Punches After")
+                {
+                    <td style="width: 8%;">
+                        <label class="text-muted">Hour</label>
+                        <select class="form-control input-sm" @bind="exception.RangeHour">
+                            @for (int i = 1; i <= 12; i++)
+                            {
+                                <option value="@i.ToString("")">@i.ToString("")</option>
+                            }
+                        </select>
+                    </td>
+                    <td style="width: 8%;">
+                        <label class="text-muted">Minute</label>
+                        <select class="form-control input-sm" @bind="exception.RangeMinute">
+                            @for (int i = 0; i <= 59; i++)
+                            {
+                                <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                            }
+                        </select>
+                    </td>
+                    <td style="width: 8%;">
+                        <label class="text-muted">AM/PM</label>
+                        <select class="form-control input-sm" @bind="exception.RangeMerdian">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </td>
+                }
+
+                @if (exception.Option == "Punches on Specific Date")
+                {
+                    <td colspan="3">
+                        <label class="text-muted">Date</label>
+                        <input type="date" class="form-control input-sm" @bind="exception.Date" />
+                    </td>
+                }
+
+                @if (exception.Option == "Punches on Day of Week")
+                {
+                    <td colspan="3">
+                        <label class="text-muted">Day</label>
+                        <select class="form-control input-sm" @bind="exception.DayOfWeek">
+                            <option value="Sunday">Sunday</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                        </select>
+                    </td>
+                }
+
+                @if (Type.ToUpperInvariant() == "PAYROLL")
+                {
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.BasePayrollRateId">
+                            @foreach (var rate in BaseRates.OrderBy(r => r.Name))
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.AlternatePayrollRateId">
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                }
+                else if (Type.ToUpperInvariant() == "SERVICE")
+                {
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.BaseServiceRateId">
+                            @foreach (var rate in BaseRates.OrderBy(r => r.Name))
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <label class="text-muted">Select Rate</label>
+                        <select class="form-control input-sm" @bind="@exception.AlternateServiceRateId">
+                            @foreach (var rate in AlternateRates.OrderBy(r => r.Name))
+                            {
+                                <option value="@rate.Id.ToString()">@rate.Name</option>
+                            }
+                        </select>
+                    </td>
+                }
+
+                <td class="text-center" style="vertical-align: middle; font-size: 1em;">
+                    <a href="javascript:void(0)" @onclick="@(e => Exceptions.Remove(exception))" title="Remove Exception"><i class="fas fa-trash-alt" aria-hidden="true"></i></a>
+                </td>
+            </tr>
+        }
+
+        @if (Exceptions.Count == 0)
+        {
+            <tr>
+                <td colspan="8">None</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public List<PopulateRateException> Exceptions { get; set; }
+    [Parameter] public List<Rate> BaseRates { get; set; }
+    [Parameter] public List<Rate> AlternateRates { get; set; }
+    [Parameter] public string Type { get; set; }
+
+    protected override void OnInitialized()
+    {
+        DialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        DialogService.OnClose -= Close;
+    }
+
+    public void AddException()
+    {
+        if (BaseRates == null || BaseRates.Count == 0)
+            return;
+
+        if (AlternateRates == null || AlternateRates.Count == 0)
+            return;
+
+        if (Type.ToUpperInvariant() == "PAYROLL")
+        {
+            Exceptions.Add(new PopulateRateException()
+            {
+                Option = "Punches Before",
+                BasePayrollRateId = BaseRates.First().Id.ToString(),
+                AlternatePayrollRateId = AlternateRates.Where(r => r.ParentRateId == BaseRates.First().Id).First().Id.ToString(),
+                RangeHour = "1",
+                RangeMinute = "00",
+                RangeMerdian = "AM",
+                CountHours = "0",
+                CountMinutes = "0",
+                Date = DateTime.Today,
+                DayOfWeek = "Sunday"
+            });
+        }
+        else if (Type.ToUpperInvariant() == "SERVICE")
+        {
+            Exceptions.Add(new PopulateRateException()
+            {
+                Option = "Punches Before",
+                BaseServiceRateId = BaseRates.First().Id.ToString(),
+                AlternateServiceRateId = AlternateRates.Where(r => r.ParentRateId == BaseRates.First().Id).First().Id.ToString(),
+                RangeHour = "1",
+                RangeMinute = "00",
+                RangeMerdian = "AM",
+                CountHours = "0",
+                CountMinutes = "0",
+                Date = DateTime.Today,
+                DayOfWeek = "Sunday"
+            });
+        }
+
+        StateHasChanged();
+    }
+
+    public async System.Threading.Tasks.Task AddExceptionFromTemplate()
+    {
+        if (BaseRates == null || BaseRates.Count == 0)
+            return;
+
+        if (AlternateRates == null || AlternateRates.Count == 0)
+            return;
+
+        if (Type.ToUpperInvariant() == "PAYROLL")
+        {
+            var result = await PopulateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            DialogService.Open<SelectPopulateTemplateDialog>("Select a Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "PAYROLL").ToList() } },
+                                new DialogOptions() { Width = "600px" });
+        }
+        else if (Type.ToUpperInvariant() == "SERVICE")
+        {
+            var result = await PopulateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            DialogService.Open<SelectPopulateTemplateDialog>("Select a Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "SERVICE").ToList() } },
+                                new DialogOptions() { Width = "600px" });
+        }
+    }
+
+    public async System.Threading.Tasks.Task SaveExceptionsToTemplate()
+    {
+        if (Type.ToUpperInvariant() == "PAYROLL")
+        {
+            var result = await PopulateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            DialogService.Open<SavePopulateTemplateDialog>("Save As Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "PAYROLL").ToList() }, { "Exceptions", Exceptions }, { "RateType", "PAYROLL" } },
+                                new DialogOptions() { Width = "600px" });
+        }
+        else if (Type.ToUpperInvariant() == "SERVICE")
+        {
+            var result = await PopulateTemplateService.GetPopulateTemplatesAsync();
+            var templates = result.Item1;
+
+            DialogService.Open<SavePopulateTemplateDialog>("Save As Template",
+                                new Dictionary<string, object>() { { "Templates", templates.Where(t => t.RateType == "SERVICE").ToList() }, { "Exceptions", Exceptions }, { "RateType", "SERVICE" } },
+                                new DialogOptions() { Width = "600px" });
+        }
+    }
+
+    public void MoveException(PopulateRateException exception, string direction)
+    {
+        var oldIndex = Exceptions.IndexOf(exception);
+
+        var newIndex = oldIndex;
+        switch (direction)
+        {
+            case "UP":
+                // Cannot move outside of list.
+                if (oldIndex == 0)
+                    return;
+
+                Exceptions.RemoveAt(oldIndex);
+                newIndex = newIndex - 1;
+
+                break;
+            case "DOWN":
+                // Cannot move outside of list.
+                if (oldIndex + 1 == Exceptions.Count)
+                    return;
+
+                Exceptions.RemoveAt(oldIndex);
+                newIndex = newIndex + 1;
+
+                break;
+        }
+
+        Exceptions.Insert(newIndex, exception);
+    }
+
+    private void Close(dynamic result)
+    {
+        var dialogCloseResult = (result as DialogCloseResult);
+
+        if (dialogCloseResult == null)
+            return;
+
+        if (dialogCloseResult.Type == "template.selected")
+        {
+            // Cannot continue if there are no rates.
+            if (BaseRates == null || BaseRates.Count == 0)
+                return;
+
+            // Cannot continue if there are no rates.
+            if (AlternateRates == null || AlternateRates.Count == 0)
+                return;
+
+            var template = dialogCloseResult.Value as PopulateTemplate;
+
+            var items = JsonSerializer.Deserialize<PopulateRateException[]>(template.Template);
+
+            foreach (var item in items)
+            {
+                if (Type.ToUpperInvariant() == "PAYROLL")
+                {
+                    if (BaseRates.Where(r => r.Id.ToString() == item.BasePayrollRateId).Any())
+                    {
+                        Exceptions.Add(new PopulateRateException()
+                        {
+                            Option = item.Option,
+                            BasePayrollRateId = item.BasePayrollRateId,
+                            AlternatePayrollRateId = item.AlternatePayrollRateId,
+                            RangeHour = item.RangeHour,
+                            RangeMinute = item.RangeMinute,
+                            RangeMerdian = item.RangeMerdian,
+                            CountHours = item.CountHours,
+                            CountMinutes = item.CountMinutes,
+                            Date = item.Date,
+                            DayOfWeek = item.DayOfWeek
+                        });
+                    }
+                }
+                else if (Type.ToUpperInvariant() == "SERVICE")
+                {
+                    if (BaseRates.Where(r => r.Id.ToString() == item.BaseServiceRateId).Any())
+                    {
+                        Exceptions.Add(new PopulateRateException()
+                        {
+                            Option = item.Option,
+                            BaseServiceRateId = item.BaseServiceRateId,
+                            AlternateServiceRateId = item.AlternateServiceRateId,
+                            RangeHour = item.RangeHour,
+                            RangeMinute = item.RangeMinute,
+                            RangeMerdian = item.RangeMerdian,
+                            CountHours = item.CountHours,
+                            CountMinutes = item.CountMinutes,
+                            Date = item.Date,
+                            DayOfWeek = item.DayOfWeek
+                        });
+                    }
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+}

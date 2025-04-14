@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dashboard - BRIZBEE</title>
+    <base href="/"/>
+
+    <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
+    
+    <!--Stripe-->
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <!-- Platform Detection -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/platform/1.3.6/platform.min.js" integrity="sha512-eYPrm8TgYWg3aa6tvSRZjN4v0Z9Qx69q3RhfSj+Mf89QqwOMqmwSlsVqfp4N8NVAcZe/YeUhh9x/nM2CAOp6cA==" crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
+
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" />
+
+    <link href="css/merged.css" rel="stylesheet" />
+    
+    <ImportMap/>
+    
+    <link rel="icon" type="image/png" href="icon-32x32.png"/>
+    
+    <HeadOutlet/>
+</head>
+
+<body>
+<div id="app">
+    <div class="spinner"></div>
+    <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)"/>
+</div>
+
+<footer>
+    <div class="container-fluid hidden-xs hidden-sm">
+        <div class="row">
+            <div class="col-md-4">
+                <p style="font-size: 1.25em;">
+                    Email <a href="mailto:support@brizbee.zohodesk.com" style="text-decoration: none; font-weight: bold;">support@brizbee.zohodesk.com</a> if you have any questions.
+                </p>
+            </div>
+            <div class="col-md-8 text-right text-muted">
+                <p>
+                    <a href="https://www.brizbee.com/download.html">Download Integration Utility</a> <span style="padding-left: 0.35em; padding-right: 0.35em;">&#9642;</span>
+                    <a href="https://www.brizbee.com/support.html">Help and Support</a> <span style="padding-left: 0.35em; padding-right: 0.35em;">&#9642;</span>
+                    <a href="https://www.brizbee.com/privacy.html">Privacy Policy</a> <span style="padding-left: 0.35em; padding-right: 0.35em;">&#9642;</span>
+                    <a href="https://www.brizbee.com/terms.html">Terms of Service</a> <span style="padding-left: 0.35em; padding-right: 0.35em;">&#9642;</span>
+                    <span>&copy; 2021-2024 East Coast Technology Services, LLC</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+<script src="_framework/blazor.web.js"></script>
+<script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="js/jquery-1.12.4.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+</body>
+
+</html>

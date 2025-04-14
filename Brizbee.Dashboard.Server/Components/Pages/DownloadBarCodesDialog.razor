@@ -1,0 +1,61 @@
+﻿@page "/dialogs/download-bar-codes"
+
+@using Brizbee.Dashboard.Server.Services
+
+@inject ApiService apiService
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject ProtectedSessionStorage ProtectedSessionStore
+
+<table class="table" style="font-size: 1.25em;">
+    <tr>
+        <td>
+            All Tasks
+        </td>
+        <td style="padding-top: 0.5em; padding-bottom: 0.5em;">
+            <a href="@downloadUrl" class="btn btn-primary btn-block">Download</a>
+        </td>
+    </tr>
+    @foreach (var group in groups)
+    {
+        <tr>
+            <td>
+                @group Tasks
+            </td>
+            <td style="padding-top: 0.5em; padding-bottom: 0.5em;">
+                <a href="@(downloadUrl + "&TaskGroupScope=" + group)" class="btn btn-default btn-block">Download</a>
+            </td>
+        </tr>
+    }
+</table>
+
+<hr />
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private string downloadUrl = "";
+    private string[] groups = new string[] { };
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Load the task groups from the organization.
+        // --------------------------------------------------------------------
+
+        groups = sharedService.CurrentUser.Organization.Groups.Split(",");
+
+        // Refresh the task download URL.
+        var result = await ProtectedSessionStore.GetAsync<string>("token");
+        var token = result.Success ? result.Value : string.Empty;
+
+        downloadUrl = $"{apiService.GetBaseUrl()}api/Reports/TasksByJob?JobId={Id}&access_token={token}";
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

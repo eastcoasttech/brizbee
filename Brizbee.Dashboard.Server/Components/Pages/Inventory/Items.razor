@@ -1,0 +1,371 @@
+﻿@page "/inventory/items"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+
+@inject SharedService SharedService
+@inject QBDInventoryItemService QbdInventoryItemService
+@inject DialogService DialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (_currentUser is { CanViewPunches: true } or { CanViewTimecards: true } or { CanViewRates: true } or { CanViewLocks: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewCustomers: true } or { CanViewProjects: true } or { CanViewTasks: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewInventoryConsumptions: true } or { CanViewInventoryItems: true })
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewReports: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewUsers: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser?.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser is { CanViewOrganizationDetails: true })
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="inventory/consumption">Consumption</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/consumption-syncs">Consumption Syncs</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="inventory/items">Items</NavLink></li>
+        <li role="presentation"><NavLink href="inventory/item-syncs">Item Syncs</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <!--Toolbar-->
+    <div class="row row-toolbar">
+        <div class="col-md-6">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(_ => RefreshItems())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Items-->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th style="width: 15%;">
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("QBDInventoryItems/Name"))">
+                        Name
+                        @if (_sortBy == "QBDInventoryItems/Name" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "QBDInventoryItems/Name" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 7%;">
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("QBDInventoryItems/ManufacturerPartNumber"))">
+                        Part #
+                        @if (_sortBy == "QBDInventoryItems/ManufacturerPartNumber" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "QBDInventoryItems/ManufacturerPartNumber" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("QBDInventoryItems/BarCodeValue"))">
+                        QB Barcode
+                        @if (_sortBy == "QBDInventoryItems/BarCodeValue" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "QBDInventoryItems/BarCodeValue" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("QBDInventoryItems/CustomBarCodeValue"))">
+                        Custom Barcode
+                        @if (_sortBy == "QBDInventoryItems/CustomBarCodeValue" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "QBDInventoryItems/CustomBarCodeValue" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 17%;">
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("QBDInventoryItems/PurchaseDescription"))">
+                        Purchase <abbr title="Description">Desc</abbr>
+                        @if (_sortBy == "QBDInventoryItems/PurchaseDescription" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "QBDInventoryItems/PurchaseDescription" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 17%;">
+                    <a href="javascript:void(0)" @onclick="@(_ => ChangeSortBy("QBDInventoryItems/SalesDescription"))">
+                        Sales <abbr title="Description">Desc</abbr>
+                        @if (_sortBy == "QBDInventoryItems/SalesDescription" && _sortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_sortBy == "QBDInventoryItems/SalesDescription" && _sortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 7%;">
+                    Purchase Cost
+                </th>
+                <th style="width: 7%;">
+                    Sales Price
+                </th>
+                <th style="width: 10%;">
+                    Offset Item
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in _items)
+            {
+                <tr class="fadeIn selectable" @onclick="@(_ => OpenModifyInventoryItemDialog(item))">
+                    <td><a href="javascript:void(0)">@item.Name</a></td>
+                    <td><a href="javascript:void(0)">@item.ManufacturerPartNumber</a></td>
+                    <td><a href="javascript:void(0)">@item.BarCodeValue</a></td>
+                    <td><a href="javascript:void(0)">@item.CustomBarCodeValue</a></td>
+                    <td><a href="javascript:void(0)">@FormatText(item.PurchaseDescription)</a></td>
+                    <td><a href="javascript:void(0)">@FormatText(item.SalesDescription)</a></td>
+                    <td><a href="javascript:void(0)">@item.PurchaseCost.ToString("C")</a></td>
+                    <td><a href="javascript:void(0)">@item.SalesPrice.ToString("C")</a></td>
+                    <td><a href="javascript:void(0)">@item.OffsetItemFullName</a></td>
+                </tr>
+            }
+            @if (_working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="9"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!_working && _items.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="9">You haven't synced any inventory items</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (_itemsCount > PageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+
+            @if (_itemsCount > 0 && !_working)
+            {
+                <p class="form-control-static pull-left">@(_itemsPageStart + 1) to @(_itemsPageStart + PageSize < _itemsCount ? _itemsPageStart + PageSize : _itemsCount) of @_itemsCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _working;
+    
+    private User? _currentUser;
+    
+    private List<QBDInventoryItem> _items = [];
+    
+    private string _sortBy = "QBDInventoryItems/Name";
+    
+    private string _sortDirection = "ASC";
+    
+    private const int PageSize = 100;
+    
+    private int _skip;
+    
+    private long _itemsCount;
+    
+    private int _itemsPageStart;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+
+        await RefreshItems();
+
+        DialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+
+        DialogService.OnClose -= Close;
+    }
+
+    private async void NextPage(MouseEventArgs e)
+    {
+        _itemsPageStart = _itemsPageStart + PageSize;
+        _skip = _itemsPageStart;
+        await RefreshItems();
+    }
+
+    private async void PreviousPage(MouseEventArgs e)
+    {
+        _itemsPageStart = _itemsPageStart - PageSize;
+        _skip = _itemsPageStart;
+        await RefreshItems();
+    }
+
+    private async void Close(dynamic result)
+    {
+        switch (result as string)
+        {
+            case "item.updated":
+            case "item.deleted":
+                await RefreshItems();
+                break;
+        }
+    }
+
+    private async System.Threading.Tasks.Task RefreshItems()
+    {
+        _working = true;
+        _items.Clear();
+        var result = await QbdInventoryItemService.GetQBDInventoryItemsAsync(PageSize, _skip, _sortBy, _sortDirection);
+        _items = result.Item1;
+        _itemsCount = result.Item2.GetValueOrDefault();
+        _working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        _sortBy = column;
+
+        if (_sortDirection == "ASC")
+        {
+            _sortDirection = "DESC";
+        }
+        else
+        {
+            _sortDirection = "ASC";
+        }
+
+        await RefreshItems();
+    }
+
+    private static string FormatText(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        return text.Length > 27 ? $"{text[..26]}..." : text;
+    }
+
+    private void OpenModifyInventoryItemDialog(QBDInventoryItem inventoryItem)
+    {
+        DialogService.Open<InventoryItemDialog>("Edit Inventory Item",
+                                new Dictionary<string, object>() { { "Id", inventoryItem.Id } },
+                                new DialogOptions() { Width = "600px" });
+    }
+}
