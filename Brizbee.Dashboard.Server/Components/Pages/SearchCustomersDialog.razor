@@ -1,0 +1,182 @@
+﻿@page "/dialogs/search/customers"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+
+@inject DialogService dialogService
+@inject CustomerService customerService
+@inject SharedService sharedService
+
+<div style="height: 400px; overflow-y: scroll;">
+    <table class="table table-condensed">
+        <thead>
+            <tr>
+                <th class="col-md-2"></th>
+                @if (sharedService.CurrentUser.Organization.ShowCustomerNumber)
+                {
+                    <th class="col-md-2">
+                        <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Number"))">
+                            Number
+                            @if (sortBy == "Number" && sortDirection == "ASC")
+                            {
+                                <span class="fa fa-caret-up"></span>
+                            }
+                            else if (sortBy == "Number" && sortDirection == "DESC")
+                            {
+                                <span class="fa fa-caret-down"></span>
+                            }
+                        </a>
+                    </th>
+                    <th class="col-md-8">
+                        <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Name"))">
+                            Name
+                            @if (sortBy == "Name" && sortDirection == "ASC")
+                            {
+                                <span class="fa fa-caret-up"></span>
+                            }
+                            else if (sortBy == "Name" && sortDirection == "DESC")
+                            {
+                                <span class="fa fa-caret-down"></span>
+                            }
+                        </a>
+                    </th>
+                }
+                else
+                {
+                    <th class="col-md-10">
+                        <a href="javascript:void(0)" @onclick="@(e => ChangeSortBy("Name"))">
+                            Name
+                            @if (sortBy == "Name" && sortDirection == "ASC")
+                            {
+                                <span class="fa fa-caret-up"></span>
+                            }
+                            else if (sortBy == "Name" && sortDirection == "DESC")
+                            {
+                                <span class="fa fa-caret-down"></span>
+                            }
+                        </a>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in customers)
+            {
+                bool isChecked = false;
+                if (selectedCustomers.Where(x => x.Id == customer.Id).Any())
+                {
+                    isChecked = true;
+                }
+
+                <tr class="fadeIn" style="cursor: pointer;" @onclick="args => { ToggleCheckbox(customer); }">
+                    <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(customer, args.Value); }" /></td>
+
+                    @if (sharedService.CurrentUser.Organization.ShowCustomerNumber)
+                    {
+                        <td>@customer.Number</td>
+                    }
+
+                    <td>@customer.Name</td>
+                </tr>
+            }
+            @if (working)
+            {
+                <tr class="fadeIn">
+                    <td colspan="@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? "3" : "2")"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">Add</button>
+
+@code {
+    [Parameter] public HashSet<Customer> ExistingFilters { get; set; }
+
+    private List<Customer> customers = new List<Customer>(0);
+    private HashSet<Customer> selectedCustomers = new HashSet<Customer>(0);
+    private string sortBy = "Name";
+    private string sortDirection = "ASC";
+    private bool working = false;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        selectedCustomers = ExistingFilters;
+
+        await RefreshCustomers();
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogSuccess(MouseEventArgs e)
+    {
+        dialogService.Close(selectedCustomers);
+    }
+
+    private void CheckboxClicked(Customer selected, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!selectedCustomers.Contains(selected))
+            {
+                selectedCustomers.Add(selected);
+            }
+        }
+        else
+        {
+            if (selectedCustomers.Contains(selected))
+            {
+                selectedCustomers.Remove(selected);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void ToggleCheckbox(Customer customer)
+    {
+        if (!selectedCustomers.Contains(customer))
+        {
+            selectedCustomers.Add(customer);
+        }
+        else
+        {
+            selectedCustomers.Remove(customer);
+        }
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshCustomers()
+    {
+        working = true;
+        customers.Clear();
+
+        StateHasChanged();
+
+        var result = await customerService.GetCustomersAsync(sortBy: sortBy, sortDirection: sortDirection);
+        customers = result.Item1;
+
+        working = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeSortBy(string column)
+    {
+        sortBy = column;
+
+        if (sortDirection == "ASC")
+        {
+            sortDirection = "DESC";
+        }
+        else
+        {
+            sortDirection = "ASC";
+        }
+
+        await RefreshCustomers();
+    }
+}

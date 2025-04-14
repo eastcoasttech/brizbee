@@ -1,0 +1,192 @@
+﻿@page "/kiosk/status"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+@using Task = System.Threading.Tasks.Task
+
+@inject SharedService SharedService
+@inject KioskService KioskService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk <span class="sr-only">(current)</span>
+                    </NavLink>
+                </li>
+                @if (_currentUser is { CanViewPunches: true } or { CanViewTimecards: true } or { CanViewRates: true } or { CanViewLocks: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewCustomers: true } or { CanViewProjects: true } or { CanViewTasks: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewInventoryConsumptions: true } or { CanViewInventoryItems: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewReports: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser is { CanViewUsers: true })
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser?.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser is { CanViewOrganizationDetails: true })
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 col-sm-12 col-xs-12">
+            <div class="panel panel-default panel-kiosk">
+                <div class="panel-heading">Hello, @_currentUser?.Name</div>
+                <div class="panel-body">
+                    @if (_working)
+                    {
+                        <div class="text-center">
+                            <i class="fa fa-spinner fa-spin fa-fw"></i>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (_currentPunch != null)
+                        {
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-top: 2em;">You are <span class="label label-success"><strong>PUNCHED IN</strong></span></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>on job</small><br /><strong>@_currentPunch.Task!.Job!.Number &ndash; @_currentPunch.Task.Job.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>for customer</small><br /><strong>@_currentPunch.Task!.Job!.Customer!.Number &ndash; @_currentPunch.Task.Job.Customer.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase;"><small>doing task</small><br /><strong>@_currentPunch.Task.Number &ndash; @_currentPunch.Task.Name</strong></p>
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-bottom: 2em;"><small>since @_currentPunch.InAt.ToString("MMM d, yyyy h:mm tt")<br />@_currentPunch.InAtTimeZone</small></p>
+                        }
+
+                        @if (_currentPunch == null)
+                        {
+                            <p class="text-center fadeIn" style="text-transform: uppercase; padding-top: 2em; padding-bottom: 2em;">You are <span class="label label-danger"><strong>PUNCHED OUT</strong></span></p>
+                        }
+
+                        <NavLink class="btn btn-block btn-lg btn-success" href="kiosk/in/tasknumber">
+                            Punch In
+                        </NavLink>
+
+                        @if (_currentPunch != null)
+                        {
+                            <NavLink class="btn btn-block btn-lg btn-danger" href="kiosk/out/confirm">
+                                Punch Out
+                            </NavLink>
+                        }
+
+                        @if (_currentUser is { UsesTimesheets: true })
+                        {
+                            <NavLink class="btn btn-block btn-lg btn-default" href="kiosk/timecard/task">
+                                Time Card
+                            </NavLink>
+                        }
+
+                        <button type="button" class="btn btn-block btn-lg btn-default" @onclick="SignOutClicked">Logout</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _working;
+    
+    private User? _currentUser;
+    
+    private Punch? _currentPunch;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _working = true;
+            StateHasChanged();
+        
+            _currentUser = SharedService.CurrentUser;
+
+            _currentPunch = await KioskService.GetCurrentPunchAsync();
+
+            _working = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+    }
+}

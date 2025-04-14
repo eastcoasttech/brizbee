@@ -1,0 +1,44 @@
+﻿@page "/dialogs/download-projects"
+
+@using Brizbee.Dashboard.Server.Services
+
+@inject ApiService apiService
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject ProtectedSessionStorage ProtectedSessionStore
+
+<p>
+    Click below to download the open projects:
+</p>
+<p>
+    <a href="@downloadUrl" class="btn btn-primary">
+        CSV File (Comma Separated Values)
+    </a>
+    <br />
+    <small>
+        This file can be opened in Microsoft Excel, LibreOffice, Google Docs, Office 365, etc.
+    </small>
+</p>
+
+<hr />
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+
+@code {
+    [Parameter] public string FilterStatus { get; set; }
+
+    private string downloadUrl = "";
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var result = await ProtectedSessionStore.GetAsync<string>("token");
+        var token = result.Success ? result.Value : string.Empty;
+
+        downloadUrl = $"{apiService.GetBaseUrl()}api/JobsExpanded/Export?filterStatus={FilterStatus}&access_token={token}";
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}

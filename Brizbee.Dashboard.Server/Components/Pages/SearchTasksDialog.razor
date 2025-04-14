@@ -1,0 +1,76 @@
+﻿@page "/dialogs/search/tasks"
+@using Brizbee.Dashboard.Server.Services
+
+@inject DialogService dialogService
+@inject TaskService taskService
+
+<table class="table table-condensed">
+    <thead>
+        <tr>
+            <th class="col-md-2"></th>
+            <th class="col-md-10">Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var task in tasks)
+        {
+            bool isChecked = false;
+            if (selectedTasks.Where(x => x.Id == task.Id).Any())
+            {
+                isChecked = true;
+            }
+
+            <tr class="fadeIn">
+                <td><input type="checkbox" checked=@isChecked @onchange="args => { CheckboxClicked(task, args.Value); }" /></td>
+                <td>@task.Name</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialogCancelled" style="margin-left: 2px;">Cancel</button>
+<button class="btn btn-primary pull-right" type="button" @onclick="CloseDialogSuccess" style="margin-left: 2px;">Add</button>
+
+@code {
+    [Parameter] public HashSet<Brizbee.Core.Models.Task> ExistingFilters { get; set; }
+
+    private List<Brizbee.Core.Models.Task> tasks = new List<Brizbee.Core.Models.Task>(0);
+    private HashSet<Brizbee.Core.Models.Task> selectedTasks = new HashSet<Brizbee.Core.Models.Task>(0);
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        selectedTasks = ExistingFilters;
+
+        var result = await taskService.GetTasksAsync(0);
+        tasks = result.Item1;
+    }
+
+    private void CloseDialogCancelled(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void CloseDialogSuccess(MouseEventArgs e)
+    {
+        dialogService.Close(selectedTasks);
+    }
+
+    private void CheckboxClicked(Brizbee.Core.Models.Task selected, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!selectedTasks.Contains(selected))
+            {
+                selectedTasks.Add(selected);
+            }
+        }
+        else
+        {
+            if (selectedTasks.Contains(selected))
+            {
+                selectedTasks.Remove(selected);
+            }
+        }
+        StateHasChanged();
+    }
+}

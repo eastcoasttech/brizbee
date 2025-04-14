@@ -1,0 +1,397 @@
+﻿@page "/open-projects"
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Services
+
+@inject NavigationManager NavigationManager
+@inject SharedService SharedService
+@inject ApiService ApiService
+@inject UserService UserService
+@inject PunchService PunchService
+@inject CustomerService CustomerService
+@inject JobService JobService
+@inject TaskService TaskService
+@inject DialogService DialogService
+
+@implements IDisposable
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <NavLink class="navbar-brand" href="kiosk/status">
+                <img alt="BRIZBEE Logo" src="/icon-32x32.png">
+            </NavLink>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <NavLink class="nav-link" href="kiosk/status">
+                        <i class="far fa-id-badge fa-padded" aria-hidden="true"></i> Kiosk
+                    </NavLink>
+                </li>
+                @if (_currentUser.CanViewPunches || _currentUser.CanViewTimecards || _currentUser.CanViewRates || _currentUser.CanViewLocks)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="punches">
+                            <i class="far fa-clock fa-padded" aria-hidden="true"></i> Time
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewCustomers || _currentUser.CanViewProjects || _currentUser.CanViewTasks)
+                {
+                    <li class="active">
+                        <NavLink class="nav-link" href="customers">
+                            <i class="fas fa-truck fa-padded" aria-hidden="true"></i> Projects and Customers <span class="sr-only">(current)</span>
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewInventoryConsumptions || _currentUser.CanViewInventoryItems)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="inventory/consumption">
+                            <i class="fas fa-boxes fa-padded" aria-hidden="true"></i> Inventory
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewReports)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="reports">
+                            <i class="fas fa-chart-line fa-padded" aria-hidden="true"></i> Reports
+                        </NavLink>
+                    </li>
+                }
+                @if (_currentUser.CanViewUsers)
+                {
+                    <li>
+                        <NavLink class="nav-link" href="users">
+                            <i class="fas fa-users fa-padded" aria-hidden="true"></i> Users
+                        </NavLink>
+                    </li>
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="navbar-phone"><a href="tel:1-888-930-3044">Punch In or Out @@ 1-888-930-3044</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@_currentUser.Name <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="nav-link" href="user-details">
+                                Account Details
+                            </NavLink>
+                        </li>
+                        @if (_currentUser.CanViewOrganizationDetails)
+                        {
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <NavLink class="nav-link" href="organization-details">
+                                    Organization Settings
+                                </NavLink>
+                            </li>
+                        }
+                        <li role="separator" class="divider"></li>
+                        <li><a href="javascript:void(0)" @onclick="SignOutClicked">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid fadeIn">
+    <ul class="nav nav-pills">
+        <li role="presentation"><NavLink href="proposed-projects">Proposed Projects</NavLink></li>
+        <li role="presentation" class="active"><NavLink href="open-projects">Open Projects</NavLink></li>
+        <li role="presentation"><NavLink href="closed-projects">Closed Projects</NavLink></li>
+        <li role="presentation"><NavLink href="customers">Everything</NavLink></li>
+    </ul>
+
+    <hr />
+
+    <div class="row row-toolbar">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => OpenDownloadOpenProjectsDialog())"><i class="fas fa-file-csv" aria-hidden="true" style="margin-right: 5px;"></i> Download</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" @onclick="@(e => RefreshProjects())"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--List of Projects-->
+    <table class="table table-bordered table-jobs">
+        <thead>
+            <tr>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Customer/Number"))">
+                        Customer #
+                        @if (_projectsSortBy == "Customer/Number" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "Customer/Number" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 15%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Customer/Name"))">
+                        Customer
+                        @if (_projectsSortBy == "Customer/Name" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "Customer/Name" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Number"))">
+                        Project #
+                        @if (_projectsSortBy == "Number" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "Number" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 15%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Name"))">
+                        Project
+                        @if (_projectsSortBy == "Name" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "Name" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("Status"))">
+                        Status
+                        @if (_projectsSortBy == "Status" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "Status" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("QuoteNumber"))">
+                        Quote #
+                        @if (_projectsSortBy == "QuoteNumber" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "QuoteNumber" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("CustomerWorkOrder"))">
+                        Customer WO
+                        @if (_projectsSortBy == "CustomerWorkOrder" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "CustomerWorkOrder" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("CustomerPurchaseOrder"))">
+                        Customer PO
+                        @if (_projectsSortBy == "CustomerPurchaseOrder" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "CustomerPurchaseOrder" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+                <th style="width: 10%;">
+                    <a href="javascript:void(0)" @onclick="@(e => ChangeProjectsSortBy("InvoiceNumber"))">
+                        Invoice #
+                        @if (_projectsSortBy == "InvoiceNumber" && _projectsSortDirection == "ASC")
+                        {
+                            <span class="fa fa-caret-up"></span>
+                        }
+                        else if (_projectsSortBy == "InvoiceNumber" && _projectsSortDirection == "DESC")
+                        {
+                            <span class="fa fa-caret-down"></span>
+                        }
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var project in _projects)
+            {
+                <tr class="fadeIn selectable">
+                    <td><a href="/project-details/@(project.Id)">@project.Customer.Number</a></td>
+                    <td><a href="/project-details/@(project.Id)">@project.Customer.Name</a></td>
+                    <td><a href="/project-details/@(project.Id)">@project.Number</a></td>
+                    <td><a href="/project-details/@(project.Id)">@project.Name</a></td>
+                    <td><a href="/project-details/@(project.Id)">@project.Status</a></td>
+                    <td><a href="/project-details/@(project.Id)">@FormatString(project.QuoteNumber)</a></td>
+                    <td><a href="/project-details/@(project.Id)">@FormatString(project.CustomerWorkOrder)</a></td>
+                    <td><a href="/project-details/@(project.Id)">@FormatString(project.CustomerPurchaseOrder)</a></td>
+                    <td><a href="/project-details/@(project.Id)">@FormatString(project.InvoiceNumber)</a></td>
+                </tr>
+            }
+            @if (_loadingProjects)
+            {
+                <tr class="fadeIn">
+                    <td colspan="9"><i class="fa fa-spinner fa-spin fa-fw"></i></td>
+                </tr>
+            }
+            @if (!_loadingProjects && _projects.Count == 0)
+            {
+                <tr class="fadeIn">
+                    <td colspan="9">No Open Projects</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row" style="margin-bottom: 2em;">
+        <div class="col-md-6">
+            @if (_projectsCount > PageSize)
+            {
+                <div class="pull-left" style="margin-right: 1rem;">
+                    <button class="btn btn-sm btn-default pull-left" @onclick="PreviousProjectPage"><i class="fa fa-arrow-left" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm btn-default pull-left" @onclick="NextProjectPage"><i class="fa fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            }
+            @if (_projectsCount > 0 && !_loadingProjects)
+            {
+                <p class="form-control-static pull-left">@(_projectsPageStart + 1) to @(_projectsPageStart + PageSize < _projectsCount ? _projectsPageStart + PageSize : _projectsCount) of @_projectsCount</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public EventCallback SignOutClicked { get; set; }
+
+    private bool _loadingProjects;
+    private User? _currentUser;
+    private List<Job> _projects = new();
+    private string _projectsSortBy = "Number";
+    private string _projectsSortDirection = "ASC";
+    private const int PageSize = 100;
+    private int _projectsSkip = 0;
+    private long _projectsCount = 0;
+    private int _projectsPageStart = 0;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Subscribe to the events
+        SharedService.OnChange += StateHasChanged;
+
+        _currentUser = SharedService.CurrentUser;
+
+        await RefreshProjects();
+
+        DialogService.OnClose += Close;
+    }
+
+    void IDisposable.Dispose()
+    {
+        // Unsubscribe to the events
+        SharedService.OnChange -= StateHasChanged;
+
+        DialogService.OnClose -= Close;
+    }
+
+    private async void NextProjectPage(MouseEventArgs e)
+    {
+        _projectsPageStart = _projectsPageStart + PageSize;
+        _projectsSkip = _projectsPageStart;
+        await RefreshProjects();
+    }
+
+    private async void PreviousProjectPage(MouseEventArgs e)
+    {
+        _projectsPageStart = _projectsPageStart - PageSize;
+        _projectsSkip = _projectsPageStart;
+        await RefreshProjects();
+    }
+
+    private async void Close(dynamic result)
+    {
+        if (result is bool && ((bool)result != false))
+            await RefreshProjects();
+    }
+
+    private void OpenDownloadOpenProjectsDialog()
+    {
+        DialogService.Open<DownloadProjectsDialog>("Download Open Projects",
+                                new Dictionary<string, object>() { { "FilterStatus", "OPEN" } },
+                                new DialogOptions() { Width = "600px" });
+    }
+    
+    private async System.Threading.Tasks.Task RefreshProjects()
+    {
+        _loadingProjects = true;
+
+        // Prevent stagnation.
+        _projects.Clear();
+
+        var result = await JobService.GetOpenJobsAsync(PageSize, _projectsSkip, _projectsSortBy, _projectsSortDirection);
+        _projects = result.Item1;
+        _projectsCount = result.Item2.GetValueOrDefault();
+        _loadingProjects = false;
+        StateHasChanged();
+    }
+
+    private async void ChangeProjectsSortBy(string column)
+    {
+        _projectsSortBy = column;
+
+        if (_projectsSortDirection == "ASC")
+        {
+            _projectsSortDirection = "DESC";
+        }
+        else
+        {
+            _projectsSortDirection = "ASC";
+        }
+
+        await RefreshProjects();
+    }
+
+    private static string FormatString(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+
+        return text.Length > 27 ? $"{text[..26]}..." : text;
+    }
+}

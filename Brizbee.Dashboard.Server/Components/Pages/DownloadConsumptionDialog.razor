@@ -1,0 +1,63 @@
+﻿@page "/dialogs/download-consumption"
+
+@using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Services
+
+@inject ApiService ApiService
+@inject DialogService DialogService
+@inject ProtectedSessionStorage ProtectedSessionStore
+
+<p>
+    Click below to download the consumption (limit of 30 days):
+</p>
+
+<form class="form-horizontal" autocomplete="off">
+
+    <div class="form-group">
+        <label for="range_min" class="col-sm-3 control-label">From</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="_range.Min" id="range_min" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="range_max" class="col-sm-3 control-label">To</label>
+        <div class="col-sm-9">
+            <InputDate @bind-Value="@_range.Max" id="range_max" class="form-control" />
+        </div>
+    </div>
+</form>
+
+<p>
+    <a href="@($"{ApiService.GetBaseUrl()}api/QBDInventoryConsumptions/Export?minCreatedAt={_range.Min:yyyy-MM-dd}&maxCreatedAt={_range.Max:yyyy-MM-dd}&access_token={_accessToken}")" class="btn btn-primary">
+        CSV File (Comma Separated Values)
+    </a>
+    <br />
+    <small>
+        This file can be opened in Microsoft Excel, LibreOffice, Google Docs, Office 365, etc.
+    </small>
+</p>
+
+<hr />
+
+<button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+
+@code {
+    private string _accessToken = string.Empty;
+    private readonly DateRange _range = new()
+    {
+        Max = DateTime.Today,
+        Min = DateTime.Today
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ProtectedSessionStore.GetAsync<string>("token");
+        _accessToken = result.Success ? result.Value : string.Empty;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        DialogService.Close(false);
+    }
+}

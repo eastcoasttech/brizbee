@@ -1,0 +1,135 @@
+﻿@inherits LayoutComponentBase
+
+@using Brizbee.Dashboard.Server.Services
+
+@inject NavigationManager NavigationManager
+
+@inject SharedService SharedService
+@inject AuditService AuditService
+@inject AuthService AuthService
+@inject KioskService KioskService
+@inject UserService UserService
+@inject PunchService PunchService
+@inject RateService RateService
+@inject OrganizationService OrganizationService
+@inject ExportService ExportService
+@inject TaskService TaskService
+@inject JobService JobService
+@inject CustomerService CustomerService
+@inject LockService LockService
+@inject TimesheetEntryService TimesheetEntryService
+@inject QBDInventoryItemService QbdInventoryItemService
+@inject QBDInventoryItemSyncService QbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService QbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService QbdInventoryConsumptionSyncService
+@inject TaskTemplateService TaskTemplateService
+@inject PopulateTemplateService PopulateTemplateService
+@inject ProtectedSessionStorage ProtectedSessionStore
+
+<RadzenComponents @rendermode="InteractiveServer" />
+
+<div id="wrap">
+    <div id="main">
+        <CascadingValue Value="SignOutClicked">
+            @Body
+        </CascadingValue>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    EventCallback _signOutClicked = EventCallback.Empty;
+    EventCallback SignOutClicked
+    {
+        get
+        {
+            if (_signOutClicked.Equals(EventCallback.Empty))
+                _signOutClicked = EventCallback.Factory.Create(this, SignOutAsync);
+            return _signOutClicked;
+        }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        // Handle authentication
+        if (SharedService.CurrentUser == null)
+        {
+            // Get token from browser storage.
+            var result = await ProtectedSessionStore.GetAsync<string>("token");
+            var token = result.Success ? result.Value : string.Empty;
+
+            // Check for previous authentication
+            if (!string.IsNullOrEmpty(token))
+            {
+                // Update headers on services.
+                AuditService.ConfigureHeadersWithToken(token);
+                AuthService.ConfigureHeadersWithToken(token);
+                KioskService.ConfigureHeadersWithToken(token);
+                UserService.ConfigureHeadersWithToken(token);
+                PunchService.ConfigureHeadersWithToken(token);
+                LockService.ConfigureHeadersWithToken(token);
+                CustomerService.ConfigureHeadersWithToken(token);
+                TaskService.ConfigureHeadersWithToken(token);
+                TaskTemplateService.ConfigureHeadersWithToken(token);
+                PopulateTemplateService.ConfigureHeadersWithToken(token);
+                JobService.ConfigureHeadersWithToken(token);
+                RateService.ConfigureHeadersWithToken(token);
+                OrganizationService.ConfigureHeadersWithToken(token);
+                TimesheetEntryService.ConfigureHeadersWithToken(token);
+                QbdInventoryItemService.ConfigureHeadersWithToken(token);
+                QbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+                QbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+                QbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+                ExportService.ConfigureHeadersWithToken(token);
+                
+                // Configure shared service.
+                SharedService.CurrentUser = await AuthService.GetMeAsync();
+                SharedService.Token = token;
+            }
+            else
+            {
+                // Otherwise, redirect to login page
+                NavigationManager.NavigateTo("/");
+            }
+        }
+    }
+
+    private async void SignOutAsync()
+    {
+        // Clear the local storage
+        await ProtectedSessionStore.DeleteAsync("token");
+
+        // Clear the headers
+        AuditService.ResetHeaders();
+        KioskService.ResetHeaders();
+        UserService.ResetHeaders();
+        PunchService.ResetHeaders();
+        RateService.ResetHeaders();
+        OrganizationService.ResetHeaders();
+        ExportService.ResetHeaders();
+        TaskService.ResetHeaders();
+        JobService.ResetHeaders();
+        CustomerService.ResetHeaders();
+        LockService.ResetHeaders();
+        TimesheetEntryService.ResetHeaders();
+        QbdInventoryItemService.ResetHeaders();
+        QbdInventoryItemSyncService.ResetHeaders();
+        QbdInventoryConsumptionService.ResetHeaders();
+        QbdInventoryConsumptionSyncService.ResetHeaders();
+        TaskTemplateService.ResetHeaders();
+        PopulateTemplateService.ResetHeaders();
+
+        // Reset shared variables
+        SharedService.Reset();
+
+        // Return to login page
+        NavigationManager.NavigateTo("/");
+    }
+}

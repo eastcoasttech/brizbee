@@ -1,0 +1,60 @@
+﻿@page "/dialogs/select-populate-template"
+
+@using System.ComponentModel.DataAnnotations
+
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Services
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+
+<EditForm Model="@templateSelection" OnValidSubmit="Select" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (!Templates.Any())
+    {
+        <p>You do not have any templates.</p>
+    }
+
+    <InputRadioGroup @bind-Value="templateSelection.SelectedTemplateId">
+        <ul class="list-group">
+            @foreach (var template in Templates)
+            {
+                <li class="list-group-item"><InputRadio id="@($"template_{template.Id}")" Value="@template.Id" /> <label for="@($"template_{template.Id}")" style="margin-bottom: 0;">@template.Name</label></li>
+            }
+        </ul>
+    </InputRadioGroup>
+
+    <hr />
+
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;" disabled="@(!context.Validate() || !context.IsModified())">OK</button>
+</EditForm>
+
+@code {
+    [Parameter] public List<PopulateTemplate> Templates { get; set; }
+
+    private TemplateSelection templateSelection = new TemplateSelection();
+
+    private void Select()
+    {
+        dialogService.Close(new DialogCloseResult()
+        {
+            Type = "template.selected",
+            Value = Templates.Where(t => t.Id == templateSelection.SelectedTemplateId).FirstOrDefault()
+        });
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    class TemplateSelection
+    {
+        [Required]
+        public int SelectedTemplateId { get; set; }
+    }
+}

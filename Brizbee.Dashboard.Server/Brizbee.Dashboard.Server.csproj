@@ -1,0 +1,150 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Brizbee.Core\Brizbee.Core.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Content Remove="appsettings.json" />
+      <None Include="appsettings.json" CopyToOutputDirectory="Never" />
+      <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="appsettings.json" Condition="'$(Configuration)' == 'Debug'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Dapper" Version="2.1.35" />
+      <PackageReference Include="itext" Version="9.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+      <PackageReference Include="NodaTime" Version="3.2.0" />
+      <PackageReference Include="Radzen.Blazor" Version="5.6.10" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\Pages\BillingDetails.razor" />
+      <AdditionalFiles Include="Components\Pages\Closed-Projects.razor" />
+      <AdditionalFiles Include="Components\Pages\ConsumptionDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\CustomerDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Customers.razor" />
+      <AdditionalFiles Include="Components\Pages\DownloadBarCodesDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\DownloadConsumptionDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\DownloadProjectsDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\DownloadPunchesDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\ExceptionsFragment.razor" />
+      <AdditionalFiles Include="Components\Pages\Exports.razor" />
+      <AdditionalFiles Include="Components\Pages\Index.razor" />
+      <AdditionalFiles Include="Components\Pages\InventoryItemDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Inventory\Consumption.razor" />
+      <AdditionalFiles Include="Components\Pages\Inventory\ConsumptionSyncs.razor" />
+      <AdditionalFiles Include="Components\Pages\Inventory\Items.razor" />
+      <AdditionalFiles Include="Components\Pages\Inventory\ItemSyncs.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\In\Confirm.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\In\Done.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\In\TaskNumber.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\Out\Confirm.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\Out\Done.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\Status.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\TimeCard\Done.razor" />
+      <AdditionalFiles Include="Components\Pages\Kiosk\TimeCard\Task.razor" />
+      <AdditionalFiles Include="Components\Pages\LockDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Locks.razor" />
+      <AdditionalFiles Include="Components\Pages\MergeProjectDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Open-Projects.razor" />
+      <AdditionalFiles Include="Components\Pages\OrganizationDetails.razor" />
+      <AdditionalFiles Include="Components\Pages\OrganizationPreferences.razor" />
+      <AdditionalFiles Include="Components\Pages\PopulateBlade.razor" />
+      <AdditionalFiles Include="Components\Pages\PopulateDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Project-Details.razor" />
+      <AdditionalFiles Include="Components\Pages\ProjectDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Proposed-Projects.razor" />
+      <AdditionalFiles Include="Components\Pages\PunchAlertsDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\PunchDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Punches.razor" />
+      <AdditionalFiles Include="Components\Pages\PunchFiltersDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\RangeDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\RateDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Rates.razor" />
+      <AdditionalFiles Include="Components\Pages\Register.razor" />
+      <AdditionalFiles Include="Components\Pages\Reports.razor" />
+      <AdditionalFiles Include="Components\Pages\SavePopulateTemplateDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\SearchCustomersDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\SearchProjectsDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\SearchTasksDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\SearchUsersDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\SelectPopulateTemplateDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\SplitDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\TaskDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\TaskTemplateDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\TaskTemplates.razor" />
+      <AdditionalFiles Include="Components\Pages\TimeCardDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\TimeCards.razor" />
+      <AdditionalFiles Include="Components\Pages\UserDetails.razor" />
+      <AdditionalFiles Include="Components\Pages\UserDialog.razor" />
+      <AdditionalFiles Include="Components\Pages\Users.razor" />
+      <AdditionalFiles Include="Components\Pages\Who.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\_Pages\Counter.razor" />
+      <_ContentIncludedByDefault Remove="Components\_Pages\Error.razor" />
+      <_ContentIncludedByDefault Remove="Components\_Pages\Home.razor" />
+      <_ContentIncludedByDefault Remove="Components\_Pages\Weather.razor" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.js.map" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js" />
+      <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map" />
+    </ItemGroup>
+
+</Project>

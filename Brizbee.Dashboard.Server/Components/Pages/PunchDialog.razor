@@ -1,0 +1,858 @@
+﻿@page "/dialogs/punch"
+
+@using System.Globalization
+@using System.Text.Json
+@using Brizbee.Core.Models
+@using Brizbee.Dashboard.Server.Serialization
+@using Brizbee.Dashboard.Server.Services 
+@using NodaTime
+@using NodaTime.TimeZones
+
+@inject DialogService dialogService
+@inject UserService userService
+@inject CustomerService customerService
+@inject JobService jobService
+@inject TaskService taskService
+@inject PunchService punchService
+@inject AuditService auditService
+@inject SharedService sharedService
+
+<ul class="nav nav-tabs">
+    <li role="presentation" class="@(selectedTab == "DETAILS" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "DETAILS")" @onclick:preventDefault>Details</a></li>
+
+    @if (Id.HasValue)
+    {
+        <li role="presentation" class="@(selectedTab == "SOURCE" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "SOURCE")" @onclick:preventDefault>Source</a></li>
+
+        @if (sharedService.CurrentUser.CanViewAudits)
+        {
+            <li role="presentation" class="@(selectedTab == "AUDIT" ? "active" : "")"><a href="" @onclick="@(() => selectedTab = "AUDIT")" @onclick:preventDefault>Audit Trail</a></li>
+        }
+    }
+</ul>
+
+<div style="padding: 1.5em 0 1.5em 0;">
+    @if (selectedTab == "DETAILS")
+    {
+        <EditForm Model="@punch" OnValidSubmit="SavePunch" class="form-horizontal" autocomplete="off">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="selected_user_id" class="col-sm-3 control-label">User</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_user_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" autofocus
+                                 ValueChanged="@( (int x) => SelectedUserValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedUserId )"
+                                 Value="@selectedUserId">
+                        @foreach (var user in users)
+                        {
+                            <option value="@user.Id">@user.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedCustomerId )"
+                                 Value="@selectedCustomerId">
+                        @foreach (var customer in customers)
+                        {
+                            <option value="@customer.Id">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{customer.Number} - {customer.Name}" : customer.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedJobId )"
+                                 Value="@selectedJobId">
+                        @foreach (var project in jobs)
+                        {
+                            <option value="@project.Id">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{project.Number} - {project.Name}" : project.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedTaskId )"
+                                 Value="@selectedTaskId">
+                        @foreach (var task in tasks)
+                        {
+                            <option value="@task.Id">@(sharedService.CurrentUser.Organization.ShowTaskNumber ? $"{task.Number} - {task.Name}" : task.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="form-group">
+                <label for="in_at" class="col-sm-3 control-label">In</label>
+                <div class="col-sm-9">
+                    <div class="row" style="margin-right: 0;">
+                        <div class="col-md-6" style="padding-right: 0;">
+                            <InputDate @bind-Value="punch.InAt" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 1; i <= 12; i++)
+                                    {
+                                    <option value="@i">@i</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 0; i <= 59; i++)
+                                    {
+                                    <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-default" @onclick="ToggleInAtMerdian" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@inAtMeridian</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_in_at_country_code" class="col-sm-3 control-label">Country</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_in_at_country_code" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedInAtCountryCodeValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedInAtCountryCode )"
+                                 Value="@selectedInAtCountryCode">
+                        @foreach (var country in countries)
+                        {
+                            <option value="@country.CountryCode">@country.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_in_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_in_at_time_zone" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedInAtTimeZoneValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedInAtTimeZone )"
+                                 Value="@selectedInAtTimeZone">
+                        @foreach (var timeZone in inAtZones)
+                        {
+                            <option value="@timeZone.Id">@timeZone.Id</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <div class="checkbox">
+                        <label>
+                            <InputCheckbox @bind-Value="hasPunchOut" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" /> Has Punch Out?
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="out_at" class="col-sm-3 control-label">Out</label>
+                <div class="col-sm-9">
+                    <div class="row" style="margin-right: 0;">
+                        <div class="col-md-6" style="padding-right: 0;">
+                            <InputDate @bind-Value="punch.OutAt" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)" />
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 1; i <= 12; i++)
+                                    {
+                                    <option value="@i">@i</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2" style="padding-right: 0;">
+                            <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
+                                @for (int i = 0; i <= 59; i++)
+                                    {
+                                    <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                                    }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-default" @onclick="ToggleOutAtMerdian" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">@outAtMeridian</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_out_at_country_code" class="col-sm-3 control-label">Country</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_out_at_country_code" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedOutAtCountryCodeValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedOutAtCountryCode )"
+                                 Value="@selectedOutAtCountryCode">
+                        @foreach (var country in countries)
+                        {
+                            <option value="@country.CountryCode">@country.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="selected_out_at_time_zone" class="col-sm-3 control-label">Time Zone</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" id="selected_out_at_time_zone" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                 ValueChanged="@( (string x) => selectedOutAtTimeZoneValueChangeHandler(x) )"
+                                 ValueExpression="@( () => selectedOutAtTimeZone )"
+                                 Value="@selectedOutAtTimeZone">
+                        @foreach (var timeZone in outAtZones)
+                        {
+                            <option value="@timeZone.Id">@timeZone.Id</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            @if (punch.CommitId.HasValue)
+            {
+                <p class="text-danger">
+                    This punch is locked.
+                </p>
+            }
+
+            <hr />
+
+            @if (punch.Id != 0)
+            {
+                <button class="btn btn-danger" type="button" @onclick="DeletePunch" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">Delete</button>
+            }
+            <i class="@((working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks) ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+            <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" disabled="@(working)" style="margin-left: 2px;">Cancel</button>
+            <button class="btn btn-primary pull-right" type="submit" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks)" style="margin-left: 2px;">OK</button>
+        </EditForm>
+    }
+    else if (selectedTab == "SOURCE")
+    {
+        <h4>Location</h4>
+        @if (center != null)
+        {
+            <RadzenGoogleMap style="height: 250px" MapId="d46dafbc62f6ac07" ApiKey="AIzaSyB3s-RGefYucx0hhIAtCKvf_g6G9CqrGe8" Zoom=13 Center="center">
+                <Markers>
+                    @if (!string.IsNullOrEmpty(punch.LatitudeForInAt) && !string.IsNullOrEmpty(punch.LongitudeForInAt))
+                    {
+                        <RadzenGoogleMapMarker Title="@($"Punched In at {punch.InAt.ToShortTimeString()}")" Label="In" Position=@(new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForInAt), Lng = double.Parse(punch.LongitudeForInAt) }) />
+                    }
+
+                    @if (!string.IsNullOrEmpty(punch.LatitudeForOutAt) && !string.IsNullOrEmpty(punch.LongitudeForOutAt))
+                    {
+                        <RadzenGoogleMapMarker Title="@($"Punched Out at {punch.OutAt.Value.ToShortTimeString()}")" Label="Out" Position=@(new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForOutAt), Lng = double.Parse(punch.LongitudeForOutAt) }) />
+                    }
+                </Markers>
+            </RadzenGoogleMap>
+        }
+        else
+        {
+            <p>There is no location data for the punch in or out.</p>
+        }
+
+        <h4 style="margin-top: 1em;">Metadata</h4>
+        <table class="table table-condensed table-supercondensed">
+            <tbody>
+                <tr>
+                    <th></th>
+                    <th>Punch In</th>
+                    <th>Punch Out</th>
+                </tr>
+                <tr>
+                    <th>Source Hardware</th>
+                    <td>@punch.InAtSourceHardware</td>
+                    <td>@punch.OutAtSourceHardware</td>
+                </tr>
+                <tr>
+                    <th>Source OS</th>
+                    <td>@punch.InAtSourceOperatingSystem</td>
+                    <td>@punch.OutAtSourceOperatingSystem</td>
+                </tr>
+                <tr>
+                    <th>Source OS Version</th>
+                    <td>@punch.InAtSourceOperatingSystemVersion</td>
+                    <td>@punch.OutAtSourceOperatingSystemVersion</td>
+                </tr>
+                <tr>
+                    <th>Source Browser</th>
+                    <td>@punch.InAtSourceBrowser</td>
+                    <td>@punch.OutAtSourceBrowser</td>
+                </tr>
+                <tr>
+                    <th>Source Browser Version</th>
+                    <td>@punch.InAtSourceBrowserVersion</td>
+                    <td>@punch.OutAtSourceBrowserVersion</td>
+                </tr>
+                <tr>
+                    <th>Source Hostname</th>
+                    <td>@punch.InAtSourceHostname</td>
+                    <td>@punch.OutAtSourceHostname</td>
+                </tr>
+                <tr>
+                    <th>Source IP</th>
+                    <td>@punch.InAtSourceIpAddress</td>
+                    <td>@punch.OutAtSourceIpAddress</td>
+                </tr>
+                <tr>
+                    <th>Source Phone Number</th>
+                    <td>@punch.InAtSourcePhoneNumber</td>
+                    <td>@punch.OutAtSourcePhoneNumber</td>
+                </tr>
+            </tbody>
+        </table>
+    }
+    else if (selectedTab == "AUDIT")
+    {
+        <table class="table table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th class="col-md-4">Timestamp <span class="fa fa-caret-down"></span></th>
+                    <th class="col-md-3">Action</th>
+                    <th class="col-md-5">User</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var audit in audits.OrderByDescending(a => a.CreatedAt))
+                {
+                    <tr class="fadeIn selectable" style="cursor: pointer;" @onclick="args => SelectAudit(audit)">
+                        <td>@audit.CreatedAt.ToString("MMM d, yyyy h:mm:ss tt")</td>
+                        <td>@audit.Action</td>
+                        <td>@audit.User.Name</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <hr />
+
+        <table class="table table-condensed table-supercondensed">
+            <thead>
+                <tr>
+                    <th class="col-md-4"></th>
+                    <th class="col-md-4">Before</th>
+                    <th class="col-md-4">After</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>In</th>
+                    <td>@(selectedBefore != null ? selectedBefore.InAt.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.InAt.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                </tr>
+                <tr>
+                    <th>In Time Zone</th>
+                    <td>@(selectedBefore != null ? selectedBefore.InAtTimeZone : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.InAtTimeZone : "")</td>
+                </tr>
+                <tr>
+                    <th>Out</th>
+                    <td>@(selectedBefore != null && selectedBefore.OutAt.HasValue ? selectedBefore.OutAt.Value.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                    <td>@(selectedAfter != null && selectedAfter.OutAt.HasValue ? selectedAfter.OutAt.Value.ToString("MMM d, yyyy h:mm tt") : "")</td>
+                </tr>
+                <tr>
+                    <th>Out Time Zone</th>
+                    <td>@(selectedBefore != null ? selectedBefore.OutAtTimeZone : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.OutAtTimeZone : "")</td>
+                </tr>
+                <tr>
+                    <th>Task Id</th>
+                    <td>@(selectedBefore != null ? selectedBefore.TaskId : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.TaskId : "")</td>
+                </tr>
+                <tr>
+                    <th>User Id</th>
+                    <td>@(selectedBefore != null ? selectedBefore.UserId : "")</td>
+                    <td>@(selectedAfter != null ? selectedAfter.UserId : "")</td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool working = false;
+    private bool loading = true;
+    private bool loadingUsers = true;
+    private bool loadingCustomers = true;
+    private bool loadingJobs = true;
+    private bool loadingTasks = true;
+    private bool loadingAudits = true;
+    private List<Country> countries = new List<Country>();
+    private List<IanaTimeZone> zones = new List<IanaTimeZone>();
+    private List<IanaTimeZone> inAtZones = new List<IanaTimeZone>();
+    private List<IanaTimeZone> outAtZones = new List<IanaTimeZone>();
+    private Punch punch = new Punch();
+    private int selectedUserId;
+    private int selectedCustomerId;
+    private int selectedJobId;
+    private int selectedTaskId;
+    private string inAtHour = "9";
+    private string inAtMinute = "00";
+    private string inAtMeridian = "AM";
+    private string selectedInAtCountryCode = "";
+    private string selectedInAtTimeZone = "";
+    private string outAtHour = "5";
+    private string outAtMinute = "00";
+    private string outAtMeridian = "PM";
+    private string selectedOutAtCountryCode = "";
+    private string selectedOutAtTimeZone = "";
+    private bool hasPunchOut = false;
+    private List<Customer> customers = new List<Customer>();
+    private List<Brizbee.Core.Models.Task> tasks = new List<Brizbee.Core.Models.Task>();
+    private List<Job> jobs = new List<Job>();
+    private List<User> users = new List<User>();
+    private List<Audit> audits = new List<Audit>();
+    private string selectedTab = "DETAILS";
+    private GoogleMapPosition center = null;
+    private Audit selectedAudit = null;
+    private Punch selectedBefore = null;
+    private Punch selectedAfter = null;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // --------------------------------------------------------------------
+        // Build list of time zones.
+        // --------------------------------------------------------------------
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var tzdb = DateTimeZoneProviders.Tzdb;
+        var countryCode = "";
+
+        var list =
+            from location in TzdbDateTimeZoneSource.Default.ZoneLocations
+            where string.IsNullOrEmpty(countryCode) ||
+                  location.CountryCode.Equals(countryCode,
+                    StringComparison.OrdinalIgnoreCase)
+            let zoneId = location.ZoneId
+            let tz = tzdb[zoneId]
+            let offset = tz.GetZoneInterval(now).StandardOffset
+            orderby offset, zoneId
+            select new
+            {
+                Id = zoneId,
+                CountryCode = location.CountryCode
+            };
+
+        foreach (var z in list)
+        {
+            zones.Add(new IanaTimeZone() { Id = z.Id, CountryCode = z.CountryCode });
+        }
+
+
+        // --------------------------------------------------------------------
+        // Build list of countries.
+        // --------------------------------------------------------------------
+
+        CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+        foreach (var culture in cultures)
+        {
+            try
+            {
+                var region = new RegionInfo(culture.Name);
+                if (!countries.Where(c => c.Name == region.EnglishName).Any())
+                {
+                    countries.Add(new Country() { CountryCode = region.TwoLetterISORegionName, Name = region.EnglishName });
+                }
+            }
+            catch (CultureNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
+        // --------------------------------------------------------------------
+        // Set defaults.
+        // --------------------------------------------------------------------
+
+        punch = new Punch()
+        {
+            InAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 9, 0, 0),
+            OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0)
+        };
+
+        selectedInAtCountryCode = "US";
+        selectedInAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
+        selectedOutAtCountryCode = "US";
+        selectedOutAtCountryCodeValueChangeHandler(selectedOutAtCountryCode);
+
+        selectedInAtTimeZone = "America/New_York";
+        selectedInAtTimeZoneValueChangeHandler(selectedInAtTimeZone);
+        selectedOutAtTimeZone = "America/New_York";
+        selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
+
+
+        // --------------------------------------------------------------------
+        // Attempt to load the punch, if necessary.
+        // --------------------------------------------------------------------
+
+        if (Id.HasValue)
+        {
+            punch = await punchService.GetPunchByIdAsync(Id.Value);
+
+            if (punch.InAt.ToString("hh").Contains("0") && punch.InAt.ToString("hh").IndexOf("0") == 0)
+                inAtHour = punch.InAt.ToString("hh").Replace("0", "");
+            else
+                inAtHour = punch.InAt.ToString("hh");
+            inAtMinute = punch.InAt.ToString("mm");
+            inAtMeridian = punch.InAt.ToString("tt").ToUpper();
+
+            if (punch.OutAt.HasValue)
+            {
+                // Allow editing the punch out.
+                hasPunchOut = true;
+
+                if (punch.OutAt.Value.ToString("hh").Contains("0") && punch.OutAt.Value.ToString("hh").IndexOf("0") == 0)
+                    outAtHour = punch.OutAt.Value.ToString("hh").Replace("0", "");
+                else
+                    outAtHour = punch.OutAt.Value.ToString("hh");
+                outAtMinute = punch.OutAt.Value.ToString("mm");
+                outAtMeridian = punch.OutAt.Value.ToString("tt").ToUpper();
+            }
+            else
+            {
+                // Set a default value.
+                punch.OutAt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0);
+                selectedOutAtCountryCode = "US";
+                selectedOutAtCountryCodeValueChangeHandler(selectedOutAtCountryCode);
+                selectedOutAtTimeZone = "America/New_York";
+                selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
+            }
+
+            // Set the customer, job, and task based on the TaskId for this punch.
+            await RefreshCustomers(punch.Task.Job.CustomerId);
+            await RefreshJobs(punch.Task.JobId);
+            await RefreshTasks(punch.TaskId);
+
+            // Set the InAt time zone.
+            var inAtTimeZone = zones.Where(x => x.Id == punch.InAtTimeZone).FirstOrDefault();
+            selectedInAtCountryCode = inAtTimeZone.CountryCode;
+            selectedInAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
+            selectedInAtTimeZone = inAtTimeZone.Id;
+            selectedInAtTimeZoneValueChangeHandler(selectedInAtTimeZone);
+
+            // Set the OutAt time zone.
+            var outAtTimeZone = zones.Where(x => x.Id == punch.OutAtTimeZone).FirstOrDefault();
+            selectedOutAtCountryCode = outAtTimeZone.CountryCode;
+            selectedOutAtCountryCodeValueChangeHandler(selectedInAtCountryCode);
+            selectedOutAtTimeZone = outAtTimeZone.Id;
+            selectedOutAtTimeZoneValueChangeHandler(selectedOutAtTimeZone);
+
+            // Set the user based on the UserId for this punch.
+            await RefreshUsers();
+
+            if (!string.IsNullOrEmpty(punch.LatitudeForInAt) && !string.IsNullOrEmpty(punch.LongitudeForInAt))
+            {
+                center = new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForInAt), Lng = double.Parse(punch.LongitudeForInAt) };
+            }
+            else if (!string.IsNullOrEmpty(punch.LatitudeForOutAt) && !string.IsNullOrEmpty(punch.LongitudeForOutAt))
+            {
+                center = new GoogleMapPosition() { Lat = double.Parse(punch.LatitudeForOutAt), Lng = double.Parse(punch.LongitudeForOutAt) };
+            }
+
+            if (sharedService.CurrentUser.CanViewAudits)
+                await RefreshAudits();
+        }
+        else
+        {
+            // Set the customer, job, and task by selecting defaults.
+            await RefreshCustomers();
+
+            // Set a default user.
+            await RefreshUsers();
+        }
+
+
+        loading = false;
+    }
+
+    private async void SelectedCustomerValueChangeHandler(int customerId)
+    {
+        selectedCustomerId = customerId;
+        await RefreshJobs();
+    }
+
+    private async void SelectedJobValueChangeHandler(int jobId)
+    {
+        selectedJobId = jobId;
+        await RefreshTasks();
+    }
+
+    private void SelectedTaskValueChangeHandler(int taskId)
+    {
+        selectedTaskId = taskId;
+
+        // Update the punch.
+        punch.TaskId = selectedTaskId;
+    }
+
+    private void SelectedUserValueChangeHandler(int userId)
+    {
+        selectedUserId = userId;
+
+        // Update the punch.
+        punch.UserId = selectedUserId;
+    }
+
+    private void selectedInAtCountryCodeValueChangeHandler(string country)
+    {
+        selectedInAtCountryCode = country;
+        inAtZones = zones.Where(z => z.CountryCode == selectedInAtCountryCode).ToList();
+    }
+
+    private void selectedInAtTimeZoneValueChangeHandler(string timeZone)
+    {
+        selectedInAtTimeZone = timeZone;
+        punch.InAtTimeZone = selectedInAtTimeZone;
+    }
+
+    private void selectedOutAtCountryCodeValueChangeHandler(string country)
+    {
+        selectedOutAtCountryCode = country;
+        outAtZones = zones.Where(z => z.CountryCode == selectedOutAtCountryCode).ToList();
+    }
+
+    private void selectedOutAtTimeZoneValueChangeHandler(string timeZone)
+    {
+        selectedOutAtTimeZone = timeZone;
+        punch.OutAtTimeZone = selectedOutAtTimeZone;
+    }
+
+    private async System.Threading.Tasks.Task RefreshUsers()
+    {
+        loadingUsers = true;
+
+        var result = await userService.GetUsersAsync(excludeInactiveUsers: true);
+        users = result.Item1;
+
+        // Update the selected user.
+        if (punch.UserId != 0)
+            SelectedUserValueChangeHandler(punch.UserId);
+        else
+            SelectedUserValueChangeHandler(users.FirstOrDefault().Id);
+
+        loadingUsers = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshCustomers(int? customerId = null)
+    {
+        loadingCustomers = true;
+
+        var result = await customerService.GetCustomersAsync(pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortCustomersByColumn);
+        customers = result.Item1;
+
+        if (customerId.HasValue)
+        {
+            // Attempt to find the requested customer in the list.
+            var exists = customers.Where(c => c.Id == customerId).Any();
+            if (exists)
+                selectedCustomerId = customerId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedCustomerId = customers.FirstOrDefault().Id;
+
+            // Trigger refresh for jobs.
+            await RefreshJobs();
+        }
+
+        loadingCustomers = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshJobs(int? jobId = null)
+    {
+        loadingJobs = true;
+
+        var result = await jobService.GetJobsAsync(selectedCustomerId, pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortProjectsByColumn);
+        jobs = result.Item1;
+
+        if (jobId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = jobs.Where(j => j.Id == jobId).Any();
+            if (exists)
+                selectedJobId = jobId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedJobId = jobs.FirstOrDefault().Id;
+
+            // Trigger refresh for tasks.
+            await RefreshTasks();
+        }
+
+        loadingJobs = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshTasks(int? taskId = null)
+    {
+        loadingTasks = true;
+
+        var result = await taskService.GetTasksAsync(selectedJobId, pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortTasksByColumn);
+        tasks = result.Item1;
+
+        if (taskId.HasValue)
+        {
+            // Attempt to find the requested job in the list.
+            var exists = tasks.Where(t => t.Id == taskId).Any();
+            if (exists)
+                selectedTaskId = taskId.Value;
+        }
+        else
+        {
+            // Set the default value.
+            selectedTaskId = tasks.FirstOrDefault().Id;
+
+            // Update the punch.
+            punch.TaskId = selectedTaskId;
+        }
+
+        loadingTasks = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task RefreshAudits()
+    {
+        loadingAudits = true;
+
+        var result = await auditService.GetPunchAuditsAsync(new DateTime(2021, 1, 1), new DateTime(2031, 1, 1), objectIds: new int[] { punch.Id });
+        audits = result.Item1;
+
+        loadingAudits = false;
+
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task SavePunch()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to save this punch?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        // Parse the new hour and minute.
+        punch.InAt = DateTime.Parse($"{punch.InAt.Year}-{punch.InAt.Month}-{punch.InAt.Day} {inAtHour}:{inAtMinute} {inAtMeridian}");
+
+        // Optionally parse the new hour and minute.
+        if (hasPunchOut)
+            punch.OutAt = DateTime.Parse($"{punch.OutAt.Value.Year}-{punch.OutAt.Value.Month}-{punch.OutAt.Value.Day} {outAtHour}:{outAtMinute} {outAtMeridian}");
+        else
+        {
+            punch.OutAt = null;
+            punch.OutAtTimeZone = null;
+        }
+
+        // Save the punch on the server and close the dialog.
+        var response = await punchService.SavePunchAsync(punch);
+
+        if (response.Item1)
+        {
+            dialogService.Close("punch.created");
+        }
+        else
+        {
+            await dialogService.OpenAsync("Oops!", ds =>
+                @<div>
+                    <p>@response.Item3</p>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog">OK</button>
+                        </div>
+                    </div>
+                </div>);
+        }
+    }
+
+    private void ToggleInAtMerdian()
+    {
+        inAtMeridian = inAtMeridian == "AM" ? "PM" : "AM";
+    }
+
+    private void ToggleOutAtMerdian()
+    {
+        outAtMeridian = outAtMeridian == "AM" ? "PM" : "AM";
+    }
+
+    private async System.Threading.Tasks.Task DeletePunch()
+    {
+        // Confirm that the user wants to make the change.
+        var confirm = await dialogService.Confirm(
+            "Are you sure you want to delete this punch?",
+            "Confirm",
+            new ConfirmOptions() { Width = "600px", CancelButtonText = "Cancel", OkButtonText = "OK" });
+        if (confirm != true)
+            return;
+
+        working = true;
+        StateHasChanged();
+
+        // Delete the punch on the server and close the dialog.
+        var result = await punchService.DeletePunchAsync(punch.Id);
+        if (result)
+            dialogService.Close("punch.deleted");
+        else
+        {
+            working = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SelectAudit(Audit audit)
+    {
+        selectedAudit = audit;
+
+        if (!string.IsNullOrEmpty(audit.Before))
+            selectedBefore = JsonSerializer.Deserialize<Punch>(audit.Before);
+        else
+            selectedBefore = null;
+
+        if (!string.IsNullOrEmpty(audit.After))
+            selectedAfter = JsonSerializer.Deserialize<Punch>(audit.After);
+        else
+            selectedAfter = null;
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+}
