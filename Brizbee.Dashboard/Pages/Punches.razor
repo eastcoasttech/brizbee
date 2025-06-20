@@ -280,7 +280,7 @@
         <tbody>
             @foreach (var punch in punches)
             {
-                <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(e => OpenModifyPunchDialog(punch))">
+                <tr class="fadeIn selectable @(punch.OutAt.HasValue ? "" : "warning") @(punch.OutAt.HasValue && punch.OutAt.Value.Date > sharedService.RangeMax.Date ? "danger" : "")" @onclick="@(async (e) => await OpenModifyPunchDialogAsync(punch))">
                     <td>@punch.User.Name</td>
                     <td>@punch.InAt.ToString("M/d/yyyy h:mm tt")</td>
                     <td>
@@ -519,11 +519,11 @@
                                 new DialogOptions() { Width = "600px" });
     }
 
-    private void OpenModifyPunchDialog(Punch punch)
+    private async System.Threading.Tasks.Task OpenModifyPunchDialogAsync(Punch punch)
     {
-        dialogService.Open<PunchDialog>("Edit Punch",
-                                new Dictionary<string, object>() { { "Id", punch.Id } },
-                                new DialogOptions() { Width = "600px" });
+        await dialogService.OpenAsync<PunchDialog>("Edit Punch",
+            new Dictionary<string, object>() { { "Id", punch.Id } },
+            new DialogOptions() { Width = "600px" });
     }
 
     private void OpenDownloadPunchesDialog()
