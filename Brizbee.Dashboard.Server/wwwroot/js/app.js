@@ -50,18 +50,18 @@ function stripeSourceHandler(source) {
 // ----------------------------------------------------------------------------
 
 function getPlatformDetails() {
-	// Built-in platform detection
-	var browserName = platform.name; // 'Safari'
-	var browserVersion = platform.version; // '5.1'
-	var operatingSystemName = platform.os.family; // 'iOS'
-	var operatingSystemVersion = platform.os.version + (platform.os.architecture === 64 ? ' 64-bit' : ''); // 5.0
+    // Built-in platform detection
+    var browserName = platform.name; // 'Safari'
+    var browserVersion = platform.version; // '5.1'
+    var operatingSystemName = platform.os.family; // 'iOS'
+    var operatingSystemVersion = platform.os.version + (platform.os.architecture === 64 ? ' 64-bit' : ''); // 5.0
 
-	return {
-		BrowserName: browserName,
-		BrowserVersion: browserVersion,
-		OperatingSystemName: operatingSystemName,
-		OperatingSystemVersion: operatingSystemVersion
-	};
+    return {
+        BrowserName: browserName,
+        BrowserVersion: browserVersion,
+        OperatingSystemName: operatingSystemName,
+        OperatingSystemVersion: operatingSystemVersion
+    };
 }
 
 // ----------------------------------------------------------------------------
