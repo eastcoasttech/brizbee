@@ -488,14 +488,14 @@
     {
         working = true;
         punches.Clear();
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
 
         var result = await punchService.GetExpandedPunchesAsync(new DateTime(sharedService.RangeMin.Year, sharedService.RangeMin.Month, sharedService.RangeMin.Day, 0, 0, 0), new DateTime(sharedService.RangeMax.Year, sharedService.RangeMax.Month, sharedService.RangeMax.Day, 23, 59, 59), pageSize, skip, sortBy, sortDirection, sharedService.PunchFilters);
         punches = result.Item1;
         punchesCount = result.Item2.GetValueOrDefault();
         RefreshHoursAndMinutes();
         working = false;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void RefreshHoursAndMinutes()
