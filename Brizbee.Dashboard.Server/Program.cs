@@ -1,5 +1,8 @@
 using Brizbee.Dashboard.Server.Components;
 using Brizbee.Dashboard.Server.Services;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 
@@ -11,13 +14,31 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        string dataProtectionKeysDirectoryPath = builder.Configuration.GetValue<string>("DataProtectionKeysDirectoryPath") ??
+                                                  throw new InvalidOperationException(
+                                                      "'DataProtectionKeysDirectoryPath' must be provided.");
+
+        if (string.IsNullOrEmpty(dataProtectionKeysDirectoryPath))
+        {
+            throw new ArgumentNullException(nameof(dataProtectionKeysDirectoryPath));
+        }
+
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysDirectoryPath))
+            .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
+            {
+                EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+                ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+            });
+
         // Add services to the container.
-        builder.Services.AddRazorComponents()
+        builder.Services
+            .AddRazorComponents()
             .AddInteractiveServerComponents();
-        
+
         // Add Radzen Blazor components.
         builder.Services.AddRadzenComponents();
-        
+
         // Add the Entity Framework database context.
         builder.Services.AddDbContextFactory<PrimaryDbContext>(options =>
             options.UseSqlServer(builder.Configuration["ConnectionStrings:PrimaryDbContext"]));
@@ -25,7 +46,7 @@ public class Program
         // Configure HttpClient to communicate with API.
         builder.Services.AddHttpClient<ApiService>(client =>
         {
-            client.BaseAddress = new Uri("http://localhost:5113");
+            client.BaseAddress = new Uri("https://api-production-1.brizbee.com");
             client.Timeout = TimeSpan.FromMinutes(10);
         });
 
@@ -58,7 +79,7 @@ public class Program
         builder.Services.AddScoped<NotificationService>();
         builder.Services.AddScoped<TooltipService>();
         builder.Services.AddScoped<ContextMenuService>();
-        
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
