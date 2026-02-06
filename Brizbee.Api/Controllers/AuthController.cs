@@ -28,8 +28,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SendGrid;
-using SendGrid.Helpers.Mail;
+using RestSharp;
+using RestSharp.Authenticators;
 using Stripe;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -144,7 +144,7 @@ namespace Brizbee.Api.Controllers
         // POST: api/Auth/Register
         [HttpPost("api/Auth/Register")]
         [AllowAnonymous]
-        public IActionResult Register([FromBody] Registration registration)
+        public async Task<IActionResult> Register([FromBody] Registration registration)
         {
             _telemetryClient.TrackEvent("Registration:Requested");
 
@@ -295,15 +295,36 @@ namespace Brizbee.Api.Controllers
 
                             organization.StripeSubscriptionId = subscription.Id;
 
-                            // Send Welcome Email.
-                            _telemetryClient.TrackEvent("Registration:Email");
+                            try
+                            {
+                                // Prepare to send the welcome Email.
+                                _telemetryClient.TrackEvent("Registration:Email");
 
-                            var apiKey = _configuration["SendGridApiKey"];
-                            var client = new SendGridClient(apiKey);
-                            var from = new EmailAddress("BRIZBEE <administrator@brizbee.com>");
-                            var to = new EmailAddress(user.EmailAddress);
-                            var msg = MailHelper.CreateSingleTemplateEmail(from, to, "d-8c48a9ad2ddd4d73b6e6c10307182f43", null);
-                            var response = client.SendEmailAsync(msg);
+                                var apiKey = _configuration.GetValue<string>("MailgunApiKey");
+
+                                var options = new RestClientOptions("https://api.mailgun.net")
+                                {
+                                    Authenticator = new HttpBasicAuthenticator("api", apiKey ?? "API_KEY")
+                                };
+
+                                var client = new RestClient(options);
+
+                                var request = new RestRequest("/v3/mg.brizbee.com/messages", Method.Post);
+
+                                request.AlwaysMultipartFormData = true;
+
+                                request.AddParameter("from", "Brizbee <postmaster@mg.brizbee.com>");
+                                request.AddParameter("to", $"{user.Name} <{user.EmailAddress}>");
+                                request.AddParameter("subject", "Welcome to Brizbee");
+                                request.AddParameter("template", "welcome");
+
+                                // Send the Email.
+                                await client.ExecuteAsync(request);
+                            }
+                            catch (Exception ex)
+                            {
+                                _telemetryClient.TrackException(ex);
+                            }
                         }
                         catch (Exception ex)
                         {

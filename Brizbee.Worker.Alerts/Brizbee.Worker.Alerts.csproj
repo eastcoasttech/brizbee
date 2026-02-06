@@ -1,24 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.13.1" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
-    <PackageReference Include="NodaTime" Version="3.2.0" />
-    <PackageReference Include="SendGrid" Version="9.29.3" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Remove="appsettings.json" />
+        <None Include="appsettings.json" CopyToOutputDirectory="Never" />
+        <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="appsettings.json" Condition="'$(Configuration)' == 'Debug'" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Identity" Version="1.13.1" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
+        <PackageReference Include="Dapper" Version="2.1.35" />
+        <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+        <PackageReference Include="NodaTime" Version="3.2.2" />
+        <PackageReference Include="Quartz" Version="3.15.1" />
+        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.15.1" />
+        <PackageReference Include="RestSharp" Version="113.1.0" />
+    </ItemGroup>
 
 </Project>

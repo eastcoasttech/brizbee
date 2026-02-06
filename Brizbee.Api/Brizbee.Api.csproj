@@ -1,56 +1,58 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Controllers\kzkdnhwq.qqw~" />
-    <None Remove="Sql\INVENTORY CONSUMPTION\COUNT SYNCED CONSUMPTION FOR PROJECT.sql" />
-    <None Remove="Sql\INVENTORY CONSUMPTION\MIGRATE CONSUMPTION FOR TASK.sql" />
-    <None Remove="Sql\MIGRATE PUNCHES FOR TASK.sql" />
-    <None Remove="Sql\PROJECTS\MIGRATE TIME CARDS FOR TASK.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Sql\INVENTORY CONSUMPTION\COUNT SYNCED CONSUMPTION FOR PROJECT.sql" />
-    <EmbeddedResource Include="Sql\INVENTORY CONSUMPTION\MIGRATE CONSUMPTION FOR TASK.sql" />
-    <EmbeddedResource Include="Sql\PROJECTS\MIGRATE PUNCHES FOR TASK.sql" />
-    <EmbeddedResource Include="Sql\PROJECTS\MIGRATE TIME CARDS FOR TASK.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="appsettings.json" />
-    <None Include="appsettings.json" CopyToOutputDirectory="Never" />
-    <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="appsettings.json" Condition="'$(Configuration)' == 'Debug'" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
-    <PackageReference Include="CsvHelper" Version="33.0.1" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
-    <PackageReference Include="Invio.Extensions.Authentication.JwtBearer" Version="2.0.1" />
-    <PackageReference Include="itext" Version="8.0.5" />
-    <PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.5" />
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.22.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.22.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.TraceListener" Version="2.22.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.1.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
-    <PackageReference Include="NodaTime" Version="3.2.0" />
-    <PackageReference Include="SendGrid" Version="9.29.3" />
-    <PackageReference Include="Stripe.net" Version="47.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.0.0" />
-    <PackageReference Include="Twilio" Version="7.7.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Brizbee.Core\Brizbee.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="Brizbee.Api.Tests" />
-  </ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Remove="Controllers\kzkdnhwq.qqw~" />
+        <None Remove="Sql\INVENTORY CONSUMPTION\COUNT SYNCED CONSUMPTION FOR PROJECT.sql" />
+        <None Remove="Sql\INVENTORY CONSUMPTION\MIGRATE CONSUMPTION FOR TASK.sql" />
+        <None Remove="Sql\MIGRATE PUNCHES FOR TASK.sql" />
+        <None Remove="Sql\PROJECTS\MIGRATE TIME CARDS FOR TASK.sql" />
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Sql\INVENTORY CONSUMPTION\COUNT SYNCED CONSUMPTION FOR PROJECT.sql" />
+        <EmbeddedResource Include="Sql\INVENTORY CONSUMPTION\MIGRATE CONSUMPTION FOR TASK.sql" />
+        <EmbeddedResource Include="Sql\PROJECTS\MIGRATE PUNCHES FOR TASK.sql" />
+        <EmbeddedResource Include="Sql\PROJECTS\MIGRATE TIME CARDS FOR TASK.sql" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Remove="appsettings.json" />
+        <None Include="appsettings.json" CopyToOutputDirectory="Never" />
+        <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="appsettings.json" Condition="'$(Configuration)' == 'Debug'" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
+        <PackageReference Include="CsvHelper" Version="33.0.1" />
+        <PackageReference Include="Dapper" Version="2.1.35" />
+        <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
+        <PackageReference Include="Invio.Extensions.Authentication.JwtBearer" Version="2.0.1" />
+        <PackageReference Include="itext" Version="8.0.5" />
+        <PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.5" />
+        <PackageReference Include="Microsoft.ApplicationInsights" Version="2.22.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.22.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.TraceListener" Version="2.22.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.1.0" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+        <PackageReference Include="NodaTime" Version="3.2.2" />
+        <PackageReference Include="RestSharp" Version="113.1.0" />
+        <PackageReference Include="Stripe.net" Version="47.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.0.0" />
+        <PackageReference Include="Twilio" Version="7.7.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Brizbee.Core\Brizbee.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Brizbee.Api.Tests" />
+    </ItemGroup>
 </Project>
