@@ -1,5 +1,5 @@
 ﻿//
-//  MidnightPunchesWorker.cs
+//  MidnightPunchesJob.cs
 //  BRIZBEE Alerts Worker
 //
 //  Copyright (C) 2021-2024 East Coast Technology Services, LLC
@@ -24,36 +24,18 @@ using Brizbee.Worker.Alerts.Serialization;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using Quartz;
 using RestSharp;
 using RestSharp.Authenticators;
 using System.Text.Json;
 
-namespace Brizbee.Worker.Alerts.Workers;
+namespace Brizbee.Worker.Alerts.Jobs;
 
-public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogger<MidnightPunchesWorker> logger, IConfiguration configuration)
-    : IHostedService
+public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfiguration configuration) : IJob
 {
-    private readonly IHostApplicationLifetime _hostLifetime = hostLifetime ?? throw new ArgumentNullException(nameof(hostLifetime));
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Midnight punches worker executed at: {Timestamp}", DateTime.UtcNow);
-
-        await GenerateMidnightPunchEmailsAsync();
-
-        _hostLifetime.StopApplication();
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    private async Task GenerateMidnightPunchEmailsAsync()
+    public async Task Execute(IJobExecutionContext context)
     {
         try
         {
@@ -64,11 +46,11 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
 
             var midnight = new DateTime(localDateTime.Year, localDateTime.Month, localDateTime.Day, 0, 0, 0);
 
-            _logger.LogInformation("{MidnightDate} {MidnightTime}", midnight.ToShortDateString(), midnight.ToShortTimeString());
+            logger.LogInformation("{MidnightDate} {MidnightTime}", midnight.ToShortDateString(), midnight.ToShortTimeString());
 
             var connectionString = configuration.GetConnectionString("Default");
 
-            _logger.LogInformation("Connecting to database");
+            logger.LogInformation("Connecting to database");
 
             await using var connection = new SqlConnection(connectionString);
 
@@ -156,7 +138,7 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
 
                 var midnightPunchesList = midnightPunches.ToList();
 
-                _logger.LogInformation("{MidnightPunchCount} punches through midnight", midnightPunchesList.Count);
+                logger.LogInformation("{MidnightPunchCount} punches through midnight", midnightPunchesList.Count);
 
                 // Do not continue if there are no punches.
                 if (midnightPunchesList.Count == 0)
@@ -205,7 +187,7 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "{Message}", ex.Message);
+                    logger.LogError(ex, "{Message}", ex.Message);
                 }
             }
 
@@ -213,7 +195,7 @@ public class MidnightPunchesWorker(IHostApplicationLifetime hostLifetime, ILogge
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{Message}", ex.Message);
+            logger.LogError(ex, "{Message}", ex.Message);
         }
     }
 }

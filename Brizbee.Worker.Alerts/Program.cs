@@ -20,11 +20,12 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Worker.Alerts.Workers;
+using Brizbee.Worker.Alerts.Jobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quartz;
 
 namespace Brizbee.Worker.Alerts;
 
@@ -42,7 +43,8 @@ internal class Program
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
         string? appInsightsConnectionString = null;
-        string? operation = null;
+        string operation = string.Empty;
+        string schedule = string.Empty;
 
         return Host.CreateDefaultBuilder()
             .ConfigureHostConfiguration(configurationBuilder =>
@@ -59,13 +61,13 @@ internal class Program
                 configurationBuilder.AddJsonFile("appsettings.json", optional: true);
                 configurationBuilder.AddJsonFile($"appsettings.{hostEnvironment.EnvironmentName}.json", optional: true);
                 configurationBuilder.AddEnvironmentVariables();
-                
+
                 var configuration = configurationBuilder.Build();
 
-                if (string.IsNullOrEmpty(configuration.GetConnectionString("SqlContext")))
+                if (string.IsNullOrEmpty(configuration.GetConnectionString("Default")))
                 {
                     throw new InvalidOperationException(
-                        "Database connection string 'SqlContext' must be provided.");
+                        "Database connection string 'Default' must be provided.");
                 }
 
                 // Determine the connection string for Application Insights.
@@ -76,6 +78,8 @@ internal class Program
                     "GENERATE" => configuration.GetValue<string>("ApplicationInsights:ConnectionStringForGenerateAlerts"),
                     _ => throw new ArgumentException("Invalid argument for operation. Must be MIDNIGHT or GENERATE.")
                 };
+
+                schedule = configuration["schedule"] ?? throw new ArgumentException("schedule must be provided");
             })
             .ConfigureServices(services =>
             {
@@ -105,13 +109,42 @@ internal class Program
 
                 services.Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true);
 
+                services.AddQuartzHostedService(options =>
+                {
+                    options.WaitForJobsToComplete = true;
+                });
+
                 switch (operation!.ToUpper())
                 {
                     case "MIDNIGHT":
-                        services.AddHostedService<MidnightPunchesWorker>();
+
+                        services.AddQuartz(q =>
+                        {
+                            var jobKey = new JobKey("MidnightPunchesJob");
+                            q.AddJob<MidnightPunchesJob>(options => options.WithIdentity(jobKey));
+
+                            q.AddTrigger(options => options
+                                .ForJob(jobKey)
+                                .WithIdentity("MidnightPunchesJob-trigger")
+                                .WithCronSchedule(schedule)
+                            );
+                        });
+
                         break;
                     case "GENERATE":
-                        services.AddHostedService<GenerateAlertsWorker>();
+
+                        services.AddQuartz(q =>
+                        {
+                            var jobKey = new JobKey("GenerateAlertsJob");
+                            q.AddJob<GenerateAlertsJob>(options => options.WithIdentity(jobKey));
+
+                            q.AddTrigger(options => options
+                                .ForJob(jobKey)
+                                .WithIdentity("GenerateAlertsJob-trigger")
+                                .WithCronSchedule(schedule)
+                            );
+                        });
+
                         break;
                 }
             });

@@ -1,5 +1,5 @@
 ﻿//
-//  GenerateAlertsWorker.cs
+//  GenerateAlertsJob.cs
 //  BRIZBEE Alerts Worker
 //
 //  Copyright (C) 2021-2024 East Coast Technology Services, LLC
@@ -20,42 +20,22 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using System.Configuration;
-using System.Text;
-using System.Text.Json;
 using Azure.Storage.Blobs;
 using Brizbee.Worker.Alerts.Serialization;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using Quartz;
+using System.Text;
+using System.Text.Json;
 
-namespace Brizbee.Worker.Alerts.Workers;
+namespace Brizbee.Worker.Alerts.Jobs;
 
-public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger<GenerateAlertsWorker> logger, IConfiguration configuration)
-    : IHostedService
+public class GenerateAlertsJob(ILogger<GenerateAlertsJob> logger, IConfiguration configuration) : IJob
 {
-    private readonly IHostApplicationLifetime _hostLifetime = hostLifetime ?? throw new ArgumentNullException(nameof(hostLifetime));
-    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Generate alerts worker executed at: {Timestamp}", DateTime.UtcNow);
-
-        await GenerateExceededAlertsAsync();
-
-        _hostLifetime.StopApplication();
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-    
-
-    private async Task GenerateExceededAlertsAsync()
+    public async Task Execute(IJobExecutionContext context)
     {
         try
         {
@@ -67,11 +47,11 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
             var monday = localDateTime.Previous(IsoDayOfWeek.Monday);
             var sunday = localDateTime.Next(IsoDayOfWeek.Sunday);
 
-            _logger.LogInformation("{Monday} thru {Sunday}", monday.ToDateTimeUnspecified().ToShortDateString(), sunday.ToDateTimeUnspecified().ToShortDateString());
+            logger.LogInformation("{Monday} thru {Sunday}", monday.ToDateTimeUnspecified().ToShortDateString(), sunday.ToDateTimeUnspecified().ToShortDateString());
             
             var connectionString = configuration.GetConnectionString("Default");
 
-            _logger.LogInformation("Connecting to database");
+            logger.LogInformation("Connecting to database");
 
             await using var connection = new SqlConnection(connectionString);
 
@@ -211,7 +191,7 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "{Message}", ex.Message);
+                    logger.LogError(ex, "{Message}", ex.Message);
                 }
             }
 
@@ -219,7 +199,7 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{Message}", ex.Message);
+            logger.LogError(ex, "{Message}", ex.Message);
         }
     }
 }
