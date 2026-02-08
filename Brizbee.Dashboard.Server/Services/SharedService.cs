@@ -1,5 +1,6 @@
 ﻿using Brizbee.Core.Models;
 using Brizbee.Dashboard.Server.Serialization;
+using Microsoft.AspNetCore.Components;
 
 namespace Brizbee.Dashboard.Server.Services
 {
@@ -10,6 +11,9 @@ namespace Brizbee.Dashboard.Server.Services
         private DateTime _rangeMin;
         private DateTime _rangeMax;
         private PunchFilters _punchFilters;
+
+        [Inject]
+        public TimeProvider TimeProvider { get; set; } = default!;
 
         public User? CurrentUser
         {
@@ -99,8 +103,8 @@ namespace Brizbee.Dashboard.Server.Services
         {
             // Clear variables
             _token = null;
-            _rangeMin = DateTime.Now;
-            _rangeMax = DateTime.Now;
+            _rangeMin = TimeProvider.ToLocalDateTime(DateTime.UtcNow);
+            _rangeMax = TimeProvider.ToLocalDateTime(DateTime.UtcNow);
             _currentUser = null;
             _punchFilters = null;
         }
