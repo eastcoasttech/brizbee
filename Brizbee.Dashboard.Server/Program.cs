@@ -14,8 +14,6 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddBrowserTimeProvider();
-
         string dataProtectionKeysDirectoryPath = builder.Configuration.GetValue<string>("DataProtectionKeysDirectoryPath") ??
                                                   throw new InvalidOperationException(
                                                       "'DataProtectionKeysDirectoryPath' must be provided.");

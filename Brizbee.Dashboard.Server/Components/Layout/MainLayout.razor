@@ -28,8 +28,6 @@
 
 <RadzenComponents @rendermode="InteractiveServer" />
 
-<InitializeTimeZone />
-
 <div id="wrap">
     <div id="main">
         <CascadingValue Value="SignOutClicked">
@@ -55,7 +53,7 @@
             return _signOutClicked;
         }
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
         var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
@@ -129,7 +127,7 @@
         PopulateTemplateService.ResetHeaders();
 
         // Reset shared variables
-        SharedService.Reset();
+        await SharedService.ResetAsync();
 
         // Return to login page
         NavigationManager.NavigateTo("/");

@@ -58,7 +58,8 @@ namespace Brizbee.Dashboard.Server.Services
             if (objectIds != null)
                 filterParameters.Append(string.Join("", objectIds.Select(x => $"&objectIds={x}")));
 
-            var response = await _apiService.GetHttpClient().GetAsync($"api/Audits/Punches?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}");
+            var url = $"api/Audits/Punches?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}";
+            var response = await _apiService.GetHttpClient().GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
                 return (new List<Audit>(0), 0);

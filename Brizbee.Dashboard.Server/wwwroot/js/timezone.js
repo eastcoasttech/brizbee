@@ -1,4 +1,4 @@
-﻿export function getBrowserTimeZone() {
-    const options = Intl.DateTimeFormat().resolvedOptions();
-    return options.timeZone;
-}
+﻿window.getTimeZoneId = () => {
+    // Returns IANA time zone ID (e.g., "America/Los_Angeles")
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};

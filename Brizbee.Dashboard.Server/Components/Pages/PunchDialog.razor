@@ -591,6 +591,7 @@
 
 
         loading = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void SelectedCustomerValueChangeHandler(int customerId)
@@ -659,8 +660,7 @@
             SelectedUserValueChangeHandler(users.FirstOrDefault().Id);
 
         loadingUsers = false;
-
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async System.Threading.Tasks.Task RefreshCustomers(int? customerId = null)
@@ -687,8 +687,7 @@
         }
 
         loadingCustomers = false;
-
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async System.Threading.Tasks.Task RefreshJobs(int? jobId = null)
@@ -715,8 +714,7 @@
         }
 
         loadingJobs = false;
-
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async System.Threading.Tasks.Task RefreshTasks(int? taskId = null)
@@ -743,8 +741,7 @@
         }
 
         loadingTasks = false;
-
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async System.Threading.Tasks.Task RefreshAudits()
@@ -755,8 +752,7 @@
         audits = result.Item1;
 
         loadingAudits = false;
-
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async System.Threading.Tasks.Task SavePunch()
@@ -823,7 +819,7 @@
             return;
 
         working = true;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
 
         // Delete the punch on the server and close the dialog.
         var result = await punchService.DeletePunchAsync(punch.Id);
@@ -832,7 +828,7 @@
         else
         {
             working = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 

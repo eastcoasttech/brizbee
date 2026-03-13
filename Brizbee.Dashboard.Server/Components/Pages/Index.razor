@@ -27,13 +27,6 @@
 @inject IJSRuntime JsRuntime
 @inject ProtectedSessionStorage ProtectedSessionStore
 
-@if (_loading)
-{
-    <div class="spinner-background">
-        <div class="spinner"></div>
-    </div>
-}
-
 <div class="container-fluid fadeIn" style="min-height: 50vh;">
     @if (_confirmed)
     {
@@ -119,18 +112,16 @@
 </div>
 
 @code {
-    private bool _loading = true;
-    
     private bool _working;
-    
+
     private bool _confirmed;
-    
+
     private string _method = "pin";
-    
+
     private readonly PinSession _pinSession = new();
-    
+
     private readonly EmailSession _emailSession = new();
-    
+
     private InputText? _inputOrganizationCode;
 
     protected override async Task OnInitializedAsync()
@@ -168,11 +159,6 @@
 
             NavigationManager.NavigateTo("kiosk/status");
         }
-        else
-        {
-            _loading = false;
-            StateHasChanged();
-        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -189,7 +175,6 @@
     private async Task AuthenticateAsync()
     {
         _working = true;
-        StateHasChanged();
 
         try
         {
@@ -233,7 +218,6 @@
         catch (Exception)
         {
             _working = false;
-            StateHasChanged();
         }
     }
 

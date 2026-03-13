@@ -1,6 +1,8 @@
 ﻿using Brizbee.Core.Models;
 using Brizbee.Dashboard.Server.Serialization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using NodaTime;
 
 namespace Brizbee.Dashboard.Server.Services
 {
@@ -13,7 +15,7 @@ namespace Brizbee.Dashboard.Server.Services
         private PunchFilters _punchFilters;
 
         [Inject]
-        public TimeProvider TimeProvider { get; set; } = default!;
+        public IJSRuntime JSRuntime { get; set; } = default!;
 
         public User? CurrentUser
         {
@@ -99,14 +101,22 @@ namespace Brizbee.Dashboard.Server.Services
 
         private void NotifyDataChanged() => OnChange?.Invoke();
 
-        public void Reset()
+        public async System.Threading.Tasks.Task ResetAsync()
         {
             // Clear variables
             _token = null;
-            _rangeMin = TimeProvider.ToLocalDateTime(DateTime.UtcNow);
-            _rangeMax = TimeProvider.ToLocalDateTime(DateTime.UtcNow);
             _currentUser = null;
             _punchFilters = null;
+
+            var timeZoneId = await JSRuntime.InvokeAsync<string>("getTimeZoneId");
+            
+            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId);
+            var nowInstant = SystemClock.Instance.GetCurrentInstant();
+            var nowLocal = nowInstant.InZone(tz);
+            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+
+            _rangeMin = nowDateTime;
+            _rangeMax = nowDateTime;
         }
     }
 }
