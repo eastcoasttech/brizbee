@@ -179,7 +179,7 @@ public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfigurati
 
                     request.AlwaysMultipartFormData = true;
 
-                    string formattedRecipients = string.Join(',', recipientsList.Select(r => $"{(r.Name ?? "").Trim()} <{r.EmailAddress}>"));
+                    string formattedRecipients = string.Join(',', recipientsList.Select(r => $"\"{(r.Name ?? "").Trim()}\" <{r.EmailAddress}>"));
 
                     request.AddParameter("from", "Brizbee <postmaster@mg.brizbee.com>");
                     request.AddParameter("to", formattedRecipients);
@@ -195,6 +195,8 @@ public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfigurati
                 {
                     logger.LogError(ex, "{Message}", ex.Message);
                 }
+
+                await Task.Delay(2000);
             }
 
             connection.Close();
