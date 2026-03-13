@@ -64,6 +64,12 @@ namespace Brizbee.Api.Controllers
 
             var currentUser = CurrentUser();
 
+            if (currentUser.RequiresLocation &&
+                (string.IsNullOrEmpty(latitude) || string.IsNullOrEmpty(longitude)))
+            {
+                return BadRequest("Location is required.");
+            }
+
             var task = _context.Tasks!
                 .Include(t => t.Job!.Customer)
                 .Where(t => t.Job!.Customer!.OrganizationId == currentUser.OrganizationId)
@@ -131,6 +137,12 @@ namespace Brizbee.Api.Controllers
             var sourceIpAddress = $"{HttpContext.Connection.RemoteIpAddress}";
 
             var currentUser = CurrentUser();
+
+            if (currentUser.RequiresLocation &&
+                (string.IsNullOrEmpty(latitude) || string.IsNullOrEmpty(longitude)))
+            {
+                return BadRequest("Location is required.");
+            }
 
             // Prevent double submission.
             var submission = _memoryCache.Get($"submission.punchout.{currentUser.Id}") as bool?;
