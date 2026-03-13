@@ -84,7 +84,7 @@ public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfigurati
                     OrganizationId = organization.Id
                 });
 
-                var recipientsList = recipients.ToList();
+                var recipientsList = recipients.Where(r => !string.IsNullOrWhiteSpace(r.EmailAddress)).ToList();
 
                 // No need to continue if no one should receive the Email.
                 if (recipientsList.Count == 0)
@@ -130,6 +130,8 @@ public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfigurati
                                                       [U].[OrganizationId] = @OrganizationId;
                                                   """;
 
+                logger.LogDebug("Checking for punches through midnight at {Midnight}", midnight);
+
                 var midnightPunches = await connection.QueryAsync<MidnightPunch>(midnightPunchesSql, new
                 {
                     Midnight = midnight,
@@ -138,7 +140,7 @@ public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfigurati
 
                 var midnightPunchesList = midnightPunches.ToList();
 
-                logger.LogInformation("{MidnightPunchCount} punches through midnight", midnightPunchesList.Count);
+                logger.LogInformation("{MidnightPunchCount} punches through midnight for organization {OrganizationId}", midnightPunchesList.Count, organization.Id);
 
                 // Do not continue if there are no punches.
                 if (midnightPunchesList.Count == 0)
@@ -177,11 +179,15 @@ public class MidnightPunchesJob(ILogger<MidnightPunchesJob> logger, IConfigurati
 
                     request.AlwaysMultipartFormData = true;
 
+                    string formattedRecipients = string.Join(',', recipientsList.Select(r => $"{(r.Name ?? "").Trim()} <{r.EmailAddress}>"));
+
                     request.AddParameter("from", "Brizbee <postmaster@mg.brizbee.com>");
-                    request.AddParameter("to", string.Join(',', recipientsList.Select(r => $"{r.Name} <{r.EmailAddress}>")));
+                    request.AddParameter("to", formattedRecipients);
                     request.AddParameter("subject", "Punches through Midnight");
                     request.AddParameter("template", "midnight punches");
                     request.AddParameter("t:variables", JsonSerializer.Serialize(dynamicTemplateData));
+
+                    logger.LogDebug("Sending midnight punches Email to: {FormattedRecipients}", formattedRecipients);
 
                     await client.ExecuteAsync(request);
                 }
