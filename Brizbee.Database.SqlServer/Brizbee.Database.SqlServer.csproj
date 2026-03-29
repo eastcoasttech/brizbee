@@ -28,7 +28,10 @@
     <None Remove="Migrations\0020 Adding Permission for Merging Projects.sql" />
     <None Remove="Migrations\0021 Adding Indexes.sql" />
     <None Remove="Migrations\0022 Adding QuickBooks Vendor.sql" />
-    <None Remove="Migrations\0023 Removing NULL.sql" />
+    <None Remove="Migrations\0023 Adding Accounting Models.sql" />
+    <None Remove="Migrations\0024 Adding Balance Function.sql" />
+    <None Remove="Migrations\0025 Adding More Accounting Models.sql" />
+    <None Remove="Migrations\0026 Adding Index to PunchAudits.sql" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\0001 Initial Create Tables.sql" />
@@ -53,7 +56,11 @@
     <EmbeddedResource Include="Migrations\0020 Adding Permission for Merging Projects.sql" />
     <EmbeddedResource Include="Migrations\0021 Adding Indexes.sql" />
     <EmbeddedResource Include="Migrations\0022 Adding QuickBooks Vendor.sql" />
-    <EmbeddedResource Include="Migrations\0023 Removing NULL.sql" />
+    <EmbeddedResource Include="Migrations\0023 Adding Accounting Models.sql" />
+    <EmbeddedResource Include="Migrations\0024 Adding Balance Function.sql" />
+    <EmbeddedResource Include="Migrations\0025 Adding More Accounting Models.sql" />
+    <EmbeddedResource Include="Migrations\0026 Adding Index to PunchAudits.sql" />
+    <EmbeddedResource Include="Migrations\Removing NULL.sql" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.13.1" />
