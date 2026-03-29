@@ -15,7 +15,7 @@ namespace Brizbee.Dashboard.Server.Services
         private PunchFilters _punchFilters;
 
         [Inject]
-        public IJSRuntime JSRuntime { get; set; } = default!;
+        public IJSRuntime? JSRuntime { get; set; }
 
         public User? CurrentUser
         {
@@ -109,14 +109,17 @@ namespace Brizbee.Dashboard.Server.Services
             _punchFilters = null;
 
             var timeZoneId = await JSRuntime.InvokeAsync<string>("getTimeZoneId");
-            
-            var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId);
-            var nowInstant = SystemClock.Instance.GetCurrentInstant();
-            var nowLocal = nowInstant.InZone(tz);
-            var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
 
-            _rangeMin = nowDateTime;
-            _rangeMax = nowDateTime;
+            if (!string.IsNullOrEmpty(timeZoneId))
+            {
+                var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId);
+                var nowInstant = SystemClock.Instance.GetCurrentInstant();
+                var nowLocal = nowInstant.InZone(tz);
+                var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
+
+                _rangeMin = nowDateTime;
+                _rangeMax = nowDateTime;
+            }
         }
     }
 }
