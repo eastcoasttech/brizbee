@@ -1,22 +1,21 @@
-﻿namespace Brizbee.Dashboard.Server.Services
+﻿namespace Brizbee.Dashboard.Server.Services;
+
+public class ApiService(HttpClient httpClient)
 {
-    public class ApiService
+    private readonly HttpClient httpClient = httpClient;
+
+    public string GetBaseUrl()
     {
-        private readonly HttpClient httpClient;
-
-        public ApiService(HttpClient httpClient)
+        if (httpClient.BaseAddress == null)
         {
-            this.httpClient = httpClient;
+            return string.Empty;
         }
 
-        public string GetBaseUrl()
-        {
-            return httpClient.BaseAddress.ToString();
-        }
+        return httpClient.BaseAddress.ToString();
+    }
 
-        public HttpClient GetHttpClient()
-        {
-            return httpClient;
-        }
+    public HttpClient GetHttpClient()
+    {
+        return httpClient;
     }
 }
