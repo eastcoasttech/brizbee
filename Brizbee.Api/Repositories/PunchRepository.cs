@@ -22,22 +22,15 @@
 
 using Brizbee.Core.Models;
 using Dapper;
-using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using NodaTime;
-using System;
-using System.Configuration;
-using System.Data.SqlClient;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Brizbee.Api.Repositories
 {
     public class PunchRepository
     {
         private readonly SqlContext _context;
-        private TelemetryClient telemetryClient = new TelemetryClient();
 
         public PunchRepository(SqlContext context)
         {
@@ -229,7 +222,7 @@ namespace Brizbee.Api.Repositories
             }
             catch (Exception ex)
             {
-                telemetryClient.TrackException(ex);
+                Console.WriteLine(ex.ToString());
             }
         }
     }

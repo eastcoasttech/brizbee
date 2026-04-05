@@ -20,15 +20,15 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Api;
 using Brizbee.Core.Models;
 using iText.Barcodes;
+using iText.Commons.Actions;
 using iText.IO.Font.Constants;
-using iText.Kernel.Events;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas;
+using iText.Kernel.Pdf.Event;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
@@ -200,7 +200,7 @@ namespace Brizbee.Api.Services
             return buffer;
         }
 
-        protected internal class MyEventHandler : IEventHandler
+        protected internal class MyEventHandler : AbstractPdfDocumentEventHandler
         {
             public string OrganizationName { get; set; }
 
@@ -209,7 +209,7 @@ namespace Brizbee.Api.Services
                 OrganizationName = organizationName;
             }
 
-            public virtual void HandleEvent(Event @event)
+            protected override void OnAcceptedEvent(AbstractPdfDocumentEvent @event)
             {
                 PdfDocumentEvent docEvent = (PdfDocumentEvent)@event;
                 PdfDocument pdfDoc = docEvent.GetDocument();

@@ -46,7 +46,7 @@ public class Program
         // Configure HttpClient to communicate with API.
         builder.Services.AddHttpClient<ApiService>(client =>
         {
-            client.BaseAddress = new Uri("https://api-production-2.brizbee.com");
+            client.BaseAddress = new Uri("https://api-production-3.brizbee.com");
             client.Timeout = TimeSpan.FromMinutes(10);
         });
 

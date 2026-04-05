@@ -9,10 +9,10 @@ namespace Brizbee.Dashboard.Server.Services
     public class SharedService
     {
         private User? _currentUser;
-        private string _token;
+        private string? _token;
         private DateTime _rangeMin;
         private DateTime _rangeMax;
-        private PunchFilters _punchFilters;
+        private PunchFilters? _punchFilters;
 
         [Inject]
         public IJSRuntime? JSRuntime { get; set; }
@@ -103,18 +103,30 @@ namespace Brizbee.Dashboard.Server.Services
 
         public async System.Threading.Tasks.Task ResetAsync()
         {
-            // Clear variables
             _token = null;
             _currentUser = null;
             _punchFilters = null;
 
+            if (JSRuntime == null)
+            {
+                return;
+            }
+
+            // Reset the date range to local time if we can retrieve
+            // the time zone from the browser.
             var timeZoneId = await JSRuntime.InvokeAsync<string>("getTimeZoneId");
 
             if (!string.IsNullOrEmpty(timeZoneId))
             {
-                var tz = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId);
+                var timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId);
+
+                if (timeZone == null)
+                {
+                    return;
+                }
+
                 var nowInstant = SystemClock.Instance.GetCurrentInstant();
-                var nowLocal = nowInstant.InZone(tz);
+                var nowLocal = nowInstant.InZone(timeZone);
                 var nowDateTime = nowLocal.LocalDateTime.ToDateTimeUnspecified();
 
                 _rangeMin = nowDateTime;

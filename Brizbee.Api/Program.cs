@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Stripe;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -113,12 +112,6 @@ builder.Services.AddControllers()
                 });
 
 builder.Services.AddODataQueryFilter();
-
-builder.Services.AddSwaggerGen(c =>
-{
-    c.OperationFilter<AuthorizationHeaderOperation>();
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Brizbee.Api", Version = "v1" });
-});
 
 // Compression does not work with only server configuration.
 builder.Services.AddRequestDecompression();
