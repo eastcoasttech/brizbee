@@ -1,21 +1,17 @@
 ﻿using Brizbee.Core.Models;
 using Brizbee.Dashboard.Server.Serialization;
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using NodaTime;
 
 namespace Brizbee.Dashboard.Server.Services
 {
-    public class SharedService
+    public class SharedService(IJSRuntime JSRuntime)
     {
         private User? _currentUser;
         private string? _token;
         private DateTime _rangeMin;
         private DateTime _rangeMax;
         private PunchFilters? _punchFilters;
-
-        [Inject]
-        public IJSRuntime? JSRuntime { get; set; }
 
         public User? CurrentUser
         {
@@ -106,11 +102,6 @@ namespace Brizbee.Dashboard.Server.Services
             _token = null;
             _currentUser = null;
             _punchFilters = null;
-
-            if (JSRuntime == null)
-            {
-                return;
-            }
 
             // Reset the date range to local time if we can retrieve
             // the time zone from the browser.
