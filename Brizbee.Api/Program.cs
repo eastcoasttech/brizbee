@@ -23,9 +23,6 @@
 using Brizbee.Api;
 using Invio.Extensions.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
@@ -35,23 +32,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-
-string dataProtectionKeysDirectoryPath = builder.Configuration.GetValue<string>("DataProtectionKeysDirectoryPath") ??
-                                          throw new InvalidOperationException(
-                                              "'DataProtectionKeysDirectoryPath' must be provided.");
-
-if (string.IsNullOrEmpty(dataProtectionKeysDirectoryPath))
-{
-    throw new ArgumentNullException(nameof(dataProtectionKeysDirectoryPath));
-}
-
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysDirectoryPath))
-    .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
-    {
-        EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
-        ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
-    });
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
