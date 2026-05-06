@@ -53,7 +53,7 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
     {
         return Task.CompletedTask;
     }
-    
+
 
     private async Task GenerateExceededAlertsAsync()
     {
@@ -68,7 +68,7 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
             var sunday = localDateTime.Next(IsoDayOfWeek.Sunday);
 
             _logger.LogInformation("{Monday} thru {Sunday}", monday.ToDateTimeUnspecified().ToShortDateString(), sunday.ToDateTimeUnspecified().ToShortDateString());
-            
+
             var connectionString = configuration.GetConnectionString("Default");
 
             _logger.LogInformation("Connecting to database");
@@ -76,8 +76,6 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
             await using var connection = new SqlConnection(connectionString);
 
             await connection.OpenAsync();
-
-            var alerts = new List<Alert>(0);
 
             const string organizationsSql = """
                                             SELECT
@@ -89,6 +87,8 @@ public class GenerateAlertsWorker(IHostApplicationLifetime hostLifetime, ILogger
 
             foreach (var organization in organizations)
             {
+                var alerts = new List<Alert>(0);
+
                 const string usersSql = """
                                         SELECT
                                             [U].[Id],
