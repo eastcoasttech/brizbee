@@ -1,3 +1,7 @@
+build.sh
+build.bat
+deploy.sh
+deploy.bat
 **/Properties/ServiceDependencies/*
 **/*/appsettings.Development.json
 **/*/launchSettings.json
