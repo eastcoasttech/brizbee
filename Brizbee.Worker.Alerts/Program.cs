@@ -20,12 +20,11 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Worker.Alerts.Jobs;
+using Brizbee.Worker.Alerts.Workers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Quartz;
 
 namespace Brizbee.Worker.Alerts;
 
@@ -78,8 +77,6 @@ internal class Program
                     "GENERATE" => configuration.GetValue<string>("ApplicationInsights:ConnectionStringForGenerateAlerts"),
                     _ => throw new ArgumentException("Invalid argument for operation. Must be MIDNIGHT or GENERATE.")
                 };
-
-                schedule = configuration["schedule"] ?? throw new ArgumentException("schedule must be provided");
             })
             .ConfigureServices(services =>
             {
@@ -109,42 +106,13 @@ internal class Program
 
                 services.Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true);
 
-                services.AddQuartzHostedService(options =>
-                {
-                    options.WaitForJobsToComplete = true;
-                });
-
                 switch (operation!.ToUpper())
                 {
                     case "MIDNIGHT":
-
-                        services.AddQuartz(q =>
-                        {
-                            var jobKey = new JobKey("MidnightPunchesJob");
-                            q.AddJob<MidnightPunchesJob>(options => options.WithIdentity(jobKey));
-
-                            q.AddTrigger(options => options
-                                .ForJob(jobKey)
-                                .WithIdentity("MidnightPunchesJob-trigger")
-                                .WithCronSchedule(schedule)
-                            );
-                        });
-
+                        services.AddHostedService<MidnightPunchesWorker>();
                         break;
                     case "GENERATE":
-
-                        services.AddQuartz(q =>
-                        {
-                            var jobKey = new JobKey("GenerateAlertsJob");
-                            q.AddJob<GenerateAlertsJob>(options => options.WithIdentity(jobKey));
-
-                            q.AddTrigger(options => options
-                                .ForJob(jobKey)
-                                .WithIdentity("GenerateAlertsJob-trigger")
-                                .WithCronSchedule(schedule)
-                            );
-                        });
-
+                        services.AddHostedService<GenerateAlertsWorker>();
                         break;
                 }
             });
