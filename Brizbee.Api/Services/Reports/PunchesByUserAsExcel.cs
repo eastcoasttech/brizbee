@@ -281,11 +281,11 @@ namespace Brizbee.Api.Services.Reports
                             var rowPunch = new Row() { RowIndex = rowIndex, Height = 16D, CustomHeight = true };
 
                             // InAt
-                            var cellInAt = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.InAt.ToShortTimeString()) };
+                            var cellInAt = new Cell() { CellReference = $"A{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.InAt.ToString("h:mm tt")) };
                             rowPunch.Append(cellInAt);
 
                             // OutAt
-                            var cellOutAt = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.OutAt.Value.ToShortTimeString()) };
+                            var cellOutAt = new Cell() { CellReference = $"B{rowIndex}", DataType = CellValues.String, StyleIndex = 6U, CellValue = new CellValue(punch.OutAt.Value.ToString("h:mm tt")) };
                             rowPunch.Append(cellOutAt);
 
                             // Task Number
