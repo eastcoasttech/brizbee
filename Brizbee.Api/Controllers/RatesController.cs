@@ -185,19 +185,18 @@ namespace Brizbee.Api.Controllers
         public IQueryable<Rate> BaseServiceRatesForPunches([FromODataUri] DateTimeOffset InAt, [FromODataUri] DateTimeOffset OutAt)
         {
             var currentUser = CurrentUser();
-            int[] userIds = _context.Users
+            var userIds = _context.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
-            var rateIds = _context.Punches
-                .Include("Task")
+                .Where(u => u.IsDeleted == false)
+                .Select(u => u.Id);
+            var baseRateIds = _context.Punches
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt.Date >= InAt && p.OutAt.Value.Date <= OutAt)
                 .Where(p => p.Task.BaseServiceRateId.HasValue)
                 .Select(p => p.Task.BaseServiceRateId.Value);
 
             return _context.Rates
-                .Where(r => rateIds.Contains(r.Id))
+                .Where(r => baseRateIds.Contains(r.Id))
                 .Where(r => r.IsDeleted == false);
         }
 
@@ -207,12 +206,11 @@ namespace Brizbee.Api.Controllers
         public IQueryable<Rate> BasePayrollRatesForPunches([FromODataUri] DateTimeOffset InAt, [FromODataUri] DateTimeOffset OutAt)
         {
             var currentUser = CurrentUser();
-            int[] userIds = _context.Users
+            var userIds = _context.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
+                .Where(u => u.IsDeleted == false)
+                .Select(u => u.Id);
             var baseRateIds = _context.Punches
-                .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt.Date >= InAt && p.OutAt.Value.Date <= OutAt)
                 .Where(p => p.Task.BasePayrollRateId.HasValue)
@@ -231,10 +229,9 @@ namespace Brizbee.Api.Controllers
             var currentUser = CurrentUser();
             var userIds = _context.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
+                .Where(u => u.IsDeleted == false)
+                .Select(u => u.Id);
             var baseRateIds = _context.Punches
-                .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt.Date >= InAt && p.OutAt.Value.Date <= OutAt)
                 .Where(p => p.Task.BaseServiceRateId.HasValue)
@@ -254,10 +251,9 @@ namespace Brizbee.Api.Controllers
             var currentUser = CurrentUser();
             var userIds = _context.Users
                 .Where(u => u.OrganizationId == currentUser.OrganizationId)
-                .Select(u => u.Id)
-                .ToArray();
+                .Where(u => u.IsDeleted == false)
+                .Select(u => u.Id);
             var baseRateIds = _context.Punches
-                .Include("Task")
                 .Where(p => userIds.Contains(p.UserId))
                 .Where(p => p.InAt.Date >= InAt && p.OutAt.Value.Date <= OutAt)
                 .Where(p => p.Task.BasePayrollRateId.HasValue)

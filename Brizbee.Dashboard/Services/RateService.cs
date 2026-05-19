@@ -40,7 +40,7 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Rate>, long?)> GetBasePayrollRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/BasePayrollRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/BasePayrollRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -50,17 +50,17 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Rate>, long?)> GetAlternatePayrollRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/AlternatePayrollRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"api/RatesExpanded/AlternatePayrollRatesForPunches?inAt={min.ToString("yyyy-MM-dd")}&outAt={max.ToString("yyyy-MM-dd")}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Rate>>(responseContent, options);
-            return (odataResponse.Value.ToList(), odataResponse.Count);
+            var deserializedResponse = await JsonSerializer.DeserializeAsync<List<Rate>>(responseContent, options);
+            return (deserializedResponse, deserializedResponse.Count);
         }
 
         public async Task<(List<Rate>, long?)> GetBaseServiceRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/BaseServiceRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/BaseServiceRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -70,12 +70,12 @@ namespace Brizbee.Dashboard.Services
 
         public async Task<(List<Rate>, long?)> GetAlternateServiceRatesAsync(DateTime min, DateTime max)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Rates/AlternateServiceRatesForPunches(InAt={min.ToString("yyyy-MM-dd")},OutAt={max.ToString("yyyy-MM-dd")})?$count=true");
+            var response = await _apiService.GetHttpClient().GetAsync($"api/RatesExpanded/AlternateServiceRatesForPunches?inAt={min.ToString("yyyy-MM-dd")}&outAt={max.ToString("yyyy-MM-dd")}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
-            var odataResponse = await JsonSerializer.DeserializeAsync<ODataListResponse<Rate>>(responseContent, options);
-            return (odataResponse.Value.ToList(), odataResponse.Count);
+            var deserializedResponse = await JsonSerializer.DeserializeAsync<List<Rate>>(responseContent, options);
+            return (deserializedResponse, deserializedResponse.Count);
         }
 
         public async Task<(List<Rate>, long?)> GetRatesAsync(int pageSize = 100, int skip = 0, string sortBy = "Name", string sortDirection = "ASC")
