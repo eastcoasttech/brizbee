@@ -94,12 +94,14 @@ builder.Services.AddControllers()
 builder.Services.AddODataQueryFilter();
 
 // Compression does not work with only server configuration.
+#if !DEBUG
 builder.Services.AddRequestDecompression();
 
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
 });
+#endif
 
 // Configure the Stripe key for payments.
 StripeConfiguration.ApiKey = builder.Configuration["StripeSecretKey"];
@@ -107,8 +109,10 @@ StripeConfiguration.ApiKey = builder.Configuration["StripeSecretKey"];
 var app = builder.Build();
 
 // Compression does not work with only server configuration.
+#if !DEBUG
 app.UseRequestDecompression();
 app.UseResponseCompression();
+#endif
 
 app.UseForwardedHeaders();
 
