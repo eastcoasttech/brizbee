@@ -18,9 +18,9 @@
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
 
         // Prepare mock client.
-        var mock = ctx.Services.AddMockHttpClient();
-        mock.When("/api/Auth/Authenticate").RespondJson(new Authentication() { Token = "0" });
-        mock.When("/api/Auth/Me").RespondJson(new User() { Id = 1, EmailAddress = "user@brizbee.com", Name = "BRIZBEE User" });
+        // var mock = ctx.Services.AddMockHttpClient();
+        // mock.When("/api/Auth/Authenticate").RespondJson(new Authentication() { Token = "0" });
+        // mock.When("/api/Auth/Me").RespondJson(new User() { Id = 1, EmailAddress = "user@brizbee.com", Name = "BRIZBEE User" });
 
         // Configure additional services.
         ctx.Services.AddSingleton<ApiService>();
