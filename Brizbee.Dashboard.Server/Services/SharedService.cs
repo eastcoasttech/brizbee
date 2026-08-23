@@ -12,6 +12,20 @@ namespace Brizbee.Dashboard.Server.Services
         private DateTime _rangeMin;
         private DateTime _rangeMax;
         private PunchFilters? _punchFilters;
+        private string _filterProjectStatus = "Open";
+
+        public string FilterProjectStatus
+        {
+            get
+            {
+                return _filterProjectStatus;
+            }
+            set
+            {
+                _filterProjectStatus = value;
+                NotifyDataChanged();
+            }
+        }
 
         public User? CurrentUser
         {

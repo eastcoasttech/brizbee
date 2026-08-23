@@ -514,42 +514,42 @@
     private void OpenNewPunchDialog()
     {
         dialogService.Open<PunchDialog>("New Punch",
-                                new Dictionary<string, object>() { { "Id", null } },
+                                new Dictionary<string, object?>() { { "Id", null } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenModifyPunchDialog(Punch punch)
     {
         dialogService.Open<PunchDialog>("Edit Punch",
-                                new Dictionary<string, object>() { { "Id", punch.Id } },
+                                new Dictionary<string, object?>() { { "Id", punch.Id } },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenDownloadPunchesDialog()
     {
         dialogService.Open<DownloadPunchesDialog>("Download Punches",
-                                new Dictionary<string, object>() { },
+                                new Dictionary<string, object?>() { },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenSplitDialog()
     {
         dialogService.Open<SplitDialog>("Split Punches at Midnight",
-                                new Dictionary<string, object>() { },
+                                new Dictionary<string, object?>() { },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenLockDialog()
     {
         dialogService.Open<LockDialog>("Lock Punches",
-                                new Dictionary<string, object>() { },
+                                new Dictionary<string, object?>() { },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenPopulateDialog()
     {
         dialogService.Open<PopulateDialog>("Populate Rates",
-                                new Dictionary<string, object>() { },
+                                new Dictionary<string, object?>() { },
                                 new DialogOptions() { Width = "900px" });
         //populateBlade = new PopulateBlade() { Step = 1 };
         //showPopulateBlade = true;
@@ -558,21 +558,21 @@
     private void OpenRangeDialog()
     {
         dialogService.Open<RangeDialog>("Change Date Range",
-                                new Dictionary<string, object>() { },
+                                new Dictionary<string, object?>() { },
                                 new DialogOptions() { Width = "600px" });
     }
 
     private void OpenPunchFiltersDialog()
     {
         dialogService.Open<PunchFiltersDialog>("Filter Punches",
-                                new Dictionary<string, object>() { },
+                                new Dictionary<string, object?>() { },
                                 new DialogOptions() { Width = "900px" });
     }
 
     private void OpenPunchAlertsDialog()
     {
         dialogService.Open<PunchAlertsDialog>("Alerts this Week",
-                                new Dictionary<string, object>() { { "Alerts", alerts } },
+                                new Dictionary<string, object?>() { { "Alerts", alerts } },
                                 new DialogOptions() { Width = "800px" });
     }
 

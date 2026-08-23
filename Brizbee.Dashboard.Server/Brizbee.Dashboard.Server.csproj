@@ -64,7 +64,7 @@
         <AdditionalFiles Include="Components\Pages\PopulateDialog.razor" />
         <AdditionalFiles Include="Components\Pages\Project-Details.razor" />
         <AdditionalFiles Include="Components\Pages\ProjectDialog.razor" />
-        <AdditionalFiles Include="Components\Pages\Proposed-Projects.razor" />
+        <AdditionalFiles Include="Components\Pages\Projects.razor" />
         <AdditionalFiles Include="Components\Pages\PunchAlertsDialog.razor" />
         <AdditionalFiles Include="Components\Pages\PunchDialog.razor" />
         <AdditionalFiles Include="Components\Pages\Punches.razor" />
