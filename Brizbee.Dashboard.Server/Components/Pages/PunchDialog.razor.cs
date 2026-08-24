@@ -312,7 +312,7 @@ namespace Brizbee.Dashboard.Server.Components.Pages
         {
             loadingJobs = true;
 
-            var result = await jobService.GetJobsAsync(selectedCustomerId, pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortProjectsByColumn);
+            var result = await jobService.GetFilteredJobsAsync(filterCustomerIds: [selectedCustomerId], pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortProjectsByColumn, excludeClosedStatus: true);
             jobs = result.Item1;
 
             if (jobId.HasValue)
@@ -324,11 +324,19 @@ namespace Brizbee.Dashboard.Server.Components.Pages
             }
             else
             {
-                // Set the default value.
-                selectedJobId = jobs.FirstOrDefault().Id;
+                // Set the default value, if possible.
+                if (jobs.Count != 0)
+                {
+                    selectedJobId = jobs.FirstOrDefault().Id;
 
-                // Trigger refresh for tasks.
-                await RefreshTasks();
+                    // Trigger refresh for tasks.
+                    await RefreshTasks();
+                }
+                else
+                {
+                    tasks.Clear();
+                    loadingTasks = false;
+                }
             }
 
             loadingJobs = false;

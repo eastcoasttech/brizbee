@@ -50,45 +50,66 @@
             <div class="form-group">
                 <label for="selected_customer_id" class="col-sm-3 control-label">Customer</label>
                 <div class="col-sm-9">
-                    <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                                 ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
-                                 ValueExpression="@( () => selectedCustomerId )"
-                                 Value="@selectedCustomerId">
-                        @foreach (var customer in customers)
-                        {
-                            <option value="@customer.Id">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{customer.Number} - {customer.Name}" : customer.Name)</option>
-                        }
-                    </InputSelect>
+                    @if (punch.Task?.Job?.Status == "Closed")
+                    {
+                        <p class="form-control-static">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{punch.Task?.Job?.Customer?.Number} - {punch.Task?.Job?.Customer?.Name}" : punch.Task?.Job?.Customer?.Name)</p>
+                    }
+                    else
+                    {
+                        <InputSelect class="form-control" id="selected_customer_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                     ValueChanged="@( (int x) => SelectedCustomerValueChangeHandler(x) )"
+                                     ValueExpression="@( () => selectedCustomerId )"
+                                     Value="@selectedCustomerId">
+                            @foreach (var customer in customers)
+                            {
+                                <option value="@customer.Id">@(sharedService.CurrentUser.Organization.ShowCustomerNumber ? $"{customer.Number} - {customer.Name}" : customer.Name)</option>
+                            }
+                        </InputSelect>
+                    }
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="selected_job_id" class="col-sm-3 control-label">Job</label>
                 <div class="col-sm-9">
-                    <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                                 ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
-                                 ValueExpression="@( () => selectedJobId )"
-                                 Value="@selectedJobId">
-                        @foreach (var project in jobs)
-                        {
-                            <option value="@project.Id">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{project.Number} - {project.Name}" : project.Name)</option>
-                        }
-                    </InputSelect>
+                    @if (punch.Task?.Job?.Status == "Closed")
+                    {
+                        <p class="form-control-static">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{punch.Task?.Job?.Number} - {punch.Task?.Job?.Name}" : punch.Task?.Job?.Name)</p>
+                    }
+                    else
+                    {
+                        <InputSelect class="form-control" id="selected_job_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                     ValueChanged="@( (int x) => SelectedJobValueChangeHandler(x) )"
+                                     ValueExpression="@( () => selectedJobId )"
+                                     Value="@selectedJobId">
+                            @foreach (var project in jobs)
+                            {
+                                <option value="@project.Id">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{project.Number} - {project.Name}" : project.Name)</option>
+                            }
+                        </InputSelect>
+                    }
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="selected_task_id" class="col-sm-3 control-label">Task</label>
                 <div class="col-sm-9">
-                    <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
-                                 ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
-                                 ValueExpression="@( () => selectedTaskId )"
-                                 Value="@selectedTaskId">
-                        @foreach (var task in tasks)
-                        {
-                            <option value="@task.Id">@(sharedService.CurrentUser.Organization.ShowTaskNumber ? $"{task.Number} - {task.Name}" : task.Name)</option>
-                        }
-                    </InputSelect>
+                    @if (punch.Task?.Job?.Status == "Closed")
+                    {
+                        <p class="form-control-static">@(sharedService.CurrentUser.Organization.ShowProjectNumber ? $"{punch.Task?.Number} - {punch.Task?.Name}" : punch.Task?.Name)</p>
+                    }
+                    else
+                    {
+                        <InputSelect class="form-control" id="selected_task_id" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)"
+                                     ValueChanged="@( (int x) => SelectedTaskValueChangeHandler(x) )"
+                                     ValueExpression="@( () => selectedTaskId )"
+                                     Value="@selectedTaskId">
+                            @foreach (var task in tasks)
+                            {
+                                <option value="@task.Id">@(sharedService.CurrentUser.Organization.ShowTaskNumber ? $"{task.Number} - {task.Name}" : task.Name)</option>
+                            }
+                        </InputSelect>
+                    }
                 </div>
             </div>
 
@@ -104,17 +125,17 @@
                         <div class="col-md-2" style="padding-right: 0;">
                             <InputSelect @bind-Value="inAtHour" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                                 @for (int i = 1; i <= 12; i++)
-                                    {
+                                {
                                     <option value="@i">@i</option>
-                                    }
+                                }
                             </InputSelect>
                         </div>
                         <div class="col-md-2" style="padding-right: 0;">
                             <InputSelect @bind-Value="inAtMinute" class="form-control" disabled="@(working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                                 @for (int i = 0; i <= 59; i++)
-                                    {
+                                {
                                     <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                                    }
+                                }
                             </InputSelect>
                         </div>
                         <div class="col-md-2">
@@ -176,17 +197,17 @@
                         <div class="col-md-2" style="padding-right: 0;">
                             <InputSelect @bind-Value="outAtHour" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                                 @for (int i = 1; i <= 12; i++)
-                                    {
+                                {
                                     <option value="@i">@i</option>
-                                    }
+                                }
                             </InputSelect>
                         </div>
                         <div class="col-md-2" style="padding-right: 0;">
                             <InputSelect @bind-Value="outAtMinute" class="form-control" disabled="@(!hasPunchOut || working || loading || loadingUsers || loadingCustomers || loadingJobs || loadingTasks || punch.CommitId.HasValue)">
                                 @for (int i = 0; i <= 59; i++)
-                                    {
+                                {
                                     <option value="@i.ToString("D2")">@i.ToString("D2")</option>
-                                    }
+                                }
                             </InputSelect>
                         </div>
                         <div class="col-md-2">

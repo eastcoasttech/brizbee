@@ -4,38 +4,34 @@ using System.Text.Json;
 using Brizbee.Core.Models;
 using Brizbee.Core.Serialization;
 using Brizbee.Dashboard.Server.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Brizbee.Dashboard.Server.Services
 {
-    public class PunchService
+    public class PunchService(ApiService apiService,
+        IDbContextFactory<PrimaryDbContext> dbContextFactory)
     {
-        public ApiService _apiService;
         private JsonSerializerOptions options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
-
-        public PunchService(ApiService apiService)
-        {
-            _apiService = apiService;
-        }
 
         public void ConfigureHeadersWithToken(string token)
         {
             // Clear old headers first
             ResetHeaders();
 
-            _apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            apiService.GetHttpClient().DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         public void ResetHeaders()
         {
-            _apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
+            apiService.GetHttpClient().DefaultRequestHeaders.Remove("Authorization");
         }
 
         public async Task<(List<Punch>, long?)> GetCurrentPunchesAsync(int pageSize = 100, int skip = 0, string sortBy = "InAt", string sortDirection = "ASC")
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches?$count=true&$filter=OutAt eq null&$expand=User,Task($expand=Job($expand=Customer))&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
+            var response = await apiService.GetHttpClient().GetAsync($"odata/Punches?$count=true&$filter=OutAt eq null&$expand=User,Task($expand=Job($expand=Customer))&$top={pageSize}&$skip={skip}&$orderby={sortBy} {sortDirection}");
             response.EnsureSuccessStatusCode();
 
             using var responseContent = await response.Content.ReadAsStreamAsync();
@@ -57,12 +53,12 @@ namespace Brizbee.Dashboard.Server.Services
 
                 if (filters.Projects != null)
                     filterParameters.Append(string.Join("", filters.Projects.Select(x => $"&jobIds={x.Id}")));
-                
+
                 if (filters.Tasks != null)
                     filterParameters.Append(string.Join("", filters.Tasks.Select(x => $"&taskIds={x.Id}")));
             }
 
-            var response = await _apiService.GetHttpClient().GetAsync($"api/PunchesExpanded?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}");
+            var response = await apiService.GetHttpClient().GetAsync($"api/PunchesExpanded?pageSize={pageSize}&skip={skip}&min={min.ToString("yyyy-MM-ddTHH:mm:ssZ")}&max={max.ToString("yyyy-MM-ddTHH:mm:ssZ")}&orderBy={sortBy}&orderByDirection={sortDirection}{filterParameters}");
 
             if (!response.IsSuccessStatusCode)
                 return (new List<Punch>(0), 0);
@@ -75,7 +71,7 @@ namespace Brizbee.Dashboard.Server.Services
 
         public async Task<Punch> GetExpandedCurrentPunchAsync()
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"api/PunchesExpanded/Current");
+            var response = await apiService.GetHttpClient().GetAsync($"api/PunchesExpanded/Current");
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -87,16 +83,20 @@ namespace Brizbee.Dashboard.Server.Services
 
         public async Task<Punch> GetPunchByIdAsync(int id)
         {
-            var response = await _apiService.GetHttpClient().GetAsync($"odata/Punches({id})?$expand=Task($expand=Job)");
-            response.EnsureSuccessStatusCode();
+            await using var context = await dbContextFactory.CreateDbContextAsync();
 
-            using var responseContent = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<Punch>(responseContent, options);
+            var punch = await context.Punches!
+                .Include(p => p.Task)
+                    .ThenInclude(t => t!.Job)
+                        .ThenInclude(j => j!.Customer)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            return punch!;
         }
 
         public async Task<bool> DeletePunchAsync(int id)
         {
-            var response = await _apiService.GetHttpClient().DeleteAsync($"odata/Punches({id})");
+            var response = await apiService.GetHttpClient().DeleteAsync($"odata/Punches({id})");
             if (response.IsSuccessStatusCode)
             {
                 return true;
@@ -165,7 +165,7 @@ namespace Brizbee.Dashboard.Server.Services
                 {
                     request.Content = stringContent;
 
-                    using (var response = await _apiService
+                    using (var response = await apiService
                         .GetHttpClient()
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))
@@ -209,7 +209,7 @@ namespace Brizbee.Dashboard.Server.Services
                 {
                     request.Content = stringContent;
 
-                    using (var response = await _apiService
+                    using (var response = await apiService
                         .GetHttpClient()
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))
@@ -242,7 +242,7 @@ namespace Brizbee.Dashboard.Server.Services
                 {
                     request.Content = stringContent;
 
-                    using (var response = await _apiService
+                    using (var response = await apiService
                         .GetHttpClient()
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))
@@ -279,7 +279,7 @@ namespace Brizbee.Dashboard.Server.Services
                 {
                     request.Content = stringContent;
 
-                    using (var response = await _apiService
+                    using (var response = await apiService
                         .GetHttpClient()
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))
@@ -319,7 +319,7 @@ namespace Brizbee.Dashboard.Server.Services
                 {
                     request.Content = stringContent;
 
-                    using (var response = await _apiService
+                    using (var response = await apiService
                         .GetHttpClient()
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))
@@ -358,7 +358,7 @@ namespace Brizbee.Dashboard.Server.Services
                 {
                     request.Content = stringContent;
 
-                    using (var response = await _apiService
+                    using (var response = await apiService
                         .GetHttpClient()
                         .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
                         .ConfigureAwait(false))

@@ -373,7 +373,7 @@
         // Prevent stagnation.
         _projects.Clear();
 
-        var result = await JobService.GetFilteredJobsAsync(PageSize, _projectsSkip, _projectsSortBy, _projectsSortDirection, SharedService.FilterProjectStatus);
+        var result = await JobService.GetFilteredJobsAsync(PageSize, _projectsSkip, _projectsSortBy, _projectsSortDirection, filterStatus: SharedService.FilterProjectStatus);
         _projects = result.Item1;
         _projectsCount = result.Item2.GetValueOrDefault();
         _loadingProjects = false;

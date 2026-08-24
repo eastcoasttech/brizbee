@@ -57,13 +57,13 @@ namespace Brizbee.Dashboard.Server.Services
             return (odataResponse.Value.ToList(), odataResponse.Count);
         }
 
-        public async Task<(List<Job>, long?)> GetFilteredJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "JOBS/NUMBER", string sortDirection = "ASC", string filterStatus = "Open")
+        public async Task<(List<Job>, long?)> GetFilteredJobsAsync(int pageSize = 100, int skip = 0, string sortBy = "JOBS/NUMBER", string sortDirection = "ASC", int[]? filterCustomerIds = null, string filterStatus = "Open", bool excludeClosedStatus = false)
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
 
             // Ensure that user is authorized.
-            //if (!currentUser.CanViewProjects)
-            //    return Forbid();
+            if (sharedService.CurrentUser == null || !sharedService.CurrentUser.CanViewProjects)
+                return ([], 0);
 
             var total = 0;
             var jobs = new List<Job>();
@@ -75,7 +75,7 @@ namespace Brizbee.Dashboard.Server.Services
                 var orderByFormatted = "";
                 switch (sortBy.ToUpperInvariant())
                 {
-                    case "JOBS/CREATEDAT":
+                    case "JOBS/CREATED_AT":
                         orderByFormatted = "[J].[CreatedAt]";
                         break;
                     case "JOBS/NUMBER":
@@ -131,8 +131,19 @@ namespace Brizbee.Dashboard.Server.Services
                 // Common clause.
                 parameters.Add("@OrganizationId", sharedService.CurrentUser?.OrganizationId);
 
-                // Filter by status.
+                // Clause for customer ids.
+                if (filterCustomerIds != null && filterCustomerIds.Length > 0)
+                {
+                    whereClauses += $" AND [C].[Id] IN ({string.Join(",", filterCustomerIds)})";
+                }
+
+                // Clause for project status.
                 whereClauses += $" AND [J].[Status] = '{filterStatus}'";
+
+                if (excludeClosedStatus)
+                {
+                    whereClauses += $" AND [J].[Status] != 'Closed'";
+                }
 
                 // Get the count.
                 var countSql = $@"
