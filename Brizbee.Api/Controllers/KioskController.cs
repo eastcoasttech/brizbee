@@ -79,8 +79,8 @@ namespace Brizbee.Api.Controllers
             if (task == null) return NotFound();
             
             // Ensure job is open.
-            if (!new [] { "Open", "Proposed" }.Contains(task.Job!.Status))
-                return BadRequest("Cannot punch in on tasks for projects that are not open or proposed.");
+            if (!new [] { "Open", "Proposed", "Internal" }.Contains(task.Job!.Status))
+                return BadRequest("Cannot punch in on tasks for projects that are not Open, Proposed, or Internal.");
 
             // Prevent double submission.
             var submission = _memoryCache.Get($"submission.punchin.{currentUser.Id}") as bool?;
