@@ -20,15 +20,16 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-using Brizbee.Core.Models;
-using Brizbee.Core.Serialization;
-using Dapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using Brizbee.Core.Models;
+using Brizbee.Core.Serialization;
+using Dapper;
+using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace Brizbee.Api.Controllers
 {
@@ -36,11 +37,13 @@ namespace Brizbee.Api.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly SqlContext _context;
+        private readonly TelemetryClient _telemetryClient;
 
-        public QBDInventoryItemsController(IConfiguration configuration, SqlContext context)
+        public QBDInventoryItemsController(IConfiguration configuration, SqlContext context, TelemetryClient telemetryClient)
         {
             _configuration = configuration;
             _context = context;
+            _telemetryClient = telemetryClient;
         }
 
         // GET: api/QBDInventoryItems
@@ -254,11 +257,13 @@ namespace Brizbee.Api.Controllers
             if (!currentUser.CanSyncInventoryItems)
                 return Forbid();
 
+            _telemetryClient.TrackTrace($"Syncing QBD Inventory Items for organization {currentUser.OrganizationId} from company file {companyFilePath}");
+
             // Ensure that the sync is for the same company file.
-            var companyFileName = Path.GetFileName(companyFilePath);
+            var companyFileName = Path.GetFileName(companyFilePath).ToUpper().Trim();
             var previous = _context.QBDInventoryItemSyncs
                 .Where(q => q.OrganizationId == currentUser.OrganizationId)
-                .Where(q => q.HostCompanyFileName != companyFileName);
+                .Where(q => q.HostCompanyFileName.ToUpper().Trim() != companyFileName);
 
             if (previous.Any())
                 return BadRequest("The company file appears to be different.");

@@ -21,24 +21,21 @@
 //
 
 using System.Collections;
-using Brizbee.Api;
+using System.Globalization;
+using System.Net;
+using System.Text;
 using Brizbee.Api.Serialization.Expanded;
 using Brizbee.Core.Models;
 using Brizbee.Core.Serialization;
-using CsvHelper.Configuration;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Dapper;
-using DocumentFormat.OpenXml.Math;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
-using System.Globalization;
-using System.Net;
-using System.Text;
-using Microsoft.ApplicationInsights;
 using NodaTime;
-using System;
 using NodaTime.Extensions;
 
 namespace Brizbee.Api.Controllers
@@ -475,12 +472,14 @@ namespace Brizbee.Api.Controllers
             // Ensure that user is authorized.
             if (!currentUser.CanSyncInventoryConsumptions)
                 return Forbid();
+            
+            _telemetryClient.TrackTrace($"Syncing QBD Inventory Consumptions for organization {currentUser.OrganizationId} from company file {companyFilePath}");
 
             // Ensure that the sync is for the same company file.
-            var companyFileName = Path.GetFileName(companyFilePath);
+            var companyFileName = Path.GetFileName(companyFilePath).ToUpper().Trim();
             var previous = _context.QBDInventoryConsumptionSyncs
                 .Where(q => q.OrganizationId == currentUser.OrganizationId)
-                .Where(q => q.HostCompanyFileName != companyFileName);
+                .Where(q => q.HostCompanyFileName.ToUpper().Trim() != companyFileName);
 
             if (previous.Any())
                 return BadRequest("The company file appears to be different.");
