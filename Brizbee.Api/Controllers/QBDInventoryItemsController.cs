@@ -259,8 +259,13 @@ namespace Brizbee.Api.Controllers
 
             _telemetryClient.TrackTrace($"Syncing QBD Inventory Items for organization {currentUser.OrganizationId} from company file {companyFilePath}");
 
+            // Parse the company file name to compare with previous syncs.
+            var cleanCompanyFileName = companyFilePath.Replace('\\', Path.DirectorySeparatorChar);
+            var companyFileName = Path.GetFileName(cleanCompanyFileName).ToUpper().Trim();
+
+            _telemetryClient.TrackTrace($"Checking for previous syncs for organization {currentUser.OrganizationId} with a different company file name than {companyFileName}");
+            
             // Ensure that the sync is for the same company file.
-            var companyFileName = Path.GetFileName(companyFilePath).ToUpper().Trim();
             var previous = _context.QBDInventoryItemSyncs
                 .Where(q => q.OrganizationId == currentUser.OrganizationId)
                 .Where(q => q.HostCompanyFileName.ToUpper().Trim() != companyFileName);
