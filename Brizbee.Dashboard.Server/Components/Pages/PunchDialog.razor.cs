@@ -312,7 +312,13 @@ namespace Brizbee.Dashboard.Server.Components.Pages
         {
             loadingJobs = true;
 
-            var result = await jobService.GetFilteredJobsAsync(filterCustomerIds: [selectedCustomerId], pageSize: 1000, sortBy: sharedService.CurrentUser.Organization.SortProjectsByColumn, excludeClosedStatus: true);
+            var sortBy = "JOBS/NUMBER";
+            if (sharedService.CurrentUser?.Organization?.SortProjectsByColumn?.ToUpper() == "NAME")
+            {
+                sortBy = "JOBS/NAME";
+            }
+
+            var result = await jobService.GetFilteredJobsAsync(filterCustomerIds: [selectedCustomerId], pageSize: 1000, sortBy: sortBy, excludeClosedStatus: true);
             jobs = result.Item1;
 
             if (jobId.HasValue)
