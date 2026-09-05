@@ -76,7 +76,7 @@ namespace Brizbee.Api.Controllers
                 var orderByFormatted = "";
                 switch (orderBy.ToUpperInvariant())
                 {
-                    case "JOBS/CREATEDAT":
+                    case "JOBS/CREATED_AT":
                         orderByFormatted = "[J].[CreatedAt]";
                         break;
                     case "JOBS/NUMBER":
@@ -85,11 +85,26 @@ namespace Brizbee.Api.Controllers
                     case "JOBS/NAME":
                         orderByFormatted = "[J].[Name]";
                         break;
+                    case "JOBS/STATUS":
+                        orderByFormatted = "[J].[Status]";
+                        break;
                     case "CUSTOMERS/NUMBER":
                         orderByFormatted = "[C].[Number]";
                         break;
                     case "CUSTOMERS/NAME":
                         orderByFormatted = "[C].[Name]";
+                        break;
+                    case "JOBS/CUSTOMER_WORK_ORDER":
+                        orderByFormatted = "[J].[CustomerWorkOrder]";
+                        break;
+                    case "JOBS/CUSTOMER_PURCHASE_ORDER":
+                        orderByFormatted = "[J].[CustomerPurchaseOrder]";
+                        break;
+                    case "JOBS/INVOICE_NUMBER":
+                        orderByFormatted = "[J].[InvoiceNumber]";
+                        break;
+                    case "JOBS/QUOTE_NUMBER":
+                        orderByFormatted = "[J].[QuoteNumber]";
                         break;
                     default:
                         orderByFormatted = "[J].[Name]";
