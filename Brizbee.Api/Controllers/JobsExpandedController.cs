@@ -55,7 +55,7 @@ namespace Brizbee.Api.Controllers
         public IActionResult GetJobs(
             [FromQuery] int skip = 0, [FromQuery] int pageSize = 1000,
             [FromQuery] string orderBy = "JOBS/NAME", [FromQuery] string orderByDirection = "ASC",
-            [FromQuery] int[] jobIds = null, [FromQuery] string[] jobNumbers = null, [FromQuery] string[] jobNames = null,
+            [FromQuery] int[] jobIds = null, [FromQuery] string[] jobNumbers = null, [FromQuery] string[] jobNames = null, [FromQuery] string[] jobStatuses = null,
             [FromQuery] int[] customerIds = null, [FromQuery] string[] customerNumbers = null, [FromQuery] string[] customerNames = null)
         {
             if (pageSize > 1000) { BadRequest(); }
@@ -135,6 +135,12 @@ namespace Brizbee.Api.Controllers
                     whereClauses += $" AND [J].[Name] IN ({string.Join(",", jobNames.Select(x => string.Format("'{0}'", x)))})";
                 }
 
+                // Clause for job status.
+                if (jobStatuses != null && jobStatuses.Length > 0)
+                {
+                    whereClauses += $" AND [J].[Status] IN ({string.Join(",", jobStatuses.Select(x => string.Format("'{0}'", x)))})";
+                }
+
                 // Clause for customer ids.
                 if (customerIds != null && customerIds.Length > 0)
                 {
@@ -180,7 +186,11 @@ namespace Brizbee.Api.Controllers
                         [J].[Description] AS [Job_Description],
                         [J].[QuickBooksCustomerJob] AS [Job_QuickBooksCustomerJob],
                         [J].[QuoteNumber] AS [Job_QuoteNumber],
+                        [J].[CustomerWorkOrder] AS [Job_CustomerWorkOrder],
+                        [J].[CustomerPurchaseOrder] AS [Job_CustomerPurchaseOrder],
+                        [J].[InvoiceNumber] AS [Job_InvoiceNumber],
                         [J].[CustomerId] AS [Job_CustomerId],
+                        [J].[Status] AS [Job_Status],
 
                         [C].[Id] AS [Customer_Id],
                         [C].[CreatedAt] AS [Customer_CreatedAt],
@@ -212,6 +222,10 @@ namespace Brizbee.Api.Controllers
                         Description = result.Job_Description,
                         QuickBooksCustomerJob = result.Job_QuickBooksCustomerJob,
                         QuoteNumber = result.Job_QuoteNumber,
+                        CustomerWorkOrder = result.Job_CustomerWorkOrder,
+                        CustomerPurchaseOrder = result.Job_CustomerPurchaseOrder,
+                        InvoiceNumber = result.Job_InvoiceNumber,
+                        Status = result.Job_Status,
                         CustomerId = result.Job_CustomerId,
 
                         Customer = new Customer()

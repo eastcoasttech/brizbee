@@ -32,15 +32,23 @@ namespace Brizbee.Api.Serialization.Expanded
 
         public DateTime Job_CreatedAt { get; set; }
 
-        public string Job_Name { get; set; }
+        public string Job_Name { get; set; } = string.Empty;
 
-        public string Job_Number { get; set; }
+        public string Job_Number { get; set; } = string.Empty;
 
-        public string Job_Description { get; set; }
+        public string Job_Description { get; set; } = string.Empty;
 
-        public string Job_QuickBooksCustomerJob { get; set; }
+        public string Job_QuickBooksCustomerJob { get; set; } = string.Empty;
 
-        public string Job_QuoteNumber { get; set; }
+        public string Job_QuoteNumber { get; set; } = string.Empty;
+
+        public string Job_CustomerWorkOrder { get; set; } = string.Empty;
+
+        public string Job_CustomerPurchaseOrder { get; set; } = string.Empty;
+
+        public string Job_InvoiceNumber { get; set; } = string.Empty;
+
+        public string Job_Status { get; set; } = string.Empty;
 
         public int Job_CustomerId { get; set; }
 
@@ -51,11 +59,11 @@ namespace Brizbee.Api.Serialization.Expanded
 
         public DateTime Customer_CreatedAt { get; set; }
 
-        public string Customer_Name { get; set; }
+        public string Customer_Name { get; set; } = string.Empty;
 
-        public string Customer_Number { get; set; }
+        public string Customer_Number { get; set; } = string.Empty;
 
-        public string Customer_Description { get; set; }
+        public string Customer_Description { get; set; } = string.Empty;
 
         public int Customer_OrganizationId { get; set; }
     }
