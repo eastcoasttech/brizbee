@@ -1,0 +1,271 @@
+﻿@page "/"
+
+@using Brizbee.Dashboard.Wasm.Services
+@using Brizbee.Dashboard.Wasm.Serialization
+@using Brizbee.Dashboard.Wasm.Security
+
+@inject NavigationManager NavigationManager
+@inject LocalStorageService localStorageService
+@inject SharedService sharedService
+@inject AuditService auditService
+@inject AuthService authService
+@inject KioskService kioskService
+@inject UserService userService
+@inject LockService lockService
+@inject PunchService punchService
+@inject CustomerService customerService
+@inject TaskService taskService
+@inject TaskTemplateService taskTemplateService
+@inject PopulateTemplateService populateTemplateService
+@inject JobService jobService
+@inject RateService rateService
+@inject OrganizationService organizationService
+@inject TimesheetEntryService timesheetEntryService
+@inject QBDInventoryItemService qbdInventoryItemService
+@inject QBDInventoryItemSyncService qbdInventoryItemSyncService
+@inject QBDInventoryConsumptionService qbdInventoryConsumptionService
+@inject QBDInventoryConsumptionSyncService qbdInventoryConsumptionSyncService
+@inject ExportService exportService
+@inject IJSRuntime JSRuntime
+
+@if (loading == true)
+{
+    <div class="spinner-background">
+        <div class="spinner"></div>
+    </div>
+}
+
+<div class="container-fluid fadeIn" style="min-height: 50vh;">
+    @if (confirmed == true)
+    {
+        <div class="alert alert-info">Your account is now confirmed! Please sign in to continue.</div>
+    }
+
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 col-xs-12">
+            <div class="row" style="margin-top: 2em; margin-bottom: 2em;">
+                <div class="col-md-8 col-md-offset-2 col-xs-12">
+                    <p class="text-center" style="margin-bottom: 4em;">
+                        <img src="/logo.png" alt="BRIZBEE Logo" style="width: 50%;" />
+                    </p>
+
+                    @if (method == "pin")
+                    {
+                        <div class="panel panel-default panel-login">
+                            <div class="panel-heading">Login with Your PIN</div>
+                            <div class="panel-body">
+                                <EditForm Model="@pinSession" OnValidSubmit="AuthenticateAsync" id="formPin" autocomplete="off">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary />
+
+                                    <div class="form-group form-group-lg">
+                                        <label class="control-label" for="inputOrganizationCode">Organization Code</label>
+                                        <InputText id="inputOrganizationCode" @bind-Value="pinSession.OrganizationCode" class="form-control" disabled="@working" />
+                                    </div>
+                                    <div class="form-group form-group-lg">
+                                        <label class="control-label" for="inputUserPin">PIN Number</label>
+                                        <InputText id="inputUserPin" @bind-Value="pinSession.UserPin" class="form-control" type="password" disabled="@working" />
+                                    </div>
+                                    <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
+                                </EditForm>
+                            </div>
+                        </div>
+                        <p class="text-right" style="font-size: 1.25em;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with Email Address Instead</a></p>
+                    }
+
+                    @if (method == "email")
+                    {
+                        <div class="panel panel-default panel-login">
+                            <div class="panel-heading">Login with Email Address</div>
+                            <div class="panel-body">
+                                <EditForm Model="@emailSession" OnValidSubmit="AuthenticateAsync" id="formEmail" autocomplete="off">
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary />
+
+                                    <div class="form-group form-group-lg">
+                                        <label class="control-label" for="inputEmailAddress">Email Address</label>
+                                        <InputText id="inputEmailAddress" @bind-Value="emailSession.EmailAddress" class="form-control" type="email" disabled="@working" />
+                                    </div>
+                                    <div class="form-group form-group-lg">
+                                        <label class="control-label" for="inputPassword">Password</label>
+                                        <InputText id="inputPassword" @bind-Value="emailSession.EmailPassword" class="form-control" type="password" disabled="@working" />
+                                    </div>
+                                    <i class="@(working ? "fa fa-spinner fa-spin fa-fw" : "hidden")"></i>
+                                    <button type="submit" class="btn btn-lg btn-primary pull-right" disabled="@working">Login</button>
+                                </EditForm>
+                            </div>
+                        </div>
+                        <p class="text-right" style="font-size: 1.25em;"><a href="javascript:void(0)" @onclick="@(e => ToggleMethodAsync())">Login with PIN Number Instead</a></p>
+                    }
+
+                    <p class="text-center" style="margin-top: 4em; font-size: 1.5em;">
+                        Don't have an account?
+                    </p>
+                    <p class="text-center">
+                        <NavLink class="btn btn-lg btn-block btn-primary hidden-xs hidden-sm" href="register" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
+                            Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
+                        </NavLink>
+                        <NavLink class="btn btn-sm btn-block btn-primary visible-xs visible-sm" href="register" style="padding: 1em; background-color: #228B22; border-color: darkgreen;">
+                            Start Tracking Time for FREE <i class="far fa-arrow-alt-circle-right"></i>
+                        </NavLink>
+                    </p>
+                    <p class="text-center text-muted" style="font-size: 1.15em;">
+                        No credit card required. Free 30 day trial. Cancel anytime.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool loading = true;
+    private bool working = false;
+    private bool confirmed = false;
+    private string method = "pin";
+    private PinSession pinSession = new PinSession();
+    private EmailSession emailSession = new EmailSession();
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        // Get token from local storage.
+        var token = await localStorageService.GetFromLocalStorage("Token");
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            // Update headers on services.
+            auditService.ConfigureHeadersWithToken(token);
+            authService.ConfigureHeadersWithToken(token);
+            kioskService.ConfigureHeadersWithToken(token);
+            userService.ConfigureHeadersWithToken(token);
+            punchService.ConfigureHeadersWithToken(token);
+            lockService.ConfigureHeadersWithToken(token);
+            customerService.ConfigureHeadersWithToken(token);
+            taskService.ConfigureHeadersWithToken(token);
+            taskTemplateService.ConfigureHeadersWithToken(token);
+            populateTemplateService.ConfigureHeadersWithToken(token);
+            jobService.ConfigureHeadersWithToken(token);
+            rateService.ConfigureHeadersWithToken(token);
+            organizationService.ConfigureHeadersWithToken(token);
+            timesheetEntryService.ConfigureHeadersWithToken(token);
+            qbdInventoryItemService.ConfigureHeadersWithToken(token);
+            qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+            qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+            qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+            exportService.ConfigureHeadersWithToken(token);
+
+            // Configure shared service.
+            sharedService.CurrentUser = await authService.GetMeAsync();
+            sharedService.Token = token;
+
+            NavigationManager.NavigateTo("kiosk/status");
+        }
+        else
+        {
+            loading = false;
+        }
+    }
+
+    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await System.Threading.Tasks.Task.Delay(100);
+                await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+            }
+            catch (Exception) { }
+        }
+    }
+
+    private async System.Threading.Tasks.Task AuthenticateAsync()
+    {
+        working = true;
+        StateHasChanged();
+
+        try
+        {
+            string token;
+
+            if (method == "pin")
+            {
+                token = await authService.AuthenticateWithPinAsync(pinSession);
+            }
+            else if (method == "email")
+            {
+                token = await authService.AuthenticateWithEmailAsync(emailSession);
+            }
+            else
+            {
+                return;
+            }
+
+            // Do not continue if the token was null.
+            if (string.IsNullOrEmpty(token))
+                throw new Exception();
+
+            // Save token to local storage.
+            await localStorageService.SetLocalStorage("Token", token);
+
+            // Update headers on services.
+            auditService.ConfigureHeadersWithToken(token);
+            authService.ConfigureHeadersWithToken(token);
+            kioskService.ConfigureHeadersWithToken(token);
+            userService.ConfigureHeadersWithToken(token);
+            punchService.ConfigureHeadersWithToken(token);
+            lockService.ConfigureHeadersWithToken(token);
+            customerService.ConfigureHeadersWithToken(token);
+            taskService.ConfigureHeadersWithToken(token);
+            taskTemplateService.ConfigureHeadersWithToken(token);
+            populateTemplateService.ConfigureHeadersWithToken(token);
+            jobService.ConfigureHeadersWithToken(token);
+            rateService.ConfigureHeadersWithToken(token);
+            organizationService.ConfigureHeadersWithToken(token);
+            timesheetEntryService.ConfigureHeadersWithToken(token);
+            qbdInventoryItemService.ConfigureHeadersWithToken(token);
+            qbdInventoryItemSyncService.ConfigureHeadersWithToken(token);
+            qbdInventoryConsumptionService.ConfigureHeadersWithToken(token);
+            qbdInventoryConsumptionSyncService.ConfigureHeadersWithToken(token);
+            exportService.ConfigureHeadersWithToken(token);
+
+            // Configure shared service.
+            sharedService.CurrentUser = await authService.GetMeAsync();
+            sharedService.Token = token;
+
+            NavigationManager.NavigateTo("kiosk/status");
+        }
+        catch (Exception)
+        {
+            working = false;
+            StateHasChanged();
+        }
+    }
+
+    private async System.Threading.Tasks.Task ToggleMethodAsync()
+    {
+        if (method == "email")
+        {
+            method = "pin";
+
+            try
+            {
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("focusElement", "inputOrganizationCode");
+            }
+            catch (Exception) { }
+        }
+        else if (method == "pin")
+        {
+            method = "email";
+
+            try
+            {
+                await Task.Delay(50);
+                await JSRuntime.InvokeVoidAsync("focusElement", "inputEmailAddress");
+            }
+            catch (Exception) { }
+        }
+    }
+} 

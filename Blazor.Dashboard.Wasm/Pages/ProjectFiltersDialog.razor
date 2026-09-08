@@ -1,0 +1,73 @@
+﻿@page "/dialogs/filters/projects"
+
+@using Brizbee.Dashboard.Wasm.Services
+
+@inject DialogService dialogService
+@inject SharedService sharedService
+@inject UserService userService
+
+@implements IDisposable
+
+<EditForm Model="@internalTransform" OnValidSubmit="SaveRange" class="form-horizontal" autocomplete="off">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="project_status" class="col-sm-3 control-label">Status</label>
+        <div class="col-sm-9">
+            <InputSelect id="project_status" class="form-control"
+                         ValueChanged="@( (string x) => SelectedStatusValueChangeHandler(x) )"
+                         ValueExpression="@( () => selectedStatus )"
+                         Value="@selectedStatus">
+                <option value="Internal">Internal</option>
+                <option value="Proposed">Proposed</option>
+                <option value="Open">Open</option>
+                <option value="Needs Invoice">Needs Invoice</option>
+                <option value="Merged">Merged</option>
+                <option value="Closed">Closed</option>
+            </InputSelect>
+        </div>
+    </div>
+
+    <hr />
+
+    <button class="btn btn-default pull-right" type="button" @onclick="CloseDialog" style="margin-left: 2px;">Cancel</button>
+    <button class="btn btn-primary pull-right" type="submit" style="margin-left: 2px;">OK</button>
+</EditForm>
+
+@code {
+    private Dictionary<string, string> internalTransform = new();
+
+    private string selectedStatus = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to the events
+        sharedService.OnChange += StateHasChanged;
+
+        selectedStatus = sharedService.FilterProjectStatus;
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to the events
+        sharedService.OnChange -= StateHasChanged;
+    }
+
+    private void SaveRange()
+    {
+        sharedService.FilterProjectStatus = selectedStatus;
+
+        dialogService.Close(true);
+    }
+
+    private void CloseDialog(MouseEventArgs e)
+    {
+        dialogService.Close(false);
+    }
+
+    private void SelectedStatusValueChangeHandler(string status)
+    {
+        selectedStatus = status;
+    }
+}
