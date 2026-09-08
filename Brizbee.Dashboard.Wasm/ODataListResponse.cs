@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Brizbee.Blazor.Dashboard.Wasm
+namespace Brizbee.Dashboard.Wasm
 {
     public class ODataListResponse<T> where T : class
     {

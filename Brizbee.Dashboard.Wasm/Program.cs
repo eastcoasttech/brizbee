@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Radzen;
 
-namespace Blazor.Dashboard.Wasm
+namespace Brizbee.Dashboard.Wasm
 {
     public class Program
     {

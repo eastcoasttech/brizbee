@@ -1,5 +1,4 @@
-﻿using Brizbee.Blazor;
-using Brizbee.Blazor.Dashboard.Wasm;
+﻿using Brizbee.Dashboard.Wasm;
 using Brizbee.Core.Serialization;
 using Brizbee.Dashboard.Wasm.Models;
 using Brizbee.Dashboard.Wasm.Serialization;

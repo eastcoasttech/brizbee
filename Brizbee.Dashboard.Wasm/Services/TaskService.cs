@@ -6,8 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Brizbee.Blazor;
-using Brizbee.Blazor.Dashboard.Wasm;
+using Brizbee.Dashboard.Wasm;
 using Brizbee.Dashboard.Wasm.Models;
 using Brizbee.Dashboard.Wasm.Security;
 

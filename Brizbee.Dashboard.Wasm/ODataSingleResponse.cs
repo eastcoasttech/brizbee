@@ -1,4 +1,4 @@
-﻿namespace Brizbee.Blazor.Dashboard.Wasm
+﻿namespace Brizbee.Dashboard.Wasm
 {
     public class ODataSingleResponse<T> where T : class
     {
